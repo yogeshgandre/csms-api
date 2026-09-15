@@ -195,6 +195,7 @@ tbody tr:last-child td{border-bottom:none}
 .btn.warn{background:var(--rose);border-color:var(--rose)}
 .btn.warn:hover{background:#9C4A1B}
 .btn:disabled{opacity:.45;cursor:not-allowed;transform:none;box-shadow:none}
+.btn.sm{padding:5px 10px;font-size:12.5px}
 .btnrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
 
 /* ---------- forms ---------- */
@@ -491,18 +492,17 @@ nav .pip.r{background:var(--rose);color:#fff}
 </div>
 
 <!-- Firebase Auth (Google Sign-In, restricted to ssrf.org — enforced server-side, see routes/auth.js) -->
-<!-- Firebase Auth (Google Sign-In, restricted to ssrf.org — enforced server-side, see routes/auth.js) -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
   import { getAuth, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
 
+  // TODO: fill in from Firebase Console -> Project Settings -> General -> Your apps -> Web app.
+  // This config is meant to be public/embedded in client code — it is not a secret.
   const firebaseConfig = {
-    apiKey: "AIzaSyA8CKVF1OLvmVY5vtW-PO9qliBP61jEj5Y",
-    authDomain: "csms-71807.firebaseapp.com",
-    projectId: "csms-71807",
-    storageBucket: "csms-71807.firebasestorage.app",
-    messagingSenderId: "9163903213",
-    appId: "1:9163903213:web:947798ee0e151e788dbce4"
+    apiKey: "REPLACE_ME",
+    authDomain: "REPLACE_ME.firebaseapp.com",
+    projectId: "REPLACE_ME",
+    appId: "REPLACE_ME"
   };
 
   const firebaseApp = initializeApp(firebaseConfig);
@@ -1724,36 +1724,127 @@ function renderOps(){
 
 
 /* ============ team / department tree ============ */
-function deptRegion(id){
-  let n = DEPT.find(x=>x.id===id);
-  while(n){ if(["Germany","France","India"].includes(n.name)) return n.name; n = DEPT.find(x=>x.id===n.parent); }
-  return null;
+/* ============ team / role management — live, from RMS ============
+   Cached so the global render() cycle (which calls renderTeam() on every
+   state change, not just when the tab is open) doesn't refetch constantly.
+   invalidateTeamData() forces a reload after an admin action succeeds. */
+let LIVE_DEPTS = null;
+let LIVE_DEPT_ROLES = {};
+
+function invalidateTeamData(){ LIVE_DEPTS = null; LIVE_DEPT_ROLES = {}; loadTeamData(); }
+
+async function loadTeamData(){
+  try{
+    const depts = await apiFetch('/api/depts');
+    const roleLists = await Promise.all(
+      depts.map(d => apiFetch('/api/admin/depts/'+d.Seva_Dept_ID+'/roles'))
+    );
+    depts.forEach((d,i)=>{ LIVE_DEPT_ROLES[d.Seva_Dept_ID] = roleLists[i]; });
+    LIVE_DEPTS = depts;
+    renderTeam();
+  }catch(err){
+    document.getElementById('team').innerHTML =
+      `<div class="hidden-note" style="background:var(--rose-wash);border-color:#EBCBCE;color:var(--rose)">
+        <b>Could not load departments.</b> ${esc(err.message||'')}</div>`;
+  }
 }
+
+async function addDept(){
+  const nameEl = document.getElementById('newDeptName');
+  const parentEl = document.getElementById('newDeptParent');
+  const errEl = document.getElementById('deptErr');
+  errEl.classList.remove('on');
+  const name = (nameEl.value||'').trim();
+  if(!name){ errEl.textContent='Enter a department name.'; errEl.classList.add('on'); return; }
+  try{
+    await apiFetch('/api/admin/depts', {method:'POST', body: JSON.stringify({
+      name, parentId: parentEl.value ? Number(parentEl.value) : null
+    })});
+    nameEl.value = '';
+    toast('Department added.');
+    invalidateTeamData();
+  }catch(err){ errEl.textContent = err.message||'Could not add department.'; errEl.classList.add('on'); }
+}
+
+async function addRole(deptId){
+  const nameEl = document.getElementById('newRoleName_'+deptId);
+  const descEl = document.getElementById('newRoleDesc_'+deptId);
+  const name = (nameEl.value||'').trim();
+  if(!name) return;
+  try{
+    await apiFetch('/api/admin/roles', {method:'POST', body: JSON.stringify({
+      sevaDeptId: deptId, name, desc: (descEl.value||'').trim()
+    })});
+    toast('Role added.');
+    invalidateTeamData();
+  }catch(err){ toast('Could not add role: '+(err.message||'')); }
+}
+
+async function saveHierarchy(deptId, roleId, value){
+  const n = Number(value);
+  if(!Number.isFinite(n)) return;
+  try{
+    await apiFetch('/api/admin/hierarchy', {method:'POST', body: JSON.stringify({
+      sevaDeptId: deptId, deptRoleId: roleId, hrchyId: n
+    })});
+    toast('Hierarchy updated.');
+    invalidateTeamData();
+  }catch(err){ toast('Could not update hierarchy: '+(err.message||'')); }
+}
+
 function renderTeam(){
-  const mine = R().regions;
-  function node(dObj, depth){
-    const kids = DEPT.filter(x=>x.parent===dObj.id);
-    const reg = deptRegion(dObj.id);
-    const inScope = !mine || (reg && mine.includes(reg)) || !reg;
-    const seekers = reg ? SEEKERS.filter(s=>s.region===reg).length : SEEKERS.length;
+  const el = document.getElementById('team');
+  if(LIVE_DEPTS === null){
+    el.innerHTML = '<p class="sub2">Loading departments…</p>';
+    loadTeamData();
+    return;
+  }
+
+  const parentOptions = LIVE_DEPTS.map(d=>
+    `<option value="${d.Seva_Dept_ID}">${esc(d.Seva_Dept_Name)}</option>`).join('');
+
+  function node(d, depth){
+    const kids = LIVE_DEPTS.filter(x=>x.Parent_Seva_Dept_ID===d.Seva_Dept_ID);
+    const roles = LIVE_DEPT_ROLES[d.Seva_Dept_ID] || [];
     return `<div style="margin-left:${depth*26}px">
-      <div class="sub-card" style="margin-bottom:8px;padding:12px 15px;${inScope?'':'opacity:.42'}">
-        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-          <span style="font-weight:600;font-size:14px">${esc(dObj.name)}</span>
-          ${reg?`<span class="tag t-core">${esc(reg)}</span>`:''}
-          ${dObj.role===ROLE?'<span class="tag t-active">you are here</span>':''}
-        </div>
-        <div class="sub2" style="margin-top:3px">Led by ${esc(dObj.head)} · ${seekers} seeker(s) below this point</div>
+      <div class="sub-card" style="margin-bottom:8px;padding:12px 15px">
+        <div style="font-weight:600;font-size:14px">${esc(d.Seva_Dept_Name)}</div>
+        ${roles.length ? `<div style="margin-top:8px;display:flex;flex-direction:column;gap:5px">
+          ${roles.map(r=>`<div style="display:flex;align-items:center;gap:8px;font-size:12.5px">
+            <span style="flex:1" title="${esc(r.Dept_Role_Desc||'')}">${esc(r.Dept_Role_Name)}</span>
+            <label class="sub2" style="margin:0">Rank</label>
+            <input type="number" value="${r.HRCHY_ID!=null?r.HRCHY_ID:''}" style="width:56px;padding:3px 6px;font-size:12px"
+              onchange="saveHierarchy(${d.Seva_Dept_ID},${r.Dept_Role_ID},this.value)">
+          </div>`).join('')}
+        </div>` : '<p class="sub2" style="margin-top:6px">No roles defined yet.</p>'}
+        <details style="margin-top:8px">
+          <summary style="cursor:pointer;font-size:12px;color:var(--deep)">+ Add role</summary>
+          <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">
+            <input id="newRoleName_${d.Seva_Dept_ID}" placeholder="Role name" style="flex:1;min-width:120px;padding:5px 8px;font-size:12.5px">
+            <input id="newRoleDesc_${d.Seva_Dept_ID}" placeholder="Description" style="flex:2;min-width:140px;padding:5px 8px;font-size:12.5px">
+            <button class="btn sm" onclick="addRole(${d.Seva_Dept_ID})">Add</button>
+          </div>
+        </details>
       </div>
       ${kids.map(k=>node(k,depth+1)).join('')}</div>`;
   }
-  const root = DEPT.find(x=>x.parent===null);
-  document.getElementById('team').innerHTML = node(root,0) + `
-    <div class="note"><b>Access is derived, not listed.</b> A person placed under Germany sees Germany.
-      Move them to Europe and they see Germany and France, without anybody editing a permissions table.
-      Faded branches are outside your own position in the tree.</div>
-    <div class="hidden-note"><b>This replaces two things.</b> The region column missing from User_Role,
-      and the Role_Manager table — who you may administer is simply whoever sits beneath you.</div>`;
+
+  const roots = LIVE_DEPTS.filter(d=>d.Parent_Seva_Dept_ID===null);
+  el.innerHTML = roots.map(r=>node(r,0)).join('') + `
+    <div class="sub-card" style="margin-top:10px">
+      <div style="font-weight:600;font-size:13.5px;margin-bottom:8px">+ Add department</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <input id="newDeptName" placeholder="Department name" style="flex:1;min-width:140px;padding:6px 9px;font-size:13px">
+        <select id="newDeptParent" style="padding:6px 9px;font-size:13px">
+          <option value="">— top level —</option>${parentOptions}
+        </select>
+        <button class="btn sm" onclick="addDept()">Add</button>
+      </div>
+      <div class="err" id="deptErr" style="margin-top:6px"></div>
+    </div>
+    <div class="note" style="margin-top:10px"><b>This is live.</b> Reads and writes RMS.Seva_Dept,
+      Seva_Dept_Role and Seva_Dept_Role_HRCHY directly. There is currently no separate admin
+      privilege check — any signed-in user can add departments and roles here.</div>`;
 }
 
 /* ============ unified inbox ============ */
@@ -2019,14 +2110,21 @@ function renderCalendar(){
       Shows what is coming up — satsangs already held move to the Reports tab.</div>`;
 }
 
-/* ============ profiles — the Bitrix "employee" idea, applied to seekers who serve ============ */
+/* ============ profiles — the Bitrix "employee" idea, applied to seekers who serve ============
+   Still on mock DEPT for the department label shown per profile — Profiles
+   tab overall is not yet wired to real data (see earlier gap analysis). */
+function mockDeptRegion(id){
+  let n = DEPT.find(x=>x.id===id);
+  while(n){ if(["Germany","France","India"].includes(n.name)) return n.name; n = DEPT.find(x=>x.id===n.parent); }
+  return null;
+}
 function renderProfiles(){
   const serving = visible().filter(p=>p.sevaHrs>0).sort((a,b)=>b.sevaHrs-a.sevaHrs);
   document.getElementById('profiles').innerHTML = `
     <div class="grid2">
       ${serving.map(p=>{
-        const dep = DEPT.find(d=>deptRegion(d.id)===p.region && d.head===p.name) ||
-                    DEPT.find(d=>deptRegion(d.id)===p.region);
+        const dep = DEPT.find(d=>mockDeptRegion(d.id)===p.region && d.head===p.name) ||
+                    DEPT.find(d=>mockDeptRegion(d.id)===p.region);
         return `<div class="card pad">
           <div style="display:flex;gap:12px;align-items:flex-start">
             <div style="width:44px;height:44px;border-radius:50%;background:var(--deep-wash);color:var(--deep);

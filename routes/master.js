@@ -24,7 +24,7 @@ router.get('/regions', requireAuth, async (_req, res) => {
   try {
     const r = await pool.query(
       `SELECT ${qi('Region_ID')}, ${qi('Region_Name')} FROM Master.${qi('M_Region')}
-       WHERE ${qi('Ver_To_DT')} IS NULL ORDER BY ${qi('Region_Name')}`
+       WHERE ${qi('Ver_To_DT')} >= CURRENT_DATE ORDER BY ${qi('Region_Name')}`
     );
     res.json(r.rows);
   } catch (err) {
@@ -37,7 +37,7 @@ router.get('/categories', requireAuth, async (_req, res) => {
   try {
     const r = await pool.query(
       `SELECT ${qi('Category_ID')}, ${qi('Category_Name')}, ${qi('Category_Desc')}
-       FROM Master.${qi('M_Seeker_Category')} WHERE ${qi('Ver_To_DT')} IS NULL ORDER BY ${qi('Category_Name')}`
+       FROM Master.${qi('M_Seeker_Category')} WHERE ${qi('Ver_To_DT')} >= CURRENT_DATE ORDER BY ${qi('Category_Name')}`
     );
     res.json(r.rows);
   } catch (err) {

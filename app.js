@@ -14,6 +14,7 @@ const deptRoutes = require('./routes/depts');
 const satsangRoutes = require('./routes/satsangs');
 const intakeRoutes = require('./routes/intake');
 const masterRoutes = require('./routes/master');
+const adminRoutes = require('./routes/admin');
 
 const app = express();
 app.use(cors());
@@ -25,6 +26,7 @@ app.use('/api/depts', deptRoutes);
 app.use('/api/satsangs', satsangRoutes);
 app.use('/api/intake', intakeRoutes);
 app.use('/api/master', masterRoutes);
+app.use('/api/admin', adminRoutes);
 
 app.get('/api/health', (_req, res) => res.json({ ok: true }));
 

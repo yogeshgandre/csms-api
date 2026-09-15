@@ -10,7 +10,7 @@ router.get('/', requireAuth, async (req, res) => {
     const depts = await pool.query(
       `SELECT ${qi('Seva_Dept_ID')}, ${qi('Seva_Dept_Name')}, ${qi('Parent_Seva_Dept_ID')}
        FROM RMS.${qi('Seva_Dept')}
-       WHERE ${qi('Ver_To_DT')} IS NULL
+       WHERE ${qi('Ver_To_DT')} >= CURRENT_DATE
        ORDER BY ${qi('Seva_Dept_Name')}`
     );
     res.json(depts.rows);
@@ -28,9 +28,9 @@ router.get('/:id/roles', requireAuth, async (req, res) => {
               up.${qi('CSMS_ID')}, up.${qi('Seeker_Name')}
        FROM RMS.${qi('Seva_Dept_Role')} r
        LEFT JOIN RMS.${qi('User_Seva_Dept_Role')} usdr
-         ON usdr.${qi('Dept_Role_ID')} = r.${qi('Dept_Role_ID')} AND usdr.${qi('Ver_To_DT')} IS NULL
+         ON usdr.${qi('Dept_Role_ID')} = r.${qi('Dept_Role_ID')} AND usdr.${qi('Ver_To_DT')} >= CURRENT_DATE
        LEFT JOIN RMS.${qi('User_Profile')} up ON up.${qi('CSMS_ID')} = usdr.${qi('CSMS_ID')}
-       WHERE r.${qi('Seva_Dept_ID')} = $1 AND r.${qi('Ver_To_DT')} IS NULL`,
+       WHERE r.${qi('Seva_Dept_ID')} = $1 AND r.${qi('Ver_To_DT')} >= CURRENT_DATE`,
       [req.params.id]
     );
     res.json(roles.rows);

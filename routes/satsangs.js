@@ -39,7 +39,7 @@ router.get('/:satsangId/attendees', requireAuth, async (req, res) => {
       `SELECT sas.${qi('AS_CSMS_ID')}, sas.${qi('Remarks')}, up.${qi('Seeker_Name')}
        FROM SCS.${qi('Satsang_Attending_Seekers')} sas
        LEFT JOIN RMS.${qi('User_Profile')} up ON up.${qi('CSMS_ID')} = sas.${qi('AS_CSMS_ID')}
-       WHERE sas.${qi('Satsang_ID')} = $1 AND sas.${qi('Ver_To_DT')} IS NULL`,
+       WHERE sas.${qi('Satsang_ID')} = $1 AND sas.${qi('Ver_To_DT')} >= CURRENT_DATE`,
       [req.params.satsangId]
     );
     res.json(result.rows);

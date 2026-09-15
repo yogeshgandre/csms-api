@@ -40,11 +40,11 @@ router.get('/', requireAuth, async (req, res) => {
        FROM MSR.${qi('Seeker')} s
        LEFT JOIN Master.${qi('M_Country')} mc ON mc.${qi('Country_ID')} = s.${qi('Country_ID')}
        LEFT JOIN MSR.${qi('Seeker_Category')} sc
-         ON sc.${qi('Seeker_ID')} = s.${qi('Seeker_ID')} AND sc.${qi('Ver_To_DT')} IS NULL
+         ON sc.${qi('Seeker_ID')} = s.${qi('Seeker_ID')} AND sc.${qi('Ver_To_DT')} >= CURRENT_DATE
        LEFT JOIN Master.${qi('M_Seeker_Category')} cat
          ON cat.${qi('Category_ID')} = sc.${qi('Seeker_Category_ID')}
        LEFT JOIN MSR.${qi('Seeker_Other_MasterList_Info')} ml
-         ON ml.${qi('Seeker_ID')} = s.${qi('Seeker_ID')} AND ml.${qi('Ver_To_DT')} IS NULL
+         ON ml.${qi('Seeker_ID')} = s.${qi('Seeker_ID')} AND ml.${qi('Ver_To_DT')} >= CURRENT_DATE
        ${where}
        ORDER BY s.${qi('First_Name')}, s.${qi('Last_Name')}`,
       params
