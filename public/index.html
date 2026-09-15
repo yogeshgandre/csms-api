@@ -1,0 +1,2456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Seeker Nurturing CRM — Prototype</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232E76A8'/%3E%3Ctext x='16' y='22' font-family='Georgia,serif' font-size='17' fill='white' text-anchor='middle'%3ESN%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* ink */
+  --ink:#1E2F3A; --ink-2:#4A6070; --ink-3:#8397A6;
+  /* surfaces */
+  --paper:#F1F5F8; --card:#FFFFFF; --line:#E7EFF6; --line-2:#D4E3EE;
+  /* primary — pastel blue */
+  --deep:#2E76A8; --deep-2:#4C93C2; --deep-wash:#E3F0F9;
+  /* secondary blue (was sage) */
+  --sage:#2B7C9B; --sage-wash:#DEF0F7;
+  /* yellow */
+  --amber:#96690F; --amber-wash:#FDF2D0;
+  /* orange */
+  --rose:#B3571F; --rose-wash:#FCE5D5;
+  /* shape — varied, not uniform */
+  --r:14px; --r-sm:9px; --r-tag:7px;
+  --ease:cubic-bezier(.2,.7,.3,1);
+  --sh:0 1px 2px rgba(30,47,58,.04), 0 4px 14px rgba(46,118,168,.07);
+  --sh-sm:0 1px 2px rgba(30,47,58,.05);
+  --font-head:"Outfit", Calibri, Arial, sans-serif;
+  --font-body:"Source Sans 3", Calibri, Arial, sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  color:var(--ink);
+  font-family:var(--font-body);
+  font-size:14px; line-height:1.55;
+  background:var(--paper);
+  -webkit-font-smoothing:antialiased;
+  text-wrap:pretty;
+}
+.serif{font-family:var(--font-head);font-weight:600;letter-spacing:-.012em}
+button{font:inherit;cursor:pointer}
+*{transition:background-color .16s var(--ease), border-color .16s var(--ease), color .16s var(--ease), box-shadow .16s var(--ease), transform .12s var(--ease)}
+:focus-visible{outline:2px solid var(--deep-2);outline-offset:2px;border-radius:3px}
+
+/* ---------- banner ---------- */
+.demo-banner{
+  background:var(--deep-wash); color:#2A5570; padding:9px 22px;
+  font-size:12px; letter-spacing:.02em; display:flex; gap:10px; align-items:center; flex-wrap:wrap;
+  border-bottom:1px solid #DCE9F3;
+}
+.demo-banner b{color:var(--deep);font-weight:600}
+
+/* ---------- header ---------- */
+header{
+  background:var(--card); border-bottom:1px solid var(--line);
+  padding:14px 22px; display:flex; align-items:center; gap:22px; flex-wrap:wrap;
+}
+.brand{display:flex;flex-direction:column;gap:1px;margin-right:auto}
+.brand .t{font-family:var(--font-head);font-size:18px;font-weight:600;letter-spacing:-.015em}
+.brand .s{font-size:11px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.1em;font-weight:500}
+.roleblock{display:flex;align-items:center;gap:10px}
+.roleblock label{font-size:11.5px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.08em}
+select{font:inherit;font-size:13px;padding:8px 12px;border:1px solid var(--line-2);
+  border-radius:var(--r-sm);background:#FCFDFE;color:var(--ink);min-width:230px;cursor:pointer}
+select:hover{border-color:var(--ink-3)}
+.scope{font-size:12px;font-weight:600;color:var(--deep);background:var(--deep-wash);
+  border:1px solid #C6E0F0;padding:6px 12px;border-radius:var(--r-tag);white-space:nowrap}
+
+/* ---------- tabs ---------- */
+nav{background:rgba(255,255,255,.86);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);
+  padding:8px 22px 0;display:flex;gap:4px;overflow-x:auto}
+nav button{
+  background:none;border:none;padding:11px 15px;font-size:13.5px;color:var(--ink-2);
+  border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap;font-weight:500;
+}
+nav button:hover{color:var(--ink);background:rgba(227,240,249,.6)}
+nav button.on{color:var(--deep);font-weight:600;background:var(--deep-wash);
+  box-shadow:inset 0 -2px 0 var(--deep)}
+nav .pip{
+  display:inline-block;margin-left:6px;background:var(--rose);color:#fff;
+  font-size:10.5px;font-weight:600;padding:1px 6px;border-radius:9px;vertical-align:1px;
+}
+
+main{padding:22px;max-width:1320px;margin:0 auto}
+.pane{display:none}
+.pane.on{display:block;animation:fadein .2s var(--ease)}
+@keyframes fadein{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+
+/* ---------- generic ---------- */
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r)}
+.pad{padding:16px 18px}
+h2.sec{font-family:var(--font-head);font-size:19px;font-weight:600;margin:0 0 4px;letter-spacing:-.015em}
+p.sub{margin:0 0 16px;color:var(--ink-3);font-size:12.5px;max-width:62ch}
+.note{
+  background:var(--deep-wash);border-left:3px solid var(--deep);border-radius:0 var(--r-sm) var(--r-sm) 0;
+  padding:10px 14px;font-size:12.5px;color:#20454F;margin:14px 0;
+}
+.note b{color:var(--deep)}
+
+/* ---------- filters ---------- */
+.filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+.filters input[type=search]{
+  font:inherit;font-size:13px;padding:7px 11px;border:1px solid var(--line-2);
+  border-radius:var(--r-sm);min-width:210px;background:var(--card);
+}
+.chip{background:var(--card);border:1px solid var(--line-2);border-radius:var(--r-tag);
+  padding:6px 14px;font-size:12.5px;color:var(--ink-2);box-shadow:none}
+.chip:hover{border-color:var(--ink-3);color:var(--ink)}
+.chip.on{background:var(--deep);border-color:var(--deep);color:#fff;font-weight:600}
+.count{margin-left:auto;font-size:12.5px;color:var(--ink-3);font-variant-numeric:tabular-nums}
+
+/* ---------- table ---------- */
+table{width:100%;border-collapse:collapse;background:var(--card)}
+th{
+  text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.07em;
+  color:var(--deep);font-weight:700;padding:11px 14px;border-bottom:1px solid var(--line-2);
+  background:var(--deep-wash);position:sticky;top:0;
+}
+td{padding:11px 14px;border-bottom:1px solid #EEF4F9;font-size:13.5px;vertical-align:middle;font-variant-numeric:tabular-nums}
+tbody tr{cursor:pointer}
+tbody tr:hover{background:#F6FAFD}
+tbody tr:last-child td{border-bottom:none}
+.nm{font-size:15px;font-weight:500;font-family:var(--font-head)}
+.sub2{font-size:11.5px;color:var(--ink-3);margin-top:1px;font-variant-numeric:normal}
+
+.tag{display:inline-block;font-size:11.5px;font-weight:600;padding:3px 9px;border-radius:var(--r-tag);white-space:nowrap;border:1px solid transparent}
+.t-core{background:var(--deep-wash);color:var(--deep);border-color:#C4DBE1}
+.t-active{background:var(--sage-wash);color:var(--sage);border-color:#CBDFD1}
+.t-semi{background:#F1EFEA;color:var(--ink-2);border-color:var(--line-2)}
+.t-new{background:#EFEEF6;color:#4A4680;border-color:#D6D3E6}
+.t-warn{background:var(--amber-wash);color:var(--amber);border-color:#EBD9B4}
+.t-bad{background:var(--rose-wash);color:var(--rose);border-color:#EBCBCE}
+
+.masked{color:var(--ink-3);background:#EFF5FA;border:1px dashed var(--line-2);
+  padding:1px 8px;border-radius:4px;font-size:12px;letter-spacing:.12em;
+}
+.a9{
+  display:inline-block;font-size:10px;text-transform:uppercase;letter-spacing:.07em;
+  background:var(--rose-wash);color:var(--rose);border:1px solid #EBCBCE;
+  padding:1px 6px;border-radius:4px;margin-left:6px;vertical-align:1px;
+}
+.hidden-note{margin-top:12px;font-size:12.5px;color:var(--amber);background:var(--amber-wash);
+  border:1px solid #F0DFAE;border-radius:var(--r-sm);padding:10px 14px}
+
+/* ---------- drawer ---------- */
+.scrim{position:absolute;inset:0;background:rgba(30,47,58,.30);backdrop-filter:blur(2px);
+  display:flex;justify-content:flex-end;z-index:40;animation:fadein .16s var(--ease);
+}
+.drawer{background:var(--paper);width:min(660px,100%);height:100%;overflow-y:auto;
+  border-left:1px solid var(--line-2);box-shadow:-12px 0 32px rgba(30,47,58,.10)}
+.dhead{background:var(--card);border-bottom:1px solid var(--line);padding:18px 22px}
+.dclose{
+  float:right;background:none;border:1px solid var(--line-2);border-radius:var(--r-sm);
+  width:28px;height:28px;line-height:1;color:var(--ink-2);font-size:16px;
+}
+.dclose:hover{border-color:var(--ink-3);color:var(--ink)}
+.dbody{padding:18px 22px 40px}
+.kv{display:grid;grid-template-columns:132px 1fr;gap:7px 14px;font-size:13.5px;margin-top:4px}
+.kv dt{color:var(--ink-3);font-size:12.5px}
+.kv dd{margin:0;font-variant-numeric:tabular-nums}
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin:14px 0}
+.metric{background:linear-gradient(180deg,#FFF,#F7FBFE);border:1px solid var(--line);
+  border-radius:var(--r-sm);padding:13px 12px;text-align:center;box-shadow:var(--sh-sm)}
+.metric .n{font-family:var(--font-head);font-size:23px;font-weight:600;color:var(--deep);line-height:1.1;font-variant-numeric:tabular-nums}
+.metric .l{font-size:10.5px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.06em;margin-top:3px}
+.metric .src{font-size:10px;color:var(--sage);margin-top:3px}
+
+.tl{list-style:none;margin:10px 0 0;padding:0 0 0 20px;border-left:2px solid var(--line)}
+.tl li{position:relative;padding:0 0 16px 14px}
+.tl li::before{
+  content:"";position:absolute;left:-25px;top:5px;width:9px;height:9px;border-radius:50%;
+  background:var(--card);border:2px solid var(--deep-2);
+}
+.tl li.flag::before{background:var(--rose);border-color:var(--rose)}
+.tl .when{font-size:11.5px;color:var(--ink-3);font-variant-numeric:tabular-nums}
+.tl .what{font-size:13.5px;margin-top:1px}
+.tl .who{font-size:11.5px;color:var(--ink-3);margin-top:2px}
+.tl .flagtxt{
+  margin-top:6px;background:var(--rose-wash);border:1px solid #EBCBCE;color:var(--rose);
+  border-radius:var(--r-sm);padding:6px 10px;font-size:12.5px;
+}
+
+.btn{
+  background:var(--deep);color:#fff;border:1px solid var(--deep);
+  border-radius:var(--r-sm);padding:7px 14px;font-size:13px;font-weight:500;
+}
+.btn:hover{background:var(--deep-2);box-shadow:0 2px 8px rgba(46,118,168,.22)}
+.btn:active{transform:translateY(1px) scale(.98)}
+.btn.ghost{background:var(--card);color:var(--ink-2);border-color:var(--line-2)}
+.btn.ghost:hover{border-color:var(--ink-3);color:var(--ink)}
+.btn.warn{background:var(--rose);border-color:var(--rose)}
+.btn.warn:hover{background:#9C4A1B}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none;box-shadow:none}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+
+/* ---------- forms ---------- */
+.field{margin-bottom:12px}
+.field label{display:block;font-size:12px;color:var(--ink-2);margin-bottom:4px}
+.field select,.field textarea,.field input{
+  width:100%;font:inherit;font-size:13.5px;padding:8px 10px;
+  border:1px solid var(--line-2);border-radius:var(--r-sm);background:var(--card);color:var(--ink);
+}
+.field select:focus,.field textarea:focus,.field input:focus{border-color:var(--deep-2)}
+.field textarea{resize:vertical;min-height:66px}
+.cc{font-size:11.5px;color:var(--ink-3);text-align:right;margin-top:3px;font-variant-numeric:tabular-nums}
+.cc.over{color:var(--rose)}
+.err{color:var(--rose);font-size:12.5px;margin-top:6px;display:none}
+.err.on{display:block}
+.check{display:flex;align-items:flex-start;gap:8px;font-size:13px;color:var(--ink-2)}
+.check input{width:auto;margin-top:2px}
+
+/* ---------- intake ---------- */
+.sub-card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);
+  padding:17px 19px;margin-bottom:12px;box-shadow:var(--sh)}
+.match{
+  margin-top:12px;background:var(--amber-wash);border:1px solid #EBD9B4;
+  border-radius:var(--r-sm);padding:11px 13px;
+}
+.match.clean{background:var(--sage-wash);border-color:#CBDFD1}
+.score{font-weight:600;color:var(--amber);font-variant-numeric:tabular-nums}
+.match.clean .score{color:var(--sage)}
+.resolved{border-left:3px solid var(--sage);background:#FCFDFC}
+
+/* ---------- dashboard ---------- */
+.grid4{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:16px}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(310px,1fr));gap:12px}
+.kpi{background:linear-gradient(180deg,#FFF,#F7FBFE);border:1px solid var(--line);
+  border-radius:var(--r);padding:16px 18px;box-shadow:var(--sh)}
+.kpi .n{font-family:var(--font-head);font-size:30px;font-weight:600;color:var(--deep);line-height:1.05;letter-spacing:-.015em;font-variant-numeric:tabular-nums}
+.kpi .l{font-size:12px;color:var(--ink-2);margin-top:3px;font-weight:500}
+.kpi .d{font-size:11px;color:var(--ink-3);margin-top:5px}
+.bar{display:grid;grid-template-columns:118px 1fr 40px;gap:10px;align-items:center;margin-bottom:8px;font-size:13px}
+.track{display:block;background:#E9F1F7;border-radius:20px;height:16px;overflow:hidden}
+.fill{display:block;background:linear-gradient(90deg,var(--deep),var(--deep-2));height:100%;border-radius:20px;min-width:3px}
+.fill.s2{background:linear-gradient(90deg,#C98A2E,#E0A94A)}
+.num{text-align:right;color:var(--ink-2);font-size:13px;font-variant-numeric:tabular-nums}
+
+.toast{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);
+  background:#213743;color:#fff;padding:11px 20px;border-radius:20px;
+  font-size:13px;z-index:60;box-shadow:0 6px 22px rgba(30,47,58,.22)}
+.shell{
+  position:relative;min-height:100vh;overflow:hidden;
+  display:grid;grid-template-columns:220px 1fr;grid-template-rows:auto auto 1fr;
+  grid-template-areas:"banner banner" "header header" "nav main";
+}
+.demo-banner{grid-area:banner}
+header{grid-area:header}
+nav{
+  grid-area:nav;flex-direction:column;align-items:stretch;gap:2px;
+  border-bottom:none;border-right:1px solid var(--line);
+  padding:16px 12px;overflow-y:auto;overflow-x:hidden;
+}
+nav button{border-bottom:none;border-left:2px solid transparent;margin-bottom:0;text-align:left;
+  border-radius:0 8px 8px 0;padding:10px 12px}
+nav button.on{box-shadow:none;border-left-color:var(--deep)}
+main{grid-area:main;max-width:none;margin:0}
+@media(max-width:880px){
+  .shell{grid-template-columns:1fr;grid-template-areas:"banner" "header" "nav" "main"}
+  nav{flex-direction:row;border-right:none;border-bottom:1px solid var(--line);padding:8px 22px 0;overflow-x:auto}
+  nav button{border-left:none;border-bottom:2px solid transparent;border-radius:0}
+  nav button.on{border-left:none;box-shadow:inset 0 -2px 0 var(--deep)}
+}
+@media(max-width:700px){
+  .metrics{grid-template-columns:repeat(2,1fr)}
+  .kv{grid-template-columns:1fr}
+  .hide-sm{display:none}
+}
+
+/* ---- refreshed accents ---- */
+h2.sec{letter-spacing:-.01em}
+.brand .t{letter-spacing:-.015em}
+.brand .s{color:var(--deep-2);opacity:.85}
+.pip{box-shadow:0 1px 2px rgba(30,47,58,.15)}
+nav .pip{background:var(--amber);color:#4A3405}
+nav .pip.r{background:var(--rose);color:#fff}
+.t-warn,.t-old{background:var(--amber-wash);color:var(--amber);border-color:#F0DFAE}
+.t-bad,.t-chg,.t-a9{background:var(--rose-wash);color:var(--rose);border-color:#F3CFB6}
+.t-core,.t-sub{background:var(--deep-wash);color:var(--deep);border-color:#C6E0F0}
+.t-active,.t-live{background:var(--sage-wash);color:var(--sage);border-color:#BFE2EE}
+.t-new{background:#EDF2FB;color:#3F5A94;border-color:#D6E0F2}
+.t-semi,.t-draft{background:#F0F4F8;color:var(--ink-2);border-color:var(--line-2)}
+.warn{border-color:#F0DFAE}
+.bad{border-color:#F3CFB6}
+.ok{background:var(--sage-wash);border-color:#BFE2EE;color:var(--sage)}
+.metric .n,.kpi .n{letter-spacing:-.02em}
+.mark.pass{background:var(--deep)!important}
+.mark.fail{background:var(--rose)!important}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-thumb{background:#CFE0EC;border-radius:10px;border:2px solid transparent;background-clip:content-box}
+::-webkit-scrollbar-track{background:transparent}
+/* ---------- kanban / journey board ---------- */
+.mini{background:var(--card);border:1px solid var(--line-2);border-radius:8px;
+  width:24px;height:24px;line-height:1;font-size:14px;color:var(--ink-2);cursor:pointer}
+.mini:hover{border-color:#8397A6;color:var(--ink)}
+.mini:disabled{opacity:.35;cursor:not-allowed}
+.kboard{display:grid;grid-template-columns:repeat(5,minmax(200px,1fr));gap:12px;overflow-x:auto;padding-bottom:6px}
+.klane{background:transparent}
+.klane-head{padding:11px 13px;margin-bottom:9px;background:var(--deep-wash);border:1px solid #C6E0F0;border-radius:var(--r-sm)}
+.klane-title{font-family:var(--font-head);font-weight:600;font-size:13.5px;color:var(--deep)}
+.klane-sub{font-size:11.5px;color:var(--ink-3);margin-top:2px;font-variant-numeric:tabular-nums}
+.klane-body{display:flex;flex-direction:column;gap:8px;min-height:60px;border-radius:var(--r-sm);transition:background-color .12s}
+.klane.drag-over .klane-body{background:rgba(46,118,168,.08)}
+.klane-empty{color:var(--ink-3);font-size:12.5px;background:var(--card);border:1px solid var(--line);
+  border-radius:var(--r-sm);padding:14px;text-align:center}
+.kcard{background:var(--card);border:1px solid var(--line);border-radius:var(--r-sm);
+  padding:11px 12px;cursor:grab;box-shadow:var(--sh-sm);display:flex;flex-direction:column}
+.kcard:hover{box-shadow:var(--sh)}
+.kcard.dragging{opacity:.4}
+.kcard.od{border-left:3px solid var(--amber)}
+.kcard-name{font-size:14px;cursor:pointer}
+.kcard-name:hover{color:var(--deep)}
+.kcard-actions{display:flex;align-items:center;gap:8px;margin-top:auto;padding-top:8px}
+.kcard-drag{margin-left:auto;font-size:10.5px;color:var(--ink-3);cursor:grab}
+</style>
+</head>
+<body>
+<div id="login-gate" style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--paper)">
+  <div class="card pad" style="width:min(380px,92vw)">
+    <div class="brand" style="margin-bottom:14px">
+      <span class="t">Seeker Nurturing CRM</span>
+      <span class="s">Sign in</span>
+    </div>
+    <p class="sub" style="margin-bottom:14px">
+      Access is by invitation only. If you have not been invited, this will not create an account.
+    </p>
+    <div class="field">
+      <label for="login-email">Your ssrf.org email</label>
+      <input id="login-email" type="email" placeholder="name@ssrf.org" autocomplete="username"
+        onkeydown="if(event.key==='Enter') attemptLogin()">
+    </div>
+    <div class="err" id="login-err"></div>
+    <button class="btn" style="width:100%;margin-top:6px" onclick="attemptLogin()">Continue</button>
+    <p class="sub2" style="margin-top:10px">
+      Prototype note: this stands in for the Firebase Google sign-in, which the client SDK normally handles.
+      The backend still enforces invitation-only lookup by email — see README.
+    </p>
+  </div>
+</div>
+
+<div class="shell" id="shell" style="display:none">
+
+<div class="demo-banner">
+  <b>Live</b>
+  <span>Seekers and Team read from Postgres. Journey, Inbox, Notes, Tasks, Calendar, Reports are still illustrative mock data — see README for why.</span>
+</div>
+
+<header>
+  <div class="brand">
+    <span class="t">Seeker Nurturing CRM</span>
+    <span class="s">Working prototype</span>
+  </div>
+  <div class="roleblock">
+    <label for="role">Signed in as</label>
+    <select id="role" onchange="setRole(this.value)"></select>
+    <span class="scope" id="scope"></span>
+  </div>
+</header>
+
+<nav>
+  <button data-p="overview" onclick="tab('overview')">Overview<span class="pip r" id="pip6">0</span></button>
+  <button class="on" data-p="seekers" onclick="tab('seekers')">Seekers</button>
+  <button data-p="alerts" onclick="tab('alerts')">My work<span class="pip" id="pip">0</span></button>
+  <button data-p="inbox" onclick="tab('inbox')">Inbox<span class="pip" id="pip4">0</span></button>
+  <button data-p="intake" onclick="tab('intake')">Intake<span class="pip" id="pip2">0</span></button>
+  <button data-p="journey" onclick="tab('journey')">Journey</button>
+  <button data-p="calendar" onclick="tab('calendar')">Calendar</button>
+  <button data-p="reports" onclick="tab('reports')">Reports<span class="pip r" id="pip5">0</span></button>
+  <button data-p="sevahub" onclick="tab('sevahub')">Seva</button>
+  <button data-p="profiles" onclick="tab('profiles')">Profiles</button>
+  <button data-p="dash" onclick="tab('dash')">Dashboard</button>
+  <button data-p="team" onclick="tab('team')">Team</button>
+  <button data-p="ops" onclick="tab('ops')">Operations<span class="pip" id="pip3">0</span></button>
+  <button data-p="about" onclick="tab('about')">What this shows</button>
+</nav>
+
+<main>
+  <section class="pane" id="p-overview">
+    <h2 class="sec">Overview</h2>
+    <p class="sub">The pulse of what you're responsible for — one screen instead of six tabs. Scoped to your access, same as everywhere else.</p>
+    <div id="overview"></div>
+  </section>
+
+  <section class="pane on" id="p-seekers">
+    <h2 class="sec">Seekers</h2>
+    <p class="sub">One record per person. Counts are calculated from the interaction log — never typed in.</p>
+
+    <div class="card pad" style="margin-bottom:14px">
+      <div style="display:flex;gap:9px;align-items:center">
+        <input type="search" id="q" style="flex:1;font-size:14px;padding:10px 13px"
+          placeholder="Try: curious in India, active with translation skills, overdue in Germany"
+          oninput="render()" onkeydown="if(event.key==='Enter') queryEnter()">
+        <button class="btn ghost sm" onclick="document.getElementById('q').value='';render()">Clear</button>
+      </div>
+      <div class="pill-row" style="margin-top:9px">
+        <span class="sub2" style="margin-right:2px">Try:</span>
+      </div>
+      <div id="qexamples" class="pill-row" style="margin-top:2px"></div>
+      <div id="qchips" style="margin-top:10px"></div>
+    </div>
+
+    <div class="filters">
+      <button class="chip on" data-f="all" onclick="filt('all')">All</button>
+      <span id="catchips" class="pill-row" style="display:contents"></span>
+      <button class="chip" data-f="overdue" onclick="filt('overdue')">Contact overdue</button>
+      <span class="count" id="cnt"></span>
+    </div>
+    <div class="card" style="overflow:hidden"><table id="tbl"></table></div>
+    <div id="hidnote"></div>
+  </section>
+
+  <section class="pane" id="p-inbox">
+    <h2 class="sec">Inbox</h2>
+    <p class="sub">Replies from seekers arrive here and land on their timeline automatically. Anyone in the region can pick one up.</p>
+    <div id="inbox"></div>
+  </section>
+
+  <section class="pane" id="p-team">
+    <h2 class="sec">Team</h2>
+    <p class="sub">Who serves where. Access follows position in this tree — there is no separate list of permissions to keep in step.</p>
+    <div id="team"></div>
+  </section>
+
+  <section class="pane" id="p-alerts">
+    <h2 class="sec">My work</h2>
+    <p class="sub">Tasks you have taken on, then what the system is raising: contact overdue against the fixed window, and sensitivity flags.</p>
+    <div id="alerts"></div>
+  </section>
+
+  <section class="pane" id="p-intake">
+    <h2 class="sec">Intake — awaiting review</h2>
+    <p class="sub">Form submissions and imports land here first. Nothing reaches the seeker record until a person confirms.</p>
+    <div class="note"><b>This is the holding area.</b> Each submission is matched against existing seekers on WhatsApp number, email and name. A confident match is offered as a merge; an unclear one waits for a human.</div>
+    <div id="intake"></div>
+  </section>
+
+  <section class="pane" id="p-journey">
+    <h2 class="sec">Journey</h2>
+    <p class="sub">Where every seeker sits, and what brought them in. Not a sales pipeline — there is no close, and moving backwards is ordinary.</p>
+    <div id="journey"></div>
+  </section>
+
+  <section class="pane" id="p-calendar">
+    <h2 class="sec">Calendar</h2>
+    <p class="sub">Satsangs and retreats already recorded in the Satsang Conducting System. This is a view over that data, not a second copy of it.</p>
+    <div id="calendar"></div>
+  </section>
+
+  <section class="pane" id="p-reports">
+    <h2 class="sec">Satsang reporting</h2>
+    <p class="sub">Every satsang that a curious person or seeker attends must be reported by the conductor. This is that discipline, made visible rather than assumed.</p>
+    <div id="reports"></div>
+  </section>
+
+  <section class="pane" id="p-sevahub">
+    <h2 class="sec">Seva Management</h2>
+    <p class="sub">Matching seekers to service, by skill and by capacity — not just a list of who volunteered once.</p>
+    <div id="sevahub"></div>
+  </section>
+
+  <section class="pane" id="p-profiles">
+    <h2 class="sec">Profiles</h2>
+    <p class="sub">Seekers who serve, shown the way Bitrix24 shows an employee — department, skills, standing. Not an HR record: nobody is paid, nobody is assigned work by right.</p>
+    <div id="profiles"></div>
+  </section>
+
+  <section class="pane" id="p-dash">
+    <h2 class="sec">Dashboard</h2>
+    <p class="sub">Everything below respects your regional access. Change role in the header and the numbers change with it.</p>
+    <div id="dash"></div>
+  </section>
+
+  <section class="pane" id="p-ops">
+    <h2 class="sec">Operations</h2>
+    <p class="sub">What the technical owner looks at each morning. Everything here is machine-generated — nobody maintains it by hand.</p>
+    <div id="ops"></div>
+  </section>
+
+  <section class="pane" id="p-about">
+    <h2 class="sec">What this prototype demonstrates</h2>
+    <p class="sub">A map from what you can click to the requirements it stands for.</p>
+    <div class="card" style="overflow:hidden"><table id="about"></table></div>
+    <div class="note" style="margin-top:16px">
+      <b>What this is not.</b> There is no database, no login and no saved data behind these screens — refreshing the page resets everything.
+      Its purpose is to settle questions of layout, wording and access rules before development begins, when changing them is still free.
+    </div>
+  </section>
+</main>
+</div>
+
+<script>
+/* ============ reference data ============ */
+const TODAY = new Date(2026,7,26);
+
+/* ============ session / auth ============
+   PROTOTYPE: the login gate stands in for the Firebase Google sign-in
+   (ssrf.org domain restriction, handled client-side by the Firebase SDK
+   in production). This still calls the real backend: POST /api/auth/session
+   does the actual invitation-only lookup (User_Profile.Seeker_Email ->
+   CSMS_ID) and returns 401 if the email has never been invited.
+
+   API_BASE: on Firebase Spark, Hosting cannot proxy /api/** to a backend
+   (that rewrite type only works for Cloud Run/Cloud Functions, which need
+   a billing-enabled project). So on Spark the front end calls the API's
+   own URL directly — fill this in once the API is deployed (Render, etc).
+   Leave it as '' for local dev, where app.js serves both from one origin. */
+const API_BASE = ''; // <- put your real Render URL here, e.g. 'https://csms-api-xxxx.onrender.com'
+let SESSION = null;
+
+async function apiFetch(path, opts={}){
+  const headers = Object.assign({'Content-Type':'application/json'}, opts.headers||{});
+  if(SESSION && SESSION.csmsId) headers['x-csms-id'] = SESSION.csmsId;
+  const res = await fetch(API_BASE + path, Object.assign({}, opts, {headers}));
+  let body = null;
+  try{ body = await res.json(); }catch(e){ /* no JSON body */ }
+  if(!res.ok){
+    const err = new Error((body && body.message) || (body && body.error) || ('Request failed: '+res.status));
+    err.status = res.status; err.body = body;
+    throw err;
+  }
+  return body;
+}
+
+async function attemptLogin(){
+  const emailEl = document.getElementById('login-email');
+  const errEl = document.getElementById('login-err');
+  errEl.classList.remove('on'); errEl.textContent = '';
+  const email = (emailEl.value||'').trim();
+  if(!email){ errEl.textContent = 'Enter your email.'; errEl.classList.add('on'); return; }
+
+  try{
+    const session = await apiFetch('/api/auth/session', {
+      method:'POST', body: JSON.stringify({email})
+    });
+    SESSION = session;
+    document.getElementById('login-gate').style.display = 'none';
+    document.getElementById('shell').style.display = '';
+    initRole();
+  }catch(err){
+    errEl.textContent = err.message || 'Could not sign in.';
+    errEl.classList.add('on');
+  }
+}
+const CONTACT_SLA_DAYS = 60; /* flat window — there is no longer a per-stage SLA, since Stage does not exist in the schema (only Seeker_Category) */
+
+const ROLES = {
+  abroad:{name:"Abroad RS — global admin", regions:null, mask:[],
+    can:"Full access to all regions and all fields.",
+    tabs:["overview","seekers","alerts","inbox","intake","journey","calendar","reports","sevahub","profiles","dash","team","ops","about"],
+    landing:"overview"},
+  rs_de:{name:"Regional RS — Germany", regions:["Germany"], mask:[],
+    can:"Germany only. All fields within that region.",
+    tabs:["overview","seekers","alerts","inbox","intake","journey","calendar","reports","sevahub","profiles","dash","team","about"],
+    landing:"overview"},
+  rs_fr:{name:"Regional RS — France", regions:["France"], mask:[],
+    can:"France only. All fields within that region.",
+    tabs:["overview","seekers","alerts","inbox","intake","journey","calendar","reports","sevahub","profiles","dash","team","about"],
+    landing:"overview"},
+  seva:{name:"Seva RS — service allocation", regions:null, mask:["whatsapp","email","dob"],
+    can:"All regions, but personal contact details and date of birth are hidden.",
+    tabs:["sevahub","seekers","profiles","about"],
+    landing:"sevahub"},
+  satsang:{name:"Satsang conductor — Germany", regions:["Germany"], mask:["dob","remedy"],
+    can:"Germany only. Attendance and notes; no remedy or date of birth.",
+    tabs:["calendar","reports","seekers","about"],
+    landing:"calendar",
+    conductorName:"Satsang conductor"}
+};
+let ROLE="abroad", FILTER="all", OPEN=null;
+
+const d = (y,m,dd)=>new Date(y,m-1,dd);
+const days = a => Math.round((TODAY-a)/864e5);
+
+/* ---- department tree: access is derived from position, not a permission list ---- */
+const DEPT = [
+  {id:1, name:"Sanatan Sanstha — global", parent:null, head:"Abroad RS", role:"abroad"},
+  {id:2, name:"Europe", parent:1, head:"Regional coordinator, Europe", role:null},
+  {id:3, name:"Germany", parent:2, head:"Hannah Vogel", role:"rs_de"},
+  {id:4, name:"Germany — Prasar", parent:3, head:"Prasar RS, Germany", role:null},
+  {id:5, name:"Germany — Satsang", parent:3, head:"Satsang conductor", role:"satsang"},
+  {id:6, name:"France", parent:2, head:"Sophie Laurent", role:"rs_fr"},
+  {id:7, name:"India", parent:1, head:"Priya Venkatesan", role:null},
+  {id:8, name:"India — Pune centre", parent:7, head:"Rajesh Nair", role:null},
+  {id:9, name:"Seva distribution — global", parent:1, head:"Seva RS", role:"seva"}
+];
+
+/* ---- internal team notes: NOT the seeker-facing interaction log ---- */
+let NOTES = [
+  {id:"n1", pid:5, by:"Regional RS — Germany", at:d(2026,8,1),
+   txt:"She asked twice about pace. I would not push her toward more satsangs yet — let her set the rhythm."},
+  {id:"n2", pid:10, by:"Satsang conductor", at:d(2026,8,6),
+   txt:"Worth pairing him with someone patient before the next group session. He responds better one to one."},
+  {id:"n3", pid:1, by:"Prasar RS", at:d(2026,8,10),
+   txt:"Good potential. Translation skills could help the German material if she stays engaged."}
+];
+
+/* ---- tasks: an alert says something is wrong, a task says who agreed to fix it ---- */
+let TASKS = [
+  {id:"t1", pid:8, title:"Try Lucas once more, then decide", who:"Regional RS — France",
+   due:d(2026,9,12), done:false, from:"Contact overdue — 291 days"},
+  {id:"t2", pid:5, title:"Gentle follow-up after her note about work stress", who:"Regional RS — France",
+   due:d(2026,9,9), done:false, from:"Sensitivity flag"},
+  {id:"t3", pid:7, title:"First call — she has only had the automatic acknowledgement",
+   who:"Prasar RS", due:d(2026,9,10), done:false, from:"Contact overdue — 67 days"},
+  {id:"t4", pid:1, title:"Send the retreat dates she asked about", who:"Prasar RS",
+   due:d(2026,9,3), done:true, from:"Manual"}
+];
+
+/* ---- events and channels that bring people in ---- */
+const EVENTS = [
+  {id:"e1", name:"Public talk, Hamburg",        kind:"Public talk", region:"Germany", on:d(2026,7,12)},
+  {id:"e2", name:"Public talk, Lyon",           kind:"Public talk", region:"France",  on:d(2026,6,11)},
+  {id:"e3", name:"Global Weekly Meditation",    kind:"Online",      region:"Abroad",  on:d(2026,8,2)},
+  {id:"e4", name:"Pune centre open day",        kind:"Open day",    region:"India",   on:d(2026,7,19)},
+  {id:"e5", name:"Instagram campaign — August", kind:"Online",      region:"Abroad",  on:d(2026,8,1)}
+];
+const evName = id => {
+  if(id && String(id).startsWith("donation:")) return "Donation — " + id.slice(9);
+  return (EVENTS.find(e=>e.id===id)||{}).name || "Not recorded";
+};
+
+/* ---- category moves, so the activity feed can show who reassigned whom ---- */
+let MOVES = [];
+
+/* ---- the milestone track: WHAT PATH someone walked, separate from category ----
+   Category says what kind of relationship this is. This says what she actually did, in order. */
+let MILESTONES = [
+  {id:"ms1", pid:1, kind:"Event",              label:"Attended public talk, Hamburg", at:d(2026,7,18), by:"Prasar RS"},
+  {id:"ms2", pid:1, kind:"Foundation satsang",  label:"First foundation satsang",       at:d(2026,8,2),  by:"Satsang conductor"},
+  {id:"ms3", pid:1, kind:"One-on-one",          label:"One-on-one spiritual discussion",at:d(2026,8,9),  by:"Regional RS — Germany"},
+  {id:"ms5", pid:9, kind:"Event",               label:"Attended weekend retreat",       at:d(2026,7,19), by:"MAV team"},
+  {id:"ms6", pid:9, kind:"Foundation satsang",  label:"First foundation satsang",       at:d(2026,7,25), by:"Satsang conductor"},
+  {id:"ms7", pid:9, kind:"Advanced satsang",    label:"Moved to advanced bhav satsang", at:d(2026,8,8),  by:"Satsang conductor"},
+  {id:"ms8", pid:9, kind:"Seva",                label:"Began drafting outreach material",at:d(2026,8,21),by:"Seva RS"}
+];
+const MK_ORDER = ["Event","Foundation satsang","One-on-one","Advanced satsang","Seva"];
+
+/* ---- donations: another entry channel, same attribution question ---- */
+let DONATIONS = [
+  {id:"dn1", pid:4, amount:50,  currency:"EUR", at:d(2024,8,1),  campaign:"Year-end appeal"},
+  {id:"dn2", pid:11,amount:120, currency:"EUR", at:d(2026,3,14), campaign:"Retreat fundraiser"},
+  {id:"dn3", pid:6, amount:2000,currency:"INR", at:d(2025,6,2),  campaign:"Pune centre open day"}
+];
+
+/* ---- calendar: a view over SCS events, not a second store ---- */
+let CAL = [
+  {id:"c1", title:"Foundation satsang — Germany", kind:"Satsang", region:"Germany", at:d(2026,9,9), time:"19:00", conductor:"Satsang conductor"},
+  {id:"c2", title:"Bhav satsang — France",         kind:"Satsang", region:"France",  at:d(2026,9,10),time:"18:30", conductor:"Sophie Laurent"},
+  {id:"c3", title:"Advanced bhav satsang — Germany",kind:"Satsang",region:"Germany", at:d(2026,9,12),time:"19:00", conductor:"Hannah Vogel"},
+  {id:"c4", title:"Weekend retreat — Pune",         kind:"Retreat",region:"India",   at:d(2026,9,13),time:"All day", conductor:"MAV team"},
+  {id:"c5", title:"Global Weekly Meditation",       kind:"Online", region:"Abroad",  at:d(2026,9,14),time:"17:00", conductor:"MAV team"},
+  {id:"c6", title:"Foundation satsang — France",    kind:"Satsang", region:"France", at:d(2026,9,16),time:"18:30", conductor:"Sophie Laurent"},
+
+  /* -- already held, used to demonstrate reporting -- */
+  {id:"c7", title:"Foundation satsang — Germany",   kind:"Satsang", region:"Germany", at:d(2026,8,17),time:"19:00", conductor:"Satsang conductor"},
+  {id:"c8", title:"Foundation satsang — France",    kind:"Satsang", region:"France",  at:d(2026,8,22),time:"18:30", conductor:"Sophie Laurent"},
+  {id:"c9", title:"Advanced bhav satsang — Germany",kind:"Satsang", region:"Germany", at:d(2026,8,24),time:"19:00", conductor:"Hannah Vogel"},
+  {id:"c10",title:"Bhav satsang — France",          kind:"Satsang", region:"France",  at:d(2026,8,19),time:"18:30", conductor:"Sophie Laurent"}
+];
+
+/* ---- satsang reporting: a report is OWED once the satsang has happened ----
+   Only Satsang-kind events carry this obligation — retreats and the online
+   weekly meditation are run by different roles and are out of this scope. */
+const REPORT_SLA_DAYS = 3;
+let REPORT_OPEN = null;
+let SUBMITTED_REPORTS = [
+  {id:"r1", calId:"c7", submittedAt:d(2026,8,18), submittedBy:"Satsang conductor",
+   entries:[
+     {pid:1,  attended:true,  note:"Engaged well, asked good questions about daily practice.", readyNext:false},
+     {pid:13, attended:true,  note:"Conducted the second half.", readyNext:false},
+     {pid:10, attended:false, note:"Registered but did not attend.", readyNext:false}
+   ]}
+];
+function satsangLevel(title){
+  if(/foundation/i.test(title)) return "Initial bhav";
+  if(/advanced/i.test(title))   return "Advanced bhav";
+  return "Bhav satsang";
+}
+
+/* ---- unified inbox: the Open Channels pattern, EU-legal channels only ---- */
+let INBOX = [
+  {id:"m1", pid:1, ch:"email", from:"a.brenner@example.de", at:"7 Sep, 08:12", unread:true,
+   txt:"Thank you for the reading material. Are there retreats in the south of Germany this year?"},
+  {id:"m2", pid:5, ch:"sms", from:"+33 7 88 30 12 09", at:"6 Sep, 21:40", unread:true,
+   txt:"Merci pour l'appel. Je vais essayer de garder la pratique quotidienne."},
+  {id:"m3", pid:12, ch:"email", from:"arun.k@example.in", at:"6 Sep, 14:02", unread:true,
+   txt:"Is there a satsang I can join online from Bengaluru?"},
+  {id:"m4", pid:4, ch:"email", from:"t.keller@example.de", at:"4 Sep, 09:30", unread:false,
+   txt:"Happy to look over the lease again if it is useful.", replied:"Regional RS — Germany"}
+];
+
+
+/* ============ seekers ============ */
+let SEEKERS=[
+ {id:1,src:"e1",name:"Anja Brenner",region:"Germany",country:"Germany",category:"Curious",gender:"F",
+  whatsapp:"+49 151 4408 2213",email:"a.brenner@example.de",dob:"14 Mar 1991",remedy:"2 hrs/day chanting",
+  potential:"Good potential",skills:["Translation (DE/EN)","Graphic design"],avail:"Weekends",sevaHrs:0,
+  notes:"Came through the German prasar form. Asked thoughtful questions about the purpose of chanting.",
+  inter:[{dt:d(2026,7,18),type:"Call",by:"Prasar RS",txt:"First call after form submission. Curious about daily practice."},
+         {dt:d(2026,8,2),type:"Satsang",by:"Satsang conductor",txt:"Attended initial bhav satsang online.",sat:"Initial bhav"},
+         {dt:d(2026,8,9),type:"WhatsApp",by:"Prasar RS",txt:"Sent reading material. Replied warmly, asked about retreats."}]},
+
+ {id:2,src:"e2",name:"Mathieu Rousseau",region:"France",country:"France",category:"Curious",gender:"M",
+  whatsapp:"+33 6 72 19 04 55",email:"m.rousseau@example.fr",dob:"2 Sep 1978",remedy:"Not yet prescribed",
+  potential:"Regular",skills:["Carpentry"],avail:"Evenings",sevaHrs:0,
+  notes:"Attended one online discussion. Quiet but returned twice.",
+  inter:[{dt:d(2026,6,11),type:"Face to face",by:"Prasar RS",txt:"Met at Lyon public talk. Took literature."},
+         {dt:d(2026,6,28),type:"Call",by:"Prasar RS",txt:"Follow-up call. Interested but hesitant about time commitment."}]},
+
+ {id:3,src:"e4",name:"Priya Venkatesan",region:"India",country:"India",category:"Partner",gender:"F",
+  whatsapp:"+91 98220 44117",email:"priya.v@example.in",dob:"7 Jan 1985",remedy:"3 hrs/day + weekly healing",
+  potential:"Good potential",skills:["Accounting","Event coordination","Hindi/Marathi"],avail:"Full time",sevaHrs:64,
+  notes:"Coordinates the Pune centre. Highly dependable, mentors newer seekers.",
+  inter:[{dt:d(2026,8,20),type:"Seva",by:"Seva RS",txt:"Led retreat logistics for 80 attendees.",hrs:22},
+         {dt:d(2026,8,14),type:"Satsang",by:"Satsang conductor",txt:"Conducted advanced bhav satsang.",sat:"Advanced bhav"},
+         {dt:d(2026,8,3),type:"Retreat",by:"MAV team",txt:"Attended three-day retreat as coordinator."},
+         {dt:d(2026,7,21),type:"Call",by:"Regional RS",txt:"Monthly review. Discussed expanding weekend satsangs."}]},
+
+ {id:4,src:"e1",name:"Thomas Keller",region:"Germany",country:"Germany",category:"Well-wisher",gender:"M",
+  whatsapp:"+49 170 2288 401",email:"t.keller@example.de",dob:"23 Nov 1966",remedy:"1 hr/day chanting",
+  potential:"Regular",skills:["Legal advisory","Photography"],avail:"Occasional",sevaHrs:12,
+  notes:"Long association, attends irregularly. Offers legal help when asked.",
+  inter:[{dt:d(2026,4,2),type:"Email",by:"Regional RS",txt:"Sent quarterly newsletter. Brief acknowledgement."},
+         {dt:d(2026,2,17),type:"Seva",by:"Seva RS",txt:"Reviewed centre lease agreement.",hrs:6}]},
+
+ {id:5,src:"e2",name:"Claire Dubois",region:"France",country:"France",category:"Curious",gender:"F",
+  whatsapp:"+33 7 88 30 12 09",email:"c.dubois@example.fr",dob:"9 Jun 1994",remedy:"1 hr/day chanting",
+  potential:"Good potential",skills:["Web development","French/English"],avail:"Weekends",sevaHrs:4,
+  notes:"Strong technical background. Enthusiastic but new — pace carefully.",
+  inter:[{dt:d(2026,8,12),type:"Satsang",by:"Satsang conductor",txt:"Second bhav satsang attendance.",sat:"Initial bhav"},
+         {dt:d(2026,7,30),type:"Call",by:"Regional RS",txt:"Discussed spiritual practice. Wants more structure.",
+          flag:"Mentioned significant stress at work and difficulty maintaining daily practice. Suggest gentle follow-up."},
+         {dt:d(2026,7,4),type:"Seva",by:"Seva RS",txt:"Helped update regional web page.",hrs:4}]},
+
+ {id:6,src:"e4",name:"Rajesh Nair",region:"India",country:"India",category:"Partner",gender:"M",
+  whatsapp:"+91 99870 21556",email:"r.nair@example.in",dob:"30 Apr 1980",remedy:"2 hrs/day + fortnightly healing",
+  potential:"Good potential",skills:["Civil engineering","Logistics"],avail:"Weekends",sevaHrs:38,
+  notes:"Reliable for infrastructure seva. Quiet, prefers practical tasks.",
+  inter:[{dt:d(2026,8,17),type:"Seva",by:"Seva RS",txt:"Supervised centre repair work.",hrs:14},
+         {dt:d(2026,7,26),type:"Satsang",by:"Satsang conductor",txt:"Regular satsang attendance.",sat:"Bhav satsang"}]},
+
+ {id:7,src:"e5",name:"Ingrid Sandberg",region:"Germany",country:"Germany",category:"Curious",gender:"F",
+  whatsapp:"+49 152 9911 730",email:"i.sandberg@example.de",dob:"18 Aug 1999",remedy:"Not yet prescribed",
+  potential:"Regular",skills:["Nursing"],avail:"Irregular shifts",sevaHrs:0,
+  notes:"Signed up through the 'Meet our Saints' form. No contact yet beyond the acknowledgement.",
+  inter:[{dt:d(2026,6,20),type:"Email",by:"Prasar RS",txt:"Automatic acknowledgement of form submission."}]},
+
+ {id:8,src:"e2",name:"Lucas Moreau",region:"France",country:"France",category:"Curious",gender:"M",
+  whatsapp:"+33 6 14 55 78 21",email:"l.moreau@example.fr",dob:"11 Feb 1972",remedy:"Lapsed",
+  potential:"Regular",skills:["Accounting"],avail:"Unknown",sevaHrs:2,
+  notes:"Was regular until 2024, then contact tapered. Reason unclear.",
+  inter:[{dt:d(2025,11,8),type:"Call",by:"Regional RS",txt:"Left voicemail, no reply."},
+         {dt:d(2025,9,14),type:"Satsang",by:"Satsang conductor",txt:"Last recorded attendance.",sat:"Bhav satsang"}]},
+
+ {id:9,src:"e3",name:"Meera Deshpande",region:"India",country:"India",category:"Curious",gender:"F",
+  whatsapp:"+91 90280 33641",email:"meera.d@example.in",dob:"5 Dec 1996",remedy:"2 hrs/day chanting",
+  potential:"Good potential",skills:["Teaching","Content writing","Marathi/Hindi/English"],avail:"Evenings",sevaHrs:26,
+  notes:"Writes well. Good candidate for prasar material in regional languages.",
+  inter:[{dt:d(2026,8,21),type:"Seva",by:"Seva RS",txt:"Drafted Marathi outreach material.",hrs:9},
+         {dt:d(2026,8,8),type:"Satsang",by:"Satsang conductor",txt:"Attended bhav satsang.",sat:"Bhav satsang"},
+         {dt:d(2026,7,19),type:"Retreat",by:"MAV team",txt:"Weekend retreat participant."}]},
+
+ {id:10,src:"e5",name:"Stefan Wolff",region:"Germany",country:"Germany",category:"Curious",gender:"M",
+  whatsapp:"+49 176 4402 118",email:"s.wolff@example.de",dob:"27 Jul 1988",remedy:"1 hr/day chanting",
+  potential:"Regular",skills:["Video editing"],avail:"Weekends",sevaHrs:6,
+  notes:"Engaged but frequently challenges guidance in group settings. Handle with patience.",
+  inter:[{dt:d(2026,8,5),type:"Satsang",by:"Satsang conductor",txt:"Attended. Raised objections during discussion.",
+          flag:"Repeatedly questioned the conductor in front of newer seekers. Regional RS may wish to speak with him privately."},
+         {dt:d(2026,7,12),type:"Seva",by:"Seva RS",txt:"Edited satsang recording.",hrs:6}]},
+
+ {id:11,src:"e2",name:"Sophie Laurent",region:"France",country:"France",category:"Well-wisher",gender:"F",
+  whatsapp:"+33 6 90 22 47 33",email:"s.laurent@example.fr",dob:"3 May 1983",remedy:"2 hrs/day chanting",
+  potential:"Good potential",skills:["Translation (FR/EN)","Hospitality"],avail:"Weekends",sevaHrs:19,
+  notes:"Hosts the Paris satsang at her home. Warm and welcoming to newcomers.",
+  inter:[{dt:d(2026,8,16),type:"Satsang",by:"Satsang conductor",txt:"Hosted regional satsang, 14 attendees.",sat:"Bhav satsang"},
+         {dt:d(2026,8,1),type:"Seva",by:"Seva RS",txt:"Translated retreat handbook into French.",hrs:11}]},
+
+ {id:12,src:"e3",name:"Arun Krishnan",region:"India",country:"India",category:"Curious",gender:"M",
+  whatsapp:"+91 98450 77012",email:"arun.k@example.in",dob:"22 Oct 2001",remedy:"Not yet prescribed",
+  potential:"Regular",skills:["Software testing"],avail:"Evenings",sevaHrs:0,
+  notes:"Student. Found the organisation through a friend.",
+  inter:[{dt:d(2026,8,10),type:"Call",by:"Prasar RS",txt:"Introductory call. Curious, asked many questions."}]},
+
+ {id:13,src:"e1",name:"Hannah Vogel",region:"Germany",country:"Germany",category:"Partner",gender:"F",
+  whatsapp:"+49 160 3377 285",email:"h.vogel@example.de",dob:"16 Feb 1974",remedy:"3 hrs/day + weekly healing",
+  potential:"Good potential",skills:["Counselling","German/English","Event coordination"],avail:"Full time",sevaHrs:71,
+  notes:"Anchors the German region. First point of contact for distressed seekers.",
+  inter:[{dt:d(2026,8,22),type:"Call",by:"Regional RS",txt:"Weekly coordination call."},
+         {dt:d(2026,8,19),type:"Satsang",by:"Satsang conductor",txt:"Conducted advanced bhav satsang.",sat:"Advanced bhav"},
+         {dt:d(2026,8,6),type:"Seva",by:"Seva RS",txt:"Supported two seekers through personal difficulty.",hrs:16}]},
+
+ {id:14,src:"e2",name:"Élodie Bernard",region:"France",country:"France",category:"Curious",gender:"F",
+  whatsapp:"+33 7 45 66 90 18",email:"e.bernard@example.fr",dob:"29 Jan 1990",remedy:"1 hr/day chanting",
+  potential:"Regular",skills:["Photography","Social media"],avail:"Weekends",sevaHrs:8,
+  notes:"Came through the French prasar form in spring. Steady, unhurried progress.",
+  inter:[{dt:d(2026,6,30),type:"Satsang",by:"Satsang conductor",txt:"Attended initial bhav satsang.",sat:"Initial bhav"},
+         {dt:d(2026,6,14),type:"Seva",by:"Seva RS",txt:"Photographed regional gathering.",hrs:8}]}
+];
+
+/* ============ intake queue ============ */
+let INTAKE=[
+ {id:"s1",form:"German prasar form",when:"25 Aug 2026, 19:42",name:"Anja Brenner",whatsapp:"+49 151 4408 2213",
+  email:"anja.brenner91@example.de",country:"Germany",msg:"I attended the talk in Hamburg and would like to know about retreats.",
+  score:96,why:["WhatsApp number matches Anja Brenner exactly","Name matches exactly","Email differs from the one on record"],match:1,status:"pending"},
+
+ {id:"s2",form:"1on1 spiritual discussion",when:"25 Aug 2026, 08:15",name:"Karin Weiss",whatsapp:"+49 157 2266 049",
+  email:"k.weiss@example.de",country:"Germany",msg:"Interested in an online discussion. Available weekday evenings.",
+  score:0,why:["No matching WhatsApp number","No matching email","No similar name in this region"],match:null,status:"pending"},
+
+ {id:"s3",form:"Optin — let's keep in touch",when:"24 Aug 2026, 21:07",name:"M. Rousseau",whatsapp:"+33 6 72 19 04 55",
+  email:"mathieu.r@example.fr",country:"France",msg:"Please add me to the mailing list.",
+  score:88,why:["WhatsApp number matches Mathieu Rousseau exactly","Name is a partial match — initial only","Email differs from the one on record"],match:2,status:"pending"},
+
+ {id:"s4",form:"Meet our Saints",when:"24 Aug 2026, 13:30",name:"Ananya Krishnan",whatsapp:"+91 98450 77012",
+  email:"ananya.k@example.in",country:"India",msg:"My brother told me about this. I would like to attend.",
+  score:52,why:["WhatsApp number matches Arun Krishnan — possibly a shared family number","Surname matches; given name differs","Email differs"],match:12,status:"pending"}
+];
+
+/* ============ derived helpers ============ */
+const R = ()=>ROLES[ROLE];
+/* seekers a given conductor has actually touched — derived from the record,
+   not a separate list to keep in step */
+function conductorSeekers(name){
+  const ids = new Set();
+  SEEKERS.forEach(p=>{ if(p.inter.some(i=>i.by===name)) ids.add(p.id); });
+  MILESTONES.forEach(m=>{ if(m.by===name) ids.add(m.pid); });
+  SUBMITTED_REPORTS.forEach(r=>{ if(r.submittedBy===name)
+    r.entries.forEach(e=>{ if(e.attended) ids.add(e.pid); }); });
+  return SEEKERS.filter(p=>ids.has(p.id));
+}
+const visible = ()=>{
+  const base = R().regions ? SEEKERS.filter(s=>R().regions.includes(s.region)) : SEEKERS.slice();
+  if(R().conductorName){
+    const mine = new Set(conductorSeekers(R().conductorName).map(p=>p.id));
+    return base.filter(s=>mine.has(s.id));
+  }
+  return base;
+};
+const hiddenCount = ()=> SEEKERS.length - visible().length;
+const isMasked = f => R().mask.includes(f);
+const mv = (f,val)=> isMasked(f) ? '<span class="masked">restricted</span>' : val;
+
+function last(s){ return s.inter.length ? new Date(Math.max(...s.inter.map(i=>+i.dt))) : d(2020,1,1); }
+function since(s){ return days(last(s)); }
+function overdue(s){ return since(s) > CONTACT_SLA_DAYS; }
+function counts(s){
+  const c={satsang:0,event:0,retreat:0,call:0,seva:0};
+  s.inter.forEach(i=>{
+    if(i.type==="Satsang")c.satsang++;
+    else if(i.type==="Retreat"){c.retreat++;c.event++;}
+    else if(i.type==="Call")c.call++;
+    else if(i.type==="Seva")c.seva+=(i.hrs||0);
+  });
+  return c;
+}
+function categoryTag(cat){
+  const k = cat==="Partner"?"t-core":cat==="Well-wisher"?"t-active":"t-new";
+  return `<span class="tag ${k}">${esc(cat)}</span>`;
+}
+const esc = s => String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+function setPip(id,n){const e=document.getElementById(id); if(!e) return; e.textContent=n?n:''; e.style.display=n?'':'none';}
+const fmt = dt => dt.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+
+/* ============ role + nav ============ */
+function initRole(){
+  document.getElementById('role').innerHTML =
+    Object.entries(ROLES).map(([k,v])=>`<option value="${k}">${v.name}</option>`).join('');
+  setRole('abroad');
+}
+function setRole(r){
+  ROLE=r; OPEN=null; REPORT_OPEN=null;
+  document.getElementById('scope').textContent = R().regions ? R().regions.join(', ')+' only' : 'All regions';
+  applyRoleNav();
+  tab(R().landing);
+  render();
+}
+function applyRoleNav(){
+  const allowed = new Set(R().tabs);
+  document.querySelectorAll('nav button[data-p]').forEach(b=>{
+    b.style.display = allowed.has(b.dataset.p) ? '' : 'none';
+  });
+}
+function tab(p){
+  document.querySelectorAll('.pane').forEach(x=>x.classList.remove('on'));
+  document.getElementById('p-'+p).classList.add('on');
+  document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.p===p));
+}
+function filt(f){
+  FILTER=f;
+  document.querySelectorAll('.chip').forEach(c=>c.classList.toggle('on',c.dataset.f===f));
+  render();
+}
+function toast(m){
+  const t=document.createElement('div'); t.className='toast'; t.textContent=m;
+  document.getElementById('shell').appendChild(t);
+  setTimeout(()=>t.remove(),2600);
+}
+
+/* ============ list ============ */
+/* ============ query interpreter ============
+   Deliberately NOT an AI call — a rule-based parser matched against
+   vocabulary already in the system (regions, categories, skills,
+   satsang levels). Same reasoning as the hand-rolled charts: no external
+   dependency, and what it understood is shown back rather than hidden. */
+function allSkillsCRM(){ const s=new Set(); SEEKERS.forEach(p=>p.skills.forEach(k=>s.add(k))); return [...s]; }
+function allCategoriesCRM(){ const s=new Set(); SEEKERS.forEach(p=>s.add(p.category)); return [...s]; }
+
+function parseQuery(raw){
+  const q = (raw||'').toLowerCase().trim();
+  const chips = []; const tests = []; let consumed = q;
+
+  const consume = (re) => {
+    const g = new RegExp(re.source, re.flags.includes('g') ? re.flags : re.flags+'g');
+    consumed = consumed.replace(g,' ');
+  };
+
+  // Every matcher below tests against `consumed`, not the original text, and
+  // immediately consumes what it matches. This makes the parser sequential:
+  // once a word is claimed by region/category, a later matcher (skills,
+  // in particular) cannot accidentally re-match a fragment of it — which is
+  // exactly how "germany" was once wrongly re-caught by the skill "German/English".
+
+  // region / country
+  const REGION_PATTERNS = [
+    {re:/\bindian?\b/, region:"India"},
+    {re:/\bgermans?\b|\bgermany\b/, region:"Germany"},
+    {re:/\bfrench\b|\bfrance\b/, region:"France"}
+  ];
+  for(const {re,region} of REGION_PATTERNS){
+    if(re.test(consumed)){ chips.push({k:"Region",v:region}); tests.push(p=>p.region===region); consume(re); break; }
+  }
+
+  // category — dynamic, from the data itself (Seeker_Category is the only
+  // real classification field in the schema; Stage and Segment were removed
+  // as they have no backing table/column).
+  const cats = allCategoriesCRM().filter(s=>s.toLowerCase()!=='curious').sort((a,b)=>b.length-a.length);
+  for(const cat of cats){
+    const escaped = cat.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g,'\\$&').replace(/-/g,'[- ]');
+    const re = new RegExp('\\b'+escaped+'\\b');
+    if(re.test(consumed)){ chips.push({k:"Category",v:cat}); tests.push(p=>p.category===cat); consume(re); break; }
+  }
+  if(!chips.some(c=>c.k==="Category") && /\bcurious\b/.test(consumed)){
+    chips.push({k:"Category",v:"Curious"});
+    tests.push(p=>p.category.toLowerCase().includes('curious'));
+    consume(/\bcurious\b/);
+  }
+
+  // satsang level attended
+  const SAT_PATTERNS = [
+    {re:/\bfoundation\b|\binitial bhav\b/, level:"Initial bhav"},
+    {re:/\badvanced( bhav)?\b/, level:"Advanced bhav"},
+    {re:/\bbhav satsang\b/, level:"Bhav satsang"}
+  ];
+  for(const sp of SAT_PATTERNS){
+    if(sp.re.test(consumed)){
+      chips.push({k:"Attended",v:sp.level});
+      tests.push(p=>p.inter.some(i=>i.type==='Satsang' && i.sat===sp.level));
+      consume(sp.re); break;
+    }
+  }
+
+  // skills — dynamic, matched on every significant word of each skill so a
+  // two-word skill (Legal advisory, Event coordination) is fully consumed
+  // rather than leaving its second word stranded as an impossible fallback.
+  // All skills are matched against the SAME snapshot of `consumed` before any
+  // of them are stripped — otherwise two skills sharing a stem (Translation
+  // (DE/EN) and Translation (FR/EN) both start with "translation") would
+  // starve each other: the first match would remove the word before the
+  // second skill got its turn to test the same still-present text.
+  const skills = allSkillsCRM();
+  const hitSkills = [];
+  const skillWordsToConsume = new Set();
+  skills.forEach(sk=>{
+    const words = sk.toLowerCase().replace(/[()/]/g,' ').split(/\s+/).filter(w=>w.length>=4);
+    let hit = false;
+    words.forEach(w=>{
+      const re = new RegExp('\\b'+w+'\\w*\\b');
+      if(re.test(consumed)){ hit = true; skillWordsToConsume.add(w); }
+    });
+    if(hit) hitSkills.push(sk);
+  });
+  skillWordsToConsume.forEach(w => consume(new RegExp('\\b'+w+'\\w*\\b')));
+  if(hitSkills.length){
+    chips.push({k:"Skill", v:hitSkills.join(" or ")});
+    tests.push(p=>hitSkills.some(sk=>p.skills.includes(sk)));
+  }
+
+  // overdue contact
+  if(/\boverdue\b|\bdue for contact\b/.test(consumed)){
+    chips.push({k:"Status",v:"Contact overdue"});
+    tests.push(p=>overdue(p));
+    consume(/\boverdue\b|\bdue for contact\b/);
+  }
+
+  // good potential
+  if(/\bgood potential\b/.test(consumed)){
+    chips.push({k:"Potential",v:"Good potential"});
+    tests.push(p=>p.potential==='Good potential');
+    consume(/\bgood potential\b/);
+  }
+
+  // whatever is left over is a plain-text fallback across name, notes, WhatsApp
+  const STOPWORDS = /\b(with|who|in|the|and|has|attended|a|an|of|for|is|are|seekers?|skills?|satsangs?|people|person|records?|profiles?|show|find|search|list|me|whose)\b/g;
+  const leftover = consumed.replace(STOPWORDS,' ').replace(/\s+/g,' ').trim();
+  if(leftover.length>=2){
+    chips.push({k:"Also matching", v:'\u201c'+leftover+'\u201d'});
+    tests.push(p=>(p.name+' '+p.notes+' '+p.whatsapp).toLowerCase().includes(leftover));
+  }
+
+  return { chips, test: p => tests.every(t=>t(p)), hasAny: chips.length>0 };
+}
+
+const QUERY_EXAMPLES = [
+  "curious in India","well-wisher with translation skills","overdue in Germany",
+  "attended foundation satsang","good potential in France","partner seekers"
+];
+function useExample(t){ document.getElementById('q').value=t; render(); }
+function queryEnter(){
+  const list = rows();
+  if(list.length===1) open_(list[0].id);
+}
+
+function rows(){
+  const raw = document.getElementById('q').value||'';
+  const parsed = parseQuery(raw);
+  return visible().filter(s=>{
+    if(FILTER==='overdue'){ if(!overdue(s)) return false; }
+    else if(FILTER!=='all'){ if(s.category!==FILTER) return false; }
+    if(!parsed.hasAny) return true;
+    return parsed.test(s);
+  }).sort((a,b)=>since(b)-since(a));
+}
+function renderQueryUI(){
+  const ex = document.getElementById('qexamples');
+  if(ex && !ex.dataset.built){
+    ex.innerHTML = QUERY_EXAMPLES.map(t=>`<button class="chip" style="font-size:11.5px;padding:4px 11px"
+      onclick="useExample('${t.replace(/'/g,"\\'")}')">${esc(t)}</button>`).join('');
+    ex.dataset.built = "1";
+  }
+  const raw = (document.getElementById('q')||{}).value || '';
+  const chipsEl = document.getElementById('qchips');
+  if(!chipsEl) return;
+  if(!raw.trim()){ chipsEl.innerHTML=''; return; }
+  const parsed = parseQuery(raw);
+  const n = rows().length;
+  chipsEl.innerHTML = `
+    <div class="pill-row" style="margin-bottom:6px">
+      ${parsed.chips.map(c=>`<span class="tag t-core">${esc(c.k)}: ${esc(c.v)}</span>`).join('')
+        || '<span class="tag t-warn">Not understood as a filter — searching as plain text</span>'}
+    </div>
+    <div class="sub2">${n} match${n===1?'':'es'}${n===1?' — press Enter to open the record':''}
+      · this searches within what your role can already see, the same as everywhere else in the system</div>`;
+}
+
+function render(){
+  renderOverview();
+  renderQueryUI();
+  const list=rows();
+  document.getElementById('cnt').textContent = `${list.length} of ${visible().length} shown`;
+
+  const catchipsEl = document.getElementById('catchips');
+  if(catchipsEl && !catchipsEl.dataset.built){
+    catchipsEl.innerHTML = allCategoriesCRM().map(c=>
+      `<button class="chip" data-f="${esc(c)}" onclick="filt('${c.replace(/'/g,"\\'")}')">${esc(c)}</button>`).join('');
+    catchipsEl.dataset.built = "1";
+  }
+
+  document.getElementById('tbl').innerHTML = `
+    <thead><tr>
+      <th>Seeker</th><th>Category</th>
+      <th class="hide-sm">WhatsApp</th><th>Last contact</th><th class="hide-sm">Seva hrs</th>
+    </tr></thead>
+    <tbody>${
+      list.length ? list.map(s=>{
+        const n=since(s), od=overdue(s);
+        return `<tr onclick="open_(${s.id})">
+          <td><div class="nm serif">${esc(s.name)}</div><div class="sub2">${s.region} · ${s.potential}</div></td>
+          <td>${categoryTag(s.category)}</td>
+          <td class="hide-sm">${mv('whatsapp',esc(s.whatsapp))}</td>
+          <td>${od?`<span class="tag t-warn">${n} days</span>`:`<span style="color:var(--ink-2)">${n} days</span>`}
+              <div class="sub2">${fmt(last(s))}</div></td>
+          <td class="hide-sm">${s.sevaHrs}</td>
+        </tr>`;
+      }).join('') : `<tr><td colspan="5" style="padding:34px;text-align:center;color:var(--ink-3)">
+          No seekers match these filters. Try clearing the search or choosing “All”.</td></tr>`
+    }</tbody>`;
+
+  const h=hiddenCount();
+  const xborder = ROLE==='abroad'
+    ? `<div class="hidden-note" style="background:var(--rose-wash);border-color:#EBCBCE;color:var(--rose)">
+       <b>Open question — cross-border access.</b> This role reaches records in every region.
+       If the person holding it sits outside the EU, that is a transfer of special-category data out of Europe,
+       and hosting in Germany does not resolve it. Tracked as ADR-0011.</div>` : '';
+  document.getElementById('hidnote').innerHTML = xborder + (h
+    ? `<div class="hidden-note"><b>${h} seeker records are outside your region</b> and are not shown.
+       They are not merely hidden on screen — the database refuses to return them for this role.</div>` : '');
+
+  renderAlerts(); renderIntake(); renderDash(); renderOps(); renderAbout();
+  renderInbox(); renderTeam(); renderJourney(); renderCalendar(); renderProfiles(); renderReports(); renderSevahub();
+  if(OPEN) drawer(OPEN);
+}
+
+/* ============ drawer ============ */
+function open_(id){ OPEN=id; drawer(id); }
+function close_(){ OPEN=null; const e=document.getElementById('scrim'); if(e) e.remove(); }
+
+function drawer(id){
+  const s=SEEKERS.find(x=>x.id===id); if(!s) return;
+  const old=document.getElementById('scrim'); if(old) old.remove();
+  const c=counts(s), n=since(s), od=overdue(s);
+
+  const el=document.createElement('div');
+  el.className='scrim'; el.id='scrim';
+  el.onclick=e=>{ if(e.target===el) close_(); };
+  el.innerHTML=`<div class="drawer">
+    <div class="dhead">
+      <button class="dclose" onclick="close_()" aria-label="Close">×</button>
+      <div class="nm serif" style="font-size:22px">${esc(s.name)}</div>
+      <div class="sub2" style="margin-top:4px">${categoryTag(s.category)} &nbsp;·&nbsp; ${s.region}</div>
+    </div>
+    <div class="dbody">
+
+      ${od?`<div class="hidden-note" style="margin-top:0;margin-bottom:14px">
+        <b>Contact overdue.</b> ${n} days since last contact — the window is ${CONTACT_SLA_DAYS} days.</div>`:''}
+
+      <div class="metrics">
+        <div class="metric"><div class="n">${c.satsang}</div><div class="l">Satsangs</div><div class="src">calculated</div></div>
+        <div class="metric"><div class="n">${c.retreat}</div><div class="l">Retreats</div><div class="src">calculated</div></div>
+        <div class="metric"><div class="n">${c.call}</div><div class="l">Calls</div><div class="src">calculated</div></div>
+        <div class="metric"><div class="n">${s.sevaHrs}</div><div class="l">Seva hours</div><div class="src">calculated</div></div>
+      </div>
+      <div class="note" style="margin-top:0">
+        <b>None of these four numbers can be typed in.</b> Each is counted from the timeline below, so two teams can never hold different figures for the same seeker.
+      </div>
+
+      <div class="card pad" style="margin-top:14px">
+        <h2 class="sec">Details</h2>
+        <dl class="kv">
+          <dt>WhatsApp</dt><dd>${mv('whatsapp',esc(s.whatsapp))}</dd>
+          <dt>Email</dt><dd>${mv('email',esc(s.email))}</dd>
+          <dt>Date of birth</dt><dd>${mv('dob',esc(s.dob))}</dd>
+          <dt>Country</dt><dd>${esc(s.country)}</dd>
+          <dt>First came from</dt><dd>${esc(evName(s.src))}</dd>
+          ${(()=>{ const dn = DONATIONS.filter(x=>x.pid===s.id);
+            return dn.length ? `<dt>Donation history</dt><dd>${dn.map(x=>
+              `${x.amount} ${x.currency} — ${esc(x.campaign)} (${fmt(x.at)})`).join('<br>')}</dd>` : '';
+          })()}
+          <dt>Prescribed remedy</dt><dd>${mv('remedy',esc(s.remedy))}<span class="a9">Article 9</span></dd>
+          <dt>Potential</dt><dd>${esc(s.potential)}<span class="a9">Article 9</span></dd>
+          <dt>Skills</dt><dd>${s.skills.map(k=>`<span class="tag t-semi" style="margin:0 3px 3px 0;display:inline-block">${esc(k)}</span>`).join('')}</dd>
+          <dt>Availability</dt><dd>${esc(s.avail)}</dd>
+        </dl>
+        <div class="hidden-note" style="background:var(--rose-wash);border-color:#EBCBCE;color:var(--rose)">
+          <b>Fields marked Article 9 reveal spiritual belief and are special-category data.</b>
+          The category shown above carries the same status. Whether we may hold these for a
+          merely curious person is the open legal question (gate item G-01) — this prototype assumes we can,
+          which has not yet been established.
+        </div>
+        ${R().mask.length?`<div class="hidden-note" style="margin-bottom:0">
+          <b>Some fields are restricted for your role.</b> ${esc(R().can)}</div>`:''}
+      </div>
+
+      <div class="card pad" style="margin-top:12px">
+        <h2 class="sec">Assessment</h2>
+        <p style="margin:6px 0 0;font-size:13.5px;color:var(--ink-2)">${esc(s.notes)}</p>
+      </div>
+
+      <div class="card pad" style="margin-top:12px">
+        <h2 class="sec">Journey milestones</h2>
+        <p class="sub">The path she actually walked — separate from category, which says what kind of relationship this is.</p>
+        ${(()=>{
+          const ms = MILESTONES.filter(m=>m.pid===s.id).sort((a,b)=>a.at-b.at);
+          if(!ms.length) return '<p class="sub" style="margin:0">No milestones recorded yet.</p>';
+          return `<ul class="tl">${ms.map((m,i)=>`<li>
+            <div class="when">${fmt(m.at)} · ${esc(m.kind)}</div>
+            <div class="what">${esc(m.label)}</div>
+            <div class="who">Recorded by ${esc(m.by)}</div>
+          </li>`).join('')}</ul>`;
+        })()}
+        <div class="field" style="margin-top:10px"><label for="mskind">Add a milestone</label>
+          <select id="mskind">${MK_ORDER.map(k=>`<option>${k}</option>`).join('')}</select></div>
+        <div class="field"><label for="mslab">What happened</label>
+          <input id="mslab" placeholder="e.g. Moved to advanced bhav satsang"></div>
+        <div class="btnrow"><button class="btn ghost" onclick="addMilestone(${s.id})">Add to journey</button></div>
+        <div class="note" style="margin-bottom:0"><b>Why this is not the Category field.</b>
+          Category is Seeker_Category — three values, and the only classification the schema tracks.
+          This is the detail underneath: which satsang, which session, in what order. Reporting asks "how many are Partners";
+          a coordinator preparing to speak with her asks "what has she actually been through" — this answers the second.</div>
+      </div>
+
+      <div class="card pad" style="margin-top:12px;border-left:3px solid var(--amber)">
+        <h2 class="sec">Team notes — internal</h2>
+        <p class="sub" style="margin-bottom:8px">What the team says to each other. Deliberately not the same thing
+          as the timeline below.</p>
+        ${(()=>{const ns=NOTES.filter(n=>n.pid===s.id);
+          return ns.length? ns.slice().sort((a,b)=>b.at-a.at).map(n=>`
+            <div style="padding:9px 0;border-bottom:1px solid #EEF4F9">
+              <div class="sub2">${esc(n.by)} · ${fmt(n.at)}</div>
+              <div style="font-size:13.5px;margin-top:2px">${esc(n.txt)}</div>
+            </div>`).join('')
+          : '<p class="sub" style="margin:0">No team notes yet.</p>';})()}
+        <div class="field" style="margin-top:12px"><label for="ntx">Add a note for the team</label>
+          <textarea id="ntx" placeholder="Only the team sees this."></textarea></div>
+        <div class="btnrow"><button class="btn ghost" onclick="saveNote(${s.id})">Save note</button></div>
+        <div class="hidden-note" style="background:var(--amber-wash);border-color:#F0DFAE;color:var(--amber)">
+          <b>Why this is separate.</b> The timeline records contact <i>with</i> the seeker and is disclosable to them
+          on request. A candid assessment of someone belongs here instead, or the team stops writing honestly.
+        </div>
+      </div>
+
+      <div class="card pad" style="margin-top:12px">
+        <h2 class="sec">Interaction timeline</h2>
+        <p class="sub" style="margin-bottom:0">Written to by every team. Entries cannot be edited or deleted once saved.</p>
+        <ul class="tl">${
+          s.inter.slice().sort((a,b)=>b.dt-a.dt).map(i=>`
+            <li class="${i.flag?'flag':''}">
+              <div class="when">${fmt(i.dt)} · ${esc(i.type)}${i.sat?` · ${esc(i.sat)}`:''}${i.hrs?` · ${i.hrs} hrs`:''}${i.durMin?` · ${i.durMin} min`:''}${i.outcome?` · ${esc(i.outcome)}`:''}</div>
+              <div class="what">${esc(i.txt)}</div>
+              <div class="who">Logged by ${esc(i.by)}</div>
+              ${i.flag?`<div class="flagtxt"><b>Sensitivity flag → Regional RS.</b> ${esc(i.flag)}</div>`:''}
+            </li>`).join('')
+        }</ul>
+      </div>
+
+      <div class="card pad" style="margin-top:12px">
+        <h2 class="sec">Log an interaction</h2>
+        <p class="sub">This is what a team member fills in after a call or satsang.</p>
+        <div class="field"><label for="ity">Type</label>
+          <select id="ity" onchange="toggleCallFields()"><option>Call</option><option>WhatsApp</option><option>Email</option>
+          <option>Face to face</option><option>Satsang</option><option>Retreat</option><option>Seva</option></select></div>
+        <div class="field"><label for="isat">Satsang marker (if applicable)</label>
+          <select id="isat"><option value="">Not a satsang</option><option>Initial bhav</option>
+          <option>Bhav satsang</option><option>Advanced bhav</option></select></div>
+        <div class="field" id="callwrap" style="display:none"><label for="idur">Call duration (minutes)</label>
+          <input id="idur" type="number" min="0" style="max-width:120px"></div>
+        <div class="field" id="outcomewrap" style="display:none"><label for="ioutc">Outcome</label>
+          <select id="ioutc"><option>Connected — good conversation</option>
+            <option>Connected — brief</option><option>No answer</option>
+            <option>Voicemail left</option><option>Asked to call back later</option></select></div>
+        <div class="field"><label for="itx">What happened</label>
+          <textarea id="itx" maxlength="220" oninput="cc()" placeholder="Three lines is the limit — enough for what matters, not a diary."></textarea>
+          <div class="cc" id="ccv">0 / 220</div></div>
+        <div class="field"><label class="check"><input type="checkbox" id="iflag" onchange="fl()">
+          <span>Raise a sensitivity flag — routes quietly to the Regional RS for this region</span></label></div>
+        <div class="field" id="flagwrap" style="display:none"><label for="iflagtx">What should the RS know?</label>
+          <textarea id="iflagtx" placeholder="Kept out of the general timeline view."></textarea></div>
+        <div class="err" id="ierr"></div>
+        <div class="btnrow"><button class="btn" onclick="saveInter(${s.id})">Save to timeline</button>
+          <button class="btn ghost" onclick="close_()">Cancel</button></div>
+      </div>
+    </div></div>`;
+  document.getElementById('shell').appendChild(el);
+}
+
+function toggleCallFields(){
+  const on = document.getElementById('ity').value === 'Call';
+  document.getElementById('callwrap').style.display = on ? 'block' : 'none';
+  document.getElementById('outcomewrap').style.display = on ? 'block' : 'none';
+}
+function cc(){
+  const t=document.getElementById('itx'), v=document.getElementById('ccv');
+  v.textContent=`${t.value.length} / 220`;
+  v.classList.toggle('over',t.value.length>=220);
+}
+function fl(){
+  document.getElementById('flagwrap').style.display =
+    document.getElementById('iflag').checked ? 'block':'none';
+}
+function saveInter(id){
+  const s=SEEKERS.find(x=>x.id===id);
+  const tx=document.getElementById('itx').value.trim();
+  const err=document.getElementById('ierr');
+  if(!tx){ err.textContent='Add a short note before saving.'; err.classList.add('on');
+    document.getElementById('itx').focus(); return; }
+  const flagged=document.getElementById('iflag').checked;
+  const ftx=document.getElementById('iflagtx').value.trim();
+  if(flagged && !ftx){ err.textContent='Describe the concern, or remove the sensitivity flag.'; err.classList.add('on');
+    document.getElementById('iflagtx').focus(); return; }
+  err.classList.remove('on');
+  const sat=document.getElementById('isat').value;
+  const type=document.getElementById('ity').value;
+  const dur = type==='Call' ? (document.getElementById('idur').value||null) : null;
+  const outc = type==='Call' ? document.getElementById('ioutc').value : null;
+  s.inter.push({dt:TODAY,type,by:R().name.split(' —')[0],txt:tx,sat:sat||undefined,
+    flag:flagged?ftx:undefined, durMin:dur, outcome:outc});
+  toast(flagged?'Saved. Regional RS notified.':'Saved to timeline.');
+  render();
+}
+
+/* ============ alerts ============ */
+function renderAlerts(){
+  const v=visible();
+  const od=v.filter(overdue).sort((a,b)=>since(b)-since(a));
+  const fl=[]; v.forEach(s=>s.inter.forEach(i=>{ if(i.flag) fl.push({s,i}); }));
+  fl.sort((a,b)=>b.i.dt-a.i.dt);
+
+  const myT = TASKS.filter(t=>{ const p=SEEKERS.find(x=>x.id===t.pid);
+    return p && (!R().regions || R().regions.includes(p.region)); });
+  const openT = myT.filter(t=>!t.done);
+  setPip('pip', od.length+fl.length+openT.length);
+
+  document.getElementById('alerts').innerHTML=`
+    <h2 class="sec" style="margin-top:4px">Tasks (${openT.length} open)</h2>
+    <p class="sub">An alert says something is wrong. A task records who agreed to do something about it.</p>
+    ${myT.length? myT.slice().sort((a,b)=>a.done-b.done||a.due-b.due).map(t=>{
+      const p=SEEKERS.find(x=>x.id===t.pid);
+      const late = !t.done && t.due < TODAY;
+      return `<div class="sub-card" style="padding:13px 16px;${t.done?'opacity:.55':(late?'border-left:3px solid var(--rose)':'border-left:3px solid var(--deep)')}">
+        <div style="display:flex;gap:11px;align-items:flex-start">
+          <input type="checkbox" ${t.done?'checked':''} onchange="toggleTask('${t.id}')" style="margin-top:4px">
+          <div style="flex:1">
+            <div style="font-size:14px;font-weight:500;${t.done?'text-decoration:line-through':''}">${esc(t.title)}</div>
+            <div class="sub2" style="margin-top:3px">${esc(p.name)} · ${esc(p.region)} ·
+              ${t.done?'done':(late?'<span style="color:var(--rose)">was due '+fmt(t.due)+'</span>':'due '+fmt(t.due))} ·
+              ${esc(t.who)}</div>
+            <div class="sub2" style="margin-top:2px;font-size:11.5px">Raised from: ${esc(t.from)}</div>
+          </div>
+          <button class="btn sm ghost" onclick="open_(${p.id})">Open</button>
+        </div></div>`;
+    }).join('') : '<div class="card pad" style="color:var(--ink-3)">No tasks in your region.</div>'}
+
+    ${fl.length?`<h2 class="sec" style="margin-top:26px">Sensitivity flags (${fl.length})</h2>
+      <p class="sub">Raised by any team member. Seen only by the Regional RS for that region.</p>
+      ${fl.map(({s,i})=>`<div class="sub-card" style="border-left:3px solid var(--rose)">
+        <div class="nm serif">${esc(s.name)}</div>
+        <div class="sub2">${s.region} · ${categoryTag(s.category)} · flagged ${fmt(i.dt)} by ${esc(i.by)}</div>
+        <div class="flagtxt" style="margin-top:9px">${esc(i.flag)}</div>
+        <div class="btnrow"><button class="btn" onclick="open_(${s.id})">Open seeker</button></div>
+      </div>`).join('')}`:''}
+
+    <h2 class="sec" style="margin-top:${fl.length?'24px':'4px'}">Contact overdue (${od.length})</h2>
+    <p class="sub">The expected window is a flat ${CONTACT_SLA_DAYS} days for every seeker.</p>
+    ${od.length?od.map(s=>`<div class="sub-card" style="border-left:3px solid var(--amber)">
+        <div class="nm serif">${esc(s.name)}</div>
+        <div class="sub2">${s.region} · ${categoryTag(s.category)}</div>
+        <p style="margin:9px 0 0;font-size:13.5px;color:var(--ink-2)">
+          <b>${since(s)} days</b> since last contact — ${since(s)-CONTACT_SLA_DAYS} days beyond the ${CONTACT_SLA_DAYS}-day window.
+          Last touch: ${fmt(last(s))}.</p>
+        <div class="btnrow"><button class="btn" onclick="open_(${s.id})">Open and log contact</button>
+          <button class="btn ghost" onclick="addTask(${s.id}, 'Make contact with ${esc(s.name).replace(/'/g,'')}', 'Contact overdue — ${since(s)} days')">Create a task</button>
+          <button class="btn ghost" onclick="toast('Snoozed for 7 days — the maximum.')">Snooze 7 days</button></div>
+      </div>`).join('')
+      :`<div class="card pad" style="color:var(--ink-3)">Nothing overdue in your region. Every seeker has been contacted within the window.</div>`}`;
+}
+
+/* ============ intake ============ */
+function renderIntake(){
+  const q = INTAKE.filter(x=> R().regions ? R().regions.includes(x.country) : true);
+  const pend = q.filter(x=>x.status==='pending');
+  setPip('pip2', pend.length);
+
+  document.getElementById('intake').innerHTML = q.length ? q.map(x=>{
+    const m = x.match!==null ? SEEKERS.find(s=>s.id===x.match) : null;
+    if(x.status!=='pending'){
+      return `<div class="sub-card resolved">
+        <div class="nm serif">${esc(x.name)}</div>
+        <div class="sub2">${esc(x.form)} · ${esc(x.when)}</div>
+        <p style="margin:9px 0 0;font-size:13.5px;color:var(--sage)"><b>${
+          x.status==='merged'?'Merged into the existing seeker record.'
+          :x.status==='promoted'?'Promoted to a new seeker record.'
+          :'Rejected. Kept in the intake log for audit.'}</b></p></div>`;
+    }
+    return `<div class="sub-card">
+      <div class="nm serif">${esc(x.name)}</div>
+      <div class="sub2">${esc(x.form)} · submitted ${esc(x.when)} · ${esc(x.country)}</div>
+      <div class="sub2" style="margin-top:2px">Came from: <b>${esc(evName(x.ev))}</b></div>
+      <dl class="kv" style="margin-top:11px">
+        <dt>WhatsApp</dt><dd>${mv('whatsapp',esc(x.whatsapp))}</dd>
+        <dt>Email</dt><dd>${mv('email',esc(x.email))}</dd>
+        <dt>Their message</dt><dd style="color:var(--ink-2)">“${esc(x.msg)}”</dd>
+      </dl>
+      <div class="match ${x.score===0?'clean':''}">
+        <div style="font-size:13px">${ x.score===0
+          ? `<span class="score">No match found</span> — this appears to be a genuinely new person.`
+          : `<span class="score">${x.score}% match</span> against <b>${esc(m.name)}</b> (${m.region}, ${esc(m.category)})`}</div>
+        <ul style="margin:8px 0 0;padding-left:18px;font-size:12.5px;color:var(--ink-2)">
+          ${x.why.map(w=>`<li>${esc(w)}</li>`).join('')}</ul>
+      </div>
+      <div class="btnrow">
+        ${x.score>=85?`<button class="btn" onclick="resolve('${x.id}','merged')">Merge into ${esc(m.name.split(' ')[0])}</button>
+          <button class="btn ghost" onclick="resolve('${x.id}','promoted')">Not the same person — create new</button>`
+         :x.score>0?`<button class="btn ghost" onclick="resolve('${x.id}','merged')">Merge into ${esc(m.name.split(' ')[0])}</button>
+          <button class="btn" onclick="resolve('${x.id}','promoted')">Create as new seeker</button>`
+         :`<button class="btn" onclick="resolve('${x.id}','promoted')">Promote to seeker</button>`}
+        <button class="btn ghost" onclick="resolve('${x.id}','rejected')">Reject</button>
+      </div>
+    </div>`;
+  }).join('') : `<div class="card pad" style="color:var(--ink-3)">No submissions awaiting review in your region.</div>`;
+}
+function resolve(id,st){
+  const x=INTAKE.find(i=>i.id===id); x.status=st;
+  toast(st==='merged'?'Merged. History preserved on the existing record.'
+      :st==='promoted'?'Promoted to a seeker record.':'Rejected and logged.');
+  render();
+}
+
+/* ============ dashboard ============ */
+/* ============ chart primitives — hand-rolled SVG, no external library ============
+   Deliberate: this build avoids third-party script dependencies throughout, for
+   the same reason WhatsApp and Firebase were set aside — every external call is
+   a data question. A donut and a trend line do not need a charting library. */
+const CHART_COLORS = ["#2E76A8","#C98A2E","#B3571F","#2B7C9B","#4C6F9C","#8397A6","#D4A24C"];
+
+function svgDonut(entries, size=148, stroke=20){
+  const r=(size-stroke)/2, cx=size/2, cy=size/2;
+  const total = entries.reduce((a,e)=>a+e.v,0) || 1;
+  let acc=0;
+  const segs = entries.map((e,i)=>{
+    const pct = e.v/total*100;
+    const seg = `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${e.c||CHART_COLORS[i%CHART_COLORS.length]}"
+      stroke-width="${stroke}" pathLength="100" stroke-dasharray="${pct} ${100-pct}"
+      stroke-dashoffset="${-acc}" transform="rotate(-90 ${cx} ${cy})"/>`;
+    acc += pct; return seg;
+  }).join('');
+  return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" style="flex:0 0 auto">
+    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#EEF3F8" stroke-width="${stroke}"/>
+    ${segs}
+    <text x="${cx}" y="${cy-3}" text-anchor="middle" font-size="22" font-weight="700" fill="#1E2F3A" font-family="Calibri,Arial,sans-serif">${total}</text>
+    <text x="${cx}" y="${cy+15}" text-anchor="middle" font-size="10" fill="#8397A6" font-family="Calibri,Arial,sans-serif">total</text>
+  </svg>`;
+}
+function donutLegend(entries){
+  const total = entries.reduce((a,e)=>a+e.v,0) || 1;
+  return entries.map((e,i)=>`<div style="display:flex;align-items:center;gap:8px;padding:4px 0;font-size:12.5px">
+    <span style="width:10px;height:10px;border-radius:3px;background:${e.c||CHART_COLORS[i%CHART_COLORS.length]};flex:0 0 auto"></span>
+    <span style="flex:1;color:var(--ink-2)">${esc(e.k)}</span>
+    <span style="font-weight:600">${e.v}</span>
+    <span style="color:var(--ink-3);min-width:36px;text-align:right">${Math.round(e.v/total*100)}%</span>
+  </div>`).join('');
+}
+function svgTrend(values, labels, w=620, h=140){
+  const pad=26, mx=Math.max(1,...values);
+  const stepX=(w-pad*2)/((values.length-1)||1);
+  const pts=values.map((v,i)=>[pad+i*stepX, h-pad-(v/mx)*(h-pad*2)]);
+  const line=pts.map((p,i)=>(i===0?'M':'L')+p[0].toFixed(1)+','+p[1].toFixed(1)).join(' ');
+  const area=line+` L${pts[pts.length-1][0].toFixed(1)},${h-pad} L${pts[0][0].toFixed(1)},${h-pad} Z`;
+  const dots=pts.map(p=>`<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="3.4" fill="#2E76A8"/>`).join('');
+  const labs=labels.map((l,i)=>`<text x="${pts[i][0].toFixed(1)}" y="${h-6}" text-anchor="middle" font-size="10"
+    fill="#8397A6" font-family="Calibri,Arial,sans-serif">${esc(l)}</text>`).join('');
+  return `<svg width="100%" height="${h}" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" style="display:block">
+    <path d="${area}" fill="#E3F0F9"/>
+    <path d="${line}" fill="none" stroke="#2E76A8" stroke-width="2.4"/>
+    ${dots}${labs}
+  </svg>`;
+}
+
+/* activity over the last N weeks, counted from the timelines already on record */
+function weeklyActivity(weeks=8){
+  const buckets = new Array(weeks).fill(0);
+  visible().forEach(p=>p.inter.forEach(i=>{
+    const wk = Math.floor(days(i.dt)/7);
+    if(wk>=0 && wk<weeks) buckets[weeks-1-wk]++;
+  }));
+  return buckets;
+}
+function seekerFirstSeen(p){ return p.inter.length ? new Date(Math.min(...p.inter.map(i=>+i.dt))) : null; }
+
+function renderDash(){
+  const v=visible();
+  const od=v.filter(overdue).length;
+  const gaps=v.map(since);
+  const avg=gaps.length?Math.round(gaps.reduce((a,b)=>a+b,0)/gaps.length):0;
+  const hrs=v.reduce((a,s)=>a+s.sevaHrs,0);
+
+  const byCat={}, byReg={};
+  v.forEach(s=>{ byCat[s.category]=(byCat[s.category]||0)+1; byReg[s.region]=(byReg[s.region]||0)+1; });
+
+  const bars=(o,cls)=>{ const mx=Math.max(1,...Object.values(o));
+    return Object.entries(o).map(([k,n])=>`<div class="bar">
+      <span style="color:var(--ink-2)">${esc(k)}</span>
+      <span class="track"><span class="fill ${cls||''}" style="width:${Math.round(n/mx*100)}%"></span></span>
+      <span class="num">${n}</span></div>`).join(''); };
+
+  // real deltas, computed from recorded dates — not typed in
+  const newThisWk = v.filter(p=>{const f=seekerFirstSeen(p); return f && days(f)<=7;}).length;
+  const newPrevWk = v.filter(p=>{const f=seekerFirstSeen(p); return f && days(f)>7 && days(f)<=14;}).length;
+  const hrsThisWk = v.reduce((a,s)=>a+s.inter.filter(i=>i.type==='Seva'&&days(i.dt)<=7).reduce((x,i)=>x+(i.hrs||0),0),0);
+
+  const catEntries = Object.entries(byCat).map(([k,v2])=>({k,v:v2}));
+  const regEntries = Object.entries(byReg).map(([k,v2])=>({k,v:v2}));
+  const weeks = weeklyActivity(8);
+  const weekLabels = ["7wk ago","6wk ago","5wk ago","4wk ago","3wk ago","2wk ago","Last wk","This wk"];
+
+  document.getElementById('dash').innerHTML=`
+    <div class="grid4">
+      <div class="kpi"><div class="n">${v.length}</div><div class="l">Seekers in view</div>
+        <div class="d">${hiddenCount()?hiddenCount()+' outside your region':'All regions'}
+          ${newThisWk?` · <span style="color:var(--sage);font-weight:600">+${newThisWk} this week</span>`:''}</div></div>
+      <div class="kpi"><div class="n" style="color:${od?'var(--amber)':'var(--sage)'}">${od}</div>
+        <div class="l">Contact overdue</div><div class="d">Against the ${CONTACT_SLA_DAYS}-day window</div></div>
+      <div class="kpi"><div class="n">${avg}</div><div class="l">Average days since contact</div>
+        <div class="d">Across seekers in view</div></div>
+      <div class="kpi"><div class="n">${hrs}</div><div class="l">Seva hours recorded</div>
+        <div class="d">Summed from the timeline${hrsThisWk?` · <span style="color:var(--sage);font-weight:600">+${hrsThisWk} this week</span>`:''}</div></div>
+    </div>
+
+    <div class="card pad" style="margin-bottom:16px">
+      <h2 class="sec">Activity over the last 8 weeks</h2>
+      <p class="sub">Every interaction logged, of any kind, across the seekers you can see. Counted from the timeline, the same way the four numbers above are.</p>
+      ${svgTrend(weeks, weekLabels)}
+    </div>
+
+    <div class="grid2">
+      <div class="card pad"><h2 class="sec">Seekers by category</h2>
+        <p class="sub">The only classification the schema tracks — Seeker_Category.</p>${bars(byCat)}</div>
+      <div class="card pad"><h2 class="sec">Seva capacity by skill</h2>
+        <p class="sub">What the Seva Distribution team searches against.</p>
+        ${(()=>{const sk={};v.forEach(s=>s.skills.forEach(k=>sk[k]=(sk[k]||0)+1));
+          const top=Object.fromEntries(Object.entries(sk).sort((a,b)=>b[1]-a[1]).slice(0,7));
+          return bars(top,'s2');})()}</div>
+      <div class="card pad"><h2 class="sec">By category</h2>
+        <p class="sub">Same figures as the bar chart above, as a proportion.</p>
+        <div style="display:flex;gap:18px;align-items:center;flex-wrap:wrap">
+          ${svgDonut(catEntries)}
+          <div style="flex:1;min-width:160px">${donutLegend(catEntries)}</div>
+        </div></div>
+      <div class="card pad"><h2 class="sec">By region</h2>
+        <p class="sub">Only regions you may see appear here.</p>
+        <div style="display:flex;gap:18px;align-items:center;flex-wrap:wrap">
+          ${svgDonut(regEntries)}
+          <div style="flex:1;min-width:160px">${donutLegend(regEntries)}</div>
+        </div></div>
+    </div>
+    <div class="note">The same screen produces different numbers for different roles, because the filtering happens
+      in the database rather than on screen. A Regional RS cannot reach another region's figures even by exporting.</div>`;
+}
+
+/* ============ operations ============ */
+const SERVICES=[
+ {n:"Application",d:"Web and API, 2 instances",s:"ok",m:"Both responding. Health check every 30s."},
+ {n:"Database",d:"PostgreSQL 16.4 · Frankfurt",s:"ok",m:"Primary and replica in sync. Lag 0.4s."},
+ {n:"Authentication",d:"Keycloak · 2FA enforced",s:"ok",m:"No failed health checks in 7 days."},
+ {n:"Warehouse feed",d:"Nightly outbox drain",s:"warn",m:"Recovered on third attempt at 02:14. See recovery log."},
+ {n:"Form intake",d:"Public submission endpoint",s:"ok",m:"4 submissions received in 24h, all queued."},
+ {n:"Backups",d:"Nightly, 35-day retention",s:"ok",m:"Last restore drill 11 Aug 2026 — passed in 22 min."}
+];
+
+const RECOVERY=[
+ {t:"02:12",w:"Warehouse feed timed out on first attempt",a:"auto",
+  r:"Retried after 2 minutes, then 4. Succeeded on attempt 3. No data lost — the outbox holds records until acknowledged."},
+ {t:"01:47",w:"Application instance stopped responding",a:"auto",
+  r:"Health check failed twice, instance restarted, traffic drained to the second instance first. Users saw no interruption."},
+ {t:"23:31",w:"Five failed logins for one account from a single address",a:"auto",
+  r:"Account locked for 15 minutes, event written to the security log. Regional RS notified."},
+ {t:"21:05",w:"Form submission failed validation — malformed phone number",a:"human",
+  r:"Moved to the dead-letter queue rather than discarded. Waiting in Intake for someone to correct or reject."},
+ {t:"19:40",w:"Intake match scored 52% — cannot decide automatically",a:"human",
+  r:"Held deliberately. The system will not merge two people on a shared family number. This is designed behaviour, not a fault."}
+];
+
+const CHECKS=[
+ {n:"Every seeker table has a row-level security policy",s:"pass",d:"6 of 6 tables covered"},
+ {n:"Audit trigger present on all tables holding personal data",s:"pass",d:"9 of 9 tables"},
+ {n:"Derived counters reconcile against the interaction log",s:"pass",d:"14 seekers checked, 0 discrepancies"},
+ {n:"No interaction rows orphaned from a seeker",s:"pass",d:"0 orphans"},
+ {n:"No seeker record without an owning region",s:"pass",d:"0 unassigned"},
+ {n:"Intake items awaiting review for over 14 days",s:"warn",d:"1 item — ageing, not failing"},
+ {n:"Retention policy applied to intake rejections",s:"pass",d:"Purged after 90 days"}
+];
+
+const SECURITY=[
+ {n:"Dependency vulnerabilities",v:"0 critical · 0 high · 2 low",s:"ok",d:"Scanned 6 hours ago. Low items scheduled for the next window."},
+ {n:"Days since last patch window",v:"9 days",s:"ok",d:"Target is 30. Next window 4 Sep."},
+ {n:"Two-factor coverage on admin accounts",v:"100%",s:"ok",d:"Enforced at Keycloak, not optional."},
+ {n:"Volunteer access review",v:"Overdue by 22 days",s:"warn",d:"11 accounts unused for 90+ days. Nobody has confirmed these people are still serving."},
+ {n:"Failed logins, last 24 hours",v:"7",s:"ok",d:"Within normal range. One lockout, auto-cleared."},
+ {n:"Restore drill",v:"15 days ago",s:"ok",d:"Quarterly target. An untested backup does not count as a backup."}
+];
+
+const UPGRADES=[
+ {n:"Application framework 5.2.3 → 5.2.4",k:"Patch",r:"Low",p:"Applied automatically once tests pass",s:"auto"},
+ {n:"Two dependency security patches",k:"Patch",r:"Low",p:"Applied automatically once tests pass",s:"auto"},
+ {n:"PostgreSQL 16.4 → 16.6",k:"Minor",r:"Low",p:"Scheduled maintenance window, rollback plan required",s:"window"},
+ {n:"Keycloak 25 → 26",k:"Major",r:"Medium",p:"Staging test and manual sign-off. Never automatic.",s:"manual"},
+ {n:"Application framework 5.x → 6.x",k:"Major",r:"High",p:"Planned work item with its own ADR. Not a maintenance task.",s:"manual"}
+];
+
+const dot = s => ({ok:'var(--sage)',warn:'var(--amber)',fail:'var(--rose)',pass:'var(--sage)'}[s]||'var(--ink-3)');
+
+function renderOps(){
+  const issues = SERVICES.filter(s=>s.s!=='ok').length
+    + CHECKS.filter(c=>c.s!=='pass').length
+    + SECURITY.filter(s=>s.s!=='ok').length;
+  setPip('pip3', issues);
+
+  const autoN=RECOVERY.filter(r=>r.a==='auto').length, humN=RECOVERY.filter(r=>r.a==='human').length;
+
+  document.getElementById('ops').innerHTML=`
+    <div class="grid4">
+      <div class="kpi"><div class="n" style="color:var(--sage)">${autoN}</div><div class="l">Recovered without anyone</div>
+        <div class="d">Last 24 hours</div></div>
+      <div class="kpi"><div class="n" style="color:var(--amber)">${humN}</div><div class="l">Stopped and waited</div>
+        <div class="d">Held for a human on purpose</div></div>
+      <div class="kpi"><div class="n">${CHECKS.filter(c=>c.s==='pass').length}/${CHECKS.length}</div>
+        <div class="l">Integrity checks passing</div><div class="d">Run nightly at 01:00</div></div>
+      <div class="kpi"><div class="n" style="color:var(--sage)">99.96%</div><div class="l">Uptime this month</div>
+        <div class="d">Target 99.9%</div></div>
+    </div>
+
+    <div class="card pad" style="margin-bottom:12px">
+      <h2 class="sec">Service health</h2>
+      <p class="sub">Checked every 30 seconds. A service that fails twice is restarted before anyone is told.</p>
+      ${SERVICES.map(s=>`<div style="display:flex;gap:11px;align-items:flex-start;padding:9px 0;border-bottom:1px solid #F0EEE9">
+        <span style="width:9px;height:9px;border-radius:50%;background:${dot(s.s)};margin-top:6px;flex:0 0 auto"></span>
+        <div style="flex:1">
+          <div style="font-size:13.5px;font-weight:500">${esc(s.n)} <span class="sub2" style="font-weight:400">· ${esc(s.d)}</span></div>
+          <div class="sub2">${esc(s.m)}</div>
+        </div>
+        <span class="tag ${s.s==='ok'?'t-active':'t-warn'}">${s.s==='ok'?'Healthy':'Recovered'}</span>
+      </div>`).join('')}
+    </div>
+
+    <div class="card pad" style="margin-bottom:12px">
+      <h2 class="sec">Recovery log — last 24 hours</h2>
+      <p class="sub">The distinction that matters: what the system fixed by itself, and what it deliberately refused to fix.</p>
+      ${RECOVERY.map(r=>`<div style="padding:11px 0;border-bottom:1px solid #F0EEE9">
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <span class="sub2" style="font-variant-numeric:tabular-nums">${r.t}</span>
+          <span class="tag ${r.a==='auto'?'t-active':'t-warn'}">${r.a==='auto'?'Recovered automatically':'Escalated to a person'}</span>
+        </div>
+        <div style="font-size:13.5px;margin-top:5px">${esc(r.w)}</div>
+        <div class="sub2" style="margin-top:2px">${esc(r.r)}</div>
+      </div>`).join('')}
+      <div class="note" style="margin-bottom:0">
+        <b>Why two of these were not auto-resolved.</b> Both involve judgement about a person — whether two records are the same human,
+        and whether a malformed submission is salvageable. Automating those would trade a visible backlog for silent, permanent data damage.
+      </div>
+    </div>
+
+    <div class="grid2" style="margin-bottom:12px">
+      <div class="card pad">
+        <h2 class="sec">Nightly integrity checks</h2>
+        <p class="sub">Assertions run against the database itself, not the application.</p>
+        ${CHECKS.map(c=>`<div style="display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px solid #F0EEE9">
+          <span style="width:8px;height:8px;border-radius:50%;background:${dot(c.s)};margin-top:6px;flex:0 0 auto"></span>
+          <div style="flex:1"><div style="font-size:13px">${esc(c.n)}</div><div class="sub2">${esc(c.d)}</div></div>
+        </div>`).join('')}
+        <div class="note" style="margin-bottom:0"><b>The second check is the important one.</b>
+          If a deployment ever removed an audit trigger, this catches it that night rather than during an investigation two years later.</div>
+      </div>
+
+      <div class="card pad">
+        <h2 class="sec">Security posture</h2>
+        <p class="sub">Reviewed weekly by the named technical owner.</p>
+        ${SECURITY.map(s=>`<div style="display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px solid #F0EEE9">
+          <span style="width:8px;height:8px;border-radius:50%;background:${dot(s.s)};margin-top:6px;flex:0 0 auto"></span>
+          <div style="flex:1"><div style="font-size:13px">${esc(s.n)} — <b>${esc(s.v)}</b></div>
+            <div class="sub2">${esc(s.d)}</div></div>
+        </div>`).join('')}
+        <div class="hidden-note" style="margin-bottom:0"><b>The overdue access review is the live risk here.</b>
+          Eleven volunteer accounts have not been used in 90 days and nobody has confirmed those people are still serving.
+          They still hold access to special-category data.</div>
+      </div>
+    </div>
+
+    <div class="card pad" style="margin-bottom:12px">
+      <h2 class="sec">Upgrade queue</h2>
+      <p class="sub">Risk decides the route. Patches flow through automatically; anything that could change behaviour does not.</p>
+      <table style="margin-top:8px">
+        <thead><tr><th>Update</th><th>Type</th><th>Risk</th><th>How it is applied</th></tr></thead>
+        <tbody>${UPGRADES.map(u=>`<tr style="cursor:default">
+          <td style="font-size:13px">${esc(u.n)}</td>
+          <td><span class="tag ${u.k==='Patch'?'t-active':u.k==='Minor'?'t-semi':'t-warn'}">${esc(u.k)}</span></td>
+          <td style="font-size:13px;color:${u.r==='Low'?'var(--sage)':u.r==='Medium'?'var(--amber)':'var(--rose)'}">${esc(u.r)}</td>
+          <td style="font-size:13px;color:var(--ink-2)">${esc(u.p)}</td></tr>`).join('')}</tbody>
+      </table>
+      <div class="note" style="margin-bottom:0">
+        <b>Every automatic update is reversible.</b> It applies to staging first, runs the full test suite including the access-control tests,
+        and rolls back on its own if anything fails. A patch that cannot be rolled back is not applied automatically.
+      </div>
+    </div>
+
+    <div class="card pad" style="border-left:3px solid var(--rose)">
+      <h2 class="sec">What this system will never repair by itself</h2>
+      <p class="sub">Stated plainly, because a dashboard that implies otherwise is worse than none.</p>
+      <ul style="margin:6px 0 0;padding-left:19px;font-size:13.5px;color:var(--ink-2);line-height:1.75">
+        <li>Authorization logic that is wrong — if a region rule is written too permissively, it will run perfectly and leak quietly.</li>
+        <li>Two seeker records wrongly merged. The merge is reversible only from a backup, and only if someone notices.</li>
+        <li>A seeker's erasure request. That is a legal decision with judgement attached, never an automated one.</li>
+        <li>Data that arrived accurate and became wrong — no check can tell a stale assessment from a current one.</li>
+        <li>Anything requiring a decision about a person rather than about a machine.</li>
+      </ul>
+      <div class="hidden-note" style="margin-bottom:0">
+        Self-healing covers transient faults: timeouts, crashed processes, failed deploys. It buys back sleep, not judgement.
+        The named technical owner still owns the system.
+      </div>
+    </div>`;
+}
+
+
+/* ============ team / department tree ============ */
+function deptRegion(id){
+  let n = DEPT.find(x=>x.id===id);
+  while(n){ if(["Germany","France","India"].includes(n.name)) return n.name; n = DEPT.find(x=>x.id===n.parent); }
+  return null;
+}
+function renderTeam(){
+  const mine = R().regions;
+  function node(dObj, depth){
+    const kids = DEPT.filter(x=>x.parent===dObj.id);
+    const reg = deptRegion(dObj.id);
+    const inScope = !mine || (reg && mine.includes(reg)) || !reg;
+    const seekers = reg ? SEEKERS.filter(s=>s.region===reg).length : SEEKERS.length;
+    return `<div style="margin-left:${depth*26}px">
+      <div class="sub-card" style="margin-bottom:8px;padding:12px 15px;${inScope?'':'opacity:.42'}">
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <span style="font-weight:600;font-size:14px">${esc(dObj.name)}</span>
+          ${reg?`<span class="tag t-core">${esc(reg)}</span>`:''}
+          ${dObj.role===ROLE?'<span class="tag t-active">you are here</span>':''}
+        </div>
+        <div class="sub2" style="margin-top:3px">Led by ${esc(dObj.head)} · ${seekers} seeker(s) below this point</div>
+      </div>
+      ${kids.map(k=>node(k,depth+1)).join('')}</div>`;
+  }
+  const root = DEPT.find(x=>x.parent===null);
+  document.getElementById('team').innerHTML = node(root,0) + `
+    <div class="note"><b>Access is derived, not listed.</b> A person placed under Germany sees Germany.
+      Move them to Europe and they see Germany and France, without anybody editing a permissions table.
+      Faded branches are outside your own position in the tree.</div>
+    <div class="hidden-note"><b>This replaces two things.</b> The region column missing from User_Role,
+      and the Role_Manager table — who you may administer is simply whoever sits beneath you.</div>`;
+}
+
+/* ============ unified inbox ============ */
+const CH = {email:'<span class="tag t-core">Email</span>', sms:'<span class="tag t-active">SMS</span>'};
+function renderInbox(){
+  const seekerIds = new Set(visible().map(p=>p.id));
+  const vis = INBOX.filter(m=>seekerIds.has(m.pid));
+  setPip('pip4', vis.filter(m=>m.unread).length);
+  document.getElementById('inbox').innerHTML = `
+    ${vis.length ? vis.map(m=>{
+      const s=SEEKERS.find(x=>x.id===m.pid);
+      return `<div class="sub-card" style="${m.unread?'border-left:3px solid var(--deep)':''}">
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          ${CH[m.ch]||''}
+          <span class="nm serif" style="font-size:15px">${esc(s.name)}</span>
+          <span class="tag t-semi">${esc(s.region)}</span>
+          <span class="sub2" style="margin-left:auto">${esc(m.at)}</span>
+        </div>
+        <div class="sub2" style="margin-top:4px">${mv(m.ch==='email'?'email':'whatsapp', esc(m.from))}</div>
+        <p style="margin:9px 0 0;font-size:13.5px">${esc(m.txt)}</p>
+        ${m.replied?`<div class="sub2" style="margin-top:7px;color:var(--sage)">Answered by ${esc(m.replied)} — logged on the timeline</div>`
+        :`<div class="btnrow">
+            <button class="btn" onclick="replyMsg('${m.id}')">Reply</button>
+            <button class="btn ghost" onclick="open_(${s.id})">Open seeker</button>
+          </div>`}
+      </div>`;
+    }).join('') : `<div class="card pad" style="color:var(--ink-3)">Nothing waiting in your region.</div>`}
+    <div class="note"><b>Every reply becomes an interaction automatically.</b> Nobody retypes what was said
+      into the timeline afterwards, which is where the record usually falls out of date.</div>
+    <div class="hidden-note"><b>Only email and SMS appear here.</b> WhatsApp, Instagram and Telegram would each
+      route seeker conversations through a company outside the EU, which cuts against hosting in Germany.
+      The pattern works with any channel — the channel list is a legal question, not a technical one.</div>`;
+}
+function replyMsg(id){
+  const m=INBOX.find(x=>x.id===id); const s=SEEKERS.find(x=>x.id===m.pid);
+  m.unread=false; m.replied=R().name;
+  s.inter.push({dt:TODAY, type:m.ch==='email'?'Email':'WhatsApp', by:R().name.split(' —')[0],
+    txt:"Replied to their message from the inbox."});
+  render(); toast("Replied. Added to "+s.name.split(' ')[0]+"'s timeline automatically.");
+}
+
+function addMilestone(pid){
+  const k=document.getElementById('mskind').value, l=(document.getElementById('mslab').value||'').trim();
+  if(!l){ toast("Describe what happened first."); return; }
+  MILESTONES.push({id:"ms"+Date.now(), pid, kind:k, label:l, at:TODAY, by:R().name});
+  render(); toast("Added to her journey.");
+}
+
+/* ============ team notes ============ */
+function saveNote(pid){
+  const el=document.getElementById('ntx'); const t=(el&&el.value||'').trim();
+  if(!t){ toast("Write something first."); if(el)el.focus(); return; }
+  NOTES.push({id:"n"+Date.now(), pid, by:R().name, at:TODAY, txt:t});
+  render(); toast("Saved. Visible to the team, not to the seeker.");
+}
+
+/* ============ tasks ============ */
+function addTask(pid, title, from){
+  TASKS.push({id:"t"+Date.now(), pid, title, who:R().name, due:new Date(TODAY.getTime()+7*864e5),
+    done:false, from:from||"Manual"});
+  render(); toast("Task created and assigned to you.");
+}
+function toggleTask(id){ const t=TASKS.find(x=>x.id===id); t.done=!t.done; render();
+  toast(t.done?"Marked done.":"Reopened."); }
+
+
+/* ============ journey board — grouped by category ============
+   Previously grouped by Stage (New/Semi-active/Active/Core). Stage has no
+   backing column in the schema — only MSR.Seeker_Category does — so this
+   now groups by category instead. Moving a card here reassigns category,
+   which maps to a real write against MSR.Seeker_Category once the API is
+   wired for it (not yet done — this still updates the in-memory record). */
+const LANES = ["Curious","Well-wisher","Partner"];
+function laneIdx(cat){ return LANES.indexOf(cat); }
+function commitCategoryChange(p, to, method){
+  const from = p.category;
+  if(from===to) return;
+  p.category = to;
+  MOVES.push({pid:p.id, from, to, at:TODAY, by:R().name});
+  p.inter.push({dt:TODAY, type:"Call", by:R().name.split(" —")[0],
+    txt:"Category changed from "+from+" to "+to+(method?" ("+method+").":"." )});
+  render();
+  toast(p.name.split(" ")[0]+" moved to "+to+". Recorded with who and when.");
+}
+function moveCategory(id, dir){
+  const p = SEEKERS.find(x=>x.id===id);
+  const i = laneIdx(p.category) + dir;
+  if(i<0 || i>=LANES.length) return;
+  commitCategoryChange(p, LANES[i], "reordered");
+}
+function dragCard(ev,id){
+  ev.dataTransfer.setData('text/plain', String(id));
+  ev.dataTransfer.effectAllowed = 'move';
+  ev.target.closest('.kcard').classList.add('dragging');
+}
+function dragEndCard(ev){ ev.target.closest('.kcard').classList.remove('dragging'); }
+function dragOverLane(ev){ ev.preventDefault(); ev.currentTarget.classList.add('drag-over'); }
+function dragLeaveLane(ev){ ev.currentTarget.classList.remove('drag-over'); }
+function dropOnLane(ev, lane){
+  ev.preventDefault();
+  ev.currentTarget.classList.remove('drag-over');
+  const id = Number(ev.dataTransfer.getData('text/plain'));
+  const p = SEEKERS.find(x=>x.id===id);
+  if(!p) return;
+  commitCategoryChange(p, lane, "dragged");
+}
+function renderJourney(){
+  const v = visible();
+
+  const lanes = LANES.map(L=>{
+    const ppl = v.filter(p=>p.category===L).sort((a,b)=>since(b)-since(a));
+    return {L, ppl};
+  });
+
+  const board = `<div class="kboard">
+    ${lanes.map(({L,ppl})=>`
+      <div class="klane" ondragover="dragOverLane(event)" ondragleave="dragLeaveLane(event)" ondrop="dropOnLane(event,'${L}')">
+        <div class="klane-head">
+          <div class="klane-title">${esc(L)}</div>
+          <div class="klane-sub">${ppl.length} seeker${ppl.length===1?'':'s'}</div>
+        </div>
+        <div class="klane-body">
+        ${ppl.length ? ppl.map(p=>{
+          const od = overdue(p), i = laneIdx(p.category);
+          return `<div class="kcard${od?' od':''}" draggable="true" ondragstart="dragCard(event,${p.id})" ondragend="dragEndCard(event)">
+            <div class="nm serif kcard-name" onclick="open_(${p.id})">${esc(p.name)}</div>
+            <div class="sub2">${esc(p.region)}</div>
+            <div class="sub2" style="font-size:11.5px">From: ${esc(evName(p.src))}</div>
+            <div class="sub2" style="font-size:11.5px;${od?'color:var(--amber)':''}">
+              ${since(p)} days since contact</div>
+            <div class="kcard-actions">
+              <button class="mini" onclick="moveCategory(${p.id},-1)" ${i===0?'disabled':''} title="Move back">‹</button>
+              <span class="kcard-drag" title="Drag to another category">⠿ drag</span>
+              <button class="mini" onclick="moveCategory(${p.id},1)" ${i===LANES.length-1?'disabled':''} title="Move forward">›</button>
+            </div>
+          </div>`;
+        }).join('') : '<div class="klane-empty">Nobody here.</div>'}
+        </div>
+      </div>`).join('')}
+  </div>`;
+
+  // attribution — what actually brings people in
+  const bySrc = {};
+  v.forEach(p=>{
+    const dn = DONATIONS.find(x=>x.pid===p.id);
+    const k = dn ? ("donation:"+dn.campaign) : (p.src||"none");
+    (bySrc[k]=bySrc[k]||{n:0,active:0}); bySrc[k].n++;
+    if(!overdue(p)) bySrc[k].active++;
+  });
+  const rows = Object.entries(bySrc).sort((a,b)=>b[1].n-a[1].n);
+  const mx = Math.max(1,...rows.map(r=>r[1].n));
+
+  const attribution = `
+    <div class="card pad" style="margin-top:18px">
+      <h2 class="sec">Where they came from</h2>
+      <p class="sub">The question a public talk cannot answer on its own: of the people who signed up, how many are still here?</p>
+      ${rows.map(([k,o])=>`<div class="bar">
+        <span style="color:var(--ink-2);font-size:12.5px">${esc(evName(k))}</span>
+        <span class="track"><span class="fill" style="width:${Math.round(o.n/mx*100)}%"></span></span>
+        <span class="num">${o.n}</span>
+      </div>
+      <div class="sub2" style="margin:-4px 0 9px 128px;font-size:11.5px">
+        ${o.active} of ${o.n} in regular contact</div>`).join('')}
+      <div class="note" style="margin-bottom:0"><b>This is the argument for recording the source.</b>
+        Without it, nobody can tell whether the Hamburg talk was worth running again.</div>
+    </div>`;
+
+  const recent = MOVES.slice(-4).reverse();
+  document.getElementById('journey').innerHTML = board + attribution + `
+    ${recent.length?`<div class="card pad" style="margin-top:12px">
+      <h2 class="sec">Recent movement</h2>
+      ${recent.map(m=>{const p=SEEKERS.find(x=>x.id===m.pid);
+        return `<div class="sub2" style="padding:5px 0">${esc(p.name)}: ${esc(m.from)} → ${esc(m.to)},
+          by ${esc(m.by)}</div>`;}).join('')}
+    </div>`:''}
+    <div class="hidden-note"><b>Why this is not called a pipeline.</b> There is no close and no win.
+      Moving a card backwards is ordinary — a seeker who goes quiet has not been lost, and the day the
+      screen implies otherwise is the day someone stops contacting them.</div>`;
+}
+
+/* ============ about ============ */
+function renderAbout(){
+  const rowsA=[
+    ["Switch role in the header","Rows vanish and fields redact live","FR-17, FR-18, FR-19"],
+    ["Open any seeker","Four counters marked “calculated”","FR-05 — counts derived, never typed"],
+    ["Open any seeker","Interaction timeline, all teams writing to one feed","FR-07"],
+    ["“Log an interaction”","220-character limit, satsang marker, sensitivity flag","FR-07 acceptance criteria"],
+    ["Needs attention tab","Overdue by a fixed window; 7-day snooze cap","FR-10, FR-11"],
+    ["Intake tab","Holding area with match scoring and merge","Jan 2026 requirements 3 and 9"],
+    ["Seekers list","Last contact recalculated from the timeline","FR-09"],
+    ["Dashboard","Region-scoped counts and category breakdown","FR-16, FR-17"],
+    ["Dashboard","Skill capacity for seva matching","FR-13, FR-14"],
+    ["Seekers list","Category shown as a single column — Seeker_Category","Decision: Stage and Segment removed, no backing table"],
+    ["Journey tab","Category board with backwards movement","FR-04 — deliberately not a sales pipeline"],
+    ["Seeker drawer","Milestone track — what she did, separate from how engaged she is","Requested: event to foundation satsang to seva"],
+    ["Calendar tab","Reads satsangs and retreats already in SCS","Bitrix calendar pattern, no second data store"],
+    ["Profiles tab","Department, skills and seva shown per serving seeker","Bitrix employee record, adapted — not an HR file"],
+    ["Journey attribution","Donations folded in as another entry channel","Requested: donation as a start of the spiritual journey"],
+    ["Log an interaction","Call duration and outcome captured for the Call type","Requested: telephony logging"],
+    ["Reports tab","A satsang held creates an owed report until filed","Regular reporting discipline, made visible"],
+    ["Reports tab","Filing a report writes each attendee's interaction automatically","Nobody retypes attendance into the timeline"],
+    ["Reports tab","Overdue after a fixed number of days, by region","Consistent with the contact-overdue SLA pattern"],
+    ["Reports tab","Turnaround time shown per conductor","Compliance made visible, not just assumed"],
+    ["Dashboard","Donut charts for category and region composition","Chart type matched to a proportion question"],
+    ["Dashboard","Eight-week activity trend, computed from logged interactions","A trend line, not just a snapshot"],
+    ["Dashboard","KPI cards carry a real weekly delta where one exists","Computed from dates already on record, never typed"],
+    ["Reports tab","Filed / within window / overdue shown as a donut","Same status at a glance, before reading the list"],
+    ["All charts","Hand-rolled SVG, no charting library loaded","Consistent with excluding WhatsApp and Firebase — fewer external calls"],
+    ["Any role","Navigation itself narrows to what that role needs","Requested: satsang conductor sees only his satsang and seekers"],
+    ["Switch to Satsang conductor","Seeker list becomes his three attendees, not the whole region","visible() scoped by who actually interacted with them"],
+    ["Switch to Satsang conductor","Calendar and Reports show only his own satsangs","Same conductor-identity filter applied consistently"],
+    ["Overview tab","One screen: notifications, activity feed, system health","Requested: admin sees the latest updates and system health together"],
+    ["Overview tab","Explicitly a view, not a duplicate store","Nothing here can drift out of step with the tabs it summarises"],
+    ["Seva tab","Skill search, hours dashboard, opportunity matching","Requested: Seva Distribution — SMS module"],
+    ["Seva tab","Propose creates a follow-up task, never an assignment","A human still decides — matching is a suggestion, not a commitment"],
+    ["Seekers tab","A typed sentence parses into region, category, skill and satsang filters","Requested: find one curious person without scrolling thousands"],
+    ["Seekers tab","What was understood is shown as chips, not hidden","Rule-based interpreter, not an AI call — consistent with no external dependency"],
+    ["Seekers tab","Query narrows within whatever the role already sees","Same access boundary as every other tab — search cannot see past it"],
+    ["Seekers tab","A single match can be opened directly by pressing Enter","Answers \u2018does this person already exist\u2019 as fast as typing"],
+    ["Journey tab","Which event or channel each seeker came from","Source attribution, missing from the live forms"],
+    ["Intake tab","Every submission shows the event it came from","Event capture"],
+    ["Team tab","Access derived from position in the department tree","Closes the region gap in User_Role"],
+    ["Team tab","Who you may administer follows the tree","Replaces the Role_Manager table"],
+    ["Seeker drawer","Team notes kept apart from the interaction timeline","Subject access — candour vs disclosure"],
+    ["My work tab","Tasks with an owner and a due date, raised from an alert","Accountability, not just notification"],
+    ["Inbox tab","Replies land on the timeline without retyping","Open Channels pattern, EU channels only"],
+    ["Operations tab","Auto-recovery separated from deliberate escalation","Availability NFR — 99.9%"],
+    ["Operations tab","Nightly check that audit triggers still exist","FR-20, Auditability NFR"],
+    ["Operations tab","Overdue volunteer access review","Volunteer deprovisioning gap"],
+    ["Operations tab","Upgrade queue routed by risk level","Maintenance model"]
+  ];
+  document.getElementById('about').innerHTML=`
+    <thead><tr><th>Where to click</th><th>What it shows</th><th>Requirement</th></tr></thead>
+    <tbody>${rowsA.map(r=>`<tr style="cursor:default">
+      <td>${esc(r[0])}</td><td style="color:var(--ink-2)">${esc(r[1])}</td>
+      <td><span class="tag t-core">${esc(r[2])}</span></td></tr>`).join('')}</tbody>`;
+}
+
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') close_(); });
+/* ============ calendar — a view over SCS, not a second store ============ */
+function renderCalendar(){
+  const vis = CAL.filter(c=>c.at>=TODAY &&
+      (!R().regions || R().regions.includes(c.region) || c.region==="Abroad") &&
+      (!R().conductorName || c.conductor===R().conductorName))
+    .sort((a,b)=>a.at-b.at);
+  const byDay = {};
+  vis.forEach(c=>{ const k=fmt(c.at); (byDay[k]=byDay[k]||[]).push(c); });
+  document.getElementById('calendar').innerHTML = `
+    ${Object.entries(byDay).map(([day,items])=>`
+      <div style="margin-bottom:16px">
+        <div style="font-weight:600;font-size:13px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">${esc(day)}</div>
+        ${items.map(c=>`<div class="sub-card" style="padding:12px 15px;margin-bottom:8px;display:flex;gap:12px;align-items:center">
+          <div style="min-width:70px;font-weight:600;color:var(--deep)">${esc(c.time)}</div>
+          <div style="flex:1">
+            <div style="font-weight:500">${esc(c.title)}</div>
+            <div class="sub2">${esc(c.kind)} · ${esc(c.region)} · conducted by ${esc(c.conductor)}</div>
+          </div>
+          <span class="tag t-core">${esc(c.kind)}</span>
+        </div>`).join('')}
+      </div>`).join('') || '<div class="card pad" style="color:var(--ink-3)">Nothing scheduled in your region.</div>'}
+    <div class="note"><b>This reads from the Satsang Conducting System.</b> A satsang scheduled there appears
+      here automatically. Nothing is entered twice, and there is no second calendar to keep in step with the first.
+      Shows what is coming up — satsangs already held move to the Reports tab.</div>`;
+}
+
+/* ============ profiles — the Bitrix "employee" idea, applied to seekers who serve ============ */
+function renderProfiles(){
+  const serving = visible().filter(p=>p.sevaHrs>0).sort((a,b)=>b.sevaHrs-a.sevaHrs);
+  document.getElementById('profiles').innerHTML = `
+    <div class="grid2">
+      ${serving.map(p=>{
+        const dep = DEPT.find(d=>deptRegion(d.id)===p.region && d.head===p.name) ||
+                    DEPT.find(d=>deptRegion(d.id)===p.region);
+        return `<div class="card pad">
+          <div style="display:flex;gap:12px;align-items:flex-start">
+            <div style="width:44px;height:44px;border-radius:50%;background:var(--deep-wash);color:var(--deep);
+              display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;flex:0 0 auto">
+              ${esc(p.name.split(' ').map(x=>x[0]).slice(0,2).join(''))}
+            </div>
+            <div style="flex:1">
+              <div class="nm serif" style="font-size:16px;cursor:pointer" onclick="open_(${p.id})">${esc(p.name)}</div>
+              <div class="sub2">${esc(dep?dep.name:p.region)} · ${esc(p.region)}</div>
+            </div>
+            ${categoryTag(p.category)}
+          </div>
+          <div class="metrics" style="grid-template-columns:repeat(3,1fr);margin-top:12px">
+            <div class="metric"><div class="n" style="font-size:18px">${p.sevaHrs}</div><div class="l">Seva hrs</div></div>
+            <div class="metric"><div class="n" style="font-size:18px">${p.skills.length}</div><div class="l">Skills</div></div>
+            <div class="metric"><div class="n" style="font-size:18px">${MILESTONES.filter(m=>m.pid===p.id).length}</div><div class="l">Milestones</div></div>
+          </div>
+          <div class="pill-row" style="margin-top:10px">${p.skills.map(k=>`<span class="tag t-semi">${esc(k)}</span>`).join('')}</div>
+          <div class="sub2" style="margin-top:9px">Availability: ${esc(p.avail)}</div>
+        </div>`;
+      }).join('') || '<div class="card pad" style="color:var(--ink-3)">Nobody in your region has a recorded seva contribution yet.</div>'}
+    </div>
+    <div class="note" style="margin-top:16px"><b>Borrowed from Bitrix24's employee record, with one change.</b>
+      Department, skills and standing carry across well. What does not: nobody here is paid, and nobody can be
+      assigned work by right the way an employer assigns an employee. This is an engagement profile, not an HR file.</div>`;
+}
+
+/* ============ satsang reporting ============ */
+function reportsInScope(){
+  return CAL.filter(c=>c.kind==="Satsang" && c.at < TODAY &&
+    (!R().regions || R().regions.includes(c.region)) &&
+    (!R().conductorName || c.conductor===R().conductorName));
+}
+function pendingReports(){
+  return reportsInScope().filter(c=>!SUBMITTED_REPORTS.some(r=>r.calId===c.id));
+}
+function renderReports(){
+  const pending = pendingReports().sort((a,b)=>a.at-b.at);
+  const overdue = pending.filter(c=>days(c.at) > REPORT_SLA_DAYS);
+  setPip('pip5', overdue.length);
+
+  if(REPORT_OPEN){ renderReportForm(); return; }
+
+  const submitted = SUBMITTED_REPORTS
+    .map(r=>({r, cal:CAL.find(c=>c.id===r.calId)}))
+    .filter(x=>x.cal && (!R().regions || R().regions.includes(x.cal.region))
+                     && (!R().conductorName || x.cal.conductor===R().conductorName))
+    .sort((a,b)=>b.r.submittedAt-a.r.submittedAt);
+
+  document.getElementById('reports').innerHTML = `
+    <h2 class="sec" style="margin-top:0">Reports owed (${pending.length})</h2>
+    <p class="sub">A report is owed from the day after the satsang. Overdue after ${REPORT_SLA_DAYS} days.</p>
+    ${pending.length ? pending.map(c=>{
+      const n = days(c.at), late = n > REPORT_SLA_DAYS;
+      return `<div class="sub-card" style="${late?'border-left:3px solid var(--rose)':'border-left:3px solid var(--amber)'}">
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <span class="nm serif" style="font-size:15px">${esc(c.title)}</span>
+          <span class="tag t-semi">${esc(c.region)}</span>
+          ${late?`<span class="tag t-warn">Overdue</span>`:''}
+        </div>
+        <div class="sub2" style="margin-top:4px">Held ${fmt(c.at)} · conducted by ${esc(c.conductor)} ·
+          ${n} day${n===1?'':'s'} ago${late?' — beyond the '+REPORT_SLA_DAYS+'-day window':''}</div>
+        <div class="btnrow"><button class="btn" onclick="openReport('${c.id}')">File the report</button></div>
+      </div>`;
+    }).join('') : `<div class="card pad" style="color:var(--ink-3)">Nothing owed in your region. Every satsang held has been reported.</div>`}
+
+    <h2 class="sec" style="margin-top:22px">Recently filed</h2>
+    ${submitted.length ? submitted.slice(0,6).map(({r,cal})=>{
+      const turn = Math.round((r.submittedAt-cal.at)/864e5);
+      const present = r.entries.filter(e=>e.attended).length;
+      return `<div class="sub-card" style="border-left:3px solid var(--sage)">
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <span class="nm serif" style="font-size:15px">${esc(cal.title)}</span>
+          <span class="tag t-active">Filed</span>
+        </div>
+        <div class="sub2" style="margin-top:4px">Held ${fmt(cal.at)} · reported by ${esc(r.submittedBy)},
+          ${turn===0?'the same day':turn+' day'+(turn===1?'':'s')+' later'} · ${present} attended</div>
+      </div>`;
+    }).join('') : `<div class="card pad" style="color:var(--ink-3)">Nothing filed yet in your region.</div>`}
+
+    ${renderReportingCompliance()}
+    <div class="hidden-note"><b>Why the deadline is short.</b> A report filed the same week is reliable.
+      One filed a month later is a coordinator reconstructing memory, and the notes on individual attendees
+      are usually the first casualty.</div>`;
+}
+
+function renderReportingCompliance(){
+  const done = SUBMITTED_REPORTS
+    .map(r=>({r, cal:CAL.find(c=>c.id===r.calId)}))
+    .filter(x=>x.cal && (!R().regions || R().regions.includes(x.cal.region))
+                     && (!R().conductorName || x.cal.conductor===R().conductorName));
+  const inScope = reportsInScope();
+  const overdueN = pendingReports().filter(c=>days(c.at)>REPORT_SLA_DAYS).length;
+  const filedN = done.length;
+  const stillDue = pendingReports().length;
+
+  const donutData = [
+    {k:"Filed", v:filedN, c:"#2B7C9B"},
+    {k:"Still within the window", v:pendingReports().filter(c=>days(c.at)<=REPORT_SLA_DAYS).length, c:"#C98A2E"},
+    {k:"Overdue", v:overdueN, c:"#B3571F"}
+  ].filter(x=>x.v>0);
+
+  if(!done.length && !stillDue) return '';
+  const byConductor = {};
+  done.forEach(({r,cal})=>{
+    const k = r.submittedBy;
+    const turn = Math.max(0, Math.round((r.submittedAt-cal.at)/864e5));
+    (byConductor[k]=byConductor[k]||{n:0,totalTurn:0});
+    byConductor[k].n++; byConductor[k].totalTurn += turn;
+  });
+  const rows = Object.entries(byConductor);
+  const mxc = Math.max(1,...rows.map(([,o])=>o.n));
+  return `<div class="grid2" style="margin-top:16px">
+    <div class="card pad">
+      <h2 class="sec">Reporting status</h2>
+      <p class="sub">Every satsang held in your region, however it currently stands.</p>
+      ${donutData.length ? `<div style="display:flex;gap:18px;align-items:center;flex-wrap:wrap">
+        ${svgDonut(donutData)}
+        <div style="flex:1;min-width:150px">${donutLegend(donutData)}</div>
+      </div>` : '<p class="sub" style="margin:0">Nothing to show yet.</p>'}
+    </div>
+    <div class="card pad">
+      <h2 class="sec">Turnaround by conductor</h2>
+      <p class="sub">Days after the satsang the report was filed, on average.</p>
+      ${rows.length ? rows.map(([k,o])=>`<div class="bar">
+        <span style="color:var(--ink-2);font-size:12.5px">${esc(k)}</span>
+        <span class="track"><span class="fill s2" style="width:${Math.round(o.n/mxc*100)}%"></span></span>
+        <span class="num">${(o.totalTurn/o.n).toFixed(1)}d avg</span>
+      </div>`).join('') : '<p class="sub" style="margin:0">No reports filed yet.</p>'}
+    </div>
+  </div>`;
+}
+
+function openReport(calId){ REPORT_OPEN = calId; render(); tab('reports'); }
+function closeReport(){ REPORT_OPEN = null; render(); }
+
+function reportAttendees(cal){
+  // No per-event registration list exists in this prototype, so the candidate
+  // list is every seeker in the satsang's region. In the real system this
+  // would come from Satsang_Attending_Seekers / event registration instead.
+  return SEEKERS.filter(p=>p.region===cal.region);
+}
+
+function renderReportForm(){
+  const cal = CAL.find(c=>c.id===REPORT_OPEN);
+  if(!cal){ REPORT_OPEN=null; renderReports(); return; }
+  const people = reportAttendees(cal);
+  document.getElementById('reports').innerHTML = `
+    <button class="btn ghost sm" onclick="closeReport()">← Back to reports</button>
+    <div class="card pad" style="margin-top:12px">
+      <h2 class="sec">${esc(cal.title)}</h2>
+      <p class="sub">Held ${fmt(cal.at)} · ${esc(cal.time)} · conducted by ${esc(cal.conductor)}</p>
+      <div class="note">Tick who attended. A short note is optional, but is what makes this report useful to
+        anyone reading the seeker's record later rather than just a headcount.</div>
+      ${people.map(p=>`
+        <div class="fld" style="padding:11px 13px">
+          <div style="display:flex;gap:10px;align-items:flex-start">
+            <input type="checkbox" id="att_${p.id}" style="margin-top:3px">
+            <div style="flex:1">
+              <div style="font-weight:500;font-size:13.5px">${esc(p.name)} <span class="sub2">· ${esc(p.category)}</span></div>
+              <div class="field" style="margin:8px 0 0"><input id="note_${p.id}" placeholder="Note for this attendee (optional)"></div>
+              <label class="check" style="margin-top:7px"><input type="checkbox" id="rdy_${p.id}">
+                <span>Seems ready to move toward the next satsang level</span></label>
+            </div>
+          </div>
+        </div>`).join('')}
+      <div class="btnrow"><button class="btn" onclick="submitReport('${cal.id}')">File this report</button>
+        <button class="btn ghost" onclick="closeReport()">Cancel</button></div>
+    </div>`;
+}
+
+function submitReport(calId){
+  const cal = CAL.find(c=>c.id===calId);
+  const people = reportAttendees(cal);
+  const entries = people.map(p=>{
+    const att = document.getElementById('att_'+p.id).checked;
+    const note = (document.getElementById('note_'+p.id).value||'').trim();
+    const rdy = document.getElementById('rdy_'+p.id).checked;
+    return {pid:p.id, attended:att, note, readyNext:rdy};
+  });
+  const level = satsangLevel(cal.title);
+  entries.filter(e=>e.attended).forEach(e=>{
+    const p = SEEKERS.find(x=>x.id===e.pid);
+    p.inter.push({dt:cal.at, type:"Satsang", by:cal.conductor, sat:level,
+      txt: e.note || ("Attended "+cal.title+".")});
+    if(e.readyNext){
+      MILESTONES.push({id:"ms"+Date.now()+e.pid, pid:e.pid, kind:level.includes("Advanced")?"Seva":"Advanced satsang",
+        label:"Conductor noted readiness to progress, from "+cal.title, at:cal.at, by:cal.conductor});
+    }
+  });
+  SUBMITTED_REPORTS.push({id:"r"+Date.now(), calId, submittedAt:TODAY, submittedBy:R().name, entries});
+  REPORT_OPEN = null;
+  render(); tab('reports');
+  const n = entries.filter(e=>e.attended).length;
+  toast("Report filed. "+n+" attendance record(s) added to timelines automatically.");
+}
+
+/* ============ overview — the admin/coordinator command centre ============ */
+function unifiedActivity(limit=12){
+  /* Merges everything that has a real Date on it. Inbox and intake carry
+     display strings for "at" rather than Date objects in this prototype,
+     so they are surfaced as counts below instead of woven into this feed. */
+  const v = visible(); const ids = new Set(v.map(p=>p.id));
+  const items = [];
+  v.forEach(p=>p.inter.forEach(i=>items.push(
+    {at:i.dt, kind:i.type, text:(i.txt||'').slice(0,90), who:i.by, pid:p.id, pname:p.name})));
+  MILESTONES.filter(m=>ids.has(m.pid)).forEach(m=>items.push(
+    {at:m.at, kind:"Milestone", text:m.label, who:m.by, pid:m.pid, pname:(SEEKERS.find(s=>s.id===m.pid)||{}).name}));
+  MOVES.filter(m=>ids.has(m.pid)).forEach(m=>items.push(
+    {at:m.at, kind:"Category move", text:m.from+" → "+m.to, who:m.by, pid:m.pid, pname:(SEEKERS.find(s=>s.id===m.pid)||{}).name}));
+  SUBMITTED_REPORTS.forEach(r=>{ const cal=CAL.find(c=>c.id===r.calId);
+    if(cal && (!R().regions||R().regions.includes(cal.region)) && (!R().conductorName||cal.conductor===R().conductorName))
+      items.push({at:r.submittedAt, kind:"Report filed", text:cal.title+" — "+r.entries.filter(e=>e.attended).length+" attended", who:r.submittedBy}); });
+  return items.sort((a,b)=>b.at-a.at).slice(0,limit);
+}
+const ACT_TAG = {Call:"t-core",WhatsApp:"t-active",Email:"t-core",Satsang:"t-a9",Retreat:"t-semi",
+  Seva:"t-live",Milestone:"t-warn","Category move":"t-core","Report filed":"t-live","Face to face":"t-semi"};
+
+function renderOverview(){
+  const el = document.getElementById('overview'); if(!el) return;
+  const v = visible();
+  const od = v.filter(overdue).length;
+  const fl = []; v.forEach(p=>p.inter.forEach(i=>{ if(i.flag) fl.push(1); }));
+  const vIds = new Set(v.map(p=>p.id));
+  const unreadInbox = INBOX.filter(m=>m.unread && vIds.has(m.pid)).length;
+  const overdueReports = pendingReports().filter(c=>days(c.at)>REPORT_SLA_DAYS).length;
+  // Intake has no per-conductor concept — a submission isn't "his" until it is
+  // promoted and someone logs a satsang with them, so region is the correct
+  // and complete scope here, not a gap.
+  const pendingIntake = INTAKE.filter(x=>x.status==='pending' &&
+    (!R().regions || R().regions.includes(x.country))).length;
+  const totalNotify = od + fl.length + unreadInbox + overdueReports + pendingIntake;
+  setPip('pip6', totalNotify);
+
+  const feed = unifiedActivity(12);
+
+  const notifyCards = [
+    {n:od, l:"Contact overdue", go:"alerts", show:R().tabs.includes("alerts")},
+    {n:fl.length, l:"Sensitivity flags", go:"alerts", show:R().tabs.includes("alerts")},
+    {n:unreadInbox, l:"Unread inbox", go:"inbox", show:R().tabs.includes("inbox")},
+    {n:overdueReports, l:"Reports overdue", go:"reports", show:R().tabs.includes("reports")},
+    {n:pendingIntake, l:"Intake awaiting review", go:"intake", show:R().tabs.includes("intake")}
+  ].filter(c=>c.show);
+
+  const isAdmin = ROLE==="abroad";
+  const healthBad = SERVICES.filter(s=>s.s!=='ok').length + SECURITY.filter(s=>s.s!=='ok').length;
+
+  el.innerHTML = `
+    <div class="grid4" style="grid-template-columns:repeat(${Math.max(notifyCards.length,1)},1fr);margin-bottom:16px">
+      ${notifyCards.map(c=>`<div class="kpi" style="cursor:pointer" onclick="tab('${c.go}')">
+        <div class="n" style="color:${c.n?'var(--amber)':'var(--sage)'}">${c.n}</div>
+        <div class="l">${esc(c.l)}</div><div class="d">Tap to open</div></div>`).join('')}
+    </div>
+
+    <div class="grid2">
+      <div class="card pad">
+        <h2 class="sec">Latest updates</h2>
+        <p class="sub">Every interaction, milestone, category move and filed report — across everyone you can see, most recent first.</p>
+        ${feed.length ? feed.map(f=>`<div style="padding:9px 0;border-bottom:1px solid #EEF4F9;display:flex;gap:10px;align-items:flex-start">
+          <span class="tag ${ACT_TAG[f.kind]||'t-semi'}" style="flex:0 0 auto;margin-top:1px">${esc(f.kind)}</span>
+          <div style="flex:1">
+            <div style="font-size:13px">${f.pname?`<b>${esc(f.pname)}</b> — `:''}${esc(f.text)}</div>
+            <div class="sub2" style="margin-top:1px">${esc(f.who)} · ${fmt(f.at)}</div>
+          </div>
+          ${f.pid?`<button class="mini" onclick="tab('seekers');open_(${f.pid})" title="Open">→</button>`:''}
+        </div>`).join('') : '<p class="sub" style="margin:0">Nothing recorded yet in your scope.</p>'}
+      </div>
+
+      <div>
+        <div class="card pad" style="margin-bottom:12px">
+          <h2 class="sec">System health</h2>
+          <p class="sub">${isAdmin?'Full detail on the Operations tab.':'A summary. Full detail is an admin view.'}</p>
+          ${SERVICES.map(s=>`<div style="display:flex;gap:9px;align-items:center;padding:5px 0">
+            <span style="width:8px;height:8px;border-radius:50%;background:${s.s==='ok'?'var(--sage)':'var(--amber)'};flex:0 0 auto"></span>
+            <span style="font-size:12.5px;flex:1">${esc(s.n)}</span>
+            <span class="tag ${s.s==='ok'?'t-active':'t-warn'}" style="font-size:10.5px">${s.s==='ok'?'Healthy':'Recovered'}</span>
+          </div>`).join('')}
+          ${healthBad?`<div class="warn" style="margin-bottom:0">${healthBad} item(s) need a look.
+            ${isAdmin?`<span class="lnk-btn" onclick="tab('ops')" style="cursor:pointer;color:var(--deep);font-weight:600"> Open Operations →</span>`:''}</div>`
+            :`<div class="ok" style="margin-bottom:0">Everything healthy.</div>`}
+        </div>
+        ${isAdmin?`<div class="card pad">
+          <h2 class="sec">Needs an administrator</h2>
+          ${SECURITY.filter(s=>s.s!=='ok').map(s=>`<div class="warn" style="margin:0 0 8px">
+            <b>${esc(s.n)}</b> — ${esc(s.v)}<br><span style="font-size:11.5px">${esc(s.d)}</span></div>`).join('')
+            || '<p class="sub" style="margin:0">Nothing outstanding.</p>'}
+          <div class="btnrow" style="margin-top:8px"><button class="btn sm ghost" onclick="tab('ops')">Full Operations view</button></div>
+        </div>`:''}
+      </div>
+    </div>
+    <div class="hidden-note"><b>This is a view, not a new store.</b> Every number above is read from data that
+      already exists elsewhere in the system — nothing is duplicated to build this screen, so it cannot drift
+      out of step with the tabs it summarises.</div>`;
+}
+
+/* ============ seva management — skill search, opportunities, hours ============ */
+let SEVA_OPPS = [
+  {id:"op1", title:"Translate the September newsletter", region:"Germany", skill:"Translation (DE/EN)", hrsEst:4},
+  {id:"op2", title:"Photograph the Pune centre open day", region:"India", skill:"Event coordination", hrsEst:3},
+  {id:"op3", title:"Legal review of the new venue lease", region:"Germany", skill:"Legal advisory", hrsEst:2}
+];
+let SEVA_SEARCH = "", SEVA_SKILL = "";
+
+function allSkills(){
+  const s = new Set(); SEEKERS.forEach(p=>p.skills.forEach(k=>s.add(k)));
+  return [...s].sort();
+}
+function seekersBySkill(skill, q){
+  return visible().filter(p=>{
+    const skillOk = !skill || p.skills.includes(skill);
+    const qOk = !q || p.skills.some(k=>k.toLowerCase().includes(q.toLowerCase())) ||
+      p.name.toLowerCase().includes(q.toLowerCase());
+    return skillOk && qOk;
+  }).sort((a,b)=>b.sevaHrs-a.sevaHrs);
+}
+function setSevaSearch(v){ SEVA_SEARCH=v; renderSevahub(); }
+function setSevaSkill(v){ SEVA_SKILL = (SEVA_SKILL===v)?'':v; renderSevahub(); }
+function proposeRole(pid, oppId){
+  const opp = SEVA_OPPS.find(o=>o.id===oppId); const p = SEEKERS.find(x=>x.id===pid);
+  addTask(pid, "Follow up: "+p.name.split(' ')[0]+" for \u201c"+opp.title+"\u201d", "Seva match — "+opp.skill);
+  toast("Task created. "+p.name.split(' ')[0]+" proposed for this role.");
+}
+function addOpp(){
+  const t=(document.getElementById('opt').value||'').trim();
+  const rg=document.getElementById('opr').value;
+  const sk=document.getElementById('ops2').value;
+  const hr=document.getElementById('oph').value||1;
+  if(!t){ toast("Give the opportunity a title first."); return; }
+  SEVA_OPPS.push({id:"op"+Date.now(), title:t, region:rg, skill:sk, hrsEst:Number(hr)});
+  document.getElementById('opt').value='';
+  render(); toast("Opportunity added. Matching candidates shown below it.");
+}
+
+function renderSevahub(){
+  const el = document.getElementById('sevahub'); if(!el) return;
+  const v = visible();
+  const serving = v.filter(p=>p.sevaHrs>0);
+  const totalHrs = v.reduce((a,p)=>a+p.sevaHrs,0);
+  const hrsThisWk = v.reduce((a,p)=>a+p.inter.filter(i=>i.type==='Seva'&&days(i.dt)<=7)
+    .reduce((x,i)=>x+(i.hrs||0),0),0);
+  const avgHrs = serving.length ? (totalHrs/serving.length).toFixed(1) : "0";
+
+  const byRegion = {}; serving.forEach(p=>byRegion[p.region]=(byRegion[p.region]||0)+p.sevaHrs);
+  const regEntries = Object.entries(byRegion).map(([k,val])=>({k,v:val}));
+
+  // approximate: hours are recorded per person, not per skill, so a skill's
+  // total is the summed hours of everyone who lists it — stated plainly rather
+  // than implying a precision the data model does not yet carry
+  const bySkillHrs = {};
+  serving.forEach(p=>p.skills.forEach(k=>bySkillHrs[k]=(bySkillHrs[k]||0)+p.sevaHrs));
+  const topSkillHrs = Object.entries(bySkillHrs).sort((a,b)=>b[1]-a[1]).slice(0,7);
+  const mxSk = Math.max(1,...topSkillHrs.map(([,n])=>n));
+
+  const leaderboard = serving.slice().sort((a,b)=>b.sevaHrs-a.sevaHrs).slice(0,5);
+
+  const results = seekersBySkill(SEVA_SKILL, SEVA_SEARCH);
+
+  el.innerHTML = `
+    <div class="grid4" style="margin-bottom:16px">
+      <div class="kpi"><div class="n">${totalHrs}</div><div class="l">Total seva hours</div>
+        <div class="d">${hrsThisWk?`+${hrsThisWk} this week`:'Across everyone in view'}</div></div>
+      <div class="kpi"><div class="n">${serving.length}</div><div class="l">Active servers</div>
+        <div class="d">Of ${v.length} in view</div></div>
+      <div class="kpi"><div class="n">${avgHrs}</div><div class="l">Average hours, per server</div>
+        <div class="d">A rough measure of load, not a target</div></div>
+      <div class="kpi"><div class="n">${SEVA_OPPS.length}</div><div class="l">Open opportunities</div>
+        <div class="d">Awaiting a match</div></div>
+    </div>
+
+    <div class="grid2" style="margin-bottom:16px">
+      <div class="card pad">
+        <h2 class="sec">Hours by region</h2>
+        <p class="sub">Where the seva capacity actually sits.</p>
+        <div style="display:flex;gap:18px;align-items:center;flex-wrap:wrap">
+          ${regEntries.length?svgDonut(regEntries):''}
+          <div style="flex:1;min-width:150px">${donutLegend(regEntries)}</div>
+        </div>
+      </div>
+      <div class="card pad">
+        <h2 class="sec">Hours by skill</h2>
+        <p class="sub">Approximate — hours are recorded per person, not split per skill they hold.</p>
+        ${topSkillHrs.map(([k,n])=>`<div class="bar">
+          <span style="color:var(--ink-2);font-size:12.5px">${esc(k)}</span>
+          <span class="track"><span class="fill s2" style="width:${Math.round(n/mxSk*100)}%"></span></span>
+          <span class="num">${n}</span></div>`).join('') || '<p class="sub" style="margin:0">No skilled seva recorded yet.</p>'}
+      </div>
+    </div>
+
+    <div class="card pad" style="margin-bottom:16px">
+      <h2 class="sec">Top contributors</h2>
+      ${leaderboard.map((p,i)=>`<div style="display:flex;gap:12px;align-items:center;padding:8px 0;
+          ${i<leaderboard.length-1?'border-bottom:1px solid #EEF4F9':''}">
+        <span style="width:22px;height:22px;border-radius:50%;background:${i===0?'var(--amber-wash)':'#F0F4F8'};
+          color:${i===0?'var(--amber)':'var(--ink-3)'};display:flex;align-items:center;justify-content:center;
+          font-size:11px;font-weight:700;flex:0 0 auto">${i+1}</span>
+        <span class="nm serif" style="font-size:14px;flex:1;cursor:pointer" onclick="open_(${p.id})">${esc(p.name)}</span>
+        <span class="sub2">${esc(p.region)}</span>
+        <span style="font-weight:700;color:var(--deep);min-width:60px;text-align:right">${p.sevaHrs} hrs</span>
+      </div>`).join('') || '<p class="sub" style="margin:0">Nobody in view has recorded seva hours yet.</p>'}
+    </div>
+
+    <div class="card pad" style="margin-bottom:16px">
+      <h2 class="sec">Open opportunities</h2>
+      <p class="sub">Add a role that needs filling. Candidates below it are pulled from who is already in the system with that skill.</p>
+      <div class="row2" style="grid-template-columns:2fr 1fr 1fr .6fr;gap:8px;margin-bottom:12px">
+        <input id="opt" placeholder="e.g. Translate the September newsletter">
+        <select id="opr">${["Germany","France","India","Abroad"].map(r=>`<option>${r}</option>`).join('')}</select>
+        <select id="ops2"><option value="">Any skill</option>${allSkills().map(k=>`<option>${esc(k)}</option>`).join('')}</select>
+        <input id="oph" type="number" min="1" value="2" title="Estimated hours">
+      </div>
+      <div class="btnrow" style="margin-top:0"><button class="btn sm" onclick="addOpp()">Add opportunity</button></div>
+
+      ${SEVA_OPPS.map(o=>{
+        const cands = v.filter(p=>(!o.skill||p.skills.includes(o.skill)) && p.region===o.region)
+                       .sort((a,b)=>b.sevaHrs-a.sevaHrs).slice(0,4);
+        return `<div class="sub-card" style="margin-top:12px">
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+            <span class="nm serif" style="font-size:14.5px">${esc(o.title)}</span>
+            <span class="tag t-semi">${esc(o.region)}</span>
+            ${o.skill?`<span class="tag t-core">${esc(o.skill)}</span>`:''}
+            <span class="sub2" style="margin-left:auto">~${o.hrsEst} hrs</span>
+          </div>
+          ${cands.length ? `<div style="margin-top:9px">
+            ${cands.map(p=>`<div style="display:flex;gap:10px;align-items:center;padding:5px 0">
+              <span style="font-size:13px;flex:1">${esc(p.name)} <span class="sub2">· ${p.sevaHrs} hrs so far</span></span>
+              <button class="btn sm ghost" onclick="proposeRole(${p.id},'${o.id}')">Propose</button>
+            </div>`).join('')}
+          </div>` : `<div class="sub2" style="margin-top:8px">No matching candidate in this region yet.</div>`}
+        </div>`;
+      }).join('')}
+    </div>
+
+    <div class="card pad">
+      <h2 class="sec">Skill search</h2>
+      <p class="sub">Search across everyone you can see, by name or skill.</p>
+      <div class="filters" style="margin-bottom:10px">
+        <input type="search" placeholder="Search name or skill" value="${esc(SEVA_SEARCH)}"
+          oninput="setSevaSearch(this.value)">
+        <span class="count">${results.length} match(es)</span>
+      </div>
+      <div class="pill-row" style="margin-bottom:12px">
+        ${allSkills().map(k=>`<button class="chip ${SEVA_SKILL===k?'on':''}" onclick="setSevaSkill('${k.replace(/'/g,"\\'")}')">${esc(k)}</button>`).join('')}
+      </div>
+      ${results.map(p=>`<div style="display:flex;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid #EEF4F9">
+        <span class="nm serif" style="font-size:14px;flex:1;cursor:pointer" onclick="open_(${p.id})">${esc(p.name)}</span>
+        <div class="pill-row">${p.skills.map(k=>`<span class="tag t-semi">${esc(k)}</span>`).join('')}</div>
+        <span class="sub2" style="min-width:90px;text-align:right">${p.sevaHrs} hrs · ${esc(p.avail)}</span>
+      </div>`).join('') || '<p class="sub" style="margin:0">Nothing matches.</p>'}
+    </div>
+    <div class="hidden-note"><b>What "match" means here.</b> Skill and region overlap, ranked by hours already
+      given — a proxy for reliability, not a guarantee. A human still decides; Propose creates a follow-up task,
+      it does not assign anyone anything.</div>`;
+}
+/* Boot: initRole() (and everything downstream) only runs after attemptLogin()
+   succeeds — see the session block near the top of this script. */
+</script>
+</body>
+</html>
