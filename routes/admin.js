@@ -43,18 +43,29 @@ router.post('/depts', requireAuth, async (req, res) => {
   }
 });
 
-// GET /api/admin/depts/:id/roles — roles in a dept, with current hierarchy rank
+// GET /api/admin/depts/:id/roles — roles in a dept, with current hierarchy
+// rank and who currently holds each one.
 router.get('/depts/:id/roles', requireAuth, async (req, res) => {
   try {
     const result = await pool.query(
       `SELECT r.${qi('Dept_Role_ID')}, r.${qi('Dept_Role_Name')}, r.${qi('Dept_Role_Desc')},
-              h.${qi('HRCHY_ID')}
+              h.${qi('HRCHY_ID')},
+              COALESCE(
+                json_agg(up.${qi('Seeker_Name')}) FILTER (WHERE up.${qi('Seeker_Name')} IS NOT NULL),
+                '[]'
+              ) AS holders
        FROM ${qi('RMS')}.${qi('Seva_Dept_Role')} r
        LEFT JOIN ${qi('RMS')}.${qi('Seva_Dept_Role_HRCHY')} h
          ON h.${qi('Dept_Role_ID')} = r.${qi('Dept_Role_ID')}
          AND h.${qi('Seva_Dept_ID')} = r.${qi('Seva_Dept_ID')}
          AND h.${qi('Ver_To_DT')} >= CURRENT_DATE
+       LEFT JOIN ${qi('RMS')}.${qi('User_Seva_Dept_Role')} usdr
+         ON usdr.${qi('Dept_Role_ID')} = r.${qi('Dept_Role_ID')}
+         AND usdr.${qi('Seva_Dept_ID')} = r.${qi('Seva_Dept_ID')}
+         AND (usdr.${qi('Ver_To_DT')} IS NULL OR usdr.${qi('Ver_To_DT')} >= CURRENT_DATE)
+       LEFT JOIN ${qi('RMS')}.${qi('User_Profile')} up ON up.${qi('CSMS_ID')} = usdr.${qi('CSMS_ID')}
        WHERE r.${qi('Seva_Dept_ID')} = $1 AND r.${qi('Ver_To_DT')} >= CURRENT_DATE
+       GROUP BY r.${qi('Dept_Role_ID')}, r.${qi('Dept_Role_Name')}, r.${qi('Dept_Role_Desc')}, h.${qi('HRCHY_ID')}
        ORDER BY h.${qi('HRCHY_ID')} NULLS LAST, r.${qi('Dept_Role_Name')}`,
       [req.params.id]
     );
@@ -119,6 +130,64 @@ router.post('/hierarchy', requireAuth, async (req, res) => {
   } catch (err) {
     if (client) await client.query('ROLLBACK');
     console.error('[POST /admin/hierarchy] error', err);
+    res.status(500).json({ error: 'INTERNAL' });
+  } finally {
+    if (client) client.release();
+  }
+});
+
+// POST /api/admin/assign-role — put an existing CSMS user into a dept/role.
+// Requires the person to already have a User_Profile row (i.e. they've
+// signed in at least once, or someone created that row directly). There is
+// no endpoint yet to create a brand-new User_Profile for someone who has
+// never signed in — that's a separate, still-open piece (see README).
+router.post('/assign-role', requireAuth, async (req, res) => {
+  const { email, sevaDeptId, deptRoleId } = req.body || {};
+  if (!email || !sevaDeptId || !deptRoleId) {
+    return res.status(400).json({ error: 'email, sevaDeptId and deptRoleId are required' });
+  }
+  let client;
+  try {
+    client = await pool.connect();
+    await client.query('BEGIN');
+
+    const userQ = await client.query(
+      `SELECT ${qi('CSMS_ID')}, ${qi('Seeker_Name')} FROM ${qi('RMS')}.${qi('User_Profile')}
+       WHERE lower(${qi('Seeker_Email')}) = lower($1) LIMIT 1`,
+      [email]
+    );
+    if (userQ.rowCount === 0) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({
+        error: 'NO_PROFILE',
+        message: 'No CSMS profile exists for this email yet. They need to sign in with Google once before they can be assigned a role.',
+      });
+    }
+    const csmsId = userQ.rows[0].CSMS_ID;
+
+    // Supersede any existing active assignment for this person IN THIS SAME
+    // department (a person can hold roles in more than one department —
+    // this only replaces a prior role within the one department given).
+    await client.query(
+      `UPDATE ${qi('RMS')}.${qi('User_Seva_Dept_Role')}
+       SET ${qi('Ver_To_DT')} = CURRENT_DATE - INTERVAL '1 day'
+       WHERE ${qi('CSMS_ID')} = $1 AND ${qi('Seva_Dept_ID')} = $2
+         AND (${qi('Ver_To_DT')} IS NULL OR ${qi('Ver_To_DT')} >= CURRENT_DATE)`,
+      [csmsId, sevaDeptId]
+    );
+
+    await client.query(
+      `INSERT INTO ${qi('RMS')}.${qi('User_Seva_Dept_Role')}
+        (${qi('CSMS_ID')}, ${qi('Seva_Dept_ID')}, ${qi('Dept_Role_ID')}, ${qi('Ver_From_DT')}, ${qi('Ver_To_DT')})
+       VALUES ($1, $2, $3, CURRENT_DATE, $4)`,
+      [csmsId, sevaDeptId, deptRoleId, FAR_FUTURE]
+    );
+
+    await client.query('COMMIT');
+    res.status(201).json({ ok: true, csmsId, name: userQ.rows[0].Seeker_Name });
+  } catch (err) {
+    if (client) await client.query('ROLLBACK');
+    console.error('[POST /admin/assign-role] error', err);
     res.status(500).json({ error: 'INTERNAL' });
   } finally {
     if (client) client.release();
