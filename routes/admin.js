@@ -44,14 +44,16 @@ router.post('/depts', requireAuth, async (req, res) => {
 });
 
 // GET /api/admin/depts/:id/roles — roles in a dept, with current hierarchy
-// rank and who currently holds each one.
+// rank and who currently holds each one (name + the USDR_ID needed to
+// remove that specific assignment).
 router.get('/depts/:id/roles', requireAuth, async (req, res) => {
   try {
     const result = await pool.query(
       `SELECT r.${qi('Dept_Role_ID')}, r.${qi('Dept_Role_Name')}, r.${qi('Dept_Role_Desc')},
               h.${qi('HRCHY_ID')},
               COALESCE(
-                json_agg(up.${qi('Seeker_Name')}) FILTER (WHERE up.${qi('Seeker_Name')} IS NOT NULL),
+                json_agg(json_build_object('name', up.${qi('Seeker_Name')}, 'usdrId', usdr.${qi('USDR_ID')}))
+                  FILTER (WHERE up.${qi('Seeker_Name')} IS NOT NULL),
                 '[]'
               ) AS holders
        FROM ${qi('RMS')}.${qi('Seva_Dept_Role')} r
@@ -221,6 +223,96 @@ router.post('/assign-role', requireAuth, async (req, res) => {
     res.status(500).json({ error: 'INTERNAL' });
   } finally {
     if (client) client.release();
+  }
+});
+
+// DELETE /api/admin/depts/:id — expire a department.
+// Blocked (409) if it has active children or active roles, rather than
+// silently orphaning them — the person deleting has to clear those first,
+// which is deliberate friction for a structural change like this.
+router.delete('/depts/:id', requireAuth, async (req, res) => {
+  const id = req.params.id;
+  try {
+    const kidsQ = await pool.query(
+      `SELECT 1 FROM ${qi('RMS')}.${qi('Seva_Dept')}
+       WHERE ${qi('Parent_Seva_Dept_ID')} = $1 AND ${qi('Ver_To_DT')} >= CURRENT_DATE LIMIT 1`,
+      [id]
+    );
+    if (kidsQ.rowCount > 0) {
+      return res.status(409).json({ error: 'HAS_CHILDREN', message: 'This department has active sub-departments. Delete or move those first.' });
+    }
+    const rolesQ = await pool.query(
+      `SELECT 1 FROM ${qi('RMS')}.${qi('Seva_Dept_Role')}
+       WHERE ${qi('Seva_Dept_ID')} = $1 AND ${qi('Ver_To_DT')} >= CURRENT_DATE LIMIT 1`,
+      [id]
+    );
+    if (rolesQ.rowCount > 0) {
+      return res.status(409).json({ error: 'HAS_ROLES', message: 'This department still has active roles. Delete those first.' });
+    }
+    await pool.query(
+      `UPDATE ${qi('RMS')}.${qi('Seva_Dept')} SET ${qi('Ver_To_DT')} = CURRENT_DATE - INTERVAL '1 day'
+       WHERE ${qi('Seva_Dept_ID')} = $1`,
+      [id]
+    );
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('[DELETE /admin/depts/:id] error', err);
+    res.status(500).json({ error: 'INTERNAL' });
+  }
+});
+
+// DELETE /api/admin/roles/:id — expire a role. Cascades to also expire any
+// active hierarchy rank row and any active member assignments for it —
+// a deleted role can't sensibly still have members, so this doesn't block
+// on that the way department deletion blocks on children.
+router.delete('/roles/:id', requireAuth, async (req, res) => {
+  const id = req.params.id;
+  let client;
+  try {
+    client = await pool.connect();
+    await client.query('BEGIN');
+
+    await client.query(
+      `UPDATE ${qi('RMS')}.${qi('User_Seva_Dept_Role')} SET ${qi('Ver_To_DT')} = CURRENT_DATE - INTERVAL '1 day'
+       WHERE ${qi('Dept_Role_ID')} = $1 AND (${qi('Ver_To_DT')} IS NULL OR ${qi('Ver_To_DT')} >= CURRENT_DATE)`,
+      [id]
+    );
+    await client.query(
+      `UPDATE ${qi('RMS')}.${qi('Seva_Dept_Role_HRCHY')} SET ${qi('Ver_To_DT')} = CURRENT_DATE - INTERVAL '1 day'
+       WHERE ${qi('Dept_Role_ID')} = $1 AND ${qi('Ver_To_DT')} >= CURRENT_DATE`,
+      [id]
+    );
+    await client.query(
+      `UPDATE ${qi('RMS')}.${qi('Seva_Dept_Role')} SET ${qi('Ver_To_DT')} = CURRENT_DATE - INTERVAL '1 day'
+       WHERE ${qi('Dept_Role_ID')} = $1`,
+      [id]
+    );
+
+    await client.query('COMMIT');
+    res.json({ ok: true });
+  } catch (err) {
+    if (client) await client.query('ROLLBACK');
+    console.error('[DELETE /admin/roles/:id] error', err);
+    res.status(500).json({ error: 'INTERNAL' });
+  } finally {
+    if (client) client.release();
+  }
+});
+
+// DELETE /api/admin/assignments/:usdrId — remove one specific person from
+// one specific role (expires that User_Seva_Dept_Role row only — the role
+// itself and other holders are untouched).
+router.delete('/assignments/:usdrId', requireAuth, async (req, res) => {
+  try {
+    await pool.query(
+      `UPDATE ${qi('RMS')}.${qi('User_Seva_Dept_Role')} SET ${qi('Ver_To_DT')} = CURRENT_DATE - INTERVAL '1 day'
+       WHERE ${qi('USDR_ID')} = $1`,
+      [req.params.usdrId]
+    );
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('[DELETE /admin/assignments/:usdrId] error', err);
+    res.status(500).json({ error: 'INTERNAL' });
   }
 });
 

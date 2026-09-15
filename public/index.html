@@ -432,7 +432,7 @@ nav .pip.r{background:var(--rose);color:#fff}
   <button data-p="sevahub" onclick="tab('sevahub')">Seva</button>
   <button data-p="profiles" onclick="tab('profiles')">Profiles</button>
   <button data-p="dash" onclick="tab('dash')">Dashboard</button>
-  <button data-p="org" onclick="tab('org')">Organisation</button>
+  <button data-p="org" onclick="tab('org')">Organisation and Team Management</button>
   <button data-p="ops" onclick="tab('ops')">Operations<span class="pip" id="pip3">0</span></button>
   <button data-p="about" onclick="tab('about')">What this shows</button>
 </nav>
@@ -479,11 +479,12 @@ nav .pip.r{background:var(--rose);color:#fff}
   </section>
 
   <section class="pane" id="p-org">
-    <h2 class="sec">Organisation</h2>
-    <p class="sub">Structure and who serves where. Access follows position in this tree — there is no separate list of permissions to keep in step.</p>
+    <h2 class="sec">Organisation and team management</h2>
+    <p class="sub">Structure lives in Seva Departments — the org chart, adding departments and roles.
+      Team Management is where people are added to and removed from roles.</p>
     <div class="filters" style="border-bottom:1px solid var(--line-2);padding-bottom:0;margin-bottom:16px">
       <button class="chip on" data-sub="depts" onclick="subtab('depts')">Seva Departments</button>
-      <button class="chip" data-sub="teams" onclick="subtab('teams')">Seva Teams</button>
+      <button class="chip" data-sub="teams" onclick="subtab('teams')">Team Management</button>
     </div>
     <div id="orgDepts"></div>
     <div id="orgTeams" style="display:none"></div>
@@ -1182,7 +1183,7 @@ function render(){
        They are not merely hidden on screen — the database refuses to return them for this role.</div>` : '');
 
   renderAlerts(); renderDash(); renderOps(); renderAbout();
-  renderInbox(); if(LIVE_DEPTS!==null){ renderSevaDepartments(); renderSevaTeams(); } renderJourney(); renderCalendar(); renderProfiles(); renderReports(); renderSevahub();
+  renderInbox(); if(LIVE_DEPTS!==null){ renderSevaDepartments(); renderTeamManagement(); } renderJourney(); renderCalendar(); renderProfiles(); renderReports(); renderSevahub();
   if(OPEN) drawer(OPEN);
 }
 
@@ -1814,14 +1815,14 @@ function subtab(s){
   document.getElementById('orgTeams').style.display = s==='teams' ? '' : 'none';
   document.querySelectorAll('#p-org .chip').forEach(c=>c.classList.toggle('on', c.dataset.sub===s));
   closeDeptModal();
-  if(s==='teams') renderSevaTeams(); else renderSevaDepartments();
+  if(s==='teams') renderTeamManagement(); else renderSevaDepartments();
 }
 
-/* ============ organisation: chart + modal ============
-   Two levels only for now (parent department -> its children), matching
-   the real data (Seva_Dept has no grandchildren in what you gave me).
+/* ============ organisation: shared state + actions ============
    Cached so the global render() cycle doesn't refetch on every tick;
-   invalidateTeamData() forces a reload after an admin action succeeds. */
+   invalidateTeamData() forces a reload after an admin action succeeds.
+   Roles/members are manageable from BOTH tabs; only "add department" (and,
+   symmetrically, "delete department") stays exclusive to Seva Departments. */
 let LIVE_DEPTS = null;
 let LIVE_DEPT_ROLES = {};
 let CHART_MODAL = null; // { deptId, level: 1|2, parentId (level 2 only) }
@@ -1837,7 +1838,7 @@ async function loadTeamData(){
     depts.forEach((d,i)=>{ LIVE_DEPT_ROLES[d.Seva_Dept_ID] = roleLists[i]; });
     LIVE_DEPTS = depts;
     renderSevaDepartments();
-    renderSevaTeams();
+    renderTeamManagement();
     if(CHART_MODAL) renderModalContent();
   }catch(err){
     const msg = `<div class="hidden-note" style="background:var(--rose-wash);border-color:#EBCBCE;color:var(--rose)">
@@ -1847,45 +1848,62 @@ async function loadTeamData(){
   }
 }
 
-function chartMode(){ return document.getElementById('orgTeams').style.display==='none' ? 'depts' : 'teams'; }
-
-function openDeptModal(deptId){ CHART_MODAL = {deptId, level:1}; renderModalContent(); }
-function drillInto(deptId, parentId){ CHART_MODAL = {deptId, level:2, parentId}; renderModalContent(); }
-function backToParent(){ if(CHART_MODAL && CHART_MODAL.parentId!=null) openDeptModal(CHART_MODAL.parentId); }
-function closeDeptModal(){ CHART_MODAL = null; const el=document.getElementById('deptModalRoot'); if(el) el.innerHTML=''; }
-
 async function withLoading(btn, fn){
-  if(!btn || btn.classList.contains('loading')) return;
-  btn.classList.add('loading'); btn.disabled = true;
-  try{ await fn(); } finally { btn.classList.remove('loading'); btn.disabled = false; }
+  if(btn && btn.classList.contains('loading')) return;
+  if(btn){ btn.classList.add('loading'); btn.disabled = true; }
+  try{ await fn(); } finally { if(btn){ btn.classList.remove('loading'); btn.disabled = false; } }
 }
 
-async function addDeptModal(parentId, btn){
-  const nameEl = document.getElementById('mNewDeptName');
-  const errEl = document.getElementById('mDeptErr');
-  errEl.classList.remove('on');
-  const name = (nameEl.value||'').trim();
-  if(!name){ errEl.textContent='Enter a department name.'; errEl.classList.add('on'); return; }
+function deptById(id){ return LIVE_DEPTS.find(d=>d.Seva_Dept_ID==id); }
+function childrenOf(id){ return LIVE_DEPTS.filter(d=>d.Parent_Seva_Dept_ID==id); }
+
+/* ---- shared core actions: create/delete depts, roles, members ---- */
+
+async function createDept(name, parentId, btn, onDone){
   await withLoading(btn, async ()=>{
     try{
       await apiFetch('/api/admin/depts', {method:'POST', body: JSON.stringify({name, parentId})});
       toast('Department added.');
       invalidateTeamData();
-    }catch(err){ errEl.textContent = err.message||'Could not add department.'; errEl.classList.add('on'); }
+      if(onDone) onDone();
+    }catch(err){ toast('Could not add department: '+(err.message||'')); }
   });
 }
 
-async function addRoleModal(deptId, btn){
-  const nameEl = document.getElementById('mNewRoleName');
-  const descEl = document.getElementById('mNewRoleDesc');
-  const name = (nameEl.value||'').trim();
-  if(!name) return;
+async function deleteDept(id, btn){
+  if(!confirm('Delete this department? This cannot be undone. Sub-departments and roles must be removed first.')) return;
   await withLoading(btn, async ()=>{
     try{
-      const r = await apiFetch('/api/admin/roles', {method:'POST', body: JSON.stringify({sevaDeptId: deptId, name, desc: (descEl.value||'').trim()})});
-      toast('Role added — set its hierarchy rank below so it appears correctly in the org chart.');
+      await apiFetch('/api/admin/depts/'+id, {method:'DELETE'});
+      toast('Department deleted.');
+      closeDeptModal();
       invalidateTeamData();
+    }catch(err){ toast('Could not delete: '+(err.message||'')); }
+  });
+}
+
+async function createRole(deptId, name, desc, btn, onDone){
+  if(!name) return null;
+  let created = null;
+  await withLoading(btn, async ()=>{
+    try{
+      created = await apiFetch('/api/admin/roles', {method:'POST', body: JSON.stringify({sevaDeptId: deptId, name, desc: desc||''})});
+      toast('Role added — set its hierarchy rank so it appears correctly in the org chart.');
+      invalidateTeamData();
+      if(onDone) onDone(created);
     }catch(err){ toast('Could not add role: '+(err.message||'')); }
+  });
+  return created;
+}
+
+async function deleteRole(id, btn){
+  if(!confirm('Delete this role? Anyone currently assigned to it will be removed too.')) return;
+  await withLoading(btn, async ()=>{
+    try{
+      await apiFetch('/api/admin/roles/'+id, {method:'DELETE'});
+      toast('Role deleted.');
+      invalidateTeamData();
+    }catch(err){ toast('Could not delete: '+(err.message||'')); }
   });
 }
 
@@ -1899,44 +1917,85 @@ async function saveHierarchy(deptId, roleId, value){
   }catch(err){ toast('Could not update hierarchy: '+(err.message||'')); }
 }
 
-function onModalRoleSelect(v){
-  document.getElementById('mNewRoleAssignRow').style.display = v==='__new__' ? 'flex' : 'none';
-}
-
-async function assignRoleModal(deptId, btn){
-  const emailEl = document.getElementById('mAssignEmail');
-  const roleEl = document.getElementById('mAssignRole');
-  const errEl = document.getElementById('mAssignErr');
-  errEl.classList.remove('on');
-  const email = (emailEl.value||'').trim();
-
+async function assignMember(deptId, email, roleId, btn, errEl){
+  if(errEl) errEl.classList.remove('on');
   await withLoading(btn, async ()=>{
     try{
-      let roleId = roleEl.value;
-      let createdNewRole = false;
-      if(roleId === '__new__'){
-        const newName = (document.getElementById('mNewRoleInline').value||'').trim();
-        if(!newName){ errEl.textContent='Enter a name for the new role.'; errEl.classList.add('on'); return; }
-        const created = await apiFetch('/api/admin/roles', {method:'POST', body: JSON.stringify({sevaDeptId: deptId, name: newName})});
-        roleId = created.deptRoleId;
-        createdNewRole = true;
-      }
-      if(!email || !roleId){ errEl.textContent='Enter an email and pick a role.'; errEl.classList.add('on'); return; }
-
+      if(!email || !roleId){ if(errEl){errEl.textContent='Enter an email and pick a role.';errEl.classList.add('on');} return; }
       const r = await apiFetch('/api/admin/assign-role', {method:'POST', body: JSON.stringify({email, sevaDeptId: deptId, deptRoleId: Number(roleId)})});
-      emailEl.value = '';
       toast((r.name||email)+' assigned.');
-      if(createdNewRole) toast('New role has no hierarchy rank yet — set one in Seva Departments.');
       invalidateTeamData();
-    }catch(err){ errEl.textContent = err.message||'Could not assign role.'; errEl.classList.add('on'); }
+    }catch(err){ if(errEl){errEl.textContent = err.message||'Could not assign role.'; errEl.classList.add('on');} }
   });
 }
 
-function deptById(id){ return LIVE_DEPTS.find(d=>d.Seva_Dept_ID===id); }
-function childrenOf(id){ return LIVE_DEPTS.filter(d=>d.Parent_Seva_Dept_ID===id); }
+async function removeMember(usdrId, btn){
+  if(!confirm('Remove this person from the role?')) return;
+  await withLoading(btn, async ()=>{
+    try{
+      await apiFetch('/api/admin/assignments/'+usdrId, {method:'DELETE'});
+      toast('Removed.');
+      invalidateTeamData();
+    }catch(err){ toast('Could not remove: '+(err.message||'')); }
+  });
+}
 
-function renderChart(containerId, mode){
-  const el = document.getElementById(containerId);
+/* ---- shared markup fragment: add-role + assign-member for a leaf dept.
+   Used by both the Seva Departments modal and the Team Management list —
+   only the id prefix differs, so element ids don't collide when both are
+   in the DOM at once (they aren't, but kept safe anyway). ---- */
+function roleAndMemberFormsHTML(dept, roles, key, submitFn){
+  const k = key;
+  return `
+    <details style="margin-top:10px">
+      <summary style="cursor:pointer;font-size:12px;color:var(--deep)">+ Add role</summary>
+      <div style="display:flex;flex-direction:column;gap:6px;margin-top:8px">
+        <input id="newRoleName_${k}" placeholder="Role name" style="border-radius:999px;padding:6px 14px;font-size:13px;border:1px solid var(--line-2)">
+        <input id="newRoleDesc_${k}" placeholder="Description (optional)" style="border-radius:999px;padding:6px 14px;font-size:13px;border:1px solid var(--line-2)">
+        <button class="btn sm" onclick="createRole(${dept.Seva_Dept_ID}, document.getElementById('newRoleName_${k}').value.trim(), document.getElementById('newRoleDesc_${k}').value.trim(), this)"><span class="spin"></span><span class="lbl">Add role</span></button>
+      </div>
+    </details>
+    ${roles.length ? `<details style="margin-top:8px">
+      <summary style="cursor:pointer;font-size:12px;color:var(--deep)">+ Add member</summary>
+      <div style="margin-top:8px">
+        <input id="assignEmail_${k}" type="email" placeholder="name@ssrf.org" style="width:100%;border-radius:999px;padding:6px 14px;font-size:13px;border:1px solid var(--line-2);box-sizing:border-box;margin-bottom:6px">
+        <select id="assignRole_${k}" onchange="document.getElementById('newRoleAssignRow_${k}').style.display=this.value==='__new__'?'flex':'none'" style="width:100%;border-radius:999px;padding:6px 14px;font-size:13px;border:1px solid var(--line-2);box-sizing:border-box;margin-bottom:6px">
+          ${roles.map(r=>`<option value="${r.Dept_Role_ID}">${esc(r.Dept_Role_Name)}</option>`).join('')}
+          <option value="__new__">+ Add new role</option>
+        </select>
+        <div id="newRoleAssignRow_${k}" style="display:none;gap:6px;margin-bottom:6px">
+          <input id="newRoleInline_${k}" placeholder="New role name" style="flex:1;border-radius:999px;padding:6px 14px;font-size:13px;border:1px solid var(--line-2)">
+        </div>
+        <button class="btn sm" style="width:100%" onclick="${submitFn}(${dept.Seva_Dept_ID}, '${k}', this)"><span class="spin"></span><span class="lbl">Add member</span></button>
+        <div class="err" id="assignErr_${k}" style="margin-top:6px"></div>
+        <p class="sub2" style="margin-top:6px">Person must have signed in with Google at least once before they can be assigned.</p>
+      </div>
+    </details>` : ''}`;
+}
+
+async function submitAssign(deptId, key, btn){
+  const roleSel = document.getElementById('assignRole_'+key);
+  const errEl = document.getElementById('assignErr_'+key);
+  errEl.classList.remove('on');
+  let roleId = roleSel.value;
+  if(roleId==='__new__'){
+    const name = (document.getElementById('newRoleInline_'+key).value||'').trim();
+    if(!name){ errEl.textContent='Enter a name for the new role.'; errEl.classList.add('on'); return; }
+    const created = await createRole(deptId, name, '', null);
+    if(!created) return;
+    roleId = created.deptRoleId;
+  }
+  await assignMember(deptId, (document.getElementById('assignEmail_'+key).value||'').trim(), roleId, btn, errEl);
+}
+
+/* ============ Seva Departments — org chart + modal (structure) ============ */
+function openDeptModal(deptId){ CHART_MODAL = {deptId, level:1}; renderModalContent(); }
+function drillInto(deptId, parentId){ CHART_MODAL = {deptId, level:2, parentId}; renderModalContent(); }
+function backToParent(){ if(CHART_MODAL && CHART_MODAL.parentId!=null) openDeptModal(CHART_MODAL.parentId); }
+function closeDeptModal(){ CHART_MODAL = null; const el=document.getElementById('deptModalRoot'); if(el) el.innerHTML=''; }
+
+function renderSevaDepartments(){
+  const el = document.getElementById('orgDepts');
   if(LIVE_DEPTS === null){ el.innerHTML = '<p class="sub2">Loading departments…</p>'; loadTeamData(); return; }
 
   const roots = LIVE_DEPTS.filter(d=>d.Parent_Seva_Dept_ID===null);
@@ -1957,13 +2016,10 @@ function renderChart(containerId, mode){
     <div id="deptModalRoot"></div>`;
   if(CHART_MODAL) renderModalContent();
 }
-function renderSevaDepartments(){ renderChart('orgDepts','depts'); }
-function renderSevaTeams(){ renderChart('orgTeams','teams'); }
 
 function renderModalContent(){
   const root = document.getElementById('deptModalRoot');
   if(!root || !CHART_MODAL) return;
-  const mode = chartMode();
   const dept = deptById(CHART_MODAL.deptId);
   if(!dept){ closeDeptModal(); return; }
 
@@ -1975,22 +2031,23 @@ function renderModalContent(){
         <h3 style="margin:0 0 2px">${esc(dept.Seva_Dept_Name)}</h3>
         <p class="sub2" style="margin-bottom:12px">${kids.length} sub-department${kids.length===1?'':'s'}</p>
         ${kids.length ? kids.map(k=>`<div class="oteamrow" onclick="drillInto(${k.Seva_Dept_ID},${dept.Seva_Dept_ID})">
-            <span>${esc(k.Seva_Dept_Name)}</span>&rsaquo;
+            <span>${esc(k.Seva_Dept_Name)}</span><span>&rsaquo;</span>
           </div>`).join('') : '<p class="sub2">No sub-departments yet.</p>'}
-        ${mode==='depts' ? `<details style="margin-top:12px">
+        <details style="margin-top:12px">
           <summary style="cursor:pointer;font-size:12px;color:var(--deep)">+ Add sub-department</summary>
           <div style="display:flex;gap:6px;margin-top:8px">
             <input id="mNewDeptName" placeholder="Department name" style="flex:1;border-radius:999px;padding:6px 14px;font-size:13px;border:1px solid var(--line-2)">
-            <button class="btn sm" onclick="addDeptModal(${dept.Seva_Dept_ID}, this)"><span class="spin"></span><span class="lbl">Add</span></button>
+            <button class="btn sm" onclick="createDept(document.getElementById('mNewDeptName').value.trim(), ${dept.Seva_Dept_ID}, this)"><span class="spin"></span><span class="lbl">Add</span></button>
           </div>
-          <div class="err" id="mDeptErr" style="margin-top:6px"></div>
-        </details>` : ''}
+        </details>
+        <div class="btnrow" style="margin-top:14px">
+          <button class="btn ghost" style="color:var(--rose);border-color:var(--rose)" onclick="deleteDept(${dept.Seva_Dept_ID}, this)"><span class="spin"></span><span class="lbl">Delete department</span></button>
+        </div>
       </div>
     </div>`;
     return;
   }
 
-  // level 2 — leaf department: roles + (depts mode: add role/rank) or (teams mode: holders + assign)
   const roles = LIVE_DEPT_ROLES[dept.Seva_Dept_ID] || [];
   root.innerHTML = `<div class="obackdrop" onclick="if(event.target===this) closeDeptModal()">
     <div class="omodal">
@@ -1999,45 +2056,62 @@ function renderModalContent(){
         <button class="mini" onclick="backToParent()" title="Back" style="width:24px;height:24px">&lsaquo;</button>
         <h3 style="margin:0">${esc(dept.Seva_Dept_Name)}</h3>
       </div>
-      ${mode==='depts' ? `
-        ${roles.length ? roles.map(r=>`<div class="oteamrow" style="cursor:default">
+      ${roles.length ? roles.map(r=>`<div class="oteamrow" style="cursor:default;flex-direction:column;align-items:stretch;gap:4px">
+          <div style="display:flex;align-items:center;justify-content:space-between">
             <span title="${esc(r.Dept_Role_Desc||'')}">${esc(r.Dept_Role_Name)}</span>
             <span style="display:flex;align-items:center;gap:6px">
               <span class="sub2">Rank</span>
               <input type="number" value="${r.HRCHY_ID!=null?r.HRCHY_ID:''}" style="width:52px;border-radius:999px;padding:3px 10px;font-size:12px;border:1px solid var(--line-2)"
                 onchange="saveHierarchy(${dept.Seva_Dept_ID},${r.Dept_Role_ID},this.value)">
+              <button class="mini" onclick="deleteRole(${r.Dept_Role_ID}, this)" title="Delete role" style="width:22px;height:22px;color:var(--rose)">&times;</button>
             </span>
-          </div>`).join('') : '<p class="sub2">No roles defined yet.</p>'}
-        <details style="margin-top:12px">
-          <summary style="cursor:pointer;font-size:12px;color:var(--deep)">+ Add role</summary>
-          <div style="display:flex;flex-direction:column;gap:6px;margin-top:8px">
-            <input id="mNewRoleName" placeholder="Role name" style="border-radius:999px;padding:6px 14px;font-size:13px;border:1px solid var(--line-2)">
-            <input id="mNewRoleDesc" placeholder="Description (optional)" style="border-radius:999px;padding:6px 14px;font-size:13px;border:1px solid var(--line-2)">
-            <button class="btn sm" onclick="addRoleModal(${dept.Seva_Dept_ID}, this)"><span class="spin"></span><span class="lbl">Add role</span></button>
           </div>
-        </details>`
-      : `
-        ${roles.length ? roles.map(r=>`<div class="oteamrow" style="cursor:default">
-            <span>${esc(r.Dept_Role_Name)}</span>
-            <span style="color:${r.holders&&r.holders.length?'var(--sage)':'var(--ink-3)'};font-style:${r.holders&&r.holders.length?'normal':'italic'};font-size:12.5px">
-              ${r.holders&&r.holders.length ? esc(r.holders.join(', ')) : 'vacant'}</span>
-          </div>`).join('') : '<p class="sub2">No roles defined for this department yet.</p>'}
-        ${roles.length ? `<div style="margin-top:12px">
-          <p class="sub2" style="margin-bottom:6px">Assign someone</p>
-          <input id="mAssignEmail" type="email" placeholder="name@ssrf.org" style="width:100%;border-radius:999px;padding:6px 14px;font-size:13px;border:1px solid var(--line-2);box-sizing:border-box;margin-bottom:6px">
-          <select id="mAssignRole" onchange="onModalRoleSelect(this.value)" style="width:100%;border-radius:999px;padding:6px 14px;font-size:13px;border:1px solid var(--line-2);box-sizing:border-box;margin-bottom:6px">
-            ${roles.map(r=>`<option value="${r.Dept_Role_ID}">${esc(r.Dept_Role_Name)}</option>`).join('')}
-            <option value="__new__">+ Add new role</option>
-          </select>
-          <div id="mNewRoleAssignRow" style="display:none;gap:6px;margin-bottom:6px">
-            <input id="mNewRoleInline" placeholder="New role name" style="flex:1;border-radius:999px;padding:6px 14px;font-size:13px;border:1px solid var(--line-2)">
-          </div>
-          <button class="btn" style="width:100%" onclick="assignRoleModal(${dept.Seva_Dept_ID}, this)"><span class="spin"></span><span class="lbl">Assign role</span></button>
-          <div class="err" id="mAssignErr" style="margin-top:6px"></div>
-          <p class="sub2" style="margin-top:6px">Person must have signed in with Google at least once before they can be assigned.</p>
-        </div>` : ''}`}
+          ${(r.holders||[]).map(h=>`<div class="sub2" style="display:flex;justify-content:space-between;padding-left:8px">
+            <span style="color:var(--sage)">${esc(h.name)}</span>
+            <span class="mini" onclick="removeMember(${h.usdrId}, this)" title="Remove" style="width:18px;height:18px;font-size:10px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center">&times;</span>
+          </div>`).join('')}
+        </div>`).join('') : '<p class="sub2">No roles defined yet.</p>'}
+      ${roleAndMemberFormsHTML(dept, roles, 'm', 'submitAssign')}
     </div>
   </div>`;
+}
+
+/* ============ Team Management — flat list, no chart (people focus) ============ */
+function renderTeamManagement(){
+  const el = document.getElementById('orgTeams');
+  if(LIVE_DEPTS === null){ el.innerHTML = '<p class="sub2">Loading…</p>'; loadTeamData(); return; }
+
+  function node(d, depth){
+    const kids = childrenOf(d.Seva_Dept_ID);
+    const roles = LIVE_DEPT_ROLES[d.Seva_Dept_ID] || [];
+    const filled = roles.filter(r=>r.holders && r.holders.length).length;
+    return `<div style="margin-left:${depth*24}px">
+      <details class="sub-card" style="margin-bottom:8px;padding:0">
+        <summary style="cursor:pointer;padding:12px 15px;font-weight:600;font-size:14px;display:flex;justify-content:space-between">
+          <span>${esc(d.Seva_Dept_Name)}</span>
+          <span class="sub2" style="font-weight:400">${filled} of ${roles.length} role${roles.length===1?'':'s'} filled</span>
+        </summary>
+        <div style="padding:0 15px 14px">
+          ${roles.length ? roles.map(r=>`<div class="oteamrow" style="cursor:default;flex-direction:column;align-items:stretch;gap:4px">
+              <div style="display:flex;align-items:center;justify-content:space-between">
+                <span>${esc(r.Dept_Role_Name)}</span>
+                <button class="mini" onclick="deleteRole(${r.Dept_Role_ID}, this)" title="Delete role" style="width:22px;height:22px;color:var(--rose)">&times;</button>
+              </div>
+              ${(r.holders&&r.holders.length) ? r.holders.map(h=>`<div class="sub2" style="display:flex;justify-content:space-between;padding-left:8px">
+                  <span style="color:var(--sage)">${esc(h.name)}</span>
+                  <span class="mini" onclick="removeMember(${h.usdrId}, this)" title="Remove" style="width:18px;height:18px;font-size:10px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center">&times;</span>
+                </div>`).join('') : '<div class="sub2" style="padding-left:8px;font-style:italic">vacant</div>'}
+            </div>`).join('') : '<p class="sub2">No roles defined yet.</p>'}
+          ${roleAndMemberFormsHTML(d, roles, 't'+d.Seva_Dept_ID, 'submitAssign')}
+        </div>
+      </details>
+      ${kids.map(k=>node(k,depth+1)).join('')}</div>`;
+  }
+
+  const roots = LIVE_DEPTS.filter(d=>d.Parent_Seva_Dept_ID===null);
+  el.innerHTML = roots.map(r=>node(r,0)).join('') + `
+    <div class="note" style="margin-top:10px"><b>Add roles and members here, or in Seva Departments.</b>
+      Adding and removing departments happens in Seva Departments only.</div>`;
 }
 
 /* ============ unified inbox ============ */
