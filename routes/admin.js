@@ -168,61 +168,88 @@ router.post('/hierarchy', requireAuth, async (req, res) => {
   }
 });
 
-// POST /api/admin/assign-role — put an existing CSMS user into a dept/role.
-// Requires the person to already have a User_Profile row (i.e. they've
-// signed in at least once, or someone created that row directly). There is
-// no endpoint yet to create a brand-new User_Profile for someone who has
-// never signed in — that's a separate, still-open piece (see README).
+// POST /api/admin/assign-role — put a CSMS user into a dept/role.
+// If no User_Profile exists yet for this email (they've never signed in),
+// one is created here so assignment isn't blocked on a prior login —
+// CSMS_ID is generated with the same MAX+1-with-retry approach already
+// used for Dept_Role_ID above, since this schema doesn't give every ID
+// column a real sequence. ASSUMPTION FLAGGED: this insert only sets
+// CSMS_ID/Seeker_Email/Seeker_Name/Ver_From_DT/Ver_To_DT — if User_Profile
+// has other NOT NULL columns (e.g. a required FK to MSR.Seeker) that
+// weren't visible from the queries built so far, this will fail loudly
+// with a clear Postgres error rather than silently — check the schema if
+// that happens.
 router.post('/assign-role', requireAuth, async (req, res) => {
-  const { email, sevaDeptId, deptRoleId } = req.body || {};
+  const { email, sevaDeptId, deptRoleId, name } = req.body || {};
   if (!email || !sevaDeptId || !deptRoleId) {
     return res.status(400).json({ error: 'email, sevaDeptId and deptRoleId are required' });
   }
-  let client;
-  try {
-    client = await pool.connect();
-    await client.query('BEGIN');
 
-    const userQ = await client.query(
-      `SELECT ${qi('CSMS_ID')}, ${qi('Seeker_Name')} FROM ${qi('RMS')}.${qi('User_Profile')}
-       WHERE lower(${qi('Seeker_Email')}) = lower($1) LIMIT 1`,
-      [email]
-    );
-    if (userQ.rowCount === 0) {
-      await client.query('ROLLBACK');
-      return res.status(404).json({
-        error: 'NO_PROFILE',
-        message: 'No CSMS profile exists for this email yet. They need to sign in with Google once before they can be assigned a role.',
-      });
+  const MAX_ATTEMPTS = 5;
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    let client;
+    try {
+      client = await pool.connect();
+      await client.query('BEGIN');
+
+      let csmsId, personName, profileCreated = false;
+      const userQ = await client.query(
+        `SELECT ${qi('CSMS_ID')}, ${qi('Seeker_Name')} FROM ${qi('RMS')}.${qi('User_Profile')}
+         WHERE lower(${qi('Seeker_Email')}) = lower($1) LIMIT 1`,
+        [email]
+      );
+
+      if (userQ.rowCount > 0) {
+        csmsId = userQ.rows[0].CSMS_ID;
+        personName = userQ.rows[0].Seeker_Name;
+      } else {
+        const maxQ = await client.query(
+          `SELECT COALESCE(MAX(${qi('CSMS_ID')}), 0) + 1 AS next_id FROM ${qi('RMS')}.${qi('User_Profile')}`
+        );
+        csmsId = maxQ.rows[0].next_id;
+        personName = (name && name.trim()) || email.split('@')[0];
+        const insQ = await client.query(
+          `INSERT INTO ${qi('RMS')}.${qi('User_Profile')}
+            (${qi('CSMS_ID')}, ${qi('Seeker_Email')}, ${qi('Seeker_Name')}, ${qi('Ver_From_DT')}, ${qi('Ver_To_DT')})
+           VALUES ($1, $2, $3, CURRENT_DATE, $4)
+           RETURNING ${qi('CSMS_ID')}`,
+          [csmsId, email, personName, FAR_FUTURE]
+        );
+        csmsId = insQ.rows[0].CSMS_ID;
+        profileCreated = true;
+      }
+
+      // Supersede any existing active assignment for this person IN THIS SAME
+      // department (a person can hold roles in more than one department —
+      // this only replaces a prior role within the one department given).
+      await client.query(
+        `UPDATE ${qi('RMS')}.${qi('User_Seva_Dept_Role')}
+         SET ${qi('Ver_To_DT')} = CURRENT_DATE - INTERVAL '1 day'
+         WHERE ${qi('CSMS_ID')} = $1 AND ${qi('Seva_Dept_ID')} = $2
+           AND (${qi('Ver_To_DT')} IS NULL OR ${qi('Ver_To_DT')} >= CURRENT_DATE)`,
+        [csmsId, sevaDeptId]
+      );
+
+      await client.query(
+        `INSERT INTO ${qi('RMS')}.${qi('User_Seva_Dept_Role')}
+          (${qi('CSMS_ID')}, ${qi('Seva_Dept_ID')}, ${qi('Dept_Role_ID')}, ${qi('Ver_From_DT')}, ${qi('Ver_To_DT')})
+         VALUES ($1, $2, $3, CURRENT_DATE, $4)`,
+        [csmsId, sevaDeptId, deptRoleId, FAR_FUTURE]
+      );
+
+      await client.query('COMMIT');
+      return res.status(201).json({ ok: true, csmsId, name: personName, profileCreated });
+    } catch (err) {
+      if (client) await client.query('ROLLBACK');
+      if (err.code === '23505' && attempt < MAX_ATTEMPTS) {
+        // CSMS_ID collision on the MAX+1 guess — retry with a fresh read.
+        continue;
+      }
+      console.error('[POST /admin/assign-role] error', err);
+      return res.status(500).json({ error: 'INTERNAL', message: err.message });
+    } finally {
+      if (client) client.release();
     }
-    const csmsId = userQ.rows[0].CSMS_ID;
-
-    // Supersede any existing active assignment for this person IN THIS SAME
-    // department (a person can hold roles in more than one department —
-    // this only replaces a prior role within the one department given).
-    await client.query(
-      `UPDATE ${qi('RMS')}.${qi('User_Seva_Dept_Role')}
-       SET ${qi('Ver_To_DT')} = CURRENT_DATE - INTERVAL '1 day'
-       WHERE ${qi('CSMS_ID')} = $1 AND ${qi('Seva_Dept_ID')} = $2
-         AND (${qi('Ver_To_DT')} IS NULL OR ${qi('Ver_To_DT')} >= CURRENT_DATE)`,
-      [csmsId, sevaDeptId]
-    );
-
-    await client.query(
-      `INSERT INTO ${qi('RMS')}.${qi('User_Seva_Dept_Role')}
-        (${qi('CSMS_ID')}, ${qi('Seva_Dept_ID')}, ${qi('Dept_Role_ID')}, ${qi('Ver_From_DT')}, ${qi('Ver_To_DT')})
-       VALUES ($1, $2, $3, CURRENT_DATE, $4)`,
-      [csmsId, sevaDeptId, deptRoleId, FAR_FUTURE]
-    );
-
-    await client.query('COMMIT');
-    res.status(201).json({ ok: true, csmsId, name: userQ.rows[0].Seeker_Name });
-  } catch (err) {
-    if (client) await client.query('ROLLBACK');
-    console.error('[POST /admin/assign-role] error', err);
-    res.status(500).json({ error: 'INTERNAL' });
-  } finally {
-    if (client) client.release();
   }
 });
 
