@@ -109,7 +109,7 @@ p.sub{margin:0 0 16px;color:var(--ink-3);font-size:12.5px;max-width:62ch}
   font:inherit;font-size:13px;padding:7px 11px;border:1px solid var(--line-2);
   border-radius:var(--r-sm);min-width:210px;background:var(--card);
 }
-.chip{background:var(--card);border:1px solid var(--line-2);border-radius:var(--r-tag);
+.chip{background:var(--card);border:1px solid var(--line-2);border-radius:999px;
   padding:6px 14px;font-size:12.5px;color:var(--ink-2);box-shadow:none}
 .chip:hover{border-color:var(--ink-3);color:var(--ink)}
 .chip.on{background:var(--deep);border-color:var(--deep);color:#fff;font-weight:600}
@@ -188,7 +188,8 @@ tbody tr:last-child td{border-bottom:none}
 
 .btn{
   background:var(--deep);color:#fff;border:1px solid var(--deep);
-  border-radius:var(--r-sm);padding:7px 14px;font-size:13px;font-weight:500;
+  border-radius:999px;padding:7px 16px;font-size:13px;font-weight:500;
+  transition:background .15s var(--ease), box-shadow .15s var(--ease), transform .1s var(--ease);
 }
 .btn:hover{background:var(--deep-2);box-shadow:0 2px 8px rgba(11,143,196,.22)}
 .btn:active{transform:translateY(1px) scale(.98)}
@@ -197,7 +198,12 @@ tbody tr:last-child td{border-bottom:none}
 .btn.warn{background:var(--rose);border-color:var(--rose)}
 .btn.warn:hover{background:#9C4A1B}
 .btn:disabled{opacity:.45;cursor:not-allowed;transform:none;box-shadow:none}
-.btn.sm{padding:5px 10px;font-size:12.5px}
+.btn.sm{padding:5px 12px;font-size:12.5px}
+.btn .spin{width:13px;height:13px;border-radius:50%;border:2px solid rgba(255,255,255,.4);
+  border-top-color:#fff;animation:btnspin .7s linear infinite;display:none;vertical-align:-2px;margin-right:6px}
+.btn.loading .spin{display:inline-block}
+.btn.loading .lbl{opacity:.85}
+@keyframes btnspin{to{transform:rotate(360deg)}}
 .btnrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
 
 /* ---------- forms ---------- */
@@ -319,7 +325,7 @@ nav .pip.r{background:var(--rose);color:#fff}
 ::-webkit-scrollbar-thumb{background:#CFE0EC;border-radius:10px;border:2px solid transparent;background-clip:content-box}
 ::-webkit-scrollbar-track{background:transparent}
 /* ---------- kanban / journey board ---------- */
-.mini{background:var(--card);border:1px solid var(--line-2);border-radius:8px;
+.mini{background:var(--card);border:1px solid var(--line-2);border-radius:999px;
   width:24px;height:24px;line-height:1;font-size:14px;color:var(--ink-2);cursor:pointer}
 .mini:hover{border-color:#8397A6;color:var(--ink)}
 .mini:disabled{opacity:.35;cursor:not-allowed}
@@ -340,7 +346,29 @@ nav .pip.r{background:var(--rose);color:#fff}
 .kcard-name{font-size:14px;cursor:pointer}
 .kcard-name:hover{color:var(--deep)}
 .kcard-actions{display:flex;align-items:center;gap:8px;margin-top:auto;padding-top:8px}
-.kcard-drag{margin-left:auto;font-size:10.5px;color:var(--ink-3);cursor:grab}
+.kcard-drag{margin-left:auto;font-size:10.5px;color:var(--ink-3);cursor:grab}/* ---------- organisation chart + modal ---------- */
+.orgchart{display:flex;flex-direction:column;align-items:center;padding:18px 0}
+.ostem{width:1px;background:var(--line-2);height:20px}
+.orow{display:flex;gap:22px;flex-wrap:wrap;justify-content:center;position:relative;padding-top:20px}
+.obranch{display:flex;flex-direction:column;align-items:center;position:relative}
+.obranch::before{content:"";position:absolute;top:-20px;left:50%;width:1px;height:20px;background:var(--line-2)}
+.ochip{border-radius:999px;padding:9px 18px;font-size:13.5px;font-weight:500;cursor:pointer;
+  border:1px solid var(--line-2);text-align:center;user-select:none;transition:background .15s var(--ease)}
+.ochip.root{background:var(--deep);color:#fff;border-color:var(--deep);cursor:default}
+.ochip.lvl1{background:var(--deep-wash);color:var(--deep)}
+.ochip.lvl1:hover{background:var(--deep);color:#fff}
+.osub2{font-size:11px;color:var(--ink-3);margin-top:4px}
+.obackdrop{position:absolute;inset:0;background:rgba(22,51,74,.32);display:flex;align-items:center;
+  justify-content:center;z-index:40;animation:fadein .16s var(--ease)}
+.omodal{width:min(380px,90vw);max-height:70vh;overflow-y:auto;background:var(--card);border-radius:16px;
+  border:1px solid var(--line-2);padding:20px;box-shadow:var(--sh)}
+.oclose{float:right;background:none;border:1px solid var(--line-2);border-radius:999px;
+  width:28px;height:28px;line-height:1;color:var(--ink-2);font-size:16px;cursor:pointer}
+.oclose:hover{border-color:var(--ink-3);color:var(--ink)}
+.oteamrow{display:flex;align-items:center;justify-content:space-between;padding:9px 2px;
+  border-bottom:1px solid var(--line);font-size:13.5px;cursor:pointer}
+.oteamrow:last-of-type{border-bottom:none}
+.oteamrow:hover{color:var(--deep)}
 </style>
 </head>
 <body>
@@ -1459,30 +1487,32 @@ function renderIntakeSection(){
       </div>
       <div class="btnrow">
         ${candidates.length
-          ? candidates.map(c=>`<button class="btn" onclick="mergeSubmission(${s.Submission_ID}, ${c.Seeker_ID}, this)">Merge into ${esc(c.First_Name)}</button>`).join('')
-            + `<button class="btn ghost" onclick="promoteSubmission(${s.Submission_ID}, this)">Not the same person — create new</button>`
-          : `<button class="btn" onclick="promoteSubmission(${s.Submission_ID}, this)">Promote to seeker</button>`}
+          ? candidates.map(c=>`<button class="btn" onclick="mergeSubmission(${s.Submission_ID}, ${c.Seeker_ID}, this)"><span class="spin"></span><span class="lbl">Merge into ${esc(c.First_Name)}</span></button>`).join('')
+            + `<button class="btn ghost" onclick="promoteSubmission(${s.Submission_ID}, this)"><span class="spin"></span><span class="lbl">Not the same person — create new</span></button>`
+          : `<button class="btn" onclick="promoteSubmission(${s.Submission_ID}, this)"><span class="spin"></span><span class="lbl">Promote to seeker</span></button>`}
       </div>
     </div>`;
   }).join('') : `<div class="card pad" style="color:var(--ink-3)">No submissions awaiting review.</div>`;
 }
 
 async function promoteSubmission(id, btn){
-  if(btn) btn.disabled = true;
-  try{
-    await apiFetch('/api/intake/'+id+'/promote', {method:'POST'});
-    toast('Promoted to a new seeker record.');
-    invalidateIntakeData();
-  }catch(err){ toast('Could not promote: '+(err.message||'')); if(btn) btn.disabled = false; }
+  await withLoading(btn, async ()=>{
+    try{
+      await apiFetch('/api/intake/'+id+'/promote', {method:'POST'});
+      toast('Promoted to a new seeker record.');
+      invalidateIntakeData();
+    }catch(err){ toast('Could not promote: '+(err.message||'')); }
+  });
 }
 
 async function mergeSubmission(id, seekerId, btn){
-  if(btn) btn.disabled = true;
-  try{
-    await apiFetch('/api/intake/'+id+'/merge', {method:'POST', body: JSON.stringify({seekerId})});
-    toast('Merged. History preserved on the existing record.');
-    invalidateIntakeData();
-  }catch(err){ toast('Could not merge: '+(err.message||'')); if(btn) btn.disabled = false; }
+  await withLoading(btn, async ()=>{
+    try{
+      await apiFetch('/api/intake/'+id+'/merge', {method:'POST', body: JSON.stringify({seekerId})});
+      toast('Merged. History preserved on the existing record.');
+      invalidateIntakeData();
+    }catch(err){ toast('Could not merge: '+(err.message||'')); }
+  });
 }
 
 /* ============ dashboard ============ */
@@ -1783,15 +1813,18 @@ function subtab(s){
   document.getElementById('orgDepts').style.display = s==='depts' ? '' : 'none';
   document.getElementById('orgTeams').style.display = s==='teams' ? '' : 'none';
   document.querySelectorAll('#p-org .chip').forEach(c=>c.classList.toggle('on', c.dataset.sub===s));
+  closeDeptModal();
   if(s==='teams') renderSevaTeams(); else renderSevaDepartments();
 }
 
-/* ============ organisation: structure ============
-   Cached so the global render() cycle (which calls these on every state
-   change, not just when the tab is open) doesn't refetch constantly.
+/* ============ organisation: chart + modal ============
+   Two levels only for now (parent department -> its children), matching
+   the real data (Seva_Dept has no grandchildren in what you gave me).
+   Cached so the global render() cycle doesn't refetch on every tick;
    invalidateTeamData() forces a reload after an admin action succeeds. */
 let LIVE_DEPTS = null;
 let LIVE_DEPT_ROLES = {};
+let CHART_MODAL = null; // { deptId, level: 1|2, parentId (level 2 only) }
 
 function invalidateTeamData(){ LIVE_DEPTS = null; LIVE_DEPT_ROLES = {}; loadTeamData(); }
 
@@ -1805,6 +1838,7 @@ async function loadTeamData(){
     LIVE_DEPTS = depts;
     renderSevaDepartments();
     renderSevaTeams();
+    if(CHART_MODAL) renderModalContent();
   }catch(err){
     const msg = `<div class="hidden-note" style="background:var(--rose-wash);border-color:#EBCBCE;color:var(--rose)">
         <b>Could not load departments.</b> ${esc(err.message||'')}</div>`;
@@ -1813,171 +1847,197 @@ async function loadTeamData(){
   }
 }
 
-async function addDept(){
-  const nameEl = document.getElementById('newDeptName');
-  const parentEl = document.getElementById('newDeptParent');
-  const errEl = document.getElementById('deptErr');
+function chartMode(){ return document.getElementById('orgTeams').style.display==='none' ? 'depts' : 'teams'; }
+
+function openDeptModal(deptId){ CHART_MODAL = {deptId, level:1}; renderModalContent(); }
+function drillInto(deptId, parentId){ CHART_MODAL = {deptId, level:2, parentId}; renderModalContent(); }
+function backToParent(){ if(CHART_MODAL && CHART_MODAL.parentId!=null) openDeptModal(CHART_MODAL.parentId); }
+function closeDeptModal(){ CHART_MODAL = null; const el=document.getElementById('deptModalRoot'); if(el) el.innerHTML=''; }
+
+async function withLoading(btn, fn){
+  if(!btn || btn.classList.contains('loading')) return;
+  btn.classList.add('loading'); btn.disabled = true;
+  try{ await fn(); } finally { btn.classList.remove('loading'); btn.disabled = false; }
+}
+
+async function addDeptModal(parentId, btn){
+  const nameEl = document.getElementById('mNewDeptName');
+  const errEl = document.getElementById('mDeptErr');
   errEl.classList.remove('on');
   const name = (nameEl.value||'').trim();
   if(!name){ errEl.textContent='Enter a department name.'; errEl.classList.add('on'); return; }
-  try{
-    await apiFetch('/api/admin/depts', {method:'POST', body: JSON.stringify({
-      name, parentId: parentEl.value ? Number(parentEl.value) : null
-    })});
-    nameEl.value = '';
-    toast('Department added.');
-    invalidateTeamData();
-  }catch(err){ errEl.textContent = err.message||'Could not add department.'; errEl.classList.add('on'); }
+  await withLoading(btn, async ()=>{
+    try{
+      await apiFetch('/api/admin/depts', {method:'POST', body: JSON.stringify({name, parentId})});
+      toast('Department added.');
+      invalidateTeamData();
+    }catch(err){ errEl.textContent = err.message||'Could not add department.'; errEl.classList.add('on'); }
+  });
 }
 
-async function addRole(deptId, btn){
-  const nameEl = document.getElementById('newRoleName_'+deptId);
-  const descEl = document.getElementById('newRoleDesc_'+deptId);
+async function addRoleModal(deptId, btn){
+  const nameEl = document.getElementById('mNewRoleName');
+  const descEl = document.getElementById('mNewRoleDesc');
   const name = (nameEl.value||'').trim();
   if(!name) return;
-  if(btn) btn.disabled = true;
-  try{
-    await apiFetch('/api/admin/roles', {method:'POST', body: JSON.stringify({
-      sevaDeptId: deptId, name, desc: (descEl.value||'').trim()
-    })});
-    toast('Role added.');
-    invalidateTeamData();
-  }catch(err){ toast('Could not add role: '+(err.message||'')); }
-  finally{ if(btn) btn.disabled = false; }
+  await withLoading(btn, async ()=>{
+    try{
+      const r = await apiFetch('/api/admin/roles', {method:'POST', body: JSON.stringify({sevaDeptId: deptId, name, desc: (descEl.value||'').trim()})});
+      toast('Role added — set its hierarchy rank below so it appears correctly in the org chart.');
+      invalidateTeamData();
+    }catch(err){ toast('Could not add role: '+(err.message||'')); }
+  });
 }
 
 async function saveHierarchy(deptId, roleId, value){
   const n = Number(value);
   if(!Number.isFinite(n)) return;
   try{
-    await apiFetch('/api/admin/hierarchy', {method:'POST', body: JSON.stringify({
-      sevaDeptId: deptId, deptRoleId: roleId, hrchyId: n
-    })});
+    await apiFetch('/api/admin/hierarchy', {method:'POST', body: JSON.stringify({sevaDeptId: deptId, deptRoleId: roleId, hrchyId: n})});
     toast('Hierarchy updated.');
     invalidateTeamData();
   }catch(err){ toast('Could not update hierarchy: '+(err.message||'')); }
 }
 
-async function assignRole(deptId){
-  const emailEl = document.getElementById('assignEmail_'+deptId);
-  const roleEl = document.getElementById('assignRole_'+deptId);
-  const errEl = document.getElementById('assignErr_'+deptId);
+function onModalRoleSelect(v){
+  document.getElementById('mNewRoleAssignRow').style.display = v==='__new__' ? 'flex' : 'none';
+}
+
+async function assignRoleModal(deptId, btn){
+  const emailEl = document.getElementById('mAssignEmail');
+  const roleEl = document.getElementById('mAssignRole');
+  const errEl = document.getElementById('mAssignErr');
   errEl.classList.remove('on');
   const email = (emailEl.value||'').trim();
-  if(!email || !roleEl.value){ errEl.textContent='Enter an email and pick a role.'; errEl.classList.add('on'); return; }
-  try{
-    const r = await apiFetch('/api/admin/assign-role', {method:'POST', body: JSON.stringify({
-      email, sevaDeptId: deptId, deptRoleId: Number(roleEl.value)
-    })});
-    emailEl.value = '';
-    toast((r.name||email)+' assigned.');
-    invalidateTeamData();
-  }catch(err){ errEl.textContent = err.message||'Could not assign role.'; errEl.classList.add('on'); }
+
+  await withLoading(btn, async ()=>{
+    try{
+      let roleId = roleEl.value;
+      let createdNewRole = false;
+      if(roleId === '__new__'){
+        const newName = (document.getElementById('mNewRoleInline').value||'').trim();
+        if(!newName){ errEl.textContent='Enter a name for the new role.'; errEl.classList.add('on'); return; }
+        const created = await apiFetch('/api/admin/roles', {method:'POST', body: JSON.stringify({sevaDeptId: deptId, name: newName})});
+        roleId = created.deptRoleId;
+        createdNewRole = true;
+      }
+      if(!email || !roleId){ errEl.textContent='Enter an email and pick a role.'; errEl.classList.add('on'); return; }
+
+      const r = await apiFetch('/api/admin/assign-role', {method:'POST', body: JSON.stringify({email, sevaDeptId: deptId, deptRoleId: Number(roleId)})});
+      emailEl.value = '';
+      toast((r.name||email)+' assigned.');
+      if(createdNewRole) toast('New role has no hierarchy rank yet — set one in Seva Departments.');
+      invalidateTeamData();
+    }catch(err){ errEl.textContent = err.message||'Could not assign role.'; errEl.classList.add('on'); }
+  });
 }
 
-/* -- Seva Departments: structure only (tree, add dept, add role, rank) -- */
-function renderSevaDepartments(){
-  const el = document.getElementById('orgDepts');
-  if(LIVE_DEPTS === null){
-    el.innerHTML = '<p class="sub2">Loading departments…</p>';
-    loadTeamData();
-    return;
-  }
+function deptById(id){ return LIVE_DEPTS.find(d=>d.Seva_Dept_ID===id); }
+function childrenOf(id){ return LIVE_DEPTS.filter(d=>d.Parent_Seva_Dept_ID===id); }
 
-  const parentOptions = LIVE_DEPTS.map(d=>
-    `<option value="${d.Seva_Dept_ID}">${esc(d.Seva_Dept_Name)}</option>`).join('');
-
-  function node(d, depth){
-    const kids = LIVE_DEPTS.filter(x=>x.Parent_Seva_Dept_ID===d.Seva_Dept_ID);
-    const roles = LIVE_DEPT_ROLES[d.Seva_Dept_ID] || [];
-    return `<div style="margin-left:${depth*26}px">
-      <div class="sub-card" style="margin-bottom:8px;padding:12px 15px">
-        <div style="font-weight:600;font-size:14px">${esc(d.Seva_Dept_Name)}</div>
-        ${roles.length ? `<div style="margin-top:8px;display:flex;flex-direction:column;gap:5px">
-          ${roles.map(r=>`<div style="display:flex;align-items:center;gap:8px;font-size:12.5px">
-            <span style="flex:1" title="${esc(r.Dept_Role_Desc||'')}">${esc(r.Dept_Role_Name)}</span>
-            <label class="sub2" style="margin:0">Rank</label>
-            <input type="number" value="${r.HRCHY_ID!=null?r.HRCHY_ID:''}" style="width:56px;padding:3px 6px;font-size:12px"
-              onchange="saveHierarchy(${d.Seva_Dept_ID},${r.Dept_Role_ID},this.value)">
-          </div>`).join('')}
-        </div>` : '<p class="sub2" style="margin-top:6px">No roles defined yet.</p>'}
-        <details style="margin-top:8px">
-          <summary style="cursor:pointer;font-size:12px;color:var(--deep)">+ Add role</summary>
-          <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">
-            <input id="newRoleName_${d.Seva_Dept_ID}" placeholder="Role name" style="flex:1;min-width:120px;padding:5px 8px;font-size:12.5px">
-            <input id="newRoleDesc_${d.Seva_Dept_ID}" placeholder="Description" style="flex:2;min-width:140px;padding:5px 8px;font-size:12.5px">
-            <button class="btn sm" onclick="addRole(${d.Seva_Dept_ID}, this)">Add</button>
-          </div>
-        </details>
-      </div>
-      ${kids.map(k=>node(k,depth+1)).join('')}</div>`;
-  }
+function renderChart(containerId, mode){
+  const el = document.getElementById(containerId);
+  if(LIVE_DEPTS === null){ el.innerHTML = '<p class="sub2">Loading departments…</p>'; loadTeamData(); return; }
 
   const roots = LIVE_DEPTS.filter(d=>d.Parent_Seva_Dept_ID===null);
-  el.innerHTML = roots.map(r=>node(r,0)).join('') + `
-    <div class="sub-card" style="margin-top:10px">
-      <div style="font-weight:600;font-size:13.5px;margin-bottom:8px">+ Add department</div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap">
-        <input id="newDeptName" placeholder="Department name" style="flex:1;min-width:140px;padding:6px 9px;font-size:13px">
-        <select id="newDeptParent" style="padding:6px 9px;font-size:13px">
-          <option value="">— top level —</option>${parentOptions}
-        </select>
-        <button class="btn sm" onclick="addDept()">Add</button>
+  el.innerHTML = `
+    <div class="orgchart">
+      <div class="ochip root">SSRF</div>
+      <div class="ostem"></div>
+      <div class="orow">
+        ${roots.map(d=>{
+          const kidCount = childrenOf(d.Seva_Dept_ID).length;
+          return `<div class="obranch">
+            <div class="ochip lvl1" onclick="openDeptModal(${d.Seva_Dept_ID})">${esc(d.Seva_Dept_Name)}</div>
+            <div class="osub2">${kidCount} sub-dept${kidCount===1?'':'s'}</div>
+          </div>`;
+        }).join('')}
       </div>
-      <div class="err" id="deptErr" style="margin-top:6px"></div>
     </div>
-    <div class="note" style="margin-top:10px"><b>This is live.</b> Reads and writes RMS.Seva_Dept,
-      Seva_Dept_Role and Seva_Dept_Role_HRCHY directly. There is currently no separate admin
-      privilege check — any signed-in user can add departments and roles here.</div>`;
+    <div id="deptModalRoot"></div>`;
+  if(CHART_MODAL) renderModalContent();
 }
+function renderSevaDepartments(){ renderChart('orgDepts','depts'); }
+function renderSevaTeams(){ renderChart('orgTeams','teams'); }
 
-/* -- Seva Teams: who's actually in each department -- */
-function renderSevaTeams(){
-  const el = document.getElementById('orgTeams');
-  if(LIVE_DEPTS === null){
-    el.innerHTML = '<p class="sub2">Loading teams…</p>';
-    loadTeamData();
-    return;
-  }
+function renderModalContent(){
+  const root = document.getElementById('deptModalRoot');
+  if(!root || !CHART_MODAL) return;
+  const mode = chartMode();
+  const dept = deptById(CHART_MODAL.deptId);
+  if(!dept){ closeDeptModal(); return; }
 
-  function node(d, depth){
-    const kids = LIVE_DEPTS.filter(x=>x.Parent_Seva_Dept_ID===d.Seva_Dept_ID);
-    const roles = LIVE_DEPT_ROLES[d.Seva_Dept_ID] || [];
-    const filled = roles.filter(r=>r.holders && r.holders.length).length;
-    return `<div style="margin-left:${depth*26}px">
-      <div class="sub-card" style="margin-bottom:8px;padding:12px 15px">
-        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-          <span style="font-weight:600;font-size:14px">${esc(d.Seva_Dept_Name)}</span>
-          <span class="sub2">${filled} of ${roles.length} role${roles.length===1?'':'s'} filled</span>
-        </div>
-        ${roles.length ? `<div style="margin-top:8px;display:flex;flex-direction:column;gap:4px">
-          ${roles.map(r=>`<div style="font-size:12.5px">
-            <span style="color:var(--ink-2)">${esc(r.Dept_Role_Name)}</span> —
-            ${r.holders && r.holders.length
-              ? `<span style="color:var(--sage);font-weight:500">${esc(r.holders.join(', '))}</span>`
-              : `<span style="color:var(--ink-3);font-style:italic">vacant</span>`}
-          </div>`).join('')}
-        </div>` : '<p class="sub2" style="margin-top:6px">No roles defined for this department yet.</p>'}
-        ${roles.length ? `<details style="margin-top:8px">
-          <summary style="cursor:pointer;font-size:12px;color:var(--deep)">+ Assign existing user</summary>
-          <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">
-            <input id="assignEmail_${d.Seva_Dept_ID}" type="email" placeholder="name@ssrf.org" style="flex:1;min-width:140px;padding:5px 8px;font-size:12.5px">
-            <select id="assignRole_${d.Seva_Dept_ID}" style="padding:5px 8px;font-size:12.5px">
-              ${roles.map(r=>`<option value="${r.Dept_Role_ID}">${esc(r.Dept_Role_Name)}</option>`).join('')}
-            </select>
-            <button class="btn sm" onclick="assignRole(${d.Seva_Dept_ID})">Assign</button>
+  if(CHART_MODAL.level === 1){
+    const kids = childrenOf(dept.Seva_Dept_ID);
+    root.innerHTML = `<div class="obackdrop" onclick="if(event.target===this) closeDeptModal()">
+      <div class="omodal">
+        <button class="oclose" onclick="closeDeptModal()" aria-label="Close">&times;</button>
+        <h3 style="margin:0 0 2px">${esc(dept.Seva_Dept_Name)}</h3>
+        <p class="sub2" style="margin-bottom:12px">${kids.length} sub-department${kids.length===1?'':'s'}</p>
+        ${kids.length ? kids.map(k=>`<div class="oteamrow" onclick="drillInto(${k.Seva_Dept_ID},${dept.Seva_Dept_ID})">
+            <span>${esc(k.Seva_Dept_Name)}</span>&rsaquo;
+          </div>`).join('') : '<p class="sub2">No sub-departments yet.</p>'}
+        ${mode==='depts' ? `<details style="margin-top:12px">
+          <summary style="cursor:pointer;font-size:12px;color:var(--deep)">+ Add sub-department</summary>
+          <div style="display:flex;gap:6px;margin-top:8px">
+            <input id="mNewDeptName" placeholder="Department name" style="flex:1;border-radius:999px;padding:6px 14px;font-size:13px;border:1px solid var(--line-2)">
+            <button class="btn sm" onclick="addDeptModal(${dept.Seva_Dept_ID}, this)"><span class="spin"></span><span class="lbl">Add</span></button>
           </div>
-          <div class="err" id="assignErr_${d.Seva_Dept_ID}" style="margin-top:4px"></div>
-          <p class="sub2" style="margin-top:4px">Person must have signed in with Google at least once before they can be assigned.</p>
+          <div class="err" id="mDeptErr" style="margin-top:6px"></div>
         </details>` : ''}
       </div>
-      ${kids.map(k=>node(k,depth+1)).join('')}</div>`;
+    </div>`;
+    return;
   }
 
-  const roots = LIVE_DEPTS.filter(d=>d.Parent_Seva_Dept_ID===null);
-  el.innerHTML = roots.map(r=>node(r,0)).join('') + `
-    <div class="note" style="margin-top:10px"><b>Who serves where.</b> Access follows position
-      in this tree — there is no separate list of permissions to keep in step.</div>`;
+  // level 2 — leaf department: roles + (depts mode: add role/rank) or (teams mode: holders + assign)
+  const roles = LIVE_DEPT_ROLES[dept.Seva_Dept_ID] || [];
+  root.innerHTML = `<div class="obackdrop" onclick="if(event.target===this) closeDeptModal()">
+    <div class="omodal">
+      <button class="oclose" onclick="closeDeptModal()" aria-label="Close">&times;</button>
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px">
+        <button class="mini" onclick="backToParent()" title="Back" style="width:24px;height:24px">&lsaquo;</button>
+        <h3 style="margin:0">${esc(dept.Seva_Dept_Name)}</h3>
+      </div>
+      ${mode==='depts' ? `
+        ${roles.length ? roles.map(r=>`<div class="oteamrow" style="cursor:default">
+            <span title="${esc(r.Dept_Role_Desc||'')}">${esc(r.Dept_Role_Name)}</span>
+            <span style="display:flex;align-items:center;gap:6px">
+              <span class="sub2">Rank</span>
+              <input type="number" value="${r.HRCHY_ID!=null?r.HRCHY_ID:''}" style="width:52px;border-radius:999px;padding:3px 10px;font-size:12px;border:1px solid var(--line-2)"
+                onchange="saveHierarchy(${dept.Seva_Dept_ID},${r.Dept_Role_ID},this.value)">
+            </span>
+          </div>`).join('') : '<p class="sub2">No roles defined yet.</p>'}
+        <details style="margin-top:12px">
+          <summary style="cursor:pointer;font-size:12px;color:var(--deep)">+ Add role</summary>
+          <div style="display:flex;flex-direction:column;gap:6px;margin-top:8px">
+            <input id="mNewRoleName" placeholder="Role name" style="border-radius:999px;padding:6px 14px;font-size:13px;border:1px solid var(--line-2)">
+            <input id="mNewRoleDesc" placeholder="Description (optional)" style="border-radius:999px;padding:6px 14px;font-size:13px;border:1px solid var(--line-2)">
+            <button class="btn sm" onclick="addRoleModal(${dept.Seva_Dept_ID}, this)"><span class="spin"></span><span class="lbl">Add role</span></button>
+          </div>
+        </details>`
+      : `
+        ${roles.length ? roles.map(r=>`<div class="oteamrow" style="cursor:default">
+            <span>${esc(r.Dept_Role_Name)}</span>
+            <span style="color:${r.holders&&r.holders.length?'var(--sage)':'var(--ink-3)'};font-style:${r.holders&&r.holders.length?'normal':'italic'};font-size:12.5px">
+              ${r.holders&&r.holders.length ? esc(r.holders.join(', ')) : 'vacant'}</span>
+          </div>`).join('') : '<p class="sub2">No roles defined for this department yet.</p>'}
+        ${roles.length ? `<div style="margin-top:12px">
+          <p class="sub2" style="margin-bottom:6px">Assign someone</p>
+          <input id="mAssignEmail" type="email" placeholder="name@ssrf.org" style="width:100%;border-radius:999px;padding:6px 14px;font-size:13px;border:1px solid var(--line-2);box-sizing:border-box;margin-bottom:6px">
+          <select id="mAssignRole" onchange="onModalRoleSelect(this.value)" style="width:100%;border-radius:999px;padding:6px 14px;font-size:13px;border:1px solid var(--line-2);box-sizing:border-box;margin-bottom:6px">
+            ${roles.map(r=>`<option value="${r.Dept_Role_ID}">${esc(r.Dept_Role_Name)}</option>`).join('')}
+            <option value="__new__">+ Add new role</option>
+          </select>
+          <div id="mNewRoleAssignRow" style="display:none;gap:6px;margin-bottom:6px">
+            <input id="mNewRoleInline" placeholder="New role name" style="flex:1;border-radius:999px;padding:6px 14px;font-size:13px;border:1px solid var(--line-2)">
+          </div>
+          <button class="btn" style="width:100%" onclick="assignRoleModal(${dept.Seva_Dept_ID}, this)"><span class="spin"></span><span class="lbl">Assign role</span></button>
+          <div class="err" id="mAssignErr" style="margin-top:6px"></div>
+          <p class="sub2" style="margin-top:6px">Person must have signed in with Google at least once before they can be assigned.</p>
+        </div>` : ''}`}
+    </div>
+  </div>`;
 }
 
 /* ============ unified inbox ============ */
