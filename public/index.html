@@ -365,7 +365,6 @@ nav .pip.r{background:var(--rose);color:#fff}
   <button class="on" data-p="seekers" onclick="tab('seekers')">Seekers</button>
   <button data-p="alerts" onclick="tab('alerts')">My work<span class="pip" id="pip">0</span></button>
   <button data-p="inbox" onclick="tab('inbox')">Inbox<span class="pip" id="pip4">0</span></button>
-  <button data-p="intake" onclick="tab('intake')">Intake<span class="pip" id="pip2">0</span></button>
   <button data-p="journey" onclick="tab('journey')">Journey</button>
   <button data-p="calendar" onclick="tab('calendar')">Calendar</button>
   <button data-p="reports" onclick="tab('reports')">Reports<span class="pip r" id="pip5">0</span></button>
@@ -431,15 +430,9 @@ nav .pip.r{background:var(--rose);color:#fff}
 
   <section class="pane" id="p-alerts">
     <h2 class="sec">My work</h2>
-    <p class="sub">Tasks you have taken on, then what the system is raising: contact overdue against the fixed window, and sensitivity flags.</p>
+    <p class="sub">Tasks you have taken on, what the system is raising — contact overdue against the fixed window
+      and sensitivity flags — and form submissions awaiting review before they become seeker records.</p>
     <div id="alerts"></div>
-  </section>
-
-  <section class="pane" id="p-intake">
-    <h2 class="sec">Intake — awaiting review</h2>
-    <p class="sub">Form submissions and imports land here first. Nothing reaches the seeker record until a person confirms.</p>
-    <div class="note"><b>This is the holding area.</b> Each submission is matched against existing seekers on WhatsApp number, email and name. A confident match is offered as a merge; an unclear one waits for a human.</div>
-    <div id="intake"></div>
   </section>
 
   <section class="pane" id="p-journey">
@@ -587,15 +580,19 @@ const CONTACT_SLA_DAYS = 60; /* flat window — there is no longer a per-stage S
 const ROLES = {
   abroad:{name:"Abroad RS — global admin", regions:null, mask:[],
     can:"Full access to all regions and all fields.",
-    tabs:["overview","seekers","alerts","inbox","intake","journey","calendar","reports","sevahub","profiles","dash","org","ops","about"],
+    tabs:["overview","seekers","alerts","inbox","journey","calendar","reports","sevahub","profiles","dash","org","about"],
     landing:"overview"},
+  tech:{name:"Technical Admin", regions:null, mask:[],
+    can:"System health and infrastructure. Not scoped to any region.",
+    tabs:["overview","org","ops","about"],
+    landing:"ops"},
   rs_de:{name:"Regional RS — Germany", regions:["Germany"], mask:[],
     can:"Germany only. All fields within that region.",
-    tabs:["overview","seekers","alerts","inbox","intake","journey","calendar","reports","sevahub","profiles","dash","org","about"],
+    tabs:["overview","seekers","alerts","inbox","journey","calendar","reports","sevahub","profiles","dash","org","about"],
     landing:"overview"},
   rs_fr:{name:"Regional RS — France", regions:["France"], mask:[],
     can:"France only. All fields within that region.",
-    tabs:["overview","seekers","alerts","inbox","intake","journey","calendar","reports","sevahub","profiles","dash","org","about"],
+    tabs:["overview","seekers","alerts","inbox","journey","calendar","reports","sevahub","profiles","dash","org","about"],
     landing:"overview"},
   seva:{name:"Seva RS — service allocation", regions:null, mask:["whatsapp","email","dob"],
     can:"All regions, but personal contact details and date of birth are hidden.",
@@ -839,23 +836,9 @@ let SEEKERS=[
 ];
 
 /* ============ intake queue ============ */
-let INTAKE=[
- {id:"s1",form:"German prasar form",when:"25 Aug 2026, 19:42",name:"Anja Brenner",whatsapp:"+49 151 4408 2213",
-  email:"anja.brenner91@example.de",country:"Germany",msg:"I attended the talk in Hamburg and would like to know about retreats.",
-  score:96,why:["WhatsApp number matches Anja Brenner exactly","Name matches exactly","Email differs from the one on record"],match:1,status:"pending"},
-
- {id:"s2",form:"1on1 spiritual discussion",when:"25 Aug 2026, 08:15",name:"Karin Weiss",whatsapp:"+49 157 2266 049",
-  email:"k.weiss@example.de",country:"Germany",msg:"Interested in an online discussion. Available weekday evenings.",
-  score:0,why:["No matching WhatsApp number","No matching email","No similar name in this region"],match:null,status:"pending"},
-
- {id:"s3",form:"Optin — let's keep in touch",when:"24 Aug 2026, 21:07",name:"M. Rousseau",whatsapp:"+33 6 72 19 04 55",
-  email:"mathieu.r@example.fr",country:"France",msg:"Please add me to the mailing list.",
-  score:88,why:["WhatsApp number matches Mathieu Rousseau exactly","Name is a partial match — initial only","Email differs from the one on record"],match:2,status:"pending"},
-
- {id:"s4",form:"Meet our Saints",when:"24 Aug 2026, 13:30",name:"Ananya Krishnan",whatsapp:"+91 98450 77012",
-  email:"ananya.k@example.in",country:"India",msg:"My brother told me about this. I would like to attend.",
-  score:52,why:["WhatsApp number matches Arun Krishnan — possibly a shared family number","Surname matches; given name differs","Email differs"],match:12,status:"pending"}
-];
+/* Intake is now live — see loadIntakeData()/renderIntakeSection() below,
+   folded into "My work". The mock INTAKE array that used to live here is
+   gone; real data comes from GET /api/intake. */
 
 /* ============ derived helpers ============ */
 const R = ()=>ROLES[ROLE];
@@ -1137,7 +1120,7 @@ function render(){
     ? `<div class="hidden-note"><b>${h} seeker records are outside your region</b> and are not shown.
        They are not merely hidden on screen — the database refuses to return them for this role.</div>` : '');
 
-  renderAlerts(); renderIntake(); renderDash(); renderOps(); renderAbout();
+  renderAlerts(); renderDash(); renderOps(); renderAbout();
   renderInbox(); if(LIVE_DEPTS!==null){ renderSevaDepartments(); renderSevaTeams(); } renderJourney(); renderCalendar(); renderProfiles(); renderReports(); renderSevahub();
   if(OPEN) drawer(OPEN);
 }
@@ -1339,7 +1322,8 @@ function renderAlerts(){
   const myT = TASKS.filter(t=>{ const p=SEEKERS.find(x=>x.id===t.pid);
     return p && (!R().regions || R().regions.includes(p.region)); });
   const openT = myT.filter(t=>!t.done);
-  setPip('pip', od.length+fl.length+openT.length);
+  const pendingIntakeCount = LIVE_INTAKE===null ? 0 : LIVE_INTAKE.length;
+  setPip('pip', od.length+fl.length+openT.length+pendingIntakeCount);
 
   document.getElementById('alerts').innerHTML=`
     <h2 class="sec" style="margin-top:4px">Tasks (${openT.length} open)</h2>
@@ -1382,58 +1366,90 @@ function renderAlerts(){
           <button class="btn ghost" onclick="addTask(${s.id}, 'Make contact with ${esc(s.name).replace(/'/g,'')}', 'Contact overdue — ${since(s)} days')">Create a task</button>
           <button class="btn ghost" onclick="toast('Snoozed for 7 days — the maximum.')">Snooze 7 days</button></div>
       </div>`).join('')
-      :`<div class="card pad" style="color:var(--ink-3)">Nothing overdue in your region. Every seeker has been contacted within the window.</div>`}`;
+      :`<div class="card pad" style="color:var(--ink-3)">Nothing overdue in your region. Every seeker has been contacted within the window.</div>`}
+
+    <h2 class="sec" style="margin-top:24px" id="intakeHeading">Awaiting review</h2>
+    <p class="sub">Form submissions land here first. Matched against existing seekers on WhatsApp number
+      and email only — exact match, not a fuzzy score. Nothing reaches the seeker record until you confirm.</p>
+    <div id="intake"><p class="sub2">Loading…</p></div>`;
+
+  renderIntakeSection();
 }
 
-/* ============ intake ============ */
-function renderIntake(){
-  const q = INTAKE.filter(x=> R().regions ? R().regions.includes(x.country) : true);
-  const pend = q.filter(x=>x.status==='pending');
-  setPip('pip2', pend.length);
+/* ============ intake — live, folded into My work ============
+   Form_Submission_Key_Details has no status column, so "pending" is
+   inferred server-side (GET /api/intake excludes anything already mapped
+   in Seeker_ID_Generator). There is also no way to persist a "reject" —
+   no status column exists to write it to — so that action is gone rather
+   than faked as a client-side-only state that resets on reload. */
+let LIVE_INTAKE = null;
+let LIVE_INTAKE_CANDIDATES = {};
 
-  document.getElementById('intake').innerHTML = q.length ? q.map(x=>{
-    const m = x.match!==null ? SEEKERS.find(s=>s.id===x.match) : null;
-    if(x.status!=='pending'){
-      return `<div class="sub-card resolved">
-        <div class="nm serif">${esc(x.name)}</div>
-        <div class="sub2">${esc(x.form)} · ${esc(x.when)}</div>
-        <p style="margin:9px 0 0;font-size:13.5px;color:var(--sage)"><b>${
-          x.status==='merged'?'Merged into the existing seeker record.'
-          :x.status==='promoted'?'Promoted to a new seeker record.'
-          :'Rejected. Kept in the intake log for audit.'}</b></p></div>`;
-    }
+function invalidateIntakeData(){ LIVE_INTAKE = null; LIVE_INTAKE_CANDIDATES = {}; loadIntakeData(); }
+
+async function loadIntakeData(){
+  try{
+    const subs = await apiFetch('/api/intake');
+    const cands = await Promise.all(subs.map(s => apiFetch('/api/intake/'+s.Submission_ID+'/candidates')));
+    subs.forEach((s,i)=>{ LIVE_INTAKE_CANDIDATES[s.Submission_ID] = cands[i].candidates; });
+    LIVE_INTAKE = subs;
+    renderIntakeSection();
+  }catch(err){
+    const el = document.getElementById('intake');
+    if(el) el.innerHTML = `<div class="hidden-note" style="background:var(--rose-wash);border-color:#EBCBCE;color:var(--rose)">
+      <b>Could not load submissions.</b> ${esc(err.message||'')}</div>`;
+  }
+}
+
+function renderIntakeSection(){
+  const el = document.getElementById('intake');
+  if(!el) return;
+  if(LIVE_INTAKE === null){ loadIntakeData(); return; }
+
+  el.innerHTML = LIVE_INTAKE.length ? LIVE_INTAKE.map(s=>{
+    const candidates = LIVE_INTAKE_CANDIDATES[s.Submission_ID] || [];
+    const fullName = [s.First_Name, s.Last_Name].filter(Boolean).join(' ');
     return `<div class="sub-card">
-      <div class="nm serif">${esc(x.name)}</div>
-      <div class="sub2">${esc(x.form)} · submitted ${esc(x.when)} · ${esc(x.country)}</div>
-      <div class="sub2" style="margin-top:2px">Came from: <b>${esc(evName(x.ev))}</b></div>
+      <div class="nm serif">${esc(fullName)}</div>
+      <div class="sub2">${esc(s.City||'')}${s.Country?(', '+esc(s.Country)):''}</div>
       <dl class="kv" style="margin-top:11px">
-        <dt>WhatsApp</dt><dd>${mv('whatsapp',esc(x.whatsapp))}</dd>
-        <dt>Email</dt><dd>${mv('email',esc(x.email))}</dd>
-        <dt>Their message</dt><dd style="color:var(--ink-2)">“${esc(x.msg)}”</dd>
+        <dt>WhatsApp</dt><dd>${mv('whatsapp',esc(String(s.WhatsApp_Number||'')))}</dd>
+        <dt>Email</dt><dd>${mv('email',esc(s.Email||''))}</dd>
       </dl>
-      <div class="match ${x.score===0?'clean':''}">
-        <div style="font-size:13px">${ x.score===0
-          ? `<span class="score">No match found</span> — this appears to be a genuinely new person.`
-          : `<span class="score">${x.score}% match</span> against <b>${esc(m.name)}</b> (${m.region}, ${esc(m.category)})`}</div>
-        <ul style="margin:8px 0 0;padding-left:18px;font-size:12.5px;color:var(--ink-2)">
-          ${x.why.map(w=>`<li>${esc(w)}</li>`).join('')}</ul>
+      <div class="match ${candidates.length===0?'clean':''}">
+        <div style="font-size:13px">${ candidates.length===0
+          ? `<span class="score">No match found</span> — no existing seeker shares this WhatsApp number or email.`
+          : candidates.map(c=>`<span class="score">Match</span> — <b>${esc([c.First_Name,c.Last_Name].filter(Boolean).join(' '))}</b>
+              shares the same ${c.Email && c.Email.toLowerCase()===String(s.Email||'').toLowerCase() ? 'email' : ''}
+              ${c.WhatsApp_Number===s.WhatsApp_Number ? (c.Email && c.Email.toLowerCase()===String(s.Email||'').toLowerCase()?' and WhatsApp number':'WhatsApp number') : ''}.`).join('<br>')
+        }</div>
       </div>
       <div class="btnrow">
-        ${x.score>=85?`<button class="btn" onclick="resolve('${x.id}','merged')">Merge into ${esc(m.name.split(' ')[0])}</button>
-          <button class="btn ghost" onclick="resolve('${x.id}','promoted')">Not the same person — create new</button>`
-         :x.score>0?`<button class="btn ghost" onclick="resolve('${x.id}','merged')">Merge into ${esc(m.name.split(' ')[0])}</button>
-          <button class="btn" onclick="resolve('${x.id}','promoted')">Create as new seeker</button>`
-         :`<button class="btn" onclick="resolve('${x.id}','promoted')">Promote to seeker</button>`}
-        <button class="btn ghost" onclick="resolve('${x.id}','rejected')">Reject</button>
+        ${candidates.length
+          ? candidates.map(c=>`<button class="btn" onclick="mergeSubmission(${s.Submission_ID}, ${c.Seeker_ID}, this)">Merge into ${esc(c.First_Name)}</button>`).join('')
+            + `<button class="btn ghost" onclick="promoteSubmission(${s.Submission_ID}, this)">Not the same person — create new</button>`
+          : `<button class="btn" onclick="promoteSubmission(${s.Submission_ID}, this)">Promote to seeker</button>`}
       </div>
     </div>`;
-  }).join('') : `<div class="card pad" style="color:var(--ink-3)">No submissions awaiting review in your region.</div>`;
+  }).join('') : `<div class="card pad" style="color:var(--ink-3)">No submissions awaiting review.</div>`;
 }
-function resolve(id,st){
-  const x=INTAKE.find(i=>i.id===id); x.status=st;
-  toast(st==='merged'?'Merged. History preserved on the existing record.'
-      :st==='promoted'?'Promoted to a seeker record.':'Rejected and logged.');
-  render();
+
+async function promoteSubmission(id, btn){
+  if(btn) btn.disabled = true;
+  try{
+    await apiFetch('/api/intake/'+id+'/promote', {method:'POST'});
+    toast('Promoted to a new seeker record.');
+    invalidateIntakeData();
+  }catch(err){ toast('Could not promote: '+(err.message||'')); if(btn) btn.disabled = false; }
+}
+
+async function mergeSubmission(id, seekerId, btn){
+  if(btn) btn.disabled = true;
+  try{
+    await apiFetch('/api/intake/'+id+'/merge', {method:'POST', body: JSON.stringify({seekerId})});
+    toast('Merged. History preserved on the existing record.');
+    invalidateIntakeData();
+  }catch(err){ toast('Could not merge: '+(err.message||'')); if(btn) btn.disabled = false; }
 }
 
 /* ============ dashboard ============ */
@@ -1585,9 +1601,9 @@ const RECOVERY=[
  {t:"23:31",w:"Five failed logins for one account from a single address",a:"auto",
   r:"Account locked for 15 minutes, event written to the security log. Regional RS notified."},
  {t:"21:05",w:"Form submission failed validation — malformed phone number",a:"human",
-  r:"Moved to the dead-letter queue rather than discarded. Waiting in Intake for someone to correct or reject."},
- {t:"19:40",w:"Intake match scored 52% — cannot decide automatically",a:"human",
-  r:"Held deliberately. The system will not merge two people on a shared family number. This is designed behaviour, not a fault."}
+  r:"Moved to the dead-letter queue rather than discarded. Waiting for someone to correct it and resubmit."},
+ {t:"19:40",w:"Two submissions share a WhatsApp number but different names",a:"human",
+  r:"Held deliberately. The system will not merge two people on a shared family number without a person confirming it."}
 ];
 
 const CHECKS=[
@@ -1596,8 +1612,7 @@ const CHECKS=[
  {n:"Derived counters reconcile against the interaction log",s:"pass",d:"14 seekers checked, 0 discrepancies"},
  {n:"No interaction rows orphaned from a seeker",s:"pass",d:"0 orphans"},
  {n:"No seeker record without an owning region",s:"pass",d:"0 unassigned"},
- {n:"Intake items awaiting review for over 14 days",s:"warn",d:"1 item — ageing, not failing"},
- {n:"Retention policy applied to intake rejections",s:"pass",d:"Purged after 90 days"}
+ {n:"Intake items awaiting review for over 14 days",s:"warn",d:"1 item — ageing, not failing"}
 ];
 
 const SECURITY=[
@@ -2118,7 +2133,7 @@ function renderAbout(){
     ["Open any seeker","Interaction timeline, all teams writing to one feed","FR-07"],
     ["“Log an interaction”","220-character limit, satsang marker, sensitivity flag","FR-07 acceptance criteria"],
     ["Needs attention tab","Overdue by a fixed window; 7-day snooze cap","FR-10, FR-11"],
-    ["Intake tab","Holding area with match scoring and merge","Jan 2026 requirements 3 and 9"],
+    ["My work — Awaiting review","Holding area with exact WhatsApp/email match and merge","Jan 2026 requirements 3 and 9"],
     ["Seekers list","Last contact recalculated from the timeline","FR-09"],
     ["Dashboard","Region-scoped counts and category breakdown","FR-16, FR-17"],
     ["Dashboard","Skill capacity for seva matching","FR-13, FR-14"],
@@ -2150,9 +2165,8 @@ function renderAbout(){
     ["Seekers tab","Query narrows within whatever the role already sees","Same access boundary as every other tab — search cannot see past it"],
     ["Seekers tab","A single match can be opened directly by pressing Enter","Answers \u2018does this person already exist\u2019 as fast as typing"],
     ["Journey tab","Which event or channel each seeker came from","Source attribution, missing from the live forms"],
-    ["Intake tab","Every submission shows the event it came from","Event capture"],
-    ["Team tab","Access derived from position in the department tree","Closes the region gap in User_Role"],
-    ["Team tab","Who you may administer follows the tree","Replaces the Role_Manager table"],
+    ["Organisation tab","Access derived from position in the department tree","Closes the region gap in User_Role"],
+    ["Organisation tab","Who you may administer follows the tree","Replaces the Role_Manager table"],
     ["Seeker drawer","Team notes kept apart from the interaction timeline","Subject access — candour vs disclosure"],
     ["My work tab","Tasks with an owner and a due date, raised from an alert","Accountability, not just notification"],
     ["Inbox tab","Replies land on the timeline without retyping","Open Channels pattern, EU channels only"],
@@ -2436,11 +2450,11 @@ function renderOverview(){
   const vIds = new Set(v.map(p=>p.id));
   const unreadInbox = INBOX.filter(m=>m.unread && vIds.has(m.pid)).length;
   const overdueReports = pendingReports().filter(c=>days(c.at)>REPORT_SLA_DAYS).length;
-  // Intake has no per-conductor concept — a submission isn't "his" until it is
-  // promoted and someone logs a satsang with them, so region is the correct
-  // and complete scope here, not a gap.
-  const pendingIntake = INTAKE.filter(x=>x.status==='pending' &&
-    (!R().regions || R().regions.includes(x.country))).length;
+  // Intake has no per-conductor or per-region concept in the live data —
+  // Form_Submission_Key_Details' Country is free text, not a Country_ID
+  // link, so it can't be filtered by region the way seekers can. Counts
+  // everyone's pending submissions, not just this role's.
+  const pendingIntake = LIVE_INTAKE===null ? 0 : LIVE_INTAKE.length;
   const totalNotify = od + fl.length + unreadInbox + overdueReports + pendingIntake;
   setPip('pip6', totalNotify);
 
@@ -2451,10 +2465,10 @@ function renderOverview(){
     {n:fl.length, l:"Sensitivity flags", go:"alerts", show:R().tabs.includes("alerts")},
     {n:unreadInbox, l:"Unread inbox", go:"inbox", show:R().tabs.includes("inbox")},
     {n:overdueReports, l:"Reports overdue", go:"reports", show:R().tabs.includes("reports")},
-    {n:pendingIntake, l:"Intake awaiting review", go:"intake", show:R().tabs.includes("intake")}
+    {n:pendingIntake, l:"Intake awaiting review", go:"alerts", show:R().tabs.includes("alerts")}
   ].filter(c=>c.show);
 
-  const isAdmin = ROLE==="abroad";
+  const isAdmin = ROLE==="tech";
   const healthBad = SERVICES.filter(s=>s.s!=='ok').length + SECURITY.filter(s=>s.s!=='ok').length;
 
   el.innerHTML = `

@@ -13,13 +13,22 @@ const { pool, qi } = require('../db/pool');
 const { requireAuth } = require('../middleware/auth');
 const router = express.Router();
 
-// GET /api/intake — pending form submissions
+// GET /api/intake — pending form submissions only.
+// Form_Submission_Key_Details has no status/resolved column and no
+// timestamp column at all — so "pending" is inferred: a submission counts
+// as resolved once Seeker_ID_Generator has a row for it (written by
+// promote/merge below), and is excluded here. Without this, every
+// submission would show as pending forever, even after being promoted.
 router.get('/', requireAuth, async (req, res) => {
   try {
     const result = await pool.query(
       `SELECT fs.*, ft.${qi('Platform_ID')}
        FROM ${qi('FMS')}.${qi('Form_Submission_Key_Details')} fs
        LEFT JOIN ${qi('FMS')}.${qi('Form_Type')} ft ON ft.${qi('Form_Type_ID')} = fs.${qi('Form_ID')}
+       WHERE NOT EXISTS (
+         SELECT 1 FROM ${qi('MSR')}.${qi('Seeker_ID_Generator')} sig
+         WHERE sig.${qi('Input_Ref_ID')} = fs.${qi('Submission_ID')}
+       )
        ORDER BY fs.${qi('Submission_ID')} DESC`
     );
     res.json(result.rows);
