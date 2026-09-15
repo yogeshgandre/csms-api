@@ -3,39 +3,45 @@
 // Access is invitation-only. A CSMS_ID must already exist in RMS.User_Profile
 // before someone can log in — there is no self-registration path.
 //
-// Flow (per instructions):
-//   1. Firebase Authentication verifies the Google sign-in, restricted to the
-//      ssrf.org domain server-side (hd === 'ssrf.org'), per the existing
-//      decisions log. That happens on the client via the Firebase SDK.
-//   2. The verified email is sent here. We look up RMS.User_Profile.Seeker_Email
-//      -> CSMS_ID. If nothing matches, the person has never been invited:
-//      show a login error, do not create an account on the fly.
-//   3. On success, we also resolve their department/role scope from
+// Flow:
+//   1. The client signs in with Google (public/index.html), restricted by a
+//      `hd: 'ssrf.org'` UX hint — a hint only, not a security control.
+//   2. The client sends the resulting Firebase ID token here. verifyGoogleIdToken
+//      (firebaseAdmin.js) verifies it against Google's own signature and
+//      independently checks the domain server-side. This is the real
+//      enforcement point — it cannot be bypassed from the browser.
+//   3. Only once the token is verified do we look up
+//      RMS.User_Profile.Seeker_Email -> CSMS_ID. If nothing matches, the
+//      person has never been invited: show a login error, do not create an
+//      account on the fly.
+//   4. On success, resolve their department/role scope from
 //      RMS.User_Seva_Dept_Role + RMS.Seva_Dept + RMS.Role_Seva_Dept_Access,
 //      and stamp RMS.User_Invitation.Login_DT if this is their first login.
-//
-// NOTE — production hardening not yet done: this route currently trusts the
-// email it is given. Before this goes anywhere near real seeker data, it
-// must verify a Firebase ID token server-side (firebase-admin.auth()
-// .verifyIdToken) rather than accept a bare email in the request body. This
-// is called out explicitly so it isn't silently skipped.
 
 const express = require('express');
 const { pool, qi } = require('../db/pool');
+const { verifyGoogleIdToken } = require('../firebaseAdmin');
 const router = express.Router();
 
 const SCHEMA_RMS = 'RMS';
 
 router.post('/session', async (req, res) => {
-  const { email } = req.body || {};
-  if (!email || typeof email !== 'string') {
-    return res.status(400).json({ error: 'email is required' });
+  const { idToken } = req.body || {};
+
+  let decoded;
+  try {
+    decoded = await verifyGoogleIdToken(idToken);
+  } catch (err) {
+    const status = err.code === 'WRONG_DOMAIN' ? 403 : 401;
+    return res.status(status).json({ error: err.code || 'AUTH_FAILED', message: err.message });
   }
+
+  const email = decoded.email;
 
   let client;
   try {
     client = await pool.connect();
-    // 1. CSMS_ID must already exist — invitation-only.
+    // CSMS_ID must already exist — invitation-only.
     const userQ = await client.query(
       `SELECT ${qi('CSMS_ID')}, ${qi('Seeker_ID')}, ${qi('Seeker_Name')}, ${qi('Seeker_Email')}
        FROM ${qi(SCHEMA_RMS)}.${qi('User_Profile')}
@@ -55,7 +61,7 @@ router.post('/session', async (req, res) => {
 
     const user = userQ.rows[0];
 
-    // 2. Resolve dept/role scope.
+    // Resolve dept/role scope.
     const scopeQ = await client.query(
       `SELECT usdr.${qi('Seva_Dept_ID')}, usdr.${qi('Dept_Role_ID')},
               sd.${qi('Seva_Dept_Name')}, sd.${qi('Parent_Seva_Dept_ID')},
@@ -69,7 +75,7 @@ router.post('/session', async (req, res) => {
       [user.CSMS_ID]
     );
 
-    // 3. Stamp first login if not already recorded.
+    // Stamp first login if not already recorded.
     await client.query(
       `UPDATE ${qi(SCHEMA_RMS)}.${qi('User_Invitation')}
        SET ${qi('Login_DT')} = CURRENT_DATE
