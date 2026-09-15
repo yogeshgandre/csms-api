@@ -10,14 +10,15 @@
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Source+Sans+3:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&display=swap" rel="stylesheet">
 <style>
 :root{
-  /* ink */
-  --ink:#1E2F3A; --ink-2:#4A6070; --ink-3:#8397A6;
+  /* ink — a considered dark navy, never literal black */
+  --ink:#16334A; --ink-2:#3E5A72; --ink-3:#7C93A3;
   /* surfaces */
-  --paper:#F1F5F8; --card:#FFFFFF; --line:#E7EFF6; --line-2:#D4E3EE;
-  /* primary — pastel blue */
-  --deep:#2E76A8; --deep-2:#4C93C2; --deep-wash:#E3F0F9;
-  /* secondary blue (was sage) */
-  --sage:#2B7C9B; --sage-wash:#DEF0F7;
+  --paper:#F3F8FB; --card:#FFFFFF; --line:#E4EEF4; --line-2:#CFE0EA;
+  /* primary — the actual SSRF blue, sampled from the real logo (~#01ABE6),
+     deepened slightly for text/button contrast at UI scale */
+  --deep:#0B8FC4; --deep-2:#2FA9DA; --deep-wash:#E1F3FA;
+  /* secondary — a professional green, echoing the logo's green */
+  --sage:#4F8A66; --sage-wash:#E5F3EA;
   /* yellow */
   --amber:#96690F; --amber-wash:#FDF2D0;
   /* orange */
@@ -25,11 +26,11 @@
   /* shape — varied, not uniform */
   --r:14px; --r-sm:9px; --r-tag:7px;
   --ease:cubic-bezier(.2,.7,.3,1);
-  --sh:0 1px 2px rgba(30,47,58,.04), 0 4px 14px rgba(46,118,168,.07);
-  --sh-sm:0 1px 2px rgba(30,47,58,.05);
+  --sh:0 1px 2px rgba(22,51,74,.05), 0 6px 18px rgba(11,143,196,.09);
+  --sh-sm:0 1px 2px rgba(22,51,74,.05);
   --font-head:"Outfit", Calibri, Arial, sans-serif;
   --font-body:"Source Sans 3", Calibri, Arial, sans-serif;
-  --font-org:"Fraunces", Georgia, serif;
+  --font-org:Calibri, Carlito, "Segoe UI", Arial, sans-serif;
 }
 *{box-sizing:border-box}
 html,body{margin:0;padding:0}
@@ -148,11 +149,11 @@ tbody tr:last-child td{border-bottom:none}
   border:1px solid #F0DFAE;border-radius:var(--r-sm);padding:10px 14px}
 
 /* ---------- drawer ---------- */
-.scrim{position:absolute;inset:0;background:rgba(30,47,58,.30);backdrop-filter:blur(2px);
+.scrim{position:absolute;inset:0;background:rgba(22,51,74,.30);backdrop-filter:blur(2px);
   display:flex;justify-content:flex-end;z-index:40;animation:fadein .16s var(--ease);
 }
 .drawer{background:var(--paper);width:min(660px,100%);height:100%;overflow-y:auto;
-  border-left:1px solid var(--line-2);box-shadow:-12px 0 32px rgba(30,47,58,.10)}
+  border-left:1px solid var(--line-2);box-shadow:-12px 0 32px rgba(22,51,74,.10)}
 .dhead{background:var(--card);border-bottom:1px solid var(--line);padding:18px 22px}
 .dclose{
   float:right;background:none;border:1px solid var(--line-2);border-radius:var(--r-sm);
@@ -189,7 +190,7 @@ tbody tr:last-child td{border-bottom:none}
   background:var(--deep);color:#fff;border:1px solid var(--deep);
   border-radius:var(--r-sm);padding:7px 14px;font-size:13px;font-weight:500;
 }
-.btn:hover{background:var(--deep-2);box-shadow:0 2px 8px rgba(46,118,168,.22)}
+.btn:hover{background:var(--deep-2);box-shadow:0 2px 8px rgba(11,143,196,.22)}
 .btn:active{transform:translateY(1px) scale(.98)}
 .btn.ghost{background:var(--card);color:var(--ink-2);border-color:var(--line-2)}
 .btn.ghost:hover{border-color:var(--ink-3);color:var(--ink)}
@@ -231,7 +232,10 @@ tbody tr:last-child td{border-bottom:none}
 .grid4{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:16px}
 .grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(310px,1fr));gap:12px}
 .kpi{background:linear-gradient(180deg,#FFF,#F7FBFE);border:1px solid var(--line);
-  border-radius:var(--r);padding:16px 18px;box-shadow:var(--sh)}
+  border-radius:var(--r);padding:16px 18px;box-shadow:var(--sh), inset 0 1px 0 rgba(255,255,255,.6);
+  transition:box-shadow .2s var(--ease), transform .2s var(--ease)}
+.kpi[onclick]:hover{box-shadow:0 2px 4px rgba(22,51,74,.06), 0 10px 24px rgba(11,143,196,.14), inset 0 1px 0 rgba(255,255,255,.6);
+  transform:translateY(-1px)}
 .kpi .n{font-family:var(--font-head);font-size:30px;font-weight:600;color:var(--deep);line-height:1.05;letter-spacing:-.015em;font-variant-numeric:tabular-nums}
 .kpi .l{font-size:12px;color:var(--ink-2);margin-top:3px;font-weight:500}
 .kpi .d{font-size:11px;color:var(--ink-3);margin-top:5px}
@@ -243,7 +247,7 @@ tbody tr:last-child td{border-bottom:none}
 
 .toast{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);
   background:#213743;color:#fff;padding:11px 20px;border-radius:20px;
-  font-size:13px;z-index:60;box-shadow:0 6px 22px rgba(30,47,58,.22)}
+  font-size:13px;z-index:60;box-shadow:0 6px 22px rgba(22,51,74,.22)}
 .shell{
   position:relative;min-height:100vh;overflow:hidden;
   display:grid;grid-template-columns:220px 1fr;grid-template-rows:auto auto auto 1fr;
@@ -260,7 +264,7 @@ tbody tr:last-child td{border-bottom:none}
   flex:0 0 auto;width:52px;height:52px;border-radius:50%;
   background:radial-gradient(circle at 32% 28%,#BFE0F5,var(--deep) 68%,#1A4E70 100%);
   display:flex;align-items:center;justify-content:center;
-  box-shadow:0 2px 6px rgba(46,118,168,.35), inset 0 1px 1px rgba(255,255,255,.4);
+  box-shadow:0 2px 6px rgba(11,143,196,.35), inset 0 1px 1px rgba(255,255,255,.4);
   font-family:var(--font-org);font-weight:600;font-size:15px;color:#fff;letter-spacing:.01em;
 }
 .org-banner .org-text .name{
@@ -296,7 +300,7 @@ main{grid-area:main;max-width:none;margin:0}
 h2.sec{letter-spacing:-.01em}
 .brand .t{letter-spacing:-.015em}
 .brand .s{color:var(--deep-2);opacity:.85}
-.pip{box-shadow:0 1px 2px rgba(30,47,58,.15)}
+.pip{box-shadow:0 1px 2px rgba(22,51,74,.15)}
 nav .pip{background:var(--amber);color:#4A3405}
 nav .pip.r{background:var(--rose);color:#fff}
 .t-warn,.t-old{background:var(--amber-wash);color:var(--amber);border-color:#F0DFAE}
@@ -325,7 +329,7 @@ nav .pip.r{background:var(--rose);color:#fff}
 .klane-title{font-family:var(--font-head);font-weight:600;font-size:13.5px;color:var(--deep)}
 .klane-sub{font-size:11.5px;color:var(--ink-3);margin-top:2px;font-variant-numeric:tabular-nums}
 .klane-body{display:flex;flex-direction:column;gap:8px;min-height:60px;border-radius:var(--r-sm);transition:background-color .12s}
-.klane.drag-over .klane-body{background:rgba(46,118,168,.08)}
+.klane.drag-over .klane-body{background:rgba(11,143,196,.08)}
 .klane-empty{color:var(--ink-3);font-size:12.5px;background:var(--card);border:1px solid var(--line);
   border-radius:var(--r-sm);padding:14px;text-align:center}
 .kcard{background:var(--card);border:1px solid var(--line);border-radius:var(--r-sm);
@@ -1486,7 +1490,7 @@ async function mergeSubmission(id, seekerId, btn){
    Deliberate: this build avoids third-party script dependencies throughout, for
    the same reason WhatsApp and Firebase were set aside — every external call is
    a data question. A donut and a trend line do not need a charting library. */
-const CHART_COLORS = ["#2E76A8","#C98A2E","#B3571F","#2B7C9B","#4C6F9C","#8397A6","#D4A24C"];
+const CHART_COLORS = ["#0B8FC4","#C98A2E","#B3571F","#4F8A66","#4C6F9C","#7C93A3","#D4A24C"];
 
 function svgDonut(entries, size=148, stroke=20){
   const r=(size-stroke)/2, cx=size/2, cy=size/2;
@@ -1521,12 +1525,12 @@ function svgTrend(values, labels, w=620, h=140){
   const pts=values.map((v,i)=>[pad+i*stepX, h-pad-(v/mx)*(h-pad*2)]);
   const line=pts.map((p,i)=>(i===0?'M':'L')+p[0].toFixed(1)+','+p[1].toFixed(1)).join(' ');
   const area=line+` L${pts[pts.length-1][0].toFixed(1)},${h-pad} L${pts[0][0].toFixed(1)},${h-pad} Z`;
-  const dots=pts.map(p=>`<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="3.4" fill="#2E76A8"/>`).join('');
+  const dots=pts.map(p=>`<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="3.4" fill="#0B8FC4"/>`).join('');
   const labs=labels.map((l,i)=>`<text x="${pts[i][0].toFixed(1)}" y="${h-6}" text-anchor="middle" font-size="10"
     fill="#8397A6" font-family="Calibri,Arial,sans-serif">${esc(l)}</text>`).join('');
   return `<svg width="100%" height="${h}" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" style="display:block">
-    <path d="${area}" fill="#E3F0F9"/>
-    <path d="${line}" fill="none" stroke="#2E76A8" stroke-width="2.4"/>
+    <path d="${area}" fill="#E1F3FA"/>
+    <path d="${line}" fill="none" stroke="#0B8FC4" stroke-width="2.4"/>
     ${dots}${labs}
   </svg>`;
 }
@@ -2350,7 +2354,7 @@ function renderReportingCompliance(){
   const stillDue = pendingReports().length;
 
   const donutData = [
-    {k:"Filed", v:filedN, c:"#2B7C9B"},
+    {k:"Filed", v:filedN, c:"#4F8A66"},
     {k:"Still within the window", v:pendingReports().filter(c=>days(c.at)<=REPORT_SLA_DAYS).length, c:"#C98A2E"},
     {k:"Overdue", v:overdueN, c:"#B3571F"}
   ].filter(x=>x.v>0);
