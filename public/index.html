@@ -10,23 +10,23 @@
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Source+Sans+3:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&display=swap" rel="stylesheet">
 <style>
 :root{
-  /* ink — warm, not cool-toned */
-  --ink:#2B2018; --ink-2:#5C4E3F; --ink-3:#8C7D6B;
-  /* surfaces — soft ivory, not blue-white */
-  --paper:#FAF6EE; --card:#FFFFFF; --line:#EFE6D3; --line-2:#E2D3B4;
-  /* primary — warm gold/saffron, in place of blue */
-  --deep:#A9761E; --deep-2:#C48F2E; --deep-wash:#F6ECD3;
-  /* secondary — sage, kept close to its original spirit-of-calm role */
-  --sage:#5B7A52; --sage-wash:#E9F0E4;
-  /* amber — warmed slightly to sit with gold rather than fight it */
+  /* ink */
+  --ink:#1E2F3A; --ink-2:#4A6070; --ink-3:#8397A6;
+  /* surfaces */
+  --paper:#F1F5F8; --card:#FFFFFF; --line:#E7EFF6; --line-2:#D4E3EE;
+  /* primary — pastel blue */
+  --deep:#2E76A8; --deep-2:#4C93C2; --deep-wash:#E3F0F9;
+  /* secondary blue (was sage) */
+  --sage:#2B7C9B; --sage-wash:#DEF0F7;
+  /* yellow */
   --amber:#96690F; --amber-wash:#FDF2D0;
-  /* rose/terracotta — for warnings, distinct from gold */
-  --rose:#A34827; --rose-wash:#F7E3D8;
+  /* orange */
+  --rose:#B3571F; --rose-wash:#FCE5D5;
   /* shape — varied, not uniform */
   --r:14px; --r-sm:9px; --r-tag:7px;
   --ease:cubic-bezier(.2,.7,.3,1);
-  --sh:0 1px 2px rgba(43,32,24,.05), 0 4px 14px rgba(169,118,30,.08);
-  --sh-sm:0 1px 2px rgba(43,32,24,.05);
+  --sh:0 1px 2px rgba(30,47,58,.04), 0 4px 14px rgba(46,118,168,.07);
+  --sh-sm:0 1px 2px rgba(30,47,58,.05);
   --font-head:"Outfit", Calibri, Arial, sans-serif;
   --font-body:"Source Sans 3", Calibri, Arial, sans-serif;
   --font-org:"Fraunces", Georgia, serif;
@@ -148,11 +148,11 @@ tbody tr:last-child td{border-bottom:none}
   border:1px solid #F0DFAE;border-radius:var(--r-sm);padding:10px 14px}
 
 /* ---------- drawer ---------- */
-.scrim{position:absolute;inset:0;background:rgba(43,32,24,.30);backdrop-filter:blur(2px);
+.scrim{position:absolute;inset:0;background:rgba(30,47,58,.30);backdrop-filter:blur(2px);
   display:flex;justify-content:flex-end;z-index:40;animation:fadein .16s var(--ease);
 }
 .drawer{background:var(--paper);width:min(660px,100%);height:100%;overflow-y:auto;
-  border-left:1px solid var(--line-2);box-shadow:-12px 0 32px rgba(43,32,24,.10)}
+  border-left:1px solid var(--line-2);box-shadow:-12px 0 32px rgba(30,47,58,.10)}
 .dhead{background:var(--card);border-bottom:1px solid var(--line);padding:18px 22px}
 .dclose{
   float:right;background:none;border:1px solid var(--line-2);border-radius:var(--r-sm);
@@ -189,7 +189,7 @@ tbody tr:last-child td{border-bottom:none}
   background:var(--deep);color:#fff;border:1px solid var(--deep);
   border-radius:var(--r-sm);padding:7px 14px;font-size:13px;font-weight:500;
 }
-.btn:hover{background:var(--deep-2);box-shadow:0 2px 8px rgba(169,118,30,.22)}
+.btn:hover{background:var(--deep-2);box-shadow:0 2px 8px rgba(46,118,168,.22)}
 .btn:active{transform:translateY(1px) scale(.98)}
 .btn.ghost{background:var(--card);color:var(--ink-2);border-color:var(--line-2)}
 .btn.ghost:hover{border-color:var(--ink-3);color:var(--ink)}
@@ -243,7 +243,7 @@ tbody tr:last-child td{border-bottom:none}
 
 .toast{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);
   background:#213743;color:#fff;padding:11px 20px;border-radius:20px;
-  font-size:13px;z-index:60;box-shadow:0 6px 22px rgba(43,32,24,.22)}
+  font-size:13px;z-index:60;box-shadow:0 6px 22px rgba(30,47,58,.22)}
 .shell{
   position:relative;min-height:100vh;overflow:hidden;
   display:grid;grid-template-columns:220px 1fr;grid-template-rows:auto auto auto 1fr;
@@ -252,22 +252,22 @@ tbody tr:last-child td{border-bottom:none}
 .demo-banner{grid-area:banner}
 .org-banner{
   grid-area:orgbanner;
-  background:linear-gradient(135deg,#FAF6EE 0%,#F2F7F6 55%,#EAF2ED 100%);
+  background:linear-gradient(135deg,#F1F7FB 0%,#E7F0F9 55%,#DDEAF4 100%);
   border-bottom:2px solid var(--deep-2);
   padding:16px 26px;display:flex;align-items:center;gap:16px;
 }
 .org-banner .mark{
   flex:0 0 auto;width:52px;height:52px;border-radius:50%;
-  background:radial-gradient(circle at 32% 28%,#F8E8BE,#C48F2E 68%,#8F651C 100%);
+  background:radial-gradient(circle at 32% 28%,#BFE0F5,var(--deep) 68%,#1A4E70 100%);
   display:flex;align-items:center;justify-content:center;
-  box-shadow:0 2px 6px rgba(169,118,30,.35), inset 0 1px 1px rgba(255,255,255,.4);
-  font-family:var(--font-org);font-weight:600;font-size:15px;color:#3E2A0C;letter-spacing:.01em;
+  box-shadow:0 2px 6px rgba(46,118,168,.35), inset 0 1px 1px rgba(255,255,255,.4);
+  font-family:var(--font-org);font-weight:600;font-size:15px;color:#fff;letter-spacing:.01em;
 }
 .org-banner .org-text .name{
-  font-family:var(--font-org);font-weight:600;font-size:20px;color:#3D5A52;letter-spacing:-.01em;line-height:1.15;
+  font-family:var(--font-org);font-weight:600;font-size:20px;color:var(--ink);letter-spacing:-.01em;line-height:1.15;
 }
 .org-banner .org-text .tag{
-  font-size:12px;color:#7A8F72;letter-spacing:.06em;text-transform:uppercase;margin-top:2px;
+  font-size:12px;color:var(--deep);letter-spacing:.06em;text-transform:uppercase;margin-top:2px;
 }
 .org-banner img.logo{height:48px;width:auto;flex:0 0 auto}
 header{grid-area:header}
@@ -296,7 +296,7 @@ main{grid-area:main;max-width:none;margin:0}
 h2.sec{letter-spacing:-.01em}
 .brand .t{letter-spacing:-.015em}
 .brand .s{color:var(--deep-2);opacity:.85}
-.pip{box-shadow:0 1px 2px rgba(43,32,24,.15)}
+.pip{box-shadow:0 1px 2px rgba(30,47,58,.15)}
 nav .pip{background:var(--amber);color:#4A3405}
 nav .pip.r{background:var(--rose);color:#fff}
 .t-warn,.t-old{background:var(--amber-wash);color:var(--amber);border-color:#F0DFAE}
@@ -325,7 +325,7 @@ nav .pip.r{background:var(--rose);color:#fff}
 .klane-title{font-family:var(--font-head);font-weight:600;font-size:13.5px;color:var(--deep)}
 .klane-sub{font-size:11.5px;color:var(--ink-3);margin-top:2px;font-variant-numeric:tabular-nums}
 .klane-body{display:flex;flex-direction:column;gap:8px;min-height:60px;border-radius:var(--r-sm);transition:background-color .12s}
-.klane.drag-over .klane-body{background:rgba(169,118,30,.08)}
+.klane.drag-over .klane-body{background:rgba(46,118,168,.08)}
 .klane-empty{color:var(--ink-3);font-size:12.5px;background:var(--card);border:1px solid var(--line);
   border-radius:var(--r-sm);padding:14px;text-align:center}
 .kcard{background:var(--card);border:1px solid var(--line);border-radius:var(--r-sm);
@@ -1486,7 +1486,7 @@ async function mergeSubmission(id, seekerId, btn){
    Deliberate: this build avoids third-party script dependencies throughout, for
    the same reason WhatsApp and Firebase were set aside — every external call is
    a data question. A donut and a trend line do not need a charting library. */
-const CHART_COLORS = ["#A9761E","#C98A2E","#A34827","#5B7A52","#8A6A32","#8C7D6B","#D4A24C"];
+const CHART_COLORS = ["#2E76A8","#C98A2E","#B3571F","#2B7C9B","#4C6F9C","#8397A6","#D4A24C"];
 
 function svgDonut(entries, size=148, stroke=20){
   const r=(size-stroke)/2, cx=size/2, cy=size/2;
@@ -1521,12 +1521,12 @@ function svgTrend(values, labels, w=620, h=140){
   const pts=values.map((v,i)=>[pad+i*stepX, h-pad-(v/mx)*(h-pad*2)]);
   const line=pts.map((p,i)=>(i===0?'M':'L')+p[0].toFixed(1)+','+p[1].toFixed(1)).join(' ');
   const area=line+` L${pts[pts.length-1][0].toFixed(1)},${h-pad} L${pts[0][0].toFixed(1)},${h-pad} Z`;
-  const dots=pts.map(p=>`<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="3.4" fill="#A9761E"/>`).join('');
+  const dots=pts.map(p=>`<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="3.4" fill="#2E76A8"/>`).join('');
   const labs=labels.map((l,i)=>`<text x="${pts[i][0].toFixed(1)}" y="${h-6}" text-anchor="middle" font-size="10"
     fill="#8397A6" font-family="Calibri,Arial,sans-serif">${esc(l)}</text>`).join('');
   return `<svg width="100%" height="${h}" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" style="display:block">
-    <path d="${area}" fill="#F6ECD3"/>
-    <path d="${line}" fill="none" stroke="#A9761E" stroke-width="2.4"/>
+    <path d="${area}" fill="#E3F0F9"/>
+    <path d="${line}" fill="none" stroke="#2E76A8" stroke-width="2.4"/>
     ${dots}${labs}
   </svg>`;
 }
@@ -2350,7 +2350,7 @@ function renderReportingCompliance(){
   const stillDue = pendingReports().length;
 
   const donutData = [
-    {k:"Filed", v:filedN, c:"#5B7A52"},
+    {k:"Filed", v:filedN, c:"#2B7C9B"},
     {k:"Still within the window", v:pendingReports().filter(c=>days(c.at)<=REPORT_SLA_DAYS).length, c:"#C98A2E"},
     {k:"Overdue", v:overdueN, c:"#B3571F"}
   ].filter(x=>x.v>0);
@@ -2507,7 +2507,7 @@ function renderOverview(){
         <div class="l">${esc(c.l)}</div><div class="d">Tap to open</div></div>`).join('')}
     </div>
 
-    <div class="grid2">
+    <div class="${isAdmin?'grid2':''}">
       <div class="card pad">
         <h2 class="sec">Latest updates</h2>
         <p class="sub">Every interaction, milestone, category move and filed report — across everyone you can see, most recent first.</p>
@@ -2521,27 +2521,27 @@ function renderOverview(){
         </div>`).join('') : '<p class="sub" style="margin:0">Nothing recorded yet in your scope.</p>'}
       </div>
 
-      <div>
+      ${isAdmin?`<div>
         <div class="card pad" style="margin-bottom:12px">
           <h2 class="sec">System health</h2>
-          <p class="sub">${isAdmin?'Full detail on the Operations tab.':'A summary. Full detail is an admin view.'}</p>
+          <p class="sub">Full detail on the Operations tab.</p>
           ${SERVICES.map(s=>`<div style="display:flex;gap:9px;align-items:center;padding:5px 0">
             <span style="width:8px;height:8px;border-radius:50%;background:${s.s==='ok'?'var(--sage)':'var(--amber)'};flex:0 0 auto"></span>
             <span style="font-size:12.5px;flex:1">${esc(s.n)}</span>
             <span class="tag ${s.s==='ok'?'t-active':'t-warn'}" style="font-size:10.5px">${s.s==='ok'?'Healthy':'Recovered'}</span>
           </div>`).join('')}
           ${healthBad?`<div class="warn" style="margin-bottom:0">${healthBad} item(s) need a look.
-            ${isAdmin?`<span class="lnk-btn" onclick="tab('ops')" style="cursor:pointer;color:var(--deep);font-weight:600"> Open Operations →</span>`:''}</div>`
+            <span class="lnk-btn" onclick="tab('ops')" style="cursor:pointer;color:var(--deep);font-weight:600"> Open Operations →</span></div>`
             :`<div class="ok" style="margin-bottom:0">Everything healthy.</div>`}
         </div>
-        ${isAdmin?`<div class="card pad">
+        <div class="card pad">
           <h2 class="sec">Needs an administrator</h2>
           ${SECURITY.filter(s=>s.s!=='ok').map(s=>`<div class="warn" style="margin:0 0 8px">
             <b>${esc(s.n)}</b> — ${esc(s.v)}<br><span style="font-size:11.5px">${esc(s.d)}</span></div>`).join('')
             || '<p class="sub" style="margin:0">Nothing outstanding.</p>'}
           <div class="btnrow" style="margin-top:8px"><button class="btn sm ghost" onclick="tab('ops')">Full Operations view</button></div>
-        </div>`:''}
-      </div>
+        </div>
+      </div>`:''}
     </div>
     <div class="hidden-note"><b>This is a view, not a new store.</b> Every number above is read from data that
       already exists elsewhere in the system — nothing is duplicated to build this screen, so it cannot drift
