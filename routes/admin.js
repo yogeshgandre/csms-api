@@ -76,24 +76,54 @@ router.get('/depts/:id/roles', requireAuth, async (req, res) => {
   }
 });
 
-// POST /api/admin/roles — create a role within a department
+// POST /api/admin/roles — create a role within a department.
+// Dept_Role_ID has no auto-increment/sequence on this table (confirmed by a
+// NULL-PK insert failure) — unlike Seva_Dept_ID, which does. The next ID is
+// computed explicitly (MAX+1) and retried on collision: a plain MAX+1 has a
+// real race window if two requests land close together (confirmed — this
+// happened on the first deploy of the fix), so this wraps it in a
+// retry-on-unique-violation loop rather than trusting one read to be safe.
 router.post('/roles', requireAuth, async (req, res) => {
   const { sevaDeptId, name, desc } = req.body || {};
   if (!sevaDeptId || !name) {
     return res.status(400).json({ error: 'sevaDeptId and name are required' });
   }
-  try {
-    const result = await pool.query(
-      `INSERT INTO ${qi('RMS')}.${qi('Seva_Dept_Role')}
-        (${qi('Seva_Dept_ID')}, ${qi('Dept_Role_Name')}, ${qi('Dept_Role_Desc')}, ${qi('Ver_From_DT')}, ${qi('Ver_To_DT')})
-       VALUES ($1, $2, $3, CURRENT_DATE, $4)
-       RETURNING ${qi('Dept_Role_ID')}`,
-      [sevaDeptId, name, desc || '', FAR_FUTURE]
-    );
-    res.status(201).json({ deptRoleId: result.rows[0].Dept_Role_ID });
-  } catch (err) {
-    console.error('[POST /admin/roles] error', err);
-    res.status(500).json({ error: 'INTERNAL' });
+
+  const MAX_ATTEMPTS = 5;
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    let client;
+    try {
+      client = await pool.connect();
+      await client.query('BEGIN');
+
+      const maxQ = await client.query(
+        `SELECT COALESCE(MAX(${qi('Dept_Role_ID')}), 0) + 1 AS next_id
+         FROM ${qi('RMS')}.${qi('Seva_Dept_Role')}`
+      );
+      const nextId = maxQ.rows[0].next_id;
+
+      const result = await client.query(
+        `INSERT INTO ${qi('RMS')}.${qi('Seva_Dept_Role')}
+          (${qi('Dept_Role_ID')}, ${qi('Seva_Dept_ID')}, ${qi('Dept_Role_Name')}, ${qi('Dept_Role_Desc')}, ${qi('Ver_From_DT')}, ${qi('Ver_To_DT')})
+         VALUES ($1, $2, $3, $4, CURRENT_DATE, $5)
+         RETURNING ${qi('Dept_Role_ID')}`,
+        [nextId, sevaDeptId, name, desc || '', FAR_FUTURE]
+      );
+
+      await client.query('COMMIT');
+      return res.status(201).json({ deptRoleId: result.rows[0].Dept_Role_ID });
+    } catch (err) {
+      if (client) await client.query('ROLLBACK');
+      if (err.code === '23505' && attempt < MAX_ATTEMPTS) {
+        // Unique violation — someone else took that ID between our read and
+        // our insert. Retry with a fresh MAX+1 rather than failing the user.
+        continue;
+      }
+      console.error('[POST /admin/roles] error', err);
+      return res.status(500).json({ error: 'INTERNAL' });
+    } finally {
+      if (client) client.release();
+    }
   }
 });
 

@@ -372,7 +372,7 @@ nav .pip.r{background:var(--rose);color:#fff}
   <button data-p="sevahub" onclick="tab('sevahub')">Seva</button>
   <button data-p="profiles" onclick="tab('profiles')">Profiles</button>
   <button data-p="dash" onclick="tab('dash')">Dashboard</button>
-  <button data-p="team" onclick="tab('team')">Team</button>
+  <button data-p="org" onclick="tab('org')">Organisation</button>
   <button data-p="ops" onclick="tab('ops')">Operations<span class="pip" id="pip3">0</span></button>
   <button data-p="about" onclick="tab('about')">What this shows</button>
 </nav>
@@ -418,10 +418,15 @@ nav .pip.r{background:var(--rose);color:#fff}
     <div id="inbox"></div>
   </section>
 
-  <section class="pane" id="p-team">
-    <h2 class="sec">Team</h2>
-    <p class="sub">Who serves where. Access follows position in this tree — there is no separate list of permissions to keep in step.</p>
-    <div id="team"></div>
+  <section class="pane" id="p-org">
+    <h2 class="sec">Organisation</h2>
+    <p class="sub">Structure and who serves where. Access follows position in this tree — there is no separate list of permissions to keep in step.</p>
+    <div class="filters" style="border-bottom:1px solid var(--line-2);padding-bottom:0;margin-bottom:16px">
+      <button class="chip on" data-sub="depts" onclick="subtab('depts')">Seva Departments</button>
+      <button class="chip" data-sub="teams" onclick="subtab('teams')">Seva Teams</button>
+    </div>
+    <div id="orgDepts"></div>
+    <div id="orgTeams" style="display:none"></div>
   </section>
 
   <section class="pane" id="p-alerts">
@@ -582,15 +587,15 @@ const CONTACT_SLA_DAYS = 60; /* flat window — there is no longer a per-stage S
 const ROLES = {
   abroad:{name:"Abroad RS — global admin", regions:null, mask:[],
     can:"Full access to all regions and all fields.",
-    tabs:["overview","seekers","alerts","inbox","intake","journey","calendar","reports","sevahub","profiles","dash","team","ops","about"],
+    tabs:["overview","seekers","alerts","inbox","intake","journey","calendar","reports","sevahub","profiles","dash","org","ops","about"],
     landing:"overview"},
   rs_de:{name:"Regional RS — Germany", regions:["Germany"], mask:[],
     can:"Germany only. All fields within that region.",
-    tabs:["overview","seekers","alerts","inbox","intake","journey","calendar","reports","sevahub","profiles","dash","team","about"],
+    tabs:["overview","seekers","alerts","inbox","intake","journey","calendar","reports","sevahub","profiles","dash","org","about"],
     landing:"overview"},
   rs_fr:{name:"Regional RS — France", regions:["France"], mask:[],
     can:"France only. All fields within that region.",
-    tabs:["overview","seekers","alerts","inbox","intake","journey","calendar","reports","sevahub","profiles","dash","team","about"],
+    tabs:["overview","seekers","alerts","inbox","intake","journey","calendar","reports","sevahub","profiles","dash","org","about"],
     landing:"overview"},
   seva:{name:"Seva RS — service allocation", regions:null, mask:["whatsapp","email","dob"],
     can:"All regions, but personal contact details and date of birth are hidden.",
@@ -1133,7 +1138,7 @@ function render(){
        They are not merely hidden on screen — the database refuses to return them for this role.</div>` : '');
 
   renderAlerts(); renderIntake(); renderDash(); renderOps(); renderAbout();
-  renderInbox(); renderTeam(); renderJourney(); renderCalendar(); renderProfiles(); renderReports(); renderSevahub();
+  renderInbox(); if(LIVE_DEPTS!==null){ renderSevaDepartments(); renderSevaTeams(); } renderJourney(); renderCalendar(); renderProfiles(); renderReports(); renderSevahub();
   if(OPEN) drawer(OPEN);
 }
 
@@ -1726,9 +1731,16 @@ function renderOps(){
 
 
 /* ============ team / department tree ============ */
-/* ============ team / role management — live, from RMS ============
-   Cached so the global render() cycle (which calls renderTeam() on every
-   state change, not just when the tab is open) doesn't refetch constantly.
+function subtab(s){
+  document.getElementById('orgDepts').style.display = s==='depts' ? '' : 'none';
+  document.getElementById('orgTeams').style.display = s==='teams' ? '' : 'none';
+  document.querySelectorAll('#p-org .chip').forEach(c=>c.classList.toggle('on', c.dataset.sub===s));
+  if(s==='teams') renderSevaTeams(); else renderSevaDepartments();
+}
+
+/* ============ organisation: structure ============
+   Cached so the global render() cycle (which calls these on every state
+   change, not just when the tab is open) doesn't refetch constantly.
    invalidateTeamData() forces a reload after an admin action succeeds. */
 let LIVE_DEPTS = null;
 let LIVE_DEPT_ROLES = {};
@@ -1743,11 +1755,13 @@ async function loadTeamData(){
     );
     depts.forEach((d,i)=>{ LIVE_DEPT_ROLES[d.Seva_Dept_ID] = roleLists[i]; });
     LIVE_DEPTS = depts;
-    renderTeam();
+    renderSevaDepartments();
+    renderSevaTeams();
   }catch(err){
-    document.getElementById('team').innerHTML =
-      `<div class="hidden-note" style="background:var(--rose-wash);border-color:#EBCBCE;color:var(--rose)">
+    const msg = `<div class="hidden-note" style="background:var(--rose-wash);border-color:#EBCBCE;color:var(--rose)">
         <b>Could not load departments.</b> ${esc(err.message||'')}</div>`;
+    document.getElementById('orgDepts').innerHTML = msg;
+    document.getElementById('orgTeams').innerHTML = msg;
   }
 }
 
@@ -1768,11 +1782,12 @@ async function addDept(){
   }catch(err){ errEl.textContent = err.message||'Could not add department.'; errEl.classList.add('on'); }
 }
 
-async function addRole(deptId){
+async function addRole(deptId, btn){
   const nameEl = document.getElementById('newRoleName_'+deptId);
   const descEl = document.getElementById('newRoleDesc_'+deptId);
   const name = (nameEl.value||'').trim();
   if(!name) return;
+  if(btn) btn.disabled = true;
   try{
     await apiFetch('/api/admin/roles', {method:'POST', body: JSON.stringify({
       sevaDeptId: deptId, name, desc: (descEl.value||'').trim()
@@ -1780,6 +1795,7 @@ async function addRole(deptId){
     toast('Role added.');
     invalidateTeamData();
   }catch(err){ toast('Could not add role: '+(err.message||'')); }
+  finally{ if(btn) btn.disabled = false; }
 }
 
 async function saveHierarchy(deptId, roleId, value){
@@ -1811,8 +1827,9 @@ async function assignRole(deptId){
   }catch(err){ errEl.textContent = err.message||'Could not assign role.'; errEl.classList.add('on'); }
 }
 
-function renderTeam(){
-  const el = document.getElementById('team');
+/* -- Seva Departments: structure only (tree, add dept, add role, rank) -- */
+function renderSevaDepartments(){
+  const el = document.getElementById('orgDepts');
   if(LIVE_DEPTS === null){
     el.innerHTML = '<p class="sub2">Loading departments…</p>';
     loadTeamData();
@@ -1830,9 +1847,7 @@ function renderTeam(){
         <div style="font-weight:600;font-size:14px">${esc(d.Seva_Dept_Name)}</div>
         ${roles.length ? `<div style="margin-top:8px;display:flex;flex-direction:column;gap:5px">
           ${roles.map(r=>`<div style="display:flex;align-items:center;gap:8px;font-size:12.5px">
-            <span style="flex:1" title="${esc(r.Dept_Role_Desc||'')}">${esc(r.Dept_Role_Name)}
-              ${r.holders && r.holders.length ? `<span class="sub2" style="font-size:11px">— ${esc(r.holders.join(', '))}</span>` : '<span class="sub2" style="font-size:11px">— vacant</span>'}
-            </span>
+            <span style="flex:1" title="${esc(r.Dept_Role_Desc||'')}">${esc(r.Dept_Role_Name)}</span>
             <label class="sub2" style="margin:0">Rank</label>
             <input type="number" value="${r.HRCHY_ID!=null?r.HRCHY_ID:''}" style="width:56px;padding:3px 6px;font-size:12px"
               onchange="saveHierarchy(${d.Seva_Dept_ID},${r.Dept_Role_ID},this.value)">
@@ -1843,21 +1858,9 @@ function renderTeam(){
           <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">
             <input id="newRoleName_${d.Seva_Dept_ID}" placeholder="Role name" style="flex:1;min-width:120px;padding:5px 8px;font-size:12.5px">
             <input id="newRoleDesc_${d.Seva_Dept_ID}" placeholder="Description" style="flex:2;min-width:140px;padding:5px 8px;font-size:12.5px">
-            <button class="btn sm" onclick="addRole(${d.Seva_Dept_ID})">Add</button>
+            <button class="btn sm" onclick="addRole(${d.Seva_Dept_ID}, this)">Add</button>
           </div>
         </details>
-        ${roles.length ? `<details style="margin-top:6px">
-          <summary style="cursor:pointer;font-size:12px;color:var(--deep)">+ Assign existing user</summary>
-          <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">
-            <input id="assignEmail_${d.Seva_Dept_ID}" type="email" placeholder="name@ssrf.org" style="flex:1;min-width:140px;padding:5px 8px;font-size:12.5px">
-            <select id="assignRole_${d.Seva_Dept_ID}" style="padding:5px 8px;font-size:12.5px">
-              ${roles.map(r=>`<option value="${r.Dept_Role_ID}">${esc(r.Dept_Role_Name)}</option>`).join('')}
-            </select>
-            <button class="btn sm" onclick="assignRole(${d.Seva_Dept_ID})">Assign</button>
-          </div>
-          <div class="err" id="assignErr_${d.Seva_Dept_ID}" style="margin-top:4px"></div>
-          <p class="sub2" style="margin-top:4px">Person must have signed in with Google at least once before they can be assigned.</p>
-        </details>` : ''}
       </div>
       ${kids.map(k=>node(k,depth+1)).join('')}</div>`;
   }
@@ -1878,6 +1881,55 @@ function renderTeam(){
     <div class="note" style="margin-top:10px"><b>This is live.</b> Reads and writes RMS.Seva_Dept,
       Seva_Dept_Role and Seva_Dept_Role_HRCHY directly. There is currently no separate admin
       privilege check — any signed-in user can add departments and roles here.</div>`;
+}
+
+/* -- Seva Teams: who's actually in each department -- */
+function renderSevaTeams(){
+  const el = document.getElementById('orgTeams');
+  if(LIVE_DEPTS === null){
+    el.innerHTML = '<p class="sub2">Loading teams…</p>';
+    loadTeamData();
+    return;
+  }
+
+  function node(d, depth){
+    const kids = LIVE_DEPTS.filter(x=>x.Parent_Seva_Dept_ID===d.Seva_Dept_ID);
+    const roles = LIVE_DEPT_ROLES[d.Seva_Dept_ID] || [];
+    const filled = roles.filter(r=>r.holders && r.holders.length).length;
+    return `<div style="margin-left:${depth*26}px">
+      <div class="sub-card" style="margin-bottom:8px;padding:12px 15px">
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <span style="font-weight:600;font-size:14px">${esc(d.Seva_Dept_Name)}</span>
+          <span class="sub2">${filled} of ${roles.length} role${roles.length===1?'':'s'} filled</span>
+        </div>
+        ${roles.length ? `<div style="margin-top:8px;display:flex;flex-direction:column;gap:4px">
+          ${roles.map(r=>`<div style="font-size:12.5px">
+            <span style="color:var(--ink-2)">${esc(r.Dept_Role_Name)}</span> —
+            ${r.holders && r.holders.length
+              ? `<span style="color:var(--sage);font-weight:500">${esc(r.holders.join(', '))}</span>`
+              : `<span style="color:var(--ink-3);font-style:italic">vacant</span>`}
+          </div>`).join('')}
+        </div>` : '<p class="sub2" style="margin-top:6px">No roles defined for this department yet.</p>'}
+        ${roles.length ? `<details style="margin-top:8px">
+          <summary style="cursor:pointer;font-size:12px;color:var(--deep)">+ Assign existing user</summary>
+          <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">
+            <input id="assignEmail_${d.Seva_Dept_ID}" type="email" placeholder="name@ssrf.org" style="flex:1;min-width:140px;padding:5px 8px;font-size:12.5px">
+            <select id="assignRole_${d.Seva_Dept_ID}" style="padding:5px 8px;font-size:12.5px">
+              ${roles.map(r=>`<option value="${r.Dept_Role_ID}">${esc(r.Dept_Role_Name)}</option>`).join('')}
+            </select>
+            <button class="btn sm" onclick="assignRole(${d.Seva_Dept_ID})">Assign</button>
+          </div>
+          <div class="err" id="assignErr_${d.Seva_Dept_ID}" style="margin-top:4px"></div>
+          <p class="sub2" style="margin-top:4px">Person must have signed in with Google at least once before they can be assigned.</p>
+        </details>` : ''}
+      </div>
+      ${kids.map(k=>node(k,depth+1)).join('')}</div>`;
+  }
+
+  const roots = LIVE_DEPTS.filter(d=>d.Parent_Seva_Dept_ID===null);
+  el.innerHTML = roots.map(r=>node(r,0)).join('') + `
+    <div class="note" style="margin-top:10px"><b>Who serves where.</b> Access follows position
+      in this tree — there is no separate list of permissions to keep in step.</div>`;
 }
 
 /* ============ unified inbox ============ */
