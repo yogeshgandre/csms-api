@@ -30,7 +30,7 @@ router.post('/depts', requireAuth, async (req, res) => {
   }
   try {
     const result = await pool.query(
-      `INSERT INTO RMS.${qi('Seva_Dept')}
+      `INSERT INTO ${qi('RMS')}.${qi('Seva_Dept')}
         (${qi('Seva_Dept_Name')}, ${qi('Parent_Seva_Dept_ID')}, ${qi('Ver_From_DT')}, ${qi('Ver_To_DT')})
        VALUES ($1, $2, CURRENT_DATE, $3)
        RETURNING ${qi('Seva_Dept_ID')}`,
@@ -49,8 +49,8 @@ router.get('/depts/:id/roles', requireAuth, async (req, res) => {
     const result = await pool.query(
       `SELECT r.${qi('Dept_Role_ID')}, r.${qi('Dept_Role_Name')}, r.${qi('Dept_Role_Desc')},
               h.${qi('HRCHY_ID')}
-       FROM RMS.${qi('Seva_Dept_Role')} r
-       LEFT JOIN RMS.${qi('Seva_Dept_Role_HRCHY')} h
+       FROM ${qi('RMS')}.${qi('Seva_Dept_Role')} r
+       LEFT JOIN ${qi('RMS')}.${qi('Seva_Dept_Role_HRCHY')} h
          ON h.${qi('Dept_Role_ID')} = r.${qi('Dept_Role_ID')}
          AND h.${qi('Seva_Dept_ID')} = r.${qi('Seva_Dept_ID')}
          AND h.${qi('Ver_To_DT')} >= CURRENT_DATE
@@ -73,7 +73,7 @@ router.post('/roles', requireAuth, async (req, res) => {
   }
   try {
     const result = await pool.query(
-      `INSERT INTO RMS.${qi('Seva_Dept_Role')}
+      `INSERT INTO ${qi('RMS')}.${qi('Seva_Dept_Role')}
         (${qi('Seva_Dept_ID')}, ${qi('Dept_Role_Name')}, ${qi('Dept_Role_Desc')}, ${qi('Ver_From_DT')}, ${qi('Ver_To_DT')})
        VALUES ($1, $2, $3, CURRENT_DATE, $4)
        RETURNING ${qi('Dept_Role_ID')}`,
@@ -100,7 +100,7 @@ router.post('/hierarchy', requireAuth, async (req, res) => {
     await client.query('BEGIN');
 
     await client.query(
-      `UPDATE RMS.${qi('Seva_Dept_Role_HRCHY')}
+      `UPDATE ${qi('RMS')}.${qi('Seva_Dept_Role_HRCHY')}
        SET ${qi('Ver_To_DT')} = CURRENT_DATE - INTERVAL '1 day'
        WHERE ${qi('Seva_Dept_ID')} = $1 AND ${qi('Dept_Role_ID')} = $2
          AND ${qi('Ver_To_DT')} >= CURRENT_DATE`,
@@ -108,7 +108,7 @@ router.post('/hierarchy', requireAuth, async (req, res) => {
     );
 
     await client.query(
-      `INSERT INTO RMS.${qi('Seva_Dept_Role_HRCHY')}
+      `INSERT INTO ${qi('RMS')}.${qi('Seva_Dept_Role_HRCHY')}
         (${qi('Seva_Dept_ID')}, ${qi('Dept_Role_ID')}, ${qi('HRCHY_ID')}, ${qi('Ver_From_DT')}, ${qi('Ver_To_DT')})
        VALUES ($1, $2, $3, CURRENT_DATE, $4)`,
       [sevaDeptId, deptRoleId, hrchyId, FAR_FUTURE]

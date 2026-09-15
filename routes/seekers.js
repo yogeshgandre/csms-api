@@ -37,13 +37,13 @@ router.get('/', requireAuth, async (req, res) => {
               s.${qi('Country_ISD')}, s.${qi('Ref_Seeker_ID')},
               cat.${qi('Category_Name')},
               ml.${qi('Weekly_Seva_Hrs')}, ml.${qi('Pranshakti')}, ml.${qi('Sensitive_List')}
-       FROM MSR.${qi('Seeker')} s
-       LEFT JOIN Master.${qi('M_Country')} mc ON mc.${qi('Country_ID')} = s.${qi('Country_ID')}
-       LEFT JOIN MSR.${qi('Seeker_Category')} sc
+       FROM ${qi('MSR')}.${qi('Seeker')} s
+       LEFT JOIN ${qi('Master')}.${qi('M_Country')} mc ON mc.${qi('Country_ID')} = s.${qi('Country_ID')}
+       LEFT JOIN ${qi('MSR')}.${qi('Seeker_Category')} sc
          ON sc.${qi('Seeker_ID')} = s.${qi('Seeker_ID')} AND sc.${qi('Ver_To_DT')} >= CURRENT_DATE
-       LEFT JOIN Master.${qi('M_Seeker_Category')} cat
+       LEFT JOIN ${qi('Master')}.${qi('M_Seeker_Category')} cat
          ON cat.${qi('Category_ID')} = sc.${qi('Seeker_Category_ID')}
-       LEFT JOIN MSR.${qi('Seeker_Other_MasterList_Info')} ml
+       LEFT JOIN ${qi('MSR')}.${qi('Seeker_Other_MasterList_Info')} ml
          ON ml.${qi('Seeker_ID')} = s.${qi('Seeker_ID')} AND ml.${qi('Ver_To_DT')} >= CURRENT_DATE
        ${where}
        ORDER BY s.${qi('First_Name')}, s.${qi('Last_Name')}`,
@@ -62,26 +62,26 @@ router.get('/:id', requireAuth, async (req, res) => {
   try {
     const [seeker, categories, engagements, bhav, upay, vyashti] = await Promise.all([
       pool.query(
-        `SELECT * FROM MSR.${qi('Seeker')} WHERE ${qi('Seeker_ID')} = $1`,
+        `SELECT * FROM ${qi('MSR')}.${qi('Seeker')} WHERE ${qi('Seeker_ID')} = $1`,
         [seekerId]
       ),
       pool.query(
         `SELECT cat.${qi('Category_Name')}, sc.${qi('Ver_From_DT')}, sc.${qi('Ver_To_DT')}
-         FROM MSR.${qi('Seeker_Category')} sc
-         JOIN Master.${qi('M_Seeker_Category')} cat ON cat.${qi('Category_ID')} = sc.${qi('Seeker_Category_ID')}
+         FROM ${qi('MSR')}.${qi('Seeker_Category')} sc
+         JOIN ${qi('Master')}.${qi('M_Seeker_Category')} cat ON cat.${qi('Category_ID')} = sc.${qi('Seeker_Category_ID')}
          WHERE sc.${qi('Seeker_ID')} = $1 ORDER BY sc.${qi('Ver_From_DT')} DESC`,
         [seekerId]
       ),
       pool.query(
         `SELECT pe.*, p.${qi('Platform_Name')}
-         FROM MSR.${qi('Seeker_Platform_Engagement')} pe
-         JOIN Master.${qi('M_Platform')} p ON p.${qi('Platform_ID')} = pe.${qi('Platform_ID')}
+         FROM ${qi('MSR')}.${qi('Seeker_Platform_Engagement')} pe
+         JOIN ${qi('Master')}.${qi('M_Platform')} p ON p.${qi('Platform_ID')} = pe.${qi('Platform_ID')}
          WHERE pe.${qi('Seeker_ID')} = $1 ORDER BY pe.${qi('Engagement_DT')} DESC`,
         [seekerId]
       ),
-      pool.query(`SELECT * FROM MSR.${qi('Seeker_Bhav_Satsang')} WHERE ${qi('Seeker_ID')} = $1`, [seekerId]),
-      pool.query(`SELECT * FROM MSR.${qi('Seeker_Upay_Satsang')} WHERE ${qi('Seeker_ID')} = $1`, [seekerId]),
-      pool.query(`SELECT * FROM MSR.${qi('Seeker_Vyashti_Satsang')} WHERE ${qi('Seeker_ID')} = $1`, [seekerId]),
+      pool.query(`SELECT * FROM ${qi('MSR')}.${qi('Seeker_Bhav_Satsang')} WHERE ${qi('Seeker_ID')} = $1`, [seekerId]),
+      pool.query(`SELECT * FROM ${qi('MSR')}.${qi('Seeker_Upay_Satsang')} WHERE ${qi('Seeker_ID')} = $1`, [seekerId]),
+      pool.query(`SELECT * FROM ${qi('MSR')}.${qi('Seeker_Vyashti_Satsang')} WHERE ${qi('Seeker_ID')} = $1`, [seekerId]),
     ]);
 
     if (seeker.rowCount === 0) {

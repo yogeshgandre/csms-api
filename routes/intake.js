@@ -18,8 +18,8 @@ router.get('/', requireAuth, async (req, res) => {
   try {
     const result = await pool.query(
       `SELECT fs.*, ft.${qi('Platform_ID')}
-       FROM FMS.${qi('Form_Submission_Key_Details')} fs
-       LEFT JOIN FMS.${qi('Form_Type')} ft ON ft.${qi('Form_Type_ID')} = fs.${qi('Form_ID')}
+       FROM ${qi('FMS')}.${qi('Form_Submission_Key_Details')} fs
+       LEFT JOIN ${qi('FMS')}.${qi('Form_Type')} ft ON ft.${qi('Form_Type_ID')} = fs.${qi('Form_ID')}
        ORDER BY fs.${qi('Submission_ID')} DESC`
     );
     res.json(result.rows);
@@ -33,7 +33,7 @@ router.get('/', requireAuth, async (req, res) => {
 router.get('/:id/candidates', requireAuth, async (req, res) => {
   try {
     const sub = await pool.query(
-      `SELECT * FROM FMS.${qi('Form_Submission_Key_Details')} WHERE ${qi('Submission_ID')} = $1`,
+      `SELECT * FROM ${qi('FMS')}.${qi('Form_Submission_Key_Details')} WHERE ${qi('Submission_ID')} = $1`,
       [req.params.id]
     );
     if (sub.rowCount === 0) return res.status(404).json({ error: 'NOT_FOUND' });
@@ -41,7 +41,7 @@ router.get('/:id/candidates', requireAuth, async (req, res) => {
 
     const candidates = await pool.query(
       `SELECT ${qi('Seeker_ID')}, ${qi('First_Name')}, ${qi('Last_Name')}, ${qi('Email')}, ${qi('WhatsApp_Number')}
-       FROM MSR.${qi('Seeker')}
+       FROM ${qi('MSR')}.${qi('Seeker')}
        WHERE lower(${qi('Email')}) = lower($1) OR ${qi('WhatsApp_Number')} = $2`,
       [s.Email, s.WhatsApp_Number]
     );
@@ -59,7 +59,7 @@ router.post('/:id/promote', requireAuth, async (req, res) => {
     client = await pool.connect();
     await client.query('BEGIN');
     const sub = await client.query(
-      `SELECT * FROM FMS.${qi('Form_Submission_Key_Details')} WHERE ${qi('Submission_ID')} = $1`,
+      `SELECT * FROM ${qi('FMS')}.${qi('Form_Submission_Key_Details')} WHERE ${qi('Submission_ID')} = $1`,
       [req.params.id]
     );
     if (sub.rowCount === 0) {
@@ -69,7 +69,7 @@ router.post('/:id/promote', requireAuth, async (req, res) => {
     const s = sub.rows[0];
 
     const inserted = await client.query(
-      `INSERT INTO MSR.${qi('Seeker')}
+      `INSERT INTO ${qi('MSR')}.${qi('Seeker')}
         (${qi('Sal')}, ${qi('First_Name')}, ${qi('Last_Name')}, ${qi('City')},
          ${qi('Country_ISD')}, ${qi('WhatsApp_Number')}, ${qi('Email')})
        VALUES ($1,$2,$3,$4,$5,$6,$7)
@@ -78,7 +78,7 @@ router.post('/:id/promote', requireAuth, async (req, res) => {
     );
 
     await client.query(
-      `INSERT INTO MSR.${qi('Seeker_ID_Generator')}
+      `INSERT INTO ${qi('MSR')}.${qi('Seeker_ID_Generator')}
         (${qi('Input_Ref_ID')}, ${qi('Input_Type_ID')}, ${qi('Seeker_ID')}, ${qi('Email')}, ${qi('Country_ISD')}, ${qi('WhatsApp_Number')})
        VALUES ($1,$2,$3,$4,$5,$6)`,
       [s.Submission_ID, 1 /* TODO: real Input_Type_ID for "form submission" — no lookup table for this was provided */,
@@ -102,14 +102,14 @@ router.post('/:id/merge', requireAuth, async (req, res) => {
   if (!seekerId) return res.status(400).json({ error: 'seekerId is required' });
   try {
     const sub = await pool.query(
-      `SELECT * FROM FMS.${qi('Form_Submission_Key_Details')} WHERE ${qi('Submission_ID')} = $1`,
+      `SELECT * FROM ${qi('FMS')}.${qi('Form_Submission_Key_Details')} WHERE ${qi('Submission_ID')} = $1`,
       [req.params.id]
     );
     if (sub.rowCount === 0) return res.status(404).json({ error: 'NOT_FOUND' });
     const s = sub.rows[0];
 
     await pool.query(
-      `INSERT INTO MSR.${qi('Seeker_ID_Generator')}
+      `INSERT INTO ${qi('MSR')}.${qi('Seeker_ID_Generator')}
         (${qi('Input_Ref_ID')}, ${qi('Input_Type_ID')}, ${qi('Seeker_ID')}, ${qi('Email')}, ${qi('Country_ISD')}, ${qi('WhatsApp_Number')})
        VALUES ($1,$2,$3,$4,$5,$6)`,
       [s.Submission_ID, 1, seekerId, s.Email, s.Country_ISD, s.WhatsApp_Number]

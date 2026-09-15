@@ -18,10 +18,10 @@ router.get('/upcoming', requireAuth, async (req, res) => {
               se.${qi('Event_Time_City')}, se.${qi('Event_Duration')},
               ms.${qi('Satsang_Name')}, ms.${qi('Satsang_Short_Name')}, mt.${qi('ST_Name')},
               est.${qi('Current_Status')}, est.${qi('Event_Link')}
-       FROM SCS.${qi('Satsang_Event_Defn')} se
-       JOIN SCS.${qi('M_Satsang')} ms ON ms.${qi('Satsang_ID')} = se.${qi('Satsang_ID')}
-       LEFT JOIN SCS.${qi('M_Satsang_type')} mt ON mt.${qi('Satsang_Type_ID')} = ms.${qi('Satsang_Type_ID')}
-       LEFT JOIN SCS.${qi('Satsang_Event_Status')} est ON est.${qi('SE_ID')} = se.${qi('SE_ID')}
+       FROM ${qi('SCS')}.${qi('Satsang_Event_Defn')} se
+       JOIN ${qi('SCS')}.${qi('M_Satsang')} ms ON ms.${qi('Satsang_ID')} = se.${qi('Satsang_ID')}
+       LEFT JOIN ${qi('SCS')}.${qi('M_Satsang_type')} mt ON mt.${qi('Satsang_Type_ID')} = ms.${qi('Satsang_Type_ID')}
+       LEFT JOIN ${qi('SCS')}.${qi('Satsang_Event_Status')} est ON est.${qi('SE_ID')} = se.${qi('SE_ID')}
        WHERE to_timestamp(se.${qi('Event_ST_DT_TIME')}) >= NOW()
        ORDER BY se.${qi('Event_ST_DT_TIME')} ASC`
     );
@@ -37,8 +37,8 @@ router.get('/:satsangId/attendees', requireAuth, async (req, res) => {
   try {
     const result = await pool.query(
       `SELECT sas.${qi('AS_CSMS_ID')}, sas.${qi('Remarks')}, up.${qi('Seeker_Name')}
-       FROM SCS.${qi('Satsang_Attending_Seekers')} sas
-       LEFT JOIN RMS.${qi('User_Profile')} up ON up.${qi('CSMS_ID')} = sas.${qi('AS_CSMS_ID')}
+       FROM ${qi('SCS')}.${qi('Satsang_Attending_Seekers')} sas
+       LEFT JOIN ${qi('RMS')}.${qi('User_Profile')} up ON up.${qi('CSMS_ID')} = sas.${qi('AS_CSMS_ID')}
        WHERE sas.${qi('Satsang_ID')} = $1 AND sas.${qi('Ver_To_DT')} >= CURRENT_DATE`,
       [req.params.satsangId]
     );
@@ -55,8 +55,8 @@ router.get('/transfers', requireAuth, async (req, res) => {
   try {
     const result = await pool.query(
       `SELECT tr.*, ts.${qi('TR_Status_Name')}
-       FROM SCS.${qi('Attendee_Transfer_Requests')} tr
-       LEFT JOIN SCS.${qi('Transfer_Status')} ts ON ts.${qi('TR_Status_ID')} = tr.${qi('TR_Status_ID')}
+       FROM ${qi('SCS')}.${qi('Attendee_Transfer_Requests')} tr
+       LEFT JOIN ${qi('SCS')}.${qi('Transfer_Status')} ts ON ts.${qi('TR_Status_ID')} = tr.${qi('TR_Status_ID')}
        ORDER BY tr.${qi('TR_Initiated_DT')} DESC`
     );
     res.json(result.rows);
