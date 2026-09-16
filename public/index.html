@@ -404,7 +404,11 @@ nav .pip.r{background:var(--rose);color:#fff}
   </div>
   <div style="display:flex;align-items:center;gap:14px;position:relative">
     <button id="notifBell" class="mini" onclick="toggleNotifDropdown()" title="Notifications" style="position:relative;width:36px;height:36px;font-size:16px">
-      &#128276;<span id="notifBadge" class="pip r" style="position:absolute;top:-4px;right:-4px;display:none;min-width:16px;height:16px;line-height:16px;font-size:10px;padding:0 3px">0</span>
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"></path>
+        <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+      </svg>
+      <span id="notifBadge" class="pip r" style="position:absolute;top:-4px;right:-4px;display:none;min-width:16px;height:16px;line-height:16px;font-size:10px;padding:0 3px">0</span>
     </button>
     <div id="notifDropdown" style="display:none;position:absolute;right:0;top:44px;width:320px;max-height:400px;overflow-y:auto;background:var(--card);border:1px solid var(--line-2);border-radius:12px;box-shadow:var(--sh);z-index:80;padding:8px"></div>
     <div class="roleblock">
@@ -421,7 +425,7 @@ nav .pip.r{background:var(--rose);color:#fff}
   <button data-p="alerts" onclick="tab('alerts')">My work<span class="pip" id="pip">0</span></button>
   <button data-p="inbox" onclick="tab('inbox')">Inbox<span class="pip" id="pip4">0</span></button>
   <button data-p="journey" onclick="tab('journey')">Journey</button>
-  <button data-p="calendar" onclick="tab('calendar')">Calendar</button>
+  <button data-p="calendar" onclick="tab('calendar'); renderCalendar()">Calendar</button>
   <button data-p="reports" onclick="tab('reports')">Reports<span class="pip r" id="pip5">0</span></button>
   <button data-p="sevahub" onclick="tab('sevahub')">Seva</button>
   <button data-p="profiles" onclick="tab('profiles')">Profiles</button>
@@ -551,9 +555,10 @@ nav .pip.r{background:var(--rose);color:#fff}
     <p class="sub">A map from what you can click to the requirements it stands for.</p>
     <div class="card" style="overflow:hidden"><table id="about"></table></div>
     <div class="note" style="margin-top:16px">
-      <b>What this is not.</b> There is no database, no login and no saved data behind these screens — refreshing the page resets everything.
-      Its purpose is to settle questions of layout, wording and access rules before development begins, when changing them is still free.
-    </div>
+      <b>Current state.</b> Seekers, Organisation &amp; Team Management, and Satsang Management read and write real Postgres
+      data through the API, behind real Google Sign-In restricted to ssrf.org. Journey, Inbox, Notes, Tasks, Calendar's
+      Retreat/Online entries, and Reports are still illustrative mock data with no backing table — see README for the
+      current split.</div>
   </section>
 </main>
 </div>
@@ -2645,20 +2650,21 @@ async function createSatsangEvent(btn){
         sc2Name: document.getElementById('evSc2Name').value.trim(), sc2Email: document.getElementById('evSc2Email').value.trim()
       })});
       toast('Event created \u2014 pending conductor approval.');
+      LIVE_SATSANG_UPCOMING = null;
       loadSatsangEvents(true);
     }catch(err){ errEl.textContent = err.message||'Could not create event.'; errEl.classList.add('on'); }
   });
 }
 async function approveSatsangEvent(seId, btn){
   await withLoading(btn, async ()=>{
-    try{ await apiFetch('/api/satsangs/events/'+seId+'/approve', {method:'POST'}); toast('Event approved and scheduled.'); loadSatsangEvents(true); }
+    try{ await apiFetch('/api/satsangs/events/'+seId+'/approve', {method:'POST'}); toast('Event approved and scheduled.'); LIVE_SATSANG_UPCOMING = null; loadSatsangEvents(true); }
     catch(err){ toast('Could not approve: '+(err.message||'')); }
   });
 }
 async function cancelSatsangEvent(seId, btn){
   if(!confirm('Cancel this event?')) return;
   await withLoading(btn, async ()=>{
-    try{ await apiFetch('/api/satsangs/events/'+seId+'/cancel', {method:'POST'}); toast('Event cancelled.'); loadSatsangEvents(true); }
+    try{ await apiFetch('/api/satsangs/events/'+seId+'/cancel', {method:'POST'}); toast('Event cancelled.'); LIVE_SATSANG_UPCOMING = null; loadSatsangEvents(true); }
     catch(err){ toast('Could not cancel: '+(err.message||'')); }
   });
 }
@@ -2894,7 +2900,7 @@ function renderAbout(){
     ["Seekers list","Category shown as a single column — Seeker_Category","Decision: Stage and Segment removed, no backing table"],
     ["Journey tab","Category board with backwards movement","FR-04 — deliberately not a sales pipeline"],
     ["Seeker drawer","Milestone track — what she did, separate from how engaged she is","Requested: event to foundation satsang to seva"],
-    ["Calendar tab","Reads satsangs and retreats already in SCS","Bitrix calendar pattern, no second data store"],
+    ["Calendar tab","Satsang events read live from SCS (marked Live); retreats/online still mock","Bitrix calendar pattern — satsangs now genuinely one store, not two"],
     ["Profiles tab","Department, skills and seva shown per serving seeker","Bitrix employee record, adapted — not an HR file"],
     ["Journey attribution","Donations folded in as another entry channel","Requested: donation as a start of the spiritual journey"],
     ["Log an interaction","Call duration and outcome captured for the Call type","Requested: telephony logging"],
@@ -2919,8 +2925,14 @@ function renderAbout(){
     ["Seekers tab","Query narrows within whatever the role already sees","Same access boundary as every other tab — search cannot see past it"],
     ["Seekers tab","A single match can be opened directly by pressing Enter","Answers \u2018does this person already exist\u2019 as fast as typing"],
     ["Journey tab","Which event or channel each seeker came from","Source attribution, missing from the live forms"],
-    ["Organisation tab","Access derived from position in the department tree","Closes the region gap in User_Role"],
+    ["Organisation tab","Access derived from position in the department tree — arbitrary depth, not fixed levels","Closes the region gap in User_Role"],
     ["Organisation tab","Who you may administer follows the tree","Replaces the Role_Manager table"],
+    ["Satsang Definitions","Draft → In Review → Approved → events unlocked","Requested: review/approve workflow before a satsang goes live"],
+    ["Satsang Definitions","Dynamic custom fields per satsang, added or removed live","Requested: fields vary per satsang type, not fixed on the table"],
+    ["Satsang Definitions","Conductor roster and attending seekers, added by email — no prior sign-in required","A CSMS profile is created automatically on first assignment"],
+    ["Satsang Events","Blocked until its definition is Approved","Requested: events can't exist ahead of an approved definition"],
+    ["Satsang Events","Each event needs its own conductor approval before Scheduled","Requested: conductor approves every event, not just the definition"],
+    ["Notification bell","In-app alerts on submit-for-review, approve/reject, new event needing approval","Requested: in-app notification, no email sending yet"],
     ["Seeker drawer","Team notes kept apart from the interaction timeline","Subject access — candour vs disclosure"],
     ["My work tab","Tasks with an owner and a due date, raised from an alert","Accountability, not just notification"],
     ["Inbox tab","Replies land on the timeline without retyping","Open Channels pattern, EU channels only"],
@@ -2938,11 +2950,32 @@ function renderAbout(){
 
 document.addEventListener('keydown',e=>{ if(e.key==='Escape') close_(); });
 /* ============ calendar — a view over SCS, not a second store ============ */
+let LIVE_SATSANG_UPCOMING = null;
+async function loadSatsangUpcoming(){
+  try{ LIVE_SATSANG_UPCOMING = await apiFetch('/api/satsangs/upcoming'); renderCalendar(); }
+  catch(err){ LIVE_SATSANG_UPCOMING = []; /* fall back to mock-only rather than block the tab */ }
+}
+
+// Real satsang events (from Satsang Management) plus the still-mock
+// Retreat/Online entries — there's no backing table for those yet, so
+// they stay illustrative and are labeled as such, rather than silently
+// mixed in as if they were real too.
 function renderCalendar(){
-  const vis = CAL.filter(c=>c.at>=TODAY &&
+  if(LIVE_SATSANG_UPCOMING === null){ loadSatsangUpcoming(); }
+  const realItems = (LIVE_SATSANG_UPCOMING||[]).map(e=>{
+    const at = new Date(e.Event_ST_DT_TIME);
+    return {
+      id:'se'+e.SE_ID, title:e.Satsang_Name, kind:e.ST_Name||'Satsang', region:null,
+      at, time: isNaN(at) ? '—' : at.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}),
+      conductor:null, live:true, status:e.Current_Status
+    };
+  });
+  const mockItems = CAL.filter(c=>c.at>=TODAY && c.kind!=='Satsang' &&
       (!R().regions || R().regions.includes(c.region) || c.region==="Abroad") &&
       (!R().conductorName || c.conductor===R().conductorName))
-    .sort((a,b)=>a.at-b.at);
+    .map(c=>({...c, live:false}));
+  const vis = [...realItems, ...mockItems].sort((a,b)=>a.at-b.at);
+
   const byDay = {};
   vis.forEach(c=>{ const k=fmt(c.at); (byDay[k]=byDay[k]||[]).push(c); });
   document.getElementById('calendar').innerHTML = `
@@ -2953,14 +2986,14 @@ function renderCalendar(){
           <div style="min-width:70px;font-weight:600;color:var(--deep)">${esc(c.time)}</div>
           <div style="flex:1">
             <div style="font-weight:500">${esc(c.title)}</div>
-            <div class="sub2">${esc(c.kind)} · ${esc(c.region)} · conducted by ${esc(c.conductor)}</div>
+            <div class="sub2">${esc(c.kind)}${c.region?(' · '+esc(c.region)):''}${c.conductor?(' · conducted by '+esc(c.conductor)):''}${c.status?(' · '+esc(c.status)):''}</div>
           </div>
-          <span class="tag t-core">${esc(c.kind)}</span>
+          ${c.live ? '<span class="tag t-active" title="Read live from Satsang Management">Live</span>' : `<span class="tag t-core">${esc(c.kind)}</span>`}
         </div>`).join('')}
       </div>`).join('') || '<div class="card pad" style="color:var(--ink-3)">Nothing scheduled in your region.</div>'}
-    <div class="note"><b>This reads from the Satsang Conducting System.</b> A satsang scheduled there appears
-      here automatically. Nothing is entered twice, and there is no second calendar to keep in step with the first.
-      Shows what is coming up — satsangs already held move to the Reports tab.</div>`;
+    <div class="note"><b>Satsang events (marked Live) are read from Satsang Management — create one there
+      and it appears here automatically.</b> Retreats and the online weekly meditation have no backing
+      schedule yet and are still illustrative. Satsangs already held move to the Reports tab.</div>`;
 }
 
 /* ============ profiles — the Bitrix "employee" idea, applied to seekers who serve ============
