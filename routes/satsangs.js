@@ -86,7 +86,7 @@ router.get('/defs', requireAuth, async (req, res) => {
     const r = await pool.query(
       `SELECT ms.${qi('Satsang_ID')}, ms.${qi('Satsang_Short_Name')}, ms.${qi('Satsang_Name')},
               ms.${qi('Satsang_Type_ID')}, mt.${qi('ST_Name')},
-              ms.${qi('Satsang_Start_Date')}, ms.${qi('Satsang_Frequency')}, ms.${qi('Satsang_Adv_Notification')},
+              ms.${qi('Satsang_Start_Date')}, ms.${qi('Satsang_Frequency')},
               ms.${qi('Satsang_Status')}, ms.${qi('Created_By_CSMS_ID')},
               up.${qi('Seeker_Name')} AS created_by_name
        FROM ${qi('SCS')}.${qi('M_Satsang')} ms
@@ -102,8 +102,12 @@ router.get('/defs', requireAuth, async (req, res) => {
   }
 });
 
+// NOTE: advNotification is accepted from the client but not yet persisted —
+// the real column name for "days advance notification" on M_Satsang isn't
+// confirmed (Satsang_Adv_Notification doesn't exist as written). Add it
+// back to the SELECT/INSERT/UPDATE below once the exact name is known.
 router.post('/defs', requireAuth, async (req, res) => {
-  const { shortName, name, typeId, startDate, frequency, advNotification } = req.body || {};
+  const { shortName, name, typeId, startDate, frequency } = req.body || {};
   if (!shortName || !name || !typeId || !startDate) {
     return res.status(400).json({ error: 'shortName, name, typeId and startDate are required' });
   }
@@ -116,9 +120,9 @@ router.post('/defs', requireAuth, async (req, res) => {
       `INSERT INTO ${qi('SCS')}.${qi('M_Satsang')}
         (${qi('Satsang_ID')}, ${qi('Satsang_Type_ID')}, ${qi('Satsang_Short_Name')}, ${qi('Satsang_Name')},
          ${qi('Created_By_CSMS_ID')}, ${qi('Satsang_Start_Date')}, ${qi('Satsang_Frequency')},
-         ${qi('Satsang_Adv_Notification')}, ${qi('Satsang_Status')}, ${qi('Ver_From_DT')}, ${qi('Ver_To_DT')})
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,'Draft',CURRENT_DATE,$9)`,
-      [id, typeId, shortName, name, req.user.csmsId, startDate, frequency || null, advNotification || null, FAR_FUTURE]
+         ${qi('Satsang_Status')}, ${qi('Ver_From_DT')}, ${qi('Ver_To_DT')})
+       VALUES ($1,$2,$3,$4,$5,$6,$7,'Draft',CURRENT_DATE,$8)`,
+      [id, typeId, shortName, name, req.user.csmsId, startDate, frequency || null, FAR_FUTURE]
     );
     res.status(201).json({ ok: true, satsangId: id });
   } catch (err) {
@@ -128,7 +132,7 @@ router.post('/defs', requireAuth, async (req, res) => {
 });
 
 router.put('/defs/:id', requireAuth, async (req, res) => {
-  const { shortName, name, typeId, startDate, frequency, advNotification } = req.body || {};
+  const { shortName, name, typeId, startDate, frequency } = req.body || {};
   try {
     const cur = await pool.query(
       `SELECT ${qi('Satsang_Status')} FROM ${qi('SCS')}.${qi('M_Satsang')} WHERE ${qi('Satsang_ID')} = $1`,
@@ -141,9 +145,9 @@ router.put('/defs/:id', requireAuth, async (req, res) => {
     await pool.query(
       `UPDATE ${qi('SCS')}.${qi('M_Satsang')}
        SET ${qi('Satsang_Short_Name')}=$1, ${qi('Satsang_Name')}=$2, ${qi('Satsang_Type_ID')}=$3,
-           ${qi('Satsang_Start_Date')}=$4, ${qi('Satsang_Frequency')}=$5, ${qi('Satsang_Adv_Notification')}=$6
-       WHERE ${qi('Satsang_ID')} = $7`,
-      [shortName, name, typeId, startDate, frequency || null, advNotification || null, req.params.id]
+           ${qi('Satsang_Start_Date')}=$4, ${qi('Satsang_Frequency')}=$5
+       WHERE ${qi('Satsang_ID')} = $6`,
+      [shortName, name, typeId, startDate, frequency || null, req.params.id]
     );
     res.json({ ok: true });
   } catch (err) {

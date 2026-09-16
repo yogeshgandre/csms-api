@@ -10,8 +10,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Source+Sans+3:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&display=swap" rel="stylesheet">
 <style>
 :root{
-  /* ink — a considered dark navy, never literal black */
-  --ink:#16334A; --ink-2:#3E5A72; --ink-3:#7C93A3;
+  /* ink — shifted to a more confidently blue navy, per request */
+  --ink:#173A66; --ink-2:#33588C; --ink-3:#7A93C4;
   /* surfaces */
   --paper:#F3F8FB; --card:#FFFFFF; --line:#E4EEF4; --line-2:#CFE0EA;
   /* primary — the actual SSRF blue, sampled from the real logo (~#01ABE6),
@@ -47,14 +47,6 @@ body{
 button{font:inherit;cursor:pointer}
 *{transition:background-color .16s var(--ease), border-color .16s var(--ease), color .16s var(--ease), box-shadow .16s var(--ease), transform .12s var(--ease)}
 :focus-visible{outline:2px solid var(--deep-2);outline-offset:2px;border-radius:3px}
-
-/* ---------- banner ---------- */
-.demo-banner{
-  background:var(--deep-wash); color:#2A5570; padding:9px 22px;
-  font-size:12px; letter-spacing:.02em; display:flex; gap:10px; align-items:center; flex-wrap:wrap;
-  border-bottom:1px solid #DCE9F3;
-}
-.demo-banner b{color:var(--deep);font-weight:600}
 
 /* ---------- header ---------- */
 header{
@@ -256,15 +248,15 @@ tbody tr:last-child td{border-bottom:none}
   font-size:13px;z-index:60;box-shadow:0 6px 22px rgba(22,51,74,.22)}
 .shell{
   position:relative;min-height:100vh;overflow:hidden;
-  display:grid;grid-template-columns:220px 1fr;grid-template-rows:auto auto auto 1fr;
-  grid-template-areas:"banner banner" "orgbanner orgbanner" "header header" "nav main";
+  display:grid;grid-template-columns:220px 1fr;grid-template-rows:auto auto 1fr;
+  grid-template-areas:"orgbanner orgbanner" "header header" "nav main";
 }
-.demo-banner{grid-area:banner}
 .org-banner{
   grid-area:orgbanner;
-  background:linear-gradient(135deg,#F1F7FB 0%,#E7F0F9 55%,#DDEAF4 100%);
-  border-bottom:2px solid var(--deep-2);
-  padding:16px 26px;display:flex;align-items:center;gap:16px;
+  background:linear-gradient(135deg,#EAF3FA 0%,#DCEAF6 55%,#CFE1F2 100%);
+  box-shadow:0 2px 10px rgba(23,58,102,.08);
+  border-bottom:1px solid var(--line-2);
+  padding:20px 28px;display:flex;align-items:center;gap:18px;
 }
 .org-banner .mark{
   flex:0 0 auto;width:52px;height:52px;border-radius:50%;
@@ -274,13 +266,13 @@ tbody tr:last-child td{border-bottom:none}
   font-family:var(--font-org);font-weight:600;font-size:15px;color:#fff;letter-spacing:.01em;
 }
 .org-banner .org-text .name{
-  font-family:var(--font-org);font-weight:600;font-size:23px;color:var(--ink);letter-spacing:-.01em;line-height:1.2;
+  font-family:var(--font-org);font-weight:600;font-size:29px;color:var(--ink);letter-spacing:-.01em;line-height:1.2;
 }
-.org-banner .org-text .name .full{font-weight:400;color:var(--ink-2);font-size:16px;margin-left:8px}
+.org-banner .org-text .name .full{font-weight:400;color:var(--ink-2);font-size:19px;margin-left:8px}
 .org-banner .org-text .tag{
-  font-size:12.5px;color:var(--deep);letter-spacing:.03em;margin-top:3px;
+  font-size:14px;color:var(--deep);letter-spacing:.03em;margin-top:4px;
 }
-.org-banner img.logo{height:48px;width:auto;flex:0 0 auto}
+.org-banner img.logo{height:56px;width:auto;flex:0 0 auto}
 header{grid-area:header}
 nav{
   grid-area:nav;flex-direction:column;align-items:stretch;gap:2px;
@@ -292,7 +284,7 @@ nav button{border-bottom:none;border-left:2px solid transparent;margin-bottom:0;
 nav button.on{box-shadow:none;border-left-color:var(--deep)}
 main{grid-area:main;max-width:none;margin:0}
 @media(max-width:880px){
-  .shell{grid-template-columns:1fr;grid-template-areas:"banner" "orgbanner" "header" "nav" "main"}
+  .shell{grid-template-columns:1fr;grid-template-areas:"orgbanner" "header" "nav" "main"}
   nav{flex-direction:row;border-right:none;border-bottom:1px solid var(--line);padding:8px 22px 0;overflow-x:auto}
   nav button{border-left:none;border-bottom:2px solid transparent;border-radius:0;white-space:nowrap}
   nav button.on{border-left:none;box-shadow:inset 0 -2px 0 var(--deep)}
@@ -396,11 +388,6 @@ nav .pip.r{background:var(--rose);color:#fff}
 </div>
 
 <div class="shell" id="shell" style="display:none">
-
-<div class="demo-banner">
-  <b>Live</b>
-  <span>Seekers and Team read from Postgres. Journey, Inbox, Notes, Tasks, Calendar, Reports are still illustrative mock data — see README for why.</span>
-</div>
 
 <div class="org-banner">
   <img class="logo" src="assets/ssrf-logo.webp" alt="SSRF logo">
@@ -2329,7 +2316,8 @@ function renderSatsangDefs(force){
           <option value="">No fixed frequency</option>
           <option>Daily</option><option>Weekly</option><option>Once every two weeks</option><option>Monthly</option>
         </select>
-        <input id="sdAdvNotif" type="number" placeholder="Advance notification (days)" style="border-radius:999px;padding:7px 14px;font-size:13px;border:1px solid var(--line-2)">
+        <!-- Advance-notification-days field removed for now — the real
+             column name for it on M_Satsang isn't confirmed yet. -->
         <button class="btn sm" onclick="createSatsangDef(this)"><span class="spin"></span><span class="lbl">Create draft</span></button>
         <div class="err" id="sdErr"></div>
       </div>
@@ -2375,9 +2363,8 @@ async function createSatsangDef(btn){
       const typeId=document.getElementById('sdType').value;
       const startDate=document.getElementById('sdStart').value;
       const frequency=document.getElementById('sdFreq').value;
-      const advNotification=document.getElementById('sdAdvNotif').value;
       if(!shortName||!name||!typeId||!startDate){ errEl.textContent='Short name, name, type and start date are required.'; errEl.classList.add('on'); return; }
-      await apiFetch('/api/satsangs/defs', {method:'POST', body: JSON.stringify({shortName,name,typeId:Number(typeId),startDate,frequency,advNotification:advNotification?Number(advNotification):null})});
+      await apiFetch('/api/satsangs/defs', {method:'POST', body: JSON.stringify({shortName,name,typeId:Number(typeId),startDate,frequency})});
       toast('Draft created.');
       LIVE_SATSANG_DEFS = null; loadSatsangDefs();
     }catch(err){ errEl.textContent = err.message||'Could not create.'; errEl.classList.add('on'); }
