@@ -1826,7 +1826,7 @@ function subtab(s){
    symmetrically, "delete department") stays exclusive to Seva Departments. */
 let LIVE_DEPTS = null;
 let LIVE_DEPT_ROLES = {};
-let CHART_MODAL = null; // { deptId, level: 1|2, parentId (level 2 only) }
+let MODAL_STACK = []; // array of Seva_Dept_ID — arbitrary depth, last entry is what's showing
 
 function invalidateTeamData(){ LIVE_DEPTS = null; LIVE_DEPT_ROLES = {}; loadTeamData(); }
 
@@ -1840,7 +1840,7 @@ async function loadTeamData(){
     LIVE_DEPTS = depts;
     renderSevaDepartments();
     renderTeamManagement(true);
-    if(CHART_MODAL) renderModalContent();
+    if(MODAL_STACK.length) renderModalContent();
   }catch(err){
     const msg = `<div class="hidden-note" style="background:var(--rose-wash);border-color:#EBCBCE;color:var(--rose)">
         <b>Could not load departments.</b> ${esc(err.message||'')}</div>`;
@@ -2001,10 +2001,10 @@ async function submitAssign(deptId, key, btn){
 }
 
 /* ============ Seva Departments — org chart + modal (structure) ============ */
-function openDeptModal(deptId){ CHART_MODAL = {deptId, level:1}; renderModalContent(); }
-function drillInto(deptId, parentId){ CHART_MODAL = {deptId, level:2, parentId}; renderModalContent(); }
-function backToParent(){ if(CHART_MODAL && CHART_MODAL.parentId!=null) openDeptModal(CHART_MODAL.parentId); }
-function closeDeptModal(){ CHART_MODAL = null; const el=document.getElementById('deptModalRoot'); if(el) el.innerHTML=''; }
+function openDeptModal(deptId){ MODAL_STACK = [deptId]; renderModalContent(); }
+function drillInto(deptId){ MODAL_STACK.push(deptId); renderModalContent(); }
+function backToParent(){ MODAL_STACK.pop(); if(MODAL_STACK.length) renderModalContent(); else closeDeptModal(); }
+function closeDeptModal(){ MODAL_STACK = []; const el=document.getElementById('deptModalRoot'); if(el) el.innerHTML=''; }
 
 function renderSevaDepartments(){
   const el = document.getElementById('orgDepts');
@@ -2026,48 +2026,44 @@ function renderSevaDepartments(){
       </div>
     </div>
     <div id="deptModalRoot"></div>`;
-  if(CHART_MODAL) renderModalContent();
+  if(MODAL_STACK.length) renderModalContent();
 }
 
+// One department at a time, but a department can have BOTH sub-departments
+// (drill deeper, no fixed depth limit) AND its own roles/members directly —
+// both shown together rather than forcing a "structure vs people" split
+// by level, since the hierarchy can nest arbitrarily.
 function renderModalContent(){
   const root = document.getElementById('deptModalRoot');
-  if(!root || !CHART_MODAL) return;
-  const dept = deptById(CHART_MODAL.deptId);
-  if(!dept){ closeDeptModal(); return; }
+  if(!root || !MODAL_STACK.length) return;
+  const dept = deptById(MODAL_STACK[MODAL_STACK.length-1]);
+  if(!dept){ MODAL_STACK.pop(); if(MODAL_STACK.length){ renderModalContent(); } else { closeDeptModal(); } return; }
 
-  if(CHART_MODAL.level === 1){
-    const kids = childrenOf(dept.Seva_Dept_ID);
-    root.innerHTML = `<div class="obackdrop" onclick="if(event.target===this) closeDeptModal()">
-      <div class="omodal">
-        <button class="oclose" onclick="closeDeptModal()" aria-label="Close">&times;</button>
-        <h3 style="margin:0 0 2px">${esc(dept.Seva_Dept_Name)}</h3>
-        <p class="sub2" style="margin-bottom:12px">${kids.length} sub-department${kids.length===1?'':'s'}</p>
-        ${kids.length ? kids.map(k=>`<div class="oteamrow" onclick="drillInto(${k.Seva_Dept_ID},${dept.Seva_Dept_ID})">
-            <span>${esc(k.Seva_Dept_Name)}</span><span>&rsaquo;</span>
-          </div>`).join('') : '<p class="sub2">No sub-departments yet.</p>'}
-        <details style="margin-top:12px">
-          <summary style="cursor:pointer;font-size:12px;color:var(--deep)">+ Add sub-department</summary>
-          <div style="display:flex;gap:6px;margin-top:8px">
-            <input id="mNewDeptName" placeholder="Department name" style="flex:1;border-radius:999px;padding:6px 14px;font-size:13px;border:1px solid var(--line-2)">
-            <button class="btn sm" onclick="createDept(document.getElementById('mNewDeptName').value.trim(), ${dept.Seva_Dept_ID}, this)"><span class="spin"></span><span class="lbl">Add</span></button>
-          </div>
-        </details>
-        <div class="btnrow" style="margin-top:14px">
-          <button class="btn ghost" style="color:var(--rose);border-color:var(--rose)" onclick="deleteDept(${dept.Seva_Dept_ID}, this)"><span class="spin"></span><span class="lbl">Delete department</span></button>
-        </div>
-      </div>
-    </div>`;
-    return;
-  }
-
+  const kids = childrenOf(dept.Seva_Dept_ID);
   const roles = LIVE_DEPT_ROLES[dept.Seva_Dept_ID] || [];
+
   root.innerHTML = `<div class="obackdrop" onclick="if(event.target===this) closeDeptModal()">
     <div class="omodal">
       <button class="oclose" onclick="closeDeptModal()" aria-label="Close">&times;</button>
       <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px">
-        <button class="mini" onclick="backToParent()" title="Back" style="width:24px;height:24px">&lsaquo;</button>
+        ${MODAL_STACK.length>1 ? `<button class="mini" onclick="backToParent()" title="Back" style="width:24px;height:24px">&lsaquo;</button>` : ''}
         <h3 style="margin:0">${esc(dept.Seva_Dept_Name)}</h3>
       </div>
+
+      ${kids.length ? `<p class="sub2" style="margin:10px 0 4px">${kids.length} sub-department${kids.length===1?'':'s'}</p>
+        ${kids.map(k=>`<div class="oteamrow" onclick="drillInto(${k.Seva_Dept_ID})">
+            <span>${esc(k.Seva_Dept_Name)}</span><span>&rsaquo;</span>
+          </div>`).join('')}` : '<p class="sub2" style="margin-top:10px">No sub-departments yet.</p>'}
+      <details style="margin-top:10px">
+        <summary style="cursor:pointer;font-size:12px;color:var(--deep)">+ Add sub-department</summary>
+        <div style="display:flex;gap:6px;margin-top:8px">
+          <input id="mNewDeptName" placeholder="Department name" style="flex:1;border-radius:999px;padding:6px 14px;font-size:13px;border:1px solid var(--line-2)">
+          <button class="btn sm" onclick="createDept(document.getElementById('mNewDeptName').value.trim(), ${dept.Seva_Dept_ID}, this)"><span class="spin"></span><span class="lbl">Add</span></button>
+        </div>
+      </details>
+
+      <hr style="border:none;border-top:1px solid var(--line-2);margin:14px 0">
+      <p class="sub2" style="margin-bottom:4px">Roles in this department</p>
       ${roles.length ? roles.map(r=>`<div class="oteamrow" style="cursor:default;flex-direction:column;align-items:stretch;gap:4px">
           <div style="display:flex;align-items:center;justify-content:space-between">
             <span title="${esc(r.Dept_Role_Desc||'')}">${esc(r.Dept_Role_Name)}</span>
@@ -2084,6 +2080,10 @@ function renderModalContent(){
           </div>`).join('')}
         </div>`).join('') : '<p class="sub2">No roles defined yet.</p>'}
       ${roleAndMemberFormsHTML(dept, roles, 'm', 'submitAssign')}
+
+      <div class="btnrow" style="margin-top:14px">
+        <button class="btn ghost" style="color:var(--rose);border-color:var(--rose)" onclick="deleteDept(${dept.Seva_Dept_ID}, this)"><span class="spin"></span><span class="lbl">Delete department</span></button>
+      </div>
     </div>
   </div>`;
 }
@@ -2136,6 +2136,17 @@ function renderTeamManagement(force){
   }
 
   el.innerHTML = `
+    <details style="margin-bottom:14px">
+      <summary style="cursor:pointer;font-size:12px;color:var(--deep)">+ Add Seva Dept</summary>
+      <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
+        <select id="tmNewDeptParent" style="border-radius:999px;padding:6px 14px;font-size:13px;border:1px solid var(--line-2)">
+          <option value="">No parent (top level)</option>
+          ${deptOptions(null)}
+        </select>
+        <input id="tmNewDeptName" placeholder="Department name" style="border-radius:999px;padding:6px 14px;font-size:13px;border:1px solid var(--line-2);flex:1;min-width:140px">
+        <button class="btn sm" onclick="createDept(document.getElementById('tmNewDeptName').value.trim(), document.getElementById('tmNewDeptParent').value||null, this)"><span class="spin"></span><span class="lbl">Add department</span></button>
+      </div>
+    </details>
     <details style="margin-bottom:14px">
       <summary style="cursor:pointer;font-size:12px;color:var(--deep)">+ Add role to a department</summary>
       <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
@@ -2197,6 +2208,8 @@ async function submitTeamChanges(btn){
   const errEl = document.getElementById('teamErr');
   errEl.classList.remove('on');
   const rows = Array.from(document.querySelectorAll('#teamTableBody tr'));
+  const removalCount = rows.filter(tr=>tr.classList.contains('pending-remove')).length;
+  if(removalCount > 0 && !confirm(`This will remove ${removalCount} member${removalCount===1?'':'s'} from their role${removalCount===1?'':'s'}. This cannot be undone. Continue?`)) return;
   await withLoading(btn, async ()=>{
     let changed = 0, failed = 0;
     for(const tr of rows){
