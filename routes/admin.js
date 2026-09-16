@@ -234,11 +234,19 @@ router.post('/assign-role', requireAuth, async (req, res) => {
         [csmsId, sevaDeptId]
       );
 
+      // USDR_ID has no sequence either — same MAX+1 pattern as CSMS_ID and
+      // Dept_Role_ID above. Confirmed by testing: without this, USDR_ID
+      // inserts as NULL and fails the primary key's NOT NULL constraint.
+      const usdrMaxQ = await client.query(
+        `SELECT COALESCE(MAX(${qi('USDR_ID')}), 0) + 1 AS next_id FROM ${qi('RMS')}.${qi('User_Seva_Dept_Role')}`
+      );
+      const usdrId = usdrMaxQ.rows[0].next_id;
+
       await client.query(
         `INSERT INTO ${qi('RMS')}.${qi('User_Seva_Dept_Role')}
-          (${qi('CSMS_ID')}, ${qi('Seva_Dept_ID')}, ${qi('Dept_Role_ID')}, ${qi('Ver_From_DT')}, ${qi('Ver_To_DT')})
-         VALUES ($1, $2, $3, CURRENT_DATE, $4)`,
-        [csmsId, sevaDeptId, deptRoleId, FAR_FUTURE]
+          (${qi('USDR_ID')}, ${qi('CSMS_ID')}, ${qi('Seva_Dept_ID')}, ${qi('Dept_Role_ID')}, ${qi('Ver_From_DT')}, ${qi('Ver_To_DT')})
+         VALUES ($1, $2, $3, $4, CURRENT_DATE, $5)`,
+        [usdrId, csmsId, sevaDeptId, deptRoleId, FAR_FUTURE]
       );
 
       await client.query('COMMIT');
