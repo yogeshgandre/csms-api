@@ -266,9 +266,9 @@ tbody tr:last-child td{border-bottom:none}
   font-family:var(--font-org);font-weight:600;font-size:15px;color:#fff;letter-spacing:.01em;
 }
 .org-banner .org-text .name{
-  font-family:var(--font-org);font-weight:600;font-size:29px;color:var(--ink);letter-spacing:-.01em;line-height:1.2;
+  font-family:var(--font-org);font-weight:700;font-size:36px;color:var(--ink);letter-spacing:-.01em;line-height:1.15;
 }
-.org-banner .org-text .name .full{font-weight:400;color:var(--ink-2);font-size:19px;margin-left:8px}
+.org-banner .org-text .name .full{font-weight:400;color:var(--ink-2);font-size:20px;margin-left:9px}
 .org-banner .org-text .tag{
   font-size:14px;color:var(--deep);letter-spacing:.03em;margin-top:4px;
 }
@@ -371,19 +371,12 @@ nav .pip.r{background:var(--rose);color:#fff}
       <span class="t">CSMS</span>
       <span class="s">Curious and Seeker Management System</span>
     </div>
-    <p class="sub" style="margin-bottom:14px">
-      Access is by invitation only, restricted to ssrf.org accounts. Signing in with a Google account
-      does not create access on its own — an administrator must have invited you first.
-    </p>
+    <p class="sub" style="margin-bottom:14px">Invitation only, restricted to ssrf.org accounts.</p>
     <div class="err" id="login-err"></div>
     <button class="btn" id="google-signin-btn" style="width:100%;display:flex;align-items:center;justify-content:center;gap:10px" onclick="attemptGoogleLogin()">
       <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.6 6.5 29.6 4.5 24 4.5 12.7 4.5 3.5 13.7 3.5 25S12.7 45.5 24 45.5 44.5 36.3 44.5 25c0-1.5-.2-2.9-.4-4.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.6 15.7 18.9 12.5 24 12.5c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.6 6.5 29.6 4.5 24 4.5c-7.7 0-14.4 4.3-17.7 10.2z"/><path fill="#4CAF50" d="M24 45.5c5.5 0 10.4-1.9 14.2-5.1l-6.6-5.4C29.6 36.6 26.9 37.5 24 37.5c-5.2 0-9.6-3.3-11.3-7.9l-6.6 5.1C9.5 41.1 16.2 45.5 24 45.5z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.2 4.2-4.1 5.6l6.6 5.4C41.9 35.8 44.5 30.8 44.5 25c0-1.5-.2-2.9-.4-4.5z"/></svg>
       Sign in with Google
     </button>
-    <p class="sub2" style="margin-top:12px">
-      Access requires an @ssrf.org Google Workspace account. This is checked on the server —
-      selecting a personal Google account will be rejected even if it appears in the account picker.
-    </p>
   </div>
 </div>
 
@@ -398,11 +391,7 @@ nav .pip.r{background:var(--rose);color:#fff}
 </div>
 
 <header>
-  <div class="brand">
-    <span class="t">CSMS</span>
-    <span class="s">Curious and Seeker Management System</span>
-  </div>
-  <div style="display:flex;align-items:center;gap:14px;position:relative">
+  <div style="display:flex;align-items:center;gap:14px;position:relative;margin-left:auto">
     <button id="notifBell" class="mini" onclick="toggleNotifDropdown()" title="Notifications" style="position:relative;width:36px;height:36px;font-size:16px">
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"></path>
@@ -424,7 +413,7 @@ nav .pip.r{background:var(--rose);color:#fff}
   <button class="on" data-p="seekers" onclick="tab('seekers')">Seekers</button>
   <button data-p="alerts" onclick="tab('alerts')">My work<span class="pip" id="pip">0</span></button>
   <button data-p="inbox" onclick="tab('inbox')">Inbox<span class="pip" id="pip4">0</span></button>
-  <button data-p="journey" onclick="tab('journey')">Journey</button>
+  <button data-p="journey" onclick="tab('journey')">Curious and Seeker Spiritual Journey</button>
   <button data-p="calendar" onclick="tab('calendar'); renderCalendar()">Calendar</button>
   <button data-p="reports" onclick="tab('reports')">Reports<span class="pip r" id="pip5">0</span></button>
   <button data-p="sevahub" onclick="tab('sevahub')">Seva</button>
@@ -496,9 +485,13 @@ nav .pip.r{background:var(--rose);color:#fff}
     <div class="filters" style="border-bottom:1px solid var(--line-2);padding-bottom:0;margin-bottom:16px">
       <button class="chip on" data-sub="defs" onclick="satsangSubtab('defs')">Satsang Definitions</button>
       <button class="chip" data-sub="events" onclick="satsangSubtab('events')">Satsang Events</button>
+      <button class="chip" data-sub="transfers" onclick="satsangSubtab('transfers')">Transfers</button>
+      <button class="chip" data-sub="access" onclick="satsangSubtab('access')">Access Configuration</button>
     </div>
     <div id="satsangDefs"></div>
     <div id="satsangEvents" style="display:none"></div>
+    <div id="satsangTransfers" style="display:none"></div>
+    <div id="satsangAccess" style="display:none"></div>
   </section>
 
   <section class="pane" id="p-alerts">
@@ -509,7 +502,7 @@ nav .pip.r{background:var(--rose);color:#fff}
   </section>
 
   <section class="pane" id="p-journey">
-    <h2 class="sec">Journey</h2>
+    <h2 class="sec">Curious and Seeker Spiritual Journey</h2>
     <p class="sub">Where every seeker sits, and what brought them in. Not a sales pipeline — there is no close, and moving backwards is ordinary.</p>
     <div id="journey"></div>
   </section>
@@ -2276,7 +2269,9 @@ const SATSANG_STATUS_COLORS = {
   'Pending Conductor Approval': {bg:'#FDF0DC', fg:'#9A6A0E'},
   'Scheduled': {bg:'#E7F3EC', fg:'var(--sage)'},
   'Cancelled': {bg:'#FBE7E7', fg:'var(--rose)'},
-  'Completed': {bg:'#E1F3FA', fg:'var(--deep)'}
+  'Completed': {bg:'#E1F3FA', fg:'var(--deep)'},
+  'Requested': {bg:'#FDF0DC', fg:'#9A6A0E'},
+  'Accepted': {bg:'#E1F3FA', fg:'var(--deep)'}
 };
 function statusBadge(s){
   const c = SATSANG_STATUS_COLORS[s] || {bg:'#EEF1F4', fg:'var(--ink-2)'};
@@ -2286,8 +2281,13 @@ function statusBadge(s){
 function satsangSubtab(s){
   document.getElementById('satsangDefs').style.display = s==='defs' ? '' : 'none';
   document.getElementById('satsangEvents').style.display = s==='events' ? '' : 'none';
+  document.getElementById('satsangTransfers').style.display = s==='transfers' ? '' : 'none';
+  document.getElementById('satsangAccess').style.display = s==='access' ? '' : 'none';
   document.querySelectorAll('#p-satsangmgmt .chip').forEach(c=>c.classList.toggle('on', c.dataset.sub===s));
-  if(s==='events') renderSatsangEvents(true); else renderSatsangDefs(true);
+  if(s==='events') renderSatsangEvents(true);
+  else if(s==='transfers') renderSatsangTransfers(true);
+  else if(s==='access') renderSatsangAccess(true);
+  else renderSatsangDefs(true);
 }
 
 async function loadSatsangDefs(){
@@ -2666,6 +2666,233 @@ async function cancelSatsangEvent(seId, btn){
   await withLoading(btn, async ()=>{
     try{ await apiFetch('/api/satsangs/events/'+seId+'/cancel', {method:'POST'}); toast('Event cancelled.'); LIVE_SATSANG_UPCOMING = null; loadSatsangEvents(true); }
     catch(err){ toast('Could not cancel: '+(err.message||'')); }
+  });
+}
+
+
+/* ---- Transfers (Attendee_Transfer_Requests, 3-stage workflow) ---- */
+let LIVE_SATSANG_TRANSFERS = null;
+
+async function loadSatsangTransfers(){
+  try{ LIVE_SATSANG_TRANSFERS = await apiFetch('/api/satsangs/transfers'); renderSatsangTransfersBody(); }
+  catch(err){
+    const el = document.getElementById('satsangTransfers');
+    if(el) el.innerHTML = `<div class="hidden-note" style="background:var(--rose-wash);border-color:#EBCBCE;color:var(--rose)"><b>Could not load transfers.</b> ${esc(err.message||'')}</div>`;
+  }
+}
+
+function renderSatsangTransfers(force){
+  const el = document.getElementById('satsangTransfers');
+  if(!el) return;
+  if(LIVE_SATSANG_DEFS === null){ el.innerHTML = '<p class="sub2">Loading\u2026</p>'; loadSatsangDefs(); return; }
+  el.innerHTML = `<div id="satsangTransfersBody"><p class="sub2">Loading\u2026</p></div>`;
+  loadSatsangTransfers();
+}
+
+function onTransferFromChange(){
+  const fromId = document.getElementById('trFrom').value;
+  const asSel = document.getElementById('trAttendee');
+  const toSel = document.getElementById('trTo');
+  asSel.innerHTML = '<option value="">Loading attendees\u2026</option>';
+  toSel.innerHTML = '<option value="">Pick a sending satsang first</option>';
+  if(!fromId) return;
+  apiFetch('/api/satsangs/defs/'+fromId+'/attendees').then(attendees=>{
+    asSel.innerHTML = attendees.length
+      ? attendees.map(a=>`<option value="${a.AS_CSMS_ID}">${esc(a.Seeker_Name||a.Seeker_Email)}</option>`).join('')
+      : '<option value="">No attendees on this satsang</option>';
+  }).catch(()=>{ asSel.innerHTML = '<option value="">Could not load attendees</option>'; });
+
+  const fromDef = LIVE_SATSANG_DEFS.find(d=>d.Satsang_ID==fromId);
+  const sameType = LIVE_SATSANG_DEFS.filter(d=>d.Satsang_ID!=fromId && fromDef && d.Satsang_Type_ID==fromDef.Satsang_Type_ID);
+  toSel.innerHTML = sameType.length
+    ? sameType.map(d=>`<option value="${d.Satsang_ID}">${esc(d.Satsang_Name)}</option>`).join('')
+    : '<option value="">No other satsang of the same type</option>';
+}
+
+function renderSatsangTransfersBody(){
+  const body = document.getElementById('satsangTransfersBody');
+  if(!body || !LIVE_SATSANG_DEFS) return;
+  const transfers = LIVE_SATSANG_TRANSFERS || [];
+
+  body.innerHTML = `
+    <details style="margin-bottom:14px">
+      <summary style="cursor:pointer;font-size:12px;color:var(--deep)">+ New transfer</summary>
+      <div class="card pad" style="margin-top:8px;display:flex;flex-direction:column;gap:8px;max-width:460px">
+        <label class="sub2">From satsang</label>
+        <select id="trFrom" onchange="onTransferFromChange()" style="border-radius:999px;padding:7px 14px;font-size:13px;border:1px solid var(--line-2)">
+          <option value="">Pick a satsang\u2026</option>
+          ${LIVE_SATSANG_DEFS.map(d=>`<option value="${d.Satsang_ID}">${esc(d.Satsang_Name)}</option>`).join('')}
+        </select>
+        <label class="sub2">Attendee</label>
+        <select id="trAttendee" style="border-radius:999px;padding:7px 14px;font-size:13px;border:1px solid var(--line-2)">
+          <option value="">Pick a sending satsang first</option>
+        </select>
+        <label class="sub2">To satsang (same type only)</label>
+        <select id="trTo" style="border-radius:999px;padding:7px 14px;font-size:13px;border:1px solid var(--line-2)">
+          <option value="">Pick a sending satsang first</option>
+        </select>
+        <input id="trRemarks" placeholder="Remarks (optional)" style="border-radius:999px;padding:7px 14px;font-size:13px;border:1px solid var(--line-2)">
+        <button class="btn sm" onclick="initiateTransfer(this)"><span class="spin"></span><span class="lbl">Request transfer</span></button>
+        <div class="err" id="trErr"></div>
+      </div>
+    </details>
+    ${transfers.length ? transfers.map(transferRowHTML).join('') : '<p class="sub2">No transfer requests yet.</p>'}`;
+}
+
+function transferRowHTML(t){
+  return `<div class="card pad" style="margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
+    <div>
+      <div style="font-weight:600">${esc(t.attendee_name||('CSMS #'+t.AS_CSMS_ID))}</div>
+      <div class="sub2">${esc(t.from_satsang_name||'')} \u2192 ${esc(t.to_satsang_name||'')}${t.TR_Initiated_Remarks?(' \u00b7 '+esc(t.TR_Initiated_Remarks)):''}</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      ${statusBadge(t.TR_Status_Name)}
+      ${transferActionsHTML(t)}
+    </div>
+  </div>`;
+}
+
+function transferActionsHTML(t){
+  if(t.TR_Status_Name==='Requested'){
+    return `<button class="btn sm" onclick="approveTransfer(${t.TR_ID}, this)"><span class="spin"></span><span class="lbl">Approve</span></button>
+      <button class="btn ghost sm" style="color:var(--rose);border-color:var(--rose)" onclick="rejectTransfer(${t.TR_ID}, this)"><span class="spin"></span><span class="lbl">Reject</span></button>`;
+  }
+  if(t.TR_Status_Name==='Approved'){
+    return `<button class="btn sm" onclick="acceptTransfer(${t.TR_ID}, this)"><span class="spin"></span><span class="lbl">Accept</span></button>
+      <button class="btn ghost sm" style="color:var(--rose);border-color:var(--rose)" onclick="rejectTransfer(${t.TR_ID}, this)"><span class="spin"></span><span class="lbl">Reject</span></button>`;
+  }
+  return '';
+}
+
+async function initiateTransfer(btn){
+  const errEl = document.getElementById('trErr'); errEl.classList.remove('on');
+  await withLoading(btn, async ()=>{
+    try{
+      const asCsmsId = document.getElementById('trAttendee').value;
+      const fromSatsangId = document.getElementById('trFrom').value;
+      const toSatsangId = document.getElementById('trTo').value;
+      const remarks = document.getElementById('trRemarks').value.trim();
+      if(!asCsmsId || !fromSatsangId || !toSatsangId){ errEl.textContent='Pick a satsang, an attendee, and a destination.'; errEl.classList.add('on'); return; }
+      await apiFetch('/api/satsangs/transfers', {method:'POST', body: JSON.stringify({asCsmsId:Number(asCsmsId), fromSatsangId:Number(fromSatsangId), toSatsangId:Number(toSatsangId), remarks})});
+      toast('Transfer requested.');
+      loadSatsangTransfers();
+    }catch(err){ errEl.textContent = err.message||'Could not request transfer.'; errEl.classList.add('on'); }
+  });
+}
+async function approveTransfer(id, btn){
+  const remarks = prompt('Remarks (optional):') || '';
+  await withLoading(btn, async ()=>{
+    try{ await apiFetch('/api/satsangs/transfers/'+id+'/approve', {method:'POST', body: JSON.stringify({remarks})}); toast('Transfer approved.'); loadSatsangTransfers(); }
+    catch(err){ toast('Could not approve: '+(err.message||'')); }
+  });
+}
+async function rejectTransfer(id, btn){
+  const remarks = prompt('Reason for rejecting (optional):') || '';
+  if(!confirm('Reject this transfer?')) return;
+  await withLoading(btn, async ()=>{
+    try{ await apiFetch('/api/satsangs/transfers/'+id+'/reject', {method:'POST', body: JSON.stringify({remarks})}); toast('Transfer rejected.'); loadSatsangTransfers(); }
+    catch(err){ toast('Could not reject: '+(err.message||'')); }
+  });
+}
+async function acceptTransfer(id, btn){
+  const remarks = prompt('Remarks (optional):') || '';
+  if(!confirm('Accept this transfer? The attendee will be moved to the receiving satsang.')) return;
+  await withLoading(btn, async ()=>{
+    try{
+      await apiFetch('/api/satsangs/transfers/'+id+'/accept', {method:'POST', body: JSON.stringify({remarks})});
+      toast('Transfer accepted \u2014 attendee moved.');
+      loadSatsangTransfers();
+      if(SATSANG_DETAIL_ID){ SATSANG_DETAIL_DATA=null; openSatsangDetail(SATSANG_DETAIL_ID); }
+    }catch(err){ toast('Could not accept: '+(err.message||'')); }
+  });
+}
+
+/* ---- Access Configuration (Satsangs_Seva_Dept_Access) ----
+   Not enforced anywhere yet, per instruction — everyone has access for
+   now. This screen only records the intended config for later. ---- */
+const SATSANG_FUNCTIONS = ['Satsang Creation','Satsang Review/Approval','Add Conductor','Add Attendee','Attendee Transfer'];
+let LIVE_SATSANG_ACCESS = null;
+
+async function loadSatsangAccess(){
+  try{ LIVE_SATSANG_ACCESS = await apiFetch('/api/satsangs/access-config'); renderSatsangAccessBody(); }
+  catch(err){
+    const el = document.getElementById('satsangAccess');
+    if(el) el.innerHTML = `<div class="hidden-note" style="background:var(--rose-wash);border-color:#EBCBCE;color:var(--rose)"><b>Could not load access configuration.</b> ${esc(err.message||'')}</div>`;
+  }
+}
+
+function renderSatsangAccess(force){
+  const el = document.getElementById('satsangAccess');
+  if(!el) return;
+  if(LIVE_DEPTS === null){ el.innerHTML = '<p class="sub2">Loading\u2026</p>'; loadTeamData(); return; }
+  el.innerHTML = `<div id="satsangAccessBody"><p class="sub2">Loading\u2026</p></div>`;
+  loadSatsangAccess();
+}
+
+function renderSatsangAccessBody(){
+  const body = document.getElementById('satsangAccessBody');
+  if(!body || !LIVE_DEPTS) return;
+  const rows = LIVE_SATSANG_ACCESS || [];
+  body.innerHTML = `
+    <div class="hidden-note" style="margin-bottom:12px">Not enforced yet — everyone currently has full access to every Satsang Management action regardless of what's configured here. This screen is for defining the rules ahead of enforcement.</div>
+    <details style="margin-bottom:14px">
+      <summary style="cursor:pointer;font-size:12px;color:var(--deep)">+ Add access rule</summary>
+      <div class="card pad" style="margin-top:8px;display:flex;flex-direction:column;gap:8px;max-width:460px">
+        <label class="sub2">Function</label>
+        <select id="acFunction" style="border-radius:999px;padding:7px 14px;font-size:13px;border:1px solid var(--line-2)">
+          ${SATSANG_FUNCTIONS.map(f=>`<option>${esc(f)}</option>`).join('')}
+        </select>
+        <label class="sub2">Department</label>
+        <select id="acDept" style="border-radius:999px;padding:7px 14px;font-size:13px;border:1px solid var(--line-2)">
+          ${LIVE_DEPTS.map(d=>`<option value="${d.Seva_Dept_ID}">${esc(d.Seva_Dept_Name)}</option>`).join('')}
+        </select>
+        <label class="sub2">Create role ID</label>
+        <input id="acCreate" type="number" placeholder="Single Dept_Role_ID" style="border-radius:999px;padding:7px 14px;font-size:13px;border:1px solid var(--line-2)">
+        <label class="sub2">Review role IDs</label>
+        <input id="acReview" placeholder="Comma-separated, e.g. 3,7,12" style="border-radius:999px;padding:7px 14px;font-size:13px;border:1px solid var(--line-2)">
+        <label class="sub2">Approve role IDs</label>
+        <input id="acApprove" placeholder="Comma-separated" style="border-radius:999px;padding:7px 14px;font-size:13px;border:1px solid var(--line-2)">
+        <label class="sub2">Notify role IDs</label>
+        <input id="acNotify" placeholder="Comma-separated" style="border-radius:999px;padding:7px 14px;font-size:13px;border:1px solid var(--line-2)">
+        <button class="btn sm" onclick="addAccessRule(this)"><span class="spin"></span><span class="lbl">Add rule</span></button>
+        <div class="err" id="acErr"></div>
+      </div>
+    </details>
+    ${rows.length ? rows.map(accessRowHTML).join('') : '<p class="sub2">No access rules configured yet.</p>'}`;
+}
+
+function accessRowHTML(r){
+  return `<div class="card pad" style="margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
+    <div>
+      <div style="font-weight:600">${esc(r.Satsang_Function)} \u2014 ${esc(r.Seva_Dept_Name||('Dept #'+r.Seva_Dept_ID))}</div>
+      <div class="sub2">Create: ${esc(r.Satsang_Create_Role_ID||'\u2014')} \u00b7 Review: ${esc(r.Satsang_Review_Role_ID||'\u2014')} \u00b7 Approve: ${esc(r.Satsang_Approve_Role_ID||'\u2014')} \u00b7 Notify: ${esc(r.Satsang_Notify_Role_ID||'\u2014')}</div>
+    </div>
+    <button class="mini" onclick="deleteAccessRule(${r.Satsang_Access_ID}, this)" title="Delete" style="width:24px;height:24px;color:var(--rose)">&times;</button>
+  </div>`;
+}
+
+async function addAccessRule(btn){
+  const errEl = document.getElementById('acErr'); errEl.classList.remove('on');
+  await withLoading(btn, async ()=>{
+    try{
+      await apiFetch('/api/satsangs/access-config', {method:'POST', body: JSON.stringify({
+        satsangFunction: document.getElementById('acFunction').value,
+        sevaDeptId: Number(document.getElementById('acDept').value),
+        createRoleId: document.getElementById('acCreate').value ? Number(document.getElementById('acCreate').value) : null,
+        reviewRoleIds: document.getElementById('acReview').value.trim() || null,
+        approveRoleIds: document.getElementById('acApprove').value.trim() || null,
+        notifyRoleIds: document.getElementById('acNotify').value.trim() || null,
+      })});
+      toast('Access rule added.');
+      loadSatsangAccess();
+    }catch(err){ errEl.textContent = err.message||'Could not add rule.'; errEl.classList.add('on'); }
+  });
+}
+async function deleteAccessRule(id, btn){
+  if(!confirm('Delete this access rule?')) return;
+  await withLoading(btn, async ()=>{
+    try{ await apiFetch('/api/satsangs/access-config/'+id, {method:'DELETE'}); toast('Deleted.'); loadSatsangAccess(); }
+    catch(err){ toast('Could not delete: '+(err.message||'')); }
   });
 }
 

@@ -589,14 +589,232 @@ router.get('/:satsangId/attendees', requireAuth, async (req, res) => {
 router.get('/transfers', requireAuth, async (req, res) => {
   try {
     const result = await pool.query(
-      `SELECT tr.*, ts.${qi('TR_Status_Name')}
+      `SELECT tr.${qi('TR_ID')}, tr.${qi('AS_CSMS_ID')}, tr.${qi('TR_From_Satsang_ID')}, tr.${qi('TR_To_Satsang_ID')},
+              tr.${qi('TR_Status_ID')}, ts.${qi('TR_Status_Name')},
+              tr.${qi('TR_Initiated_Remarks')}, tr.${qi('TR_Initiated_DT')}, tr.${qi('TR_Initiated_By_CSMS_ID')},
+              tr.${qi('TR_Approver_CSMS_ID')}, tr.${qi('TR_Approver_Remarks')}, tr.${qi('TR_Approved_DT')},
+              tr.${qi('TR_To_SC_CSMS_ID')}, tr.${qi('TR_Remarks')}, tr.${qi('TR_Accepted_DT')},
+              asu.${qi('Seeker_Name')} AS attendee_name,
+              fs.${qi('Satsang_Name')} AS from_satsang_name, ts2.${qi('Satsang_Name')} AS to_satsang_name
        FROM ${qi('SCS')}.${qi('Attendee_Transfer_Requests')} tr
        LEFT JOIN ${qi('SCS')}.${qi('Transfer_Status')} ts ON ts.${qi('TR_Status_ID')} = tr.${qi('TR_Status_ID')}
+       LEFT JOIN ${qi('RMS')}.${qi('User_Profile')} asu ON asu.${qi('CSMS_ID')} = tr.${qi('AS_CSMS_ID')}
+       LEFT JOIN ${qi('SCS')}.${qi('M_Satsang')} fs ON fs.${qi('Satsang_ID')} = tr.${qi('TR_From_Satsang_ID')}
+       LEFT JOIN ${qi('SCS')}.${qi('M_Satsang')} ts2 ON ts2.${qi('Satsang_ID')} = tr.${qi('TR_To_Satsang_ID')}
        ORDER BY tr.${qi('TR_Initiated_DT')} DESC`
     );
     res.json(result.rows);
   } catch (err) {
     console.error('[GET /satsangs/transfers] error', err);
+    res.status(500).json({ error: 'INTERNAL' });
+  }
+});
+
+// POST /transfers — initiate a transfer request (stage 1 of 3: Requested).
+// Same-type-only: the receiving satsang must share the sending satsang's
+// Satsang_Type_ID. TR_Status_ID is resolved by name each time rather than
+// hardcoded, since Transfer_Status rows are seeded separately and their
+// actual IDs aren't guaranteed.
+router.post('/transfers', requireAuth, async (req, res) => {
+  const { asCsmsId, fromSatsangId, toSatsangId, remarks } = req.body || {};
+  if (!asCsmsId || !fromSatsangId || !toSatsangId) {
+    return res.status(400).json({ error: 'asCsmsId, fromSatsangId and toSatsangId are required' });
+  }
+  if (String(fromSatsangId) === String(toSatsangId)) {
+    return res.status(400).json({ error: 'SAME_SATSANG', message: 'From and To satsangs must be different.' });
+  }
+  try {
+    const typesQ = await pool.query(
+      `SELECT ${qi('Satsang_ID')}, ${qi('Satsang_Type_ID')} FROM ${qi('SCS')}.${qi('M_Satsang')}
+       WHERE ${qi('Satsang_ID')} = ANY($1::bigint[])`,
+      [[fromSatsangId, toSatsangId]]
+    );
+    if (typesQ.rowCount !== 2) return res.status(404).json({ error: 'NOT_FOUND' });
+    const fromType = typesQ.rows.find(r => String(r.Satsang_ID) === String(fromSatsangId)).Satsang_Type_ID;
+    const toType = typesQ.rows.find(r => String(r.Satsang_ID) === String(toSatsangId)).Satsang_Type_ID;
+    if (String(fromType) !== String(toType)) {
+      return res.status(409).json({ error: 'TYPE_MISMATCH', message: 'The receiving satsang must be the same type as the sending one.' });
+    }
+
+    const statusQ = await pool.query(
+      `SELECT ${qi('TR_Status_ID')} FROM ${qi('SCS')}.${qi('Transfer_Status')} WHERE ${qi('TR_Status_Name')} = 'Requested'`
+    );
+    if (statusQ.rowCount === 0) return res.status(500).json({ error: 'NO_STATUS_ROW', message: '"Requested" is missing from Transfer_Status — seed it first.' });
+
+    const maxQ = await pool.query(
+      `SELECT COALESCE(MAX(${qi('TR_ID')}), 0) + 1 AS next_id FROM ${qi('SCS')}.${qi('Attendee_Transfer_Requests')}`
+    );
+    const id = maxQ.rows[0].next_id;
+    await pool.query(
+      `INSERT INTO ${qi('SCS')}.${qi('Attendee_Transfer_Requests')}
+        (${qi('TR_ID')}, ${qi('AS_CSMS_ID')}, ${qi('TR_From_Satsang_ID')}, ${qi('TR_To_Satsang_ID')},
+         ${qi('TR_Status_ID')}, ${qi('TR_Initiated_Remarks')}, ${qi('TR_Initiated_DT')}, ${qi('TR_Initiated_By_CSMS_ID')})
+       VALUES ($1,$2,$3,$4,$5,$6,CURRENT_DATE,$7)`,
+      [id, asCsmsId, fromSatsangId, toSatsangId, statusQ.rows[0].TR_Status_ID, remarks || null, req.user.csmsId]
+    );
+    res.status(201).json({ ok: true, trId: id });
+  } catch (err) {
+    console.error('[POST /satsangs/transfers] error', err);
+    res.status(500).json({ error: 'INTERNAL', message: err.message });
+  }
+});
+
+// Stage 2: Approve or Reject the request itself (not yet moving anyone).
+router.post('/transfers/:id/approve', requireAuth, async (req, res) => {
+  await setTransferStage(req, res, {
+    fromStatuses: ['Requested'], toStatus: 'Approved',
+    apply: (client, id) => client.query(
+      `UPDATE ${qi('SCS')}.${qi('Attendee_Transfer_Requests')}
+       SET ${qi('TR_Approver_CSMS_ID')} = $1, ${qi('TR_Approver_Remarks')} = $2, ${qi('TR_Approved_DT')} = CURRENT_DATE
+       WHERE ${qi('TR_ID')} = $3`,
+      [req.user.csmsId, (req.body || {}).remarks || null, id]
+    ),
+  });
+});
+
+router.post('/transfers/:id/reject', requireAuth, async (req, res) => {
+  await setTransferStage(req, res, {
+    fromStatuses: ['Requested', 'Approved'], toStatus: 'Rejected',
+    apply: (client, id) => client.query(
+      `UPDATE ${qi('SCS')}.${qi('Attendee_Transfer_Requests')}
+       SET ${qi('TR_Approver_CSMS_ID')} = $1, ${qi('TR_Approver_Remarks')} = $2, ${qi('TR_Approved_DT')} = CURRENT_DATE
+       WHERE ${qi('TR_ID')} = $3`,
+      [req.user.csmsId, (req.body || {}).remarks || null, id]
+    ),
+  });
+});
+
+// Stage 3: Accept — this is what actually moves the attendee. Expires their
+// Satsang_Attending_Seekers row on the sending satsang and creates a fresh
+// one on the receiving satsang.
+router.post('/transfers/:id/accept', requireAuth, async (req, res) => {
+  await setTransferStage(req, res, {
+    fromStatuses: ['Approved'], toStatus: 'Accepted',
+    apply: async (client, id) => {
+      const trQ = await client.query(
+        `SELECT ${qi('AS_CSMS_ID')}, ${qi('TR_From_Satsang_ID')}, ${qi('TR_To_Satsang_ID')}
+         FROM ${qi('SCS')}.${qi('Attendee_Transfer_Requests')} WHERE ${qi('TR_ID')} = $1`,
+        [id]
+      );
+      const tr = trQ.rows[0];
+      await client.query(
+        `UPDATE ${qi('SCS')}.${qi('Satsang_Attending_Seekers')} SET ${qi('Ver_To_DT')} = CURRENT_DATE - INTERVAL '1 day'
+         WHERE ${qi('Satsang_ID')} = $1 AND ${qi('AS_CSMS_ID')} = $2 AND ${qi('Ver_To_DT')} >= CURRENT_DATE`,
+        [tr.TR_From_Satsang_ID, tr.AS_CSMS_ID]
+      );
+      await client.query(
+        `INSERT INTO ${qi('SCS')}.${qi('Satsang_Attending_Seekers')} (${qi('Satsang_ID')}, ${qi('AS_CSMS_ID')}, ${qi('Ver_From_DT')}, ${qi('Ver_To_DT')})
+         VALUES ($1, $2, CURRENT_DATE, $3)`,
+        [tr.TR_To_Satsang_ID, tr.AS_CSMS_ID, FAR_FUTURE]
+      );
+      await client.query(
+        `UPDATE ${qi('SCS')}.${qi('Attendee_Transfer_Requests')}
+         SET ${qi('TR_To_SC_CSMS_ID')} = $1, ${qi('TR_Remarks')} = $2, ${qi('TR_Accepted_DT')} = CURRENT_DATE
+         WHERE ${qi('TR_ID')} = $3`,
+        [req.user.csmsId, (req.body || {}).remarks || null, id]
+      );
+    },
+  });
+});
+
+async function setTransferStage(req, res, { fromStatuses, toStatus, apply }) {
+  let client;
+  try {
+    client = await pool.connect();
+    await client.query('BEGIN');
+    const cur = await client.query(
+      `SELECT ts.${qi('TR_Status_Name')} FROM ${qi('SCS')}.${qi('Attendee_Transfer_Requests')} tr
+       JOIN ${qi('SCS')}.${qi('Transfer_Status')} ts ON ts.${qi('TR_Status_ID')} = tr.${qi('TR_Status_ID')}
+       WHERE tr.${qi('TR_ID')} = $1 FOR UPDATE OF tr`,
+      [req.params.id]
+    );
+    if (cur.rowCount === 0) { await client.query('ROLLBACK'); return res.status(404).json({ error: 'NOT_FOUND' }); }
+    if (!fromStatuses.includes(cur.rows[0].TR_Status_Name)) {
+      await client.query('ROLLBACK');
+      return res.status(409).json({ error: 'BAD_STATE', message: `Must be ${fromStatuses.join(' or ')} to do this — it's currently ${cur.rows[0].TR_Status_Name}.` });
+    }
+    const statusQ = await client.query(
+      `SELECT ${qi('TR_Status_ID')} FROM ${qi('SCS')}.${qi('Transfer_Status')} WHERE ${qi('TR_Status_Name')} = $1`,
+      [toStatus]
+    );
+    if (statusQ.rowCount === 0) {
+      await client.query('ROLLBACK');
+      return res.status(500).json({ error: 'NO_STATUS_ROW', message: `"${toStatus}" is missing from Transfer_Status — seed it first.` });
+    }
+
+    await apply(client, req.params.id);
+    await client.query(
+      `UPDATE ${qi('SCS')}.${qi('Attendee_Transfer_Requests')} SET ${qi('TR_Status_ID')} = $1 WHERE ${qi('TR_ID')} = $2`,
+      [statusQ.rows[0].TR_Status_ID, req.params.id]
+    );
+    await client.query('COMMIT');
+    res.json({ ok: true });
+  } catch (err) {
+    if (client) await client.query('ROLLBACK');
+    console.error('[setTransferStage] error', err);
+    res.status(500).json({ error: 'INTERNAL', message: err.message });
+  } finally {
+    if (client) client.release();
+  }
+}
+
+/* ============ Satsangs_Seva_Dept_Access (configuration only — not
+   enforced anywhere yet, per instruction: everyone has access for now) ============ */
+
+router.get('/access-config', requireAuth, async (req, res) => {
+  try {
+    const r = await pool.query(
+      `SELECT sda.${qi('Satsang_Access_ID')}, sda.${qi('Satsang_Function')}, sda.${qi('Seva_Dept_ID')},
+              d.${qi('Seva_Dept_Name')},
+              sda.${qi('Satsang_Create_Role_ID')}, sda.${qi('Satsang_Review_Role_ID')},
+              sda.${qi('Satsang_Approve_Role_ID')}, sda.${qi('Satsang_Notify_Role_ID')}
+       FROM ${qi('SCS')}.${qi('Satsangs_Seva_Dept_Access')} sda
+       LEFT JOIN ${qi('RMS')}.${qi('Seva_Dept')} d ON d.${qi('Seva_Dept_ID')} = sda.${qi('Seva_Dept_ID')}
+       WHERE sda.${qi('Ver_To_DT')} >= CURRENT_DATE
+       ORDER BY d.${qi('Seva_Dept_Name')}, sda.${qi('Satsang_Function')}`
+    );
+    res.json(r.rows);
+  } catch (err) {
+    console.error('[GET /satsangs/access-config] error', err);
+    res.status(500).json({ error: 'INTERNAL' });
+  }
+});
+
+router.post('/access-config', requireAuth, async (req, res) => {
+  const { satsangFunction, sevaDeptId, createRoleId, reviewRoleIds, approveRoleIds, notifyRoleIds } = req.body || {};
+  if (!satsangFunction || !sevaDeptId) {
+    return res.status(400).json({ error: 'satsangFunction and sevaDeptId are required' });
+  }
+  try {
+    const maxQ = await pool.query(
+      `SELECT COALESCE(MAX(${qi('Satsang_Access_ID')}), 0) + 1 AS next_id FROM ${qi('SCS')}.${qi('Satsangs_Seva_Dept_Access')}`
+    );
+    const id = maxQ.rows[0].next_id;
+    await pool.query(
+      `INSERT INTO ${qi('SCS')}.${qi('Satsangs_Seva_Dept_Access')}
+        (${qi('Satsang_Access_ID')}, ${qi('Satsang_Function')}, ${qi('Seva_Dept_ID')},
+         ${qi('Satsang_Create_Role_ID')}, ${qi('Satsang_Review_Role_ID')}, ${qi('Satsang_Approve_Role_ID')}, ${qi('Satsang_Notify_Role_ID')},
+         ${qi('Ver_From_DT')}, ${qi('Ver_To_DT')})
+       VALUES ($1,$2,$3,$4,$5,$6,$7,CURRENT_DATE,$8)`,
+      [id, satsangFunction, sevaDeptId, createRoleId || null, reviewRoleIds || null, approveRoleIds || null, notifyRoleIds || null, FAR_FUTURE]
+    );
+    res.status(201).json({ ok: true, accessId: id });
+  } catch (err) {
+    console.error('[POST /satsangs/access-config] error', err);
+    res.status(500).json({ error: 'INTERNAL', message: err.message });
+  }
+});
+
+router.delete('/access-config/:id', requireAuth, async (req, res) => {
+  try {
+    await pool.query(
+      `UPDATE ${qi('SCS')}.${qi('Satsangs_Seva_Dept_Access')} SET ${qi('Ver_To_DT')} = CURRENT_DATE - INTERVAL '1 day'
+       WHERE ${qi('Satsang_Access_ID')} = $1`,
+      [req.params.id]
+    );
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('[DELETE /satsangs/access-config/:id] error', err);
     res.status(500).json({ error: 'INTERNAL' });
   }
 });
