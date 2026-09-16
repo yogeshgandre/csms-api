@@ -415,10 +415,16 @@ nav .pip.r{background:var(--rose);color:#fff}
     <span class="t">CSMS</span>
     <span class="s">Curious and Seeker Management System</span>
   </div>
-  <div class="roleblock">
-    <label for="role">Signed in as</label>
-    <select id="role" onchange="setRole(this.value)"></select>
-    <span class="scope" id="scope"></span>
+  <div style="display:flex;align-items:center;gap:14px;position:relative">
+    <button id="notifBell" class="mini" onclick="toggleNotifDropdown()" title="Notifications" style="position:relative;width:36px;height:36px;font-size:16px">
+      &#128276;<span id="notifBadge" class="pip r" style="position:absolute;top:-4px;right:-4px;display:none;min-width:16px;height:16px;line-height:16px;font-size:10px;padding:0 3px">0</span>
+    </button>
+    <div id="notifDropdown" style="display:none;position:absolute;right:0;top:44px;width:320px;max-height:400px;overflow-y:auto;background:var(--card);border:1px solid var(--line-2);border-radius:12px;box-shadow:var(--sh);z-index:80;padding:8px"></div>
+    <div class="roleblock">
+      <label for="role">Signed in as</label>
+      <select id="role" onchange="setRole(this.value)"></select>
+      <span class="scope" id="scope"></span>
+    </div>
   </div>
 </header>
 
@@ -434,6 +440,7 @@ nav .pip.r{background:var(--rose);color:#fff}
   <button data-p="profiles" onclick="tab('profiles')">Profiles</button>
   <button data-p="dash" onclick="tab('dash')">Dashboard</button>
   <button data-p="org" onclick="tab('org')">Organisation and Team Management</button>
+  <button data-p="satsangmgmt" onclick="tab('satsangmgmt'); satsangSubtab('defs')">Satsang Management</button>
   <button data-p="ops" onclick="tab('ops')">Operations<span class="pip" id="pip3">0</span></button>
   <button data-p="about" onclick="tab('about')">What this shows</button>
 </nav>
@@ -489,6 +496,18 @@ nav .pip.r{background:var(--rose);color:#fff}
     </div>
     <div id="orgDepts"></div>
     <div id="orgTeams" style="display:none"></div>
+  </section>
+
+  <section class="pane" id="p-satsangmgmt">
+    <h2 class="sec">Satsang Management</h2>
+    <p class="sub">Definitions go Draft → In Review → Approved before events can be scheduled off them.
+      Each event still needs a conductor's approval before it's confirmed.</p>
+    <div class="filters" style="border-bottom:1px solid var(--line-2);padding-bottom:0;margin-bottom:16px">
+      <button class="chip on" data-sub="defs" onclick="satsangSubtab('defs')">Satsang Definitions</button>
+      <button class="chip" data-sub="events" onclick="satsangSubtab('events')">Satsang Events</button>
+    </div>
+    <div id="satsangDefs"></div>
+    <div id="satsangEvents" style="display:none"></div>
   </section>
 
   <section class="pane" id="p-alerts">
@@ -643,19 +662,19 @@ const CONTACT_SLA_DAYS = 60; /* flat window — there is no longer a per-stage S
 const ROLES = {
   abroad:{name:"Abroad RS — global admin", regions:null, mask:[],
     can:"Full access to all regions and all fields.",
-    tabs:["overview","seekers","alerts","inbox","journey","calendar","reports","sevahub","profiles","dash","org","about"],
+    tabs:["overview","seekers","alerts","inbox","journey","calendar","reports","sevahub","profiles","dash","org","satsangmgmt","about"],
     landing:"overview"},
   tech:{name:"Technical Admin", regions:null, mask:[],
     can:"System health and infrastructure. Not scoped to any region.",
-    tabs:["overview","org","ops","about"],
+    tabs:["overview","org","satsangmgmt","ops","about"],
     landing:"ops"},
   rs_de:{name:"Regional RS — Germany", regions:["Germany"], mask:[],
     can:"Germany only. All fields within that region.",
-    tabs:["overview","seekers","alerts","inbox","journey","calendar","reports","sevahub","profiles","dash","org","about"],
+    tabs:["overview","seekers","alerts","inbox","journey","calendar","reports","sevahub","profiles","dash","org","satsangmgmt","about"],
     landing:"overview"},
   rs_fr:{name:"Regional RS — France", regions:["France"], mask:[],
     can:"France only. All fields within that region.",
-    tabs:["overview","seekers","alerts","inbox","journey","calendar","reports","sevahub","profiles","dash","org","about"],
+    tabs:["overview","seekers","alerts","inbox","journey","calendar","reports","sevahub","profiles","dash","org","satsangmgmt","about"],
     landing:"overview"},
   seva:{name:"Seva RS — service allocation", regions:null, mask:["whatsapp","email","dob"],
     can:"All regions, but personal contact details and date of birth are hidden.",
@@ -663,7 +682,7 @@ const ROLES = {
     landing:"sevahub"},
   satsang:{name:"Satsang conductor — Germany", regions:["Germany"], mask:["dob","remedy"],
     can:"Germany only. Attendance and notes; no remedy or date of birth.",
-    tabs:["calendar","reports","seekers","about"],
+    tabs:["calendar","reports","seekers","satsangmgmt","about"],
     landing:"calendar",
     conductorName:"Satsang conductor"}
 };
@@ -954,6 +973,7 @@ function initRole(){
   document.getElementById('role').innerHTML =
     Object.entries(ROLES).map(([k,v])=>`<option value="${k}">${v.name}</option>`).join('');
   setRole('abroad');
+  loadNotifications();
 }
 function setRole(r){
   ROLE=r; OPEN=null; REPORT_OPEN=null;
@@ -2245,6 +2265,453 @@ async function submitTeamChanges(btn){
     if(!changed && !failed) toast('No changes to save.');
     invalidateTeamData();
   });
+}
+
+
+/* ============ Satsang Management ============ */
+let LIVE_SATSANG_DEFS = null;
+let LIVE_SATSANG_TYPES = null;
+let SATSANG_DETAIL_ID = null;
+let SATSANG_DETAIL_DATA = null;
+let SATSANG_EVENTS_DEF_ID = null;
+let LIVE_SATSANG_EVENTS = {};
+
+const SATSANG_STATUS_COLORS = {
+  'Draft': {bg:'#EEF1F4', fg:'var(--ink-2)'},
+  'In Review': {bg:'#FDF0DC', fg:'#9A6A0E'},
+  'Approved': {bg:'#E7F3EC', fg:'var(--sage)'},
+  'Rejected': {bg:'#FBE7E7', fg:'var(--rose)'},
+  'Pending Conductor Approval': {bg:'#FDF0DC', fg:'#9A6A0E'},
+  'Scheduled': {bg:'#E7F3EC', fg:'var(--sage)'},
+  'Cancelled': {bg:'#FBE7E7', fg:'var(--rose)'},
+  'Completed': {bg:'#E1F3FA', fg:'var(--deep)'}
+};
+function statusBadge(s){
+  const c = SATSANG_STATUS_COLORS[s] || {bg:'#EEF1F4', fg:'var(--ink-2)'};
+  return `<span style="background:${c.bg};color:${c.fg};border-radius:999px;padding:2px 10px;font-size:11.5px;font-weight:500;white-space:nowrap">${esc(s||'\u2014')}</span>`;
+}
+
+function satsangSubtab(s){
+  document.getElementById('satsangDefs').style.display = s==='defs' ? '' : 'none';
+  document.getElementById('satsangEvents').style.display = s==='events' ? '' : 'none';
+  document.querySelectorAll('#p-satsangmgmt .chip').forEach(c=>c.classList.toggle('on', c.dataset.sub===s));
+  if(s==='events') renderSatsangEvents(true); else renderSatsangDefs(true);
+}
+
+async function loadSatsangDefs(){
+  try{
+    const [defs, types] = await Promise.all([apiFetch('/api/satsangs/defs'), apiFetch('/api/satsangs/types')]);
+    LIVE_SATSANG_DEFS = defs; LIVE_SATSANG_TYPES = types;
+    renderSatsangDefs(true);
+    if(SATSANG_DETAIL_ID) openSatsangDetail(SATSANG_DETAIL_ID);
+  }catch(err){
+    const msg = `<div class="hidden-note" style="background:var(--rose-wash);border-color:#EBCBCE;color:var(--rose)"><b>Could not load satsang definitions.</b> ${esc(err.message||'')}</div>`;
+    const el = document.getElementById('satsangDefs'); if(el) el.innerHTML = msg;
+  }
+}
+
+function renderSatsangDefs(force){
+  const el = document.getElementById('satsangDefs');
+  if(!el) return;
+  if(LIVE_SATSANG_DEFS === null){ el.innerHTML = '<p class="sub2">Loading\u2026</p>'; loadSatsangDefs(); return; }
+
+  el.innerHTML = `
+    <details style="margin-bottom:14px">
+      <summary style="cursor:pointer;font-size:12px;color:var(--deep)">+ New Satsang Definition</summary>
+      <div class="card pad" style="margin-top:8px;display:flex;flex-direction:column;gap:8px;max-width:480px">
+        <input id="sdShortName" placeholder="Short name" style="border-radius:999px;padding:7px 14px;font-size:13px;border:1px solid var(--line-2)">
+        <input id="sdName" placeholder="Full name" style="border-radius:999px;padding:7px 14px;font-size:13px;border:1px solid var(--line-2)">
+        <select id="sdType" style="border-radius:999px;padding:7px 14px;font-size:13px;border:1px solid var(--line-2)">
+          ${(LIVE_SATSANG_TYPES||[]).map(t=>`<option value="${t.Satsang_Type_ID}">${esc(t.ST_Name)}</option>`).join('')}
+        </select>
+        <input id="sdStart" type="date" style="border-radius:999px;padding:7px 14px;font-size:13px;border:1px solid var(--line-2)">
+        <select id="sdFreq" style="border-radius:999px;padding:7px 14px;font-size:13px;border:1px solid var(--line-2)">
+          <option value="">No fixed frequency</option>
+          <option>Daily</option><option>Weekly</option><option>Once every two weeks</option><option>Monthly</option>
+        </select>
+        <input id="sdAdvNotif" type="number" placeholder="Advance notification (days)" style="border-radius:999px;padding:7px 14px;font-size:13px;border:1px solid var(--line-2)">
+        <button class="btn sm" onclick="createSatsangDef(this)"><span class="spin"></span><span class="lbl">Create draft</span></button>
+        <div class="err" id="sdErr"></div>
+      </div>
+    </details>
+    <div id="satsangDefTable">
+      ${LIVE_SATSANG_DEFS.length ? LIVE_SATSANG_DEFS.map(satsangDefRowHTML).join('') : '<p class="sub2">No satsang definitions yet.</p>'}
+    </div>
+    <div id="satsangDetailRoot"></div>`;
+  if(SATSANG_DETAIL_ID && SATSANG_DETAIL_DATA) renderSatsangDetail();
+}
+
+function satsangDefRowHTML(d){
+  return `<div class="card pad" style="margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
+    <div style="cursor:pointer" onclick="openSatsangDetail(${d.Satsang_ID})">
+      <div style="font-weight:600">${esc(d.Satsang_Name)} <span class="sub2">(${esc(d.Satsang_Short_Name)})</span></div>
+      <div class="sub2">${esc(d.ST_Name||'')} \u00b7 Starts ${esc(d.Satsang_Start_Date||'')} \u00b7 ${esc(d.Satsang_Frequency||'One-off')} \u00b7 by ${esc(d.created_by_name||'\u2014')}</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      ${statusBadge(d.Satsang_Status)}
+      ${satsangDefActionsHTML(d)}
+    </div>
+  </div>`;
+}
+
+function satsangDefActionsHTML(d){
+  if(d.Satsang_Status==='Draft' || d.Satsang_Status==='Rejected'){
+    return `<button class="btn sm" onclick="submitSatsangDef(${d.Satsang_ID}, this)"><span class="spin"></span><span class="lbl">Submit for review</span></button>
+      <button class="mini" onclick="deleteSatsangDef(${d.Satsang_ID}, this)" title="Delete" style="width:24px;height:24px;color:var(--rose)">&times;</button>`;
+  }
+  if(d.Satsang_Status==='In Review'){
+    return `<button class="btn sm" onclick="approveSatsangDef(${d.Satsang_ID}, this)"><span class="spin"></span><span class="lbl">Approve</span></button>
+      <button class="btn ghost sm" style="color:var(--rose);border-color:var(--rose)" onclick="rejectSatsangDef(${d.Satsang_ID}, this)"><span class="spin"></span><span class="lbl">Reject</span></button>`;
+  }
+  return '';
+}
+
+async function createSatsangDef(btn){
+  const errEl = document.getElementById('sdErr'); errEl.classList.remove('on');
+  await withLoading(btn, async ()=>{
+    try{
+      const shortName=document.getElementById('sdShortName').value.trim();
+      const name=document.getElementById('sdName').value.trim();
+      const typeId=document.getElementById('sdType').value;
+      const startDate=document.getElementById('sdStart').value;
+      const frequency=document.getElementById('sdFreq').value;
+      const advNotification=document.getElementById('sdAdvNotif').value;
+      if(!shortName||!name||!typeId||!startDate){ errEl.textContent='Short name, name, type and start date are required.'; errEl.classList.add('on'); return; }
+      await apiFetch('/api/satsangs/defs', {method:'POST', body: JSON.stringify({shortName,name,typeId:Number(typeId),startDate,frequency,advNotification:advNotification?Number(advNotification):null})});
+      toast('Draft created.');
+      LIVE_SATSANG_DEFS = null; loadSatsangDefs();
+    }catch(err){ errEl.textContent = err.message||'Could not create.'; errEl.classList.add('on'); }
+  });
+}
+
+async function submitSatsangDef(id, btn){
+  await withLoading(btn, async ()=>{
+    try{ await apiFetch('/api/satsangs/defs/'+id+'/submit', {method:'POST'}); toast('Submitted for review.'); LIVE_SATSANG_DEFS=null; loadSatsangDefs(); }
+    catch(err){ toast('Could not submit: '+(err.message||'')); }
+  });
+}
+async function approveSatsangDef(id, btn){
+  await withLoading(btn, async ()=>{
+    try{ await apiFetch('/api/satsangs/defs/'+id+'/approve', {method:'POST'}); toast('Approved.'); LIVE_SATSANG_DEFS=null; loadSatsangDefs(); }
+    catch(err){ toast('Could not approve: '+(err.message||'')); }
+  });
+}
+async function rejectSatsangDef(id, btn){
+  const remarks = prompt('Reason for rejecting (optional):') || '';
+  await withLoading(btn, async ()=>{
+    try{ await apiFetch('/api/satsangs/defs/'+id+'/reject', {method:'POST', body: JSON.stringify({remarks})}); toast('Rejected.'); LIVE_SATSANG_DEFS=null; loadSatsangDefs(); }
+    catch(err){ toast('Could not reject: '+(err.message||'')); }
+  });
+}
+async function deleteSatsangDef(id, btn){
+  if(!confirm('Delete this satsang definition? This cannot be undone.')) return;
+  await withLoading(btn, async ()=>{
+    try{ await apiFetch('/api/satsangs/defs/'+id, {method:'DELETE'}); toast('Deleted.'); LIVE_SATSANG_DEFS=null; loadSatsangDefs(); }
+    catch(err){ toast('Could not delete: '+(err.message||'')); }
+  });
+}
+
+/* ---- Satsang detail modal: dynamic fields, conductors, attendees ---- */
+async function openSatsangDetail(id){
+  SATSANG_DETAIL_ID = id;
+  const root = document.getElementById('satsangDetailRoot');
+  if(!root) return;
+  root.innerHTML = `<div class="obackdrop" onclick="if(event.target===this) closeSatsangDetail()">
+    <div class="omodal" style="max-width:520px"><button class="oclose" onclick="closeSatsangDetail()">&times;</button><p class="sub2">Loading\u2026</p></div></div>`;
+  try{
+    const [fields, conductors, attendees] = await Promise.all([
+      apiFetch('/api/satsangs/defs/'+id+'/fields'),
+      apiFetch('/api/satsangs/defs/'+id+'/conductors'),
+      apiFetch('/api/satsangs/defs/'+id+'/attendees')
+    ]);
+    SATSANG_DETAIL_DATA = {fields, conductors, attendees};
+    renderSatsangDetail();
+  }catch(err){
+    const modal = root.querySelector('.omodal');
+    if(modal) modal.innerHTML = `<button class="oclose" onclick="closeSatsangDetail()">&times;</button><p class="sub2">Could not load: ${esc(err.message||'')}</p>`;
+  }
+}
+function closeSatsangDetail(){ SATSANG_DETAIL_ID=null; SATSANG_DETAIL_DATA=null; const el=document.getElementById('satsangDetailRoot'); if(el) el.innerHTML=''; }
+
+function renderSatsangDetail(){
+  const root = document.getElementById('satsangDetailRoot');
+  if(!root || !SATSANG_DETAIL_ID || !SATSANG_DETAIL_DATA || !LIVE_SATSANG_DEFS) return;
+  const d = LIVE_SATSANG_DEFS.find(x=>x.Satsang_ID==SATSANG_DETAIL_ID);
+  if(!d){ closeSatsangDetail(); return; }
+  const {fields, conductors, attendees} = SATSANG_DETAIL_DATA;
+  root.innerHTML = `<div class="obackdrop" onclick="if(event.target===this) closeSatsangDetail()">
+    <div class="omodal" style="max-width:520px;max-height:80vh;overflow-y:auto">
+      <button class="oclose" onclick="closeSatsangDetail()">&times;</button>
+      <h3 style="margin:0 0 2px">${esc(d.Satsang_Name)}</h3>
+      <p style="margin-bottom:10px">${statusBadge(d.Satsang_Status)}</p>
+
+      <p class="sub2" style="font-weight:600;margin-top:14px">Custom fields</p>
+      ${fields.length ? fields.map(f=>`<div class="oteamrow" style="cursor:default">
+          <span>${esc(f.Field_Name)} <span class="sub2">(${esc(f.Field_Data_Type)}${f.QTY_FIELD?', qty':''}${f.GLT_FIELD?', GLT':''})</span></span>
+          <button class="mini" onclick="deleteSatsangField(${f.MSD_ID}, this)" style="width:22px;height:22px;color:var(--rose)">&times;</button>
+        </div>`).join('') : '<p class="sub2">None yet.</p>'}
+      <details style="margin-top:6px">
+        <summary style="cursor:pointer;font-size:12px;color:var(--deep)">+ Add field</summary>
+        <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;align-items:center">
+          <input id="fldName" placeholder="Field name" style="border-radius:999px;padding:5px 12px;font-size:12.5px;border:1px solid var(--line-2);flex:1;min-width:100px">
+          <select id="fldType" style="border-radius:999px;padding:5px 12px;font-size:12.5px;border:1px solid var(--line-2)">
+            <option value="text">Text</option><option value="number">Number</option><option value="date">Date</option><option value="boolean">Yes/No</option>
+          </select>
+          <label class="sub2" style="display:flex;align-items:center;gap:4px"><input type="checkbox" id="fldQty">Qty</label>
+          <label class="sub2" style="display:flex;align-items:center;gap:4px"><input type="checkbox" id="fldGlt">GLT</label>
+          <button class="btn sm" onclick="addSatsangField(${d.Satsang_ID}, this)"><span class="spin"></span><span class="lbl">Add</span></button>
+        </div>
+      </details>
+
+      <p class="sub2" style="font-weight:600;margin-top:16px">Conductors</p>
+      ${conductors.length ? conductors.map(c=>`<div class="oteamrow" style="cursor:default">
+          <span>${esc(c.Seeker_Name||c.Seeker_Email)}</span>
+          <button class="mini" onclick="removeSatsangConductor(${d.Satsang_ID}, ${c.SC_CSMS_ID}, this)" style="width:22px;height:22px;color:var(--rose)">&times;</button>
+        </div>`).join('') : '<p class="sub2">None yet.</p>'}
+      <details style="margin-top:6px">
+        <summary style="cursor:pointer;font-size:12px;color:var(--deep)">+ Add conductor</summary>
+        <div style="display:flex;gap:6px;margin-top:8px">
+          <input id="condName" placeholder="Name (optional)" style="border-radius:999px;padding:5px 12px;font-size:12.5px;border:1px solid var(--line-2);flex:1">
+          <input id="condEmail" type="email" placeholder="name@ssrf.org" style="border-radius:999px;padding:5px 12px;font-size:12.5px;border:1px solid var(--line-2);flex:1">
+          <button class="btn sm" onclick="addSatsangConductor(${d.Satsang_ID}, this)"><span class="spin"></span><span class="lbl">Add</span></button>
+        </div>
+        <p class="sub2" style="margin-top:4px">Doesn't need to have signed in yet \u2014 open to anyone.</p>
+      </details>
+
+      <p class="sub2" style="font-weight:600;margin-top:16px">Attending seekers</p>
+      ${attendees.length ? attendees.map(a=>`<div class="oteamrow" style="cursor:default">
+          <span>${esc(a.Seeker_Name||a.Seeker_Email)}${a.Remarks?(' <span class="sub2">\u2014 '+esc(a.Remarks)+'</span>'):''}</span>
+          <button class="mini" onclick="removeSatsangAttendee(${d.Satsang_ID}, ${a.AS_CSMS_ID}, this)" style="width:22px;height:22px;color:var(--rose)">&times;</button>
+        </div>`).join('') : '<p class="sub2">None yet.</p>'}
+      <details style="margin-top:6px">
+        <summary style="cursor:pointer;font-size:12px;color:var(--deep)">+ Add attending seeker</summary>
+        <div style="display:flex;flex-direction:column;gap:6px;margin-top:8px">
+          <input id="attName" placeholder="Name (optional)" style="border-radius:999px;padding:5px 12px;font-size:12.5px;border:1px solid var(--line-2)">
+          <input id="attEmail" type="email" placeholder="name@ssrf.org" style="border-radius:999px;padding:5px 12px;font-size:12.5px;border:1px solid var(--line-2)">
+          <input id="attRemarks" placeholder="Remarks (optional)" style="border-radius:999px;padding:5px 12px;font-size:12.5px;border:1px solid var(--line-2)">
+          <button class="btn sm" onclick="addSatsangAttendee(${d.Satsang_ID}, this)"><span class="spin"></span><span class="lbl">Add</span></button>
+        </div>
+        <p class="sub2" style="margin-top:4px">Doesn't need to have signed in yet.</p>
+      </details>
+    </div>
+  </div>`;
+}
+
+async function addSatsangField(defId, btn){
+  await withLoading(btn, async ()=>{
+    try{
+      const fieldName=document.getElementById('fldName').value.trim();
+      if(!fieldName) return;
+      await apiFetch('/api/satsangs/defs/'+defId+'/fields', {method:'POST', body: JSON.stringify({
+        fieldName, dataType: document.getElementById('fldType').value,
+        isQty: document.getElementById('fldQty').checked, isGlt: document.getElementById('fldGlt').checked
+      })});
+      toast('Field added.');
+      SATSANG_DETAIL_DATA.fields = await apiFetch('/api/satsangs/defs/'+defId+'/fields');
+      renderSatsangDetail();
+    }catch(err){ toast('Could not add field: '+(err.message||'')); }
+  });
+}
+async function deleteSatsangField(msdId, btn){
+  if(!confirm('Remove this field?')) return;
+  await withLoading(btn, async ()=>{
+    try{
+      await apiFetch('/api/satsangs/fields/'+msdId, {method:'DELETE'});
+      toast('Removed.');
+      SATSANG_DETAIL_DATA.fields = await apiFetch('/api/satsangs/defs/'+SATSANG_DETAIL_ID+'/fields');
+      renderSatsangDetail();
+    }catch(err){ toast('Could not remove: '+(err.message||'')); }
+  });
+}
+async function addSatsangConductor(defId, btn){
+  await withLoading(btn, async ()=>{
+    try{
+      const email=document.getElementById('condEmail').value.trim();
+      if(!email) return;
+      await apiFetch('/api/satsangs/defs/'+defId+'/conductors', {method:'POST', body: JSON.stringify({email, name: document.getElementById('condName').value.trim()})});
+      toast('Conductor added.');
+      SATSANG_DETAIL_DATA.conductors = await apiFetch('/api/satsangs/defs/'+defId+'/conductors');
+      renderSatsangDetail();
+    }catch(err){ toast('Could not add: '+(err.message||'')); }
+  });
+}
+async function removeSatsangConductor(defId, csmsId, btn){
+  if(!confirm('Remove this conductor?')) return;
+  await withLoading(btn, async ()=>{
+    try{
+      await apiFetch('/api/satsangs/defs/'+defId+'/conductors/'+csmsId, {method:'DELETE'});
+      toast('Removed.');
+      SATSANG_DETAIL_DATA.conductors = await apiFetch('/api/satsangs/defs/'+defId+'/conductors');
+      renderSatsangDetail();
+    }catch(err){ toast('Could not remove: '+(err.message||'')); }
+  });
+}
+async function addSatsangAttendee(defId, btn){
+  await withLoading(btn, async ()=>{
+    try{
+      const email=document.getElementById('attEmail').value.trim();
+      if(!email) return;
+      await apiFetch('/api/satsangs/defs/'+defId+'/attendees', {method:'POST', body: JSON.stringify({email, name: document.getElementById('attName').value.trim(), remarks: document.getElementById('attRemarks').value.trim()})});
+      toast('Attendee added.');
+      SATSANG_DETAIL_DATA.attendees = await apiFetch('/api/satsangs/defs/'+defId+'/attendees');
+      renderSatsangDetail();
+    }catch(err){ toast('Could not add: '+(err.message||'')); }
+  });
+}
+async function removeSatsangAttendee(defId, csmsId, btn){
+  if(!confirm('Remove this attending seeker?')) return;
+  await withLoading(btn, async ()=>{
+    try{
+      await apiFetch('/api/satsangs/defs/'+defId+'/attendees/'+csmsId, {method:'DELETE'});
+      toast('Removed.');
+      SATSANG_DETAIL_DATA.attendees = await apiFetch('/api/satsangs/defs/'+defId+'/attendees');
+      renderSatsangDetail();
+    }catch(err){ toast('Could not remove: '+(err.message||'')); }
+  });
+}
+
+/* ---- Satsang Events ---- */
+function renderSatsangEvents(force){
+  const el = document.getElementById('satsangEvents');
+  if(!el) return;
+  if(LIVE_SATSANG_DEFS === null){ el.innerHTML = '<p class="sub2">Loading\u2026</p>'; loadSatsangDefs(); return; }
+  if(!SATSANG_EVENTS_DEF_ID && LIVE_SATSANG_DEFS.length) SATSANG_EVENTS_DEF_ID = LIVE_SATSANG_DEFS[0].Satsang_ID;
+
+  if(!LIVE_SATSANG_DEFS.length){ el.innerHTML = '<p class="sub2">No satsang definitions yet \u2014 create one under Satsang Definitions first.</p>'; return; }
+
+  el.innerHTML = `
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:14px;flex-wrap:wrap">
+      <label class="sub2">Satsang:</label>
+      <select id="seDefPicker" style="border-radius:999px;padding:6px 14px;font-size:13px;border:1px solid var(--line-2)" onchange="SATSANG_EVENTS_DEF_ID=Number(this.value); loadSatsangEvents(true)">
+        ${LIVE_SATSANG_DEFS.map(d=>`<option value="${d.Satsang_ID}" ${d.Satsang_ID==SATSANG_EVENTS_DEF_ID?'selected':''}>${esc(d.Satsang_Name)}</option>`).join('')}
+      </select>
+    </div>
+    <div id="satsangEventsBody"><p class="sub2">Loading\u2026</p></div>`;
+  loadSatsangEvents(force);
+}
+
+async function loadSatsangEvents(force){
+  if(!SATSANG_EVENTS_DEF_ID) return;
+  if(!force && LIVE_SATSANG_EVENTS[SATSANG_EVENTS_DEF_ID]){ renderSatsangEventsBody(); return; }
+  try{
+    LIVE_SATSANG_EVENTS[SATSANG_EVENTS_DEF_ID] = await apiFetch('/api/satsangs/defs/'+SATSANG_EVENTS_DEF_ID+'/events');
+    renderSatsangEventsBody();
+  }catch(err){
+    const body = document.getElementById('satsangEventsBody');
+    if(body) body.innerHTML = `<div class="hidden-note" style="background:var(--rose-wash);border-color:#EBCBCE;color:var(--rose)"><b>Could not load events.</b> ${esc(err.message||'')}</div>`;
+  }
+}
+
+function eventRowHTML(e){
+  const when = e.Event_ST_DT_TIME ? new Date(e.Event_ST_DT_TIME).toLocaleString() : '\u2014';
+  return `<div class="card pad" style="margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
+    <div>
+      <div style="font-weight:600">${esc(when)} \u00b7 ${esc(e.Event_Time_City)}</div>
+      <div class="sub2">${esc(e.Event_Duration||'')}${e.sc1_name?(' \u00b7 '+esc(e.sc1_name)):''}${e.sc2_name?(', '+esc(e.sc2_name)):''}</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      ${statusBadge(e.Current_Status)}
+      ${e.Current_Status==='Pending Conductor Approval' ? `<button class="btn sm" onclick="approveSatsangEvent(${e.SE_ID}, this)"><span class="spin"></span><span class="lbl">Approve</span></button>` : ''}
+      ${e.Current_Status!=='Cancelled' ? `<button class="mini" onclick="cancelSatsangEvent(${e.SE_ID}, this)" title="Cancel" style="width:24px;height:24px;color:var(--rose)">&times;</button>` : ''}
+    </div>
+  </div>`;
+}
+
+function renderSatsangEventsBody(){
+  const body = document.getElementById('satsangEventsBody');
+  if(!body) return;
+  const def = LIVE_SATSANG_DEFS.find(d=>d.Satsang_ID==SATSANG_EVENTS_DEF_ID);
+  const events = LIVE_SATSANG_EVENTS[SATSANG_EVENTS_DEF_ID] || [];
+  const isApproved = def && def.Satsang_Status==='Approved';
+
+  body.innerHTML = `
+    ${!isApproved ? `<div class="hidden-note" style="margin-bottom:12px">This satsang definition is <b>${esc(def?def.Satsang_Status:'')}</b> \u2014 it must be Approved before events can be created.</div>` : ''}
+    ${isApproved ? `<details style="margin-bottom:14px">
+      <summary style="cursor:pointer;font-size:12px;color:var(--deep)">+ New event</summary>
+      <div class="card pad" style="margin-top:8px;display:flex;flex-direction:column;gap:8px;max-width:420px">
+        <input id="evStart" type="datetime-local" style="border-radius:999px;padding:7px 14px;font-size:13px;border:1px solid var(--line-2)">
+        <input id="evCity" placeholder="City" style="border-radius:999px;padding:7px 14px;font-size:13px;border:1px solid var(--line-2)">
+        <input id="evDuration" placeholder="Duration (e.g. 1.5 hours)" style="border-radius:999px;padding:7px 14px;font-size:13px;border:1px solid var(--line-2)">
+        <input id="evSc1Name" placeholder="Conductor 1 name (optional)" style="border-radius:999px;padding:7px 14px;font-size:13px;border:1px solid var(--line-2)">
+        <input id="evSc1Email" type="email" placeholder="Conductor 1 email" style="border-radius:999px;padding:7px 14px;font-size:13px;border:1px solid var(--line-2)">
+        <input id="evSc2Name" placeholder="Conductor 2 name (optional)" style="border-radius:999px;padding:7px 14px;font-size:13px;border:1px solid var(--line-2)">
+        <input id="evSc2Email" type="email" placeholder="Conductor 2 email (optional)" style="border-radius:999px;padding:7px 14px;font-size:13px;border:1px solid var(--line-2)">
+        <button class="btn sm" onclick="createSatsangEvent(this)"><span class="spin"></span><span class="lbl">Create event</span></button>
+        <div class="err" id="evErr"></div>
+        <p class="sub2">Conductors don't need to have signed in yet \u2014 open to anyone. Conductor 1 approves the event before it's Scheduled.</p>
+      </div>
+    </details>` : ''}
+    ${events.length ? events.map(eventRowHTML).join('') : '<p class="sub2">No events yet.</p>'}`;
+}
+
+async function createSatsangEvent(btn){
+  const errEl = document.getElementById('evErr'); errEl.classList.remove('on');
+  await withLoading(btn, async ()=>{
+    try{
+      const eventStart = document.getElementById('evStart').value;
+      const city = document.getElementById('evCity').value.trim();
+      const duration = document.getElementById('evDuration').value.trim();
+      if(!eventStart || !city || !duration){ errEl.textContent='Date/time, city and duration are required.'; errEl.classList.add('on'); return; }
+      await apiFetch('/api/satsangs/defs/'+SATSANG_EVENTS_DEF_ID+'/events', {method:'POST', body: JSON.stringify({
+        eventStart, city, duration,
+        sc1Name: document.getElementById('evSc1Name').value.trim(), sc1Email: document.getElementById('evSc1Email').value.trim(),
+        sc2Name: document.getElementById('evSc2Name').value.trim(), sc2Email: document.getElementById('evSc2Email').value.trim()
+      })});
+      toast('Event created \u2014 pending conductor approval.');
+      loadSatsangEvents(true);
+    }catch(err){ errEl.textContent = err.message||'Could not create event.'; errEl.classList.add('on'); }
+  });
+}
+async function approveSatsangEvent(seId, btn){
+  await withLoading(btn, async ()=>{
+    try{ await apiFetch('/api/satsangs/events/'+seId+'/approve', {method:'POST'}); toast('Event approved and scheduled.'); loadSatsangEvents(true); }
+    catch(err){ toast('Could not approve: '+(err.message||'')); }
+  });
+}
+async function cancelSatsangEvent(seId, btn){
+  if(!confirm('Cancel this event?')) return;
+  await withLoading(btn, async ()=>{
+    try{ await apiFetch('/api/satsangs/events/'+seId+'/cancel', {method:'POST'}); toast('Event cancelled.'); loadSatsangEvents(true); }
+    catch(err){ toast('Could not cancel: '+(err.message||'')); }
+  });
+}
+
+/* ---- Notifications ---- */
+let LIVE_NOTIFS = null;
+async function loadNotifications(){
+  try{ LIVE_NOTIFS = await apiFetch('/api/notifications'); renderNotifBadge(); }
+  catch(err){ /* silent — bell just stays at zero */ }
+}
+function renderNotifBadge(){
+  const badge = document.getElementById('notifBadge');
+  if(!badge || !LIVE_NOTIFS) return;
+  const unread = LIVE_NOTIFS.filter(n=>!n.Is_Read).length;
+  badge.style.display = unread ? '' : 'none';
+  badge.textContent = unread;
+}
+function toggleNotifDropdown(){
+  const dd = document.getElementById('notifDropdown');
+  const opening = dd.style.display==='none';
+  dd.style.display = opening ? '' : 'none';
+  if(opening) renderNotifDropdown();
+}
+function renderNotifDropdown(){
+  const dd = document.getElementById('notifDropdown');
+  if(!dd) return;
+  if(LIVE_NOTIFS === null){ dd.innerHTML = '<p class="sub2">Loading\u2026</p>'; loadNotifications().then(renderNotifDropdown); return; }
+  dd.innerHTML = LIVE_NOTIFS.length ? LIVE_NOTIFS.map(n=>`
+    <div onclick="markNotifRead(${n.Notification_ID})" style="padding:8px 6px;border-bottom:1px solid var(--line);cursor:pointer;${n.Is_Read?'opacity:.55':''}">
+      <div style="font-size:13px">${esc(n.Message)}</div>
+      <div class="sub2">${new Date(n.Created_DT).toLocaleString()}</div>
+    </div>`).join('') : '<p class="sub2">No notifications.</p>';
+}
+async function markNotifRead(id){
+  try{
+    await apiFetch('/api/notifications/'+id+'/read', {method:'POST'});
+    const n = LIVE_NOTIFS.find(x=>x.Notification_ID===id);
+    if(n) n.Is_Read = true;
+    renderNotifBadge(); renderNotifDropdown();
+  }catch(err){ /* silent */ }
 }
 
 /* ============ unified inbox ============ */
