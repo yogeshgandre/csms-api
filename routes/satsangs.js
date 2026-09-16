@@ -282,7 +282,7 @@ router.delete('/defs/:id', requireAuth, async (req, res) => {
 router.get('/defs/:id/fields', requireAuth, async (req, res) => {
   try {
     const r = await pool.query(
-      `SELECT ${qi('MSD_ID')}, ${qi('Field_Name')}, ${qi('Field_Data_Type')}, ${qi('GLT_FIELD')}, ${qi('QTY_FIELD')}, ${qi('Display_Order')}
+      `SELECT ${qi('MSD_ID')}, ${qi('Field_Name')}, ${qi('Field_Data_Type')}, ${qi('QLT_FIELD')}, ${qi('QTY_FIELD')}, ${qi('Display_Order')}
        FROM ${qi('SCS')}.${qi('M_Satsang_Defn')}
        WHERE ${qi('Satsang_ID')} = $1 AND ${qi('Ver_To_DT')} >= CURRENT_DATE
        ORDER BY ${qi('Display_Order')} NULLS LAST, ${qi('Field_Name')}`,
@@ -296,7 +296,7 @@ router.get('/defs/:id/fields', requireAuth, async (req, res) => {
 });
 
 router.post('/defs/:id/fields', requireAuth, async (req, res) => {
-  const { fieldName, dataType, isGlt, isQty, displayOrder } = req.body || {};
+  const { fieldName, dataType, isQlt, isQty, displayOrder } = req.body || {};
   if (!fieldName) return res.status(400).json({ error: 'fieldName is required' });
   try {
     const maxQ = await pool.query(
@@ -305,9 +305,9 @@ router.post('/defs/:id/fields', requireAuth, async (req, res) => {
     const id = maxQ.rows[0].next_id;
     await pool.query(
       `INSERT INTO ${qi('SCS')}.${qi('M_Satsang_Defn')}
-        (${qi('MSD_ID')}, ${qi('Satsang_ID')}, ${qi('Field_Name')}, ${qi('Field_Data_Type')}, ${qi('GLT_FIELD')}, ${qi('QTY_FIELD')}, ${qi('Display_Order')}, ${qi('Ver_From_DT')}, ${qi('Ver_To_DT')})
+        (${qi('MSD_ID')}, ${qi('Satsang_ID')}, ${qi('Field_Name')}, ${qi('Field_Data_Type')}, ${qi('QLT_FIELD')}, ${qi('QTY_FIELD')}, ${qi('Display_Order')}, ${qi('Ver_From_DT')}, ${qi('Ver_To_DT')})
        VALUES ($1,$2,$3,$4,$5,$6,$7,CURRENT_DATE,$8)`,
-      [id, req.params.id, fieldName, dataType || 'text', !!isGlt, !!isQty, displayOrder || null, FAR_FUTURE]
+      [id, req.params.id, fieldName, dataType || 'text', !!isQlt, !!isQty, displayOrder || null, FAR_FUTURE]
     );
     res.status(201).json({ ok: true, fieldId: id });
   } catch (err) {

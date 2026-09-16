@@ -434,8 +434,15 @@ nav .pip.r{background:var(--rose);color:#fff}
 
   <section class="pane on" id="p-seekers">
     <h2 class="sec">Seekers</h2>
-    <p class="sub">One record per person. Counts are calculated from the interaction log — never typed in.</p>
+    <p class="sub">Search &amp; Records is the rich illustrative demo (natural-language search, skills, interaction
+      timeline) — none of that has a backing table yet. Live Seekers reads actual MSR data from Postgres, with a
+      simpler, narrower set of fields to match what's really there.</p>
+    <div class="filters" style="border-bottom:1px solid var(--line-2);padding-bottom:0;margin-bottom:16px">
+      <button class="chip on" data-sub="mock" onclick="seekersSubtab('mock')">Search &amp; Records</button>
+      <button class="chip" data-sub="live" onclick="seekersSubtab('live')">Live Seekers (Postgres)</button>
+    </div>
 
+    <div id="seekersMock">
     <div class="card pad" style="margin-bottom:14px">
       <div style="display:flex;gap:9px;align-items:center">
         <input type="search" id="q" style="flex:1;font-size:14px;padding:10px 13px"
@@ -458,6 +465,9 @@ nav .pip.r{background:var(--rose);color:#fff}
     </div>
     <div class="card" style="overflow:hidden"><table id="tbl"></table></div>
     <div id="hidnote"></div>
+    </div>
+
+    <div id="seekersLive" style="display:none"></div>
   </section>
 
   <section class="pane" id="p-inbox">
@@ -959,6 +969,7 @@ function initRole(){
     Object.entries(ROLES).map(([k,v])=>`<option value="${k}">${v.name}</option>`).join('');
   setRole('abroad');
   loadNotifications();
+  loadSeekerCategories();
 }
 function setRole(r){
   ROLE=r; OPEN=null; REPORT_OPEN=null;
@@ -1191,6 +1202,138 @@ function render(){
   renderAlerts(); renderDash(); renderOps(); renderAbout();
   renderInbox(); if(LIVE_DEPTS!==null){ renderSevaDepartments(); renderTeamManagement(); } renderJourney(); renderCalendar(); renderProfiles(); renderReports(); renderSevahub();
   if(OPEN) drawer(OPEN);
+}
+
+/* ============ Live Seekers (real MSR data) ============
+   Deliberately separate from the mock Search & Records view above: that
+   view is deeply woven into Overview/Journey/Reports counts via fields
+   (skills, notes, interaction log, "overdue" status) that have no backing
+   table. Rather than silently degrade that demo or risk destabilizing
+   everything hanging off render()'s SEEKERS-shaped assumptions, this is a
+   parallel, narrower, genuinely-real view using only what MSR actually has. */
+let LIVE_SEEKERS = null;
+let LIVE_SEEKER_DETAIL_ID = null;
+let LIVE_SEEKER_DETAIL = null;
+let LIVE_SEEKER_DETAIL_TAB = 'overview';
+
+function seekersSubtab(s){
+  document.getElementById('seekersMock').style.display = s==='mock' ? '' : 'none';
+  document.getElementById('seekersLive').style.display = s==='live' ? '' : 'none';
+  document.querySelectorAll('#p-seekers .chip[data-sub]').forEach(c=>c.classList.toggle('on', c.dataset.sub===s));
+  if(s==='live') renderLiveSeekers();
+}
+
+async function loadLiveSeekers(){
+  const q = (document.getElementById('liveSeekerQ')||{}).value || '';
+  try{
+    const params = new URLSearchParams();
+    if(q) params.set('q', q);
+    LIVE_SEEKERS = await apiFetch('/api/seekers'+(params.toString()?('?'+params.toString()):''));
+    renderLiveSeekersBody();
+  }catch(err){
+    const el = document.getElementById('seekersLiveBody');
+    if(el) el.innerHTML = `<div class="hidden-note" style="background:var(--rose-wash);border-color:#EBCBCE;color:var(--rose)"><b>Could not load seekers.</b> ${esc(err.message||'')}</div>`;
+  }
+}
+
+function renderLiveSeekers(){
+  const el = document.getElementById('seekersLive');
+  if(!el) return;
+  el.innerHTML = `
+    <div class="card pad" style="margin-bottom:14px;display:flex;gap:9px;align-items:center">
+      <input type="search" id="liveSeekerQ" style="flex:1;font-size:14px;padding:10px 13px" placeholder="Search name, email or WhatsApp" onkeydown="if(event.key==='Enter') loadLiveSeekers()">
+      <button class="btn ghost sm" onclick="document.getElementById('liveSeekerQ').value='';loadLiveSeekers()">Clear</button>
+    </div>
+    <div id="seekersLiveBody"><p class="sub2">Loading\u2026</p></div>
+    <div id="seekerDetailRoot"></div>`;
+  loadLiveSeekers();
+}
+
+function renderLiveSeekersBody(){
+  const body = document.getElementById('seekersLiveBody');
+  if(!body) return;
+  const list = LIVE_SEEKERS || [];
+  body.innerHTML = `<div class="card" style="overflow:hidden"><table>
+    <thead><tr><th>Seeker</th><th>Category</th><th class="hide-sm">Country</th><th class="hide-sm">WhatsApp</th><th>Weekly seva hrs</th></tr></thead>
+    <tbody>${list.length ? list.map(s=>`<tr onclick="openLiveSeekerDetail(${s.Seeker_ID})" style="cursor:pointer">
+        <td><div class="nm serif">${esc([s.Sal,s.First_Name,s.Last_Name].filter(Boolean).join(' '))}</div><div class="sub2">${esc(s.Email||'')}</div></td>
+        <td>${s.Category_Name ? categoryTag(s.Category_Name) : '<span class="sub2">Uncategorised</span>'}</td>
+        <td class="hide-sm">${esc(s.Country_Name||'')}</td>
+        <td class="hide-sm">${esc(s.WhatsApp_Number||'')}</td>
+        <td>${s.Weekly_Seva_Hrs!=null?esc(s.Weekly_Seva_Hrs):'\u2014'}</td>
+      </tr>`).join('') : '<tr><td colspan="5" style="padding:34px;text-align:center;color:var(--ink-3)">No seekers found.</td></tr>'}</tbody>
+  </table></div>`;
+}
+
+async function openLiveSeekerDetail(id){
+  LIVE_SEEKER_DETAIL_ID = id; LIVE_SEEKER_DETAIL_TAB = 'overview';
+  const root = document.getElementById('seekerDetailRoot');
+  if(!root) return;
+  root.innerHTML = `<div class="obackdrop" onclick="if(event.target===this) closeLiveSeekerDetail()">
+    <div class="omodal" style="max-width:560px"><button class="oclose" onclick="closeLiveSeekerDetail()">&times;</button><p class="sub2">Loading\u2026</p></div></div>`;
+  try{
+    LIVE_SEEKER_DETAIL = await apiFetch('/api/seekers/'+id);
+    renderLiveSeekerDetail();
+  }catch(err){
+    const modal = root.querySelector('.omodal');
+    if(modal) modal.innerHTML = `<button class="oclose" onclick="closeLiveSeekerDetail()">&times;</button><p class="sub2">Could not load: ${esc(err.message||'')}</p>`;
+  }
+}
+function closeLiveSeekerDetail(){ LIVE_SEEKER_DETAIL_ID=null; LIVE_SEEKER_DETAIL=null; const el=document.getElementById('seekerDetailRoot'); if(el) el.innerHTML=''; }
+function switchLiveSeekerTab(t){ LIVE_SEEKER_DETAIL_TAB = t; renderLiveSeekerDetail(); }
+
+function renderLiveSeekerDetail(){
+  const root = document.getElementById('seekerDetailRoot');
+  if(!root || !LIVE_SEEKER_DETAIL) return;
+  const s = LIVE_SEEKER_DETAIL;
+  const tabs = [['overview','Overview'],['categories','Category history'],['platform','Platform engagement'],['satsangs','Satsangs']];
+  const t = LIVE_SEEKER_DETAIL_TAB;
+
+  let body = '';
+  if(t==='overview'){
+    body = `<div class="kv">
+      <div>Name</div><div>${esc([s.Sal,s.First_Name,s.Last_Name].filter(Boolean).join(' '))}</div>
+      <div>Email</div><div>${esc(s.Email||'\u2014')}</div>
+      <div>WhatsApp</div><div>${esc((s.Country_ISD||'')+' '+(s.WhatsApp_Number||'')||'\u2014')}</div>
+      <div>City</div><div>${esc(s.City||'\u2014')}</div>
+      <div>Weekly seva hrs</div><div>${s.Weekly_Seva_Hrs!=null?esc(s.Weekly_Seva_Hrs):'\u2014'}</div>
+      <div>Pranshakti</div><div>${esc(s.Pranshakti||'\u2014')}</div>
+      <div>Sensitive list</div><div>${s.Sensitive_List ? 'Yes' : 'No'}</div>
+    </div>`;
+  } else if(t==='categories'){
+    body = (s.categories||[]).length
+      ? s.categories.map(c=>`<div class="oteamrow" style="cursor:default">
+          <span>${categoryTag(c.Category_Name)}</span>
+          <span class="sub2">${esc(c.Ver_From_DT||'')} \u2192 ${c.Ver_To_DT ? esc(c.Ver_To_DT) : 'current'}</span>
+        </div>`).join('')
+      : '<p class="sub2">No category history recorded.</p>';
+  } else if(t==='platform'){
+    body = (s.platformEngagements||[]).length
+      ? s.platformEngagements.map(p=>`<div class="oteamrow" style="cursor:default">
+          <span>${esc(p.Platform_Name||'')}</span>
+          <span class="sub2">${esc(p.Engagement_DT||'')}</span>
+        </div>`).join('')
+      : '<p class="sub2">No platform engagement recorded.</p>';
+  } else if(t==='satsangs'){
+    const groups = [['bhav','Bhav satsang'],['upay','Upay satsang'],['vyashti','Vyashti satsang']];
+    body = groups.map(([key,label])=>{
+      const rows = (s.satsangs && s.satsangs[key]) || [];
+      return `<p class="sub2" style="font-weight:600;margin-top:10px">${esc(label)}</p>
+        ${rows.length ? rows.map(r=>`<div class="oteamrow" style="cursor:default"><span>${esc(JSON.stringify(r).slice(0,80))}</span></div>`).join('')
+          : '<p class="sub2">None recorded.</p>'}`;
+    }).join('');
+  }
+
+  root.innerHTML = `<div class="obackdrop" onclick="if(event.target===this) closeLiveSeekerDetail()">
+    <div class="omodal" style="max-width:560px;max-height:80vh;overflow-y:auto">
+      <button class="oclose" onclick="closeLiveSeekerDetail()">&times;</button>
+      <h3 style="margin:0 0 10px">${esc([s.First_Name,s.Last_Name].filter(Boolean).join(' '))}</h3>
+      <div class="filters" style="border-bottom:1px solid var(--line-2);padding-bottom:0;margin-bottom:12px">
+        ${tabs.map(([key,label])=>`<button class="chip ${t===key?'on':''}" onclick="switchLiveSeekerTab('${key}')">${esc(label)}</button>`).join('')}
+      </div>
+      ${body}
+    </div>
+  </div>`;
 }
 
 /* ============ drawer ============ */
@@ -2016,9 +2159,10 @@ function renderSevaDepartments(){
   if(LIVE_DEPTS === null){ el.innerHTML = '<p class="sub2">Loading departments…</p>'; loadTeamData(); return; }
 
   const roots = rootDepts();
+  const rootDept = deptById(1);
   el.innerHTML = `
     <div class="orgchart">
-      <div class="ochip root">SSRF</div>
+      <div class="ochip root">${rootDept ? esc(rootDept.Seva_Dept_Name) : 'SSRF'}</div>
       <div class="ostem"></div>
       <div class="orow">
         ${roots.map(d=>{
@@ -2439,7 +2583,7 @@ function renderSatsangDetail(){
 
       <p class="sub2" style="font-weight:600;margin-top:14px">Custom fields</p>
       ${fields.length ? fields.map(f=>`<div class="oteamrow" style="cursor:default">
-          <span>${esc(f.Field_Name)} <span class="sub2">(${esc(f.Field_Data_Type)}${f.QTY_FIELD?', qty':''}${f.GLT_FIELD?', GLT':''})</span></span>
+          <span>${esc(f.Field_Name)} <span class="sub2">(${esc(f.Field_Data_Type)}${f.QTY_FIELD?', qty':''}${f.QLT_FIELD?', QLT':''}${f.Display_Order!=null?(', order '+esc(f.Display_Order)):''})</span></span>
           <button class="mini" onclick="deleteSatsangField(${f.MSD_ID}, this)" style="width:22px;height:22px;color:var(--rose)">&times;</button>
         </div>`).join('') : '<p class="sub2">None yet.</p>'}
       <details style="margin-top:6px">
@@ -2449,8 +2593,9 @@ function renderSatsangDetail(){
           <select id="fldType" style="border-radius:999px;padding:5px 12px;font-size:12.5px;border:1px solid var(--line-2)">
             <option value="text">Text</option><option value="number">Number</option><option value="date">Date</option><option value="boolean">Yes/No</option>
           </select>
+          <input id="fldOrder" type="number" placeholder="Order" style="width:64px;border-radius:999px;padding:5px 10px;font-size:12.5px;border:1px solid var(--line-2)">
           <label class="sub2" style="display:flex;align-items:center;gap:4px"><input type="checkbox" id="fldQty">Qty</label>
-          <label class="sub2" style="display:flex;align-items:center;gap:4px"><input type="checkbox" id="fldGlt">GLT</label>
+          <label class="sub2" style="display:flex;align-items:center;gap:4px"><input type="checkbox" id="fldQlt">QLT</label>
           <button class="btn sm" onclick="addSatsangField(${d.Satsang_ID}, this)"><span class="spin"></span><span class="lbl">Add</span></button>
         </div>
       </details>
@@ -2496,7 +2641,8 @@ async function addSatsangField(defId, btn){
       if(!fieldName) return;
       await apiFetch('/api/satsangs/defs/'+defId+'/fields', {method:'POST', body: JSON.stringify({
         fieldName, dataType: document.getElementById('fldType').value,
-        isQty: document.getElementById('fldQty').checked, isGlt: document.getElementById('fldGlt').checked
+        isQty: document.getElementById('fldQty').checked, isQlt: document.getElementById('fldQlt').checked,
+        displayOrder: document.getElementById('fldOrder').value ? Number(document.getElementById('fldOrder').value) : null
       })});
       toast('Field added.');
       SATSANG_DETAIL_DATA.fields = await apiFetch('/api/satsangs/defs/'+defId+'/fields');
@@ -3004,7 +3150,14 @@ function toggleTask(id){ const t=TASKS.find(x=>x.id===id); t.done=!t.done; rende
    now groups by category instead. Moving a card here reassigns category,
    which maps to a real write against MSR.Seeker_Category once the API is
    wired for it (not yet done — this still updates the in-memory record). */
-const LANES = ["Curious","Well-wisher","Partner"];
+let LANES = ["Curious","Well-wisher","Partner"]; // fallback until Master.M_Seeker_Category loads
+let LIVE_SEEKER_CATEGORIES = null;
+async function loadSeekerCategories(){
+  try{
+    const cats = await apiFetch('/api/master/categories');
+    if(cats && cats.length){ LANES = cats.map(c=>c.Category_Name); LIVE_SEEKER_CATEGORIES = cats; renderJourney(); }
+  }catch(err){ /* keep the fallback lanes — the illustrative board still works either way */ }
+}
 function laneIdx(cat){ return LANES.indexOf(cat); }
 function commitCategoryChange(p, to, method){
   const from = p.category;
@@ -3018,7 +3171,9 @@ function commitCategoryChange(p, to, method){
 }
 function moveCategory(id, dir){
   const p = SEEKERS.find(x=>x.id===id);
-  const i = laneIdx(p.category) + dir;
+  const cur = laneIdx(p.category);
+  if(cur<0) return;
+  const i = cur + dir;
   if(i<0 || i>=LANES.length) return;
   commitCategoryChange(p, LANES[i], "reordered");
 }
@@ -3045,10 +3200,15 @@ function renderJourney(){
     const ppl = v.filter(p=>p.category===L).sort((a,b)=>since(b)-since(a));
     return {L, ppl};
   });
+  // Safety net: if the fetched category names don't match this mock data's
+  // hardcoded categories, nobody should silently vanish from the board —
+  // anything unmatched lands in a visible, read-only catch-all lane instead.
+  const unmatched = v.filter(p=>laneIdx(p.category)<0);
+  if(unmatched.length) lanes.push({L:'Other / uncategorised', ppl: unmatched, readonly:true});
 
   const board = `<div class="kboard">
-    ${lanes.map(({L,ppl})=>`
-      <div class="klane" ondragover="dragOverLane(event)" ondragleave="dragLeaveLane(event)" ondrop="dropOnLane(event,'${L}')">
+    ${lanes.map(({L,ppl,readonly})=>`
+      <div class="klane" ${readonly?'':`ondragover="dragOverLane(event)" ondragleave="dragLeaveLane(event)" ondrop="dropOnLane(event,'${L}')"`}>
         <div class="klane-head">
           <div class="klane-title">${esc(L)}</div>
           <div class="klane-sub">${ppl.length} seeker${ppl.length===1?'':'s'}</div>
@@ -3056,17 +3216,17 @@ function renderJourney(){
         <div class="klane-body">
         ${ppl.length ? ppl.map(p=>{
           const od = overdue(p), i = laneIdx(p.category);
-          return `<div class="kcard${od?' od':''}" draggable="true" ondragstart="dragCard(event,${p.id})" ondragend="dragEndCard(event)">
+          return `<div class="kcard${od?' od':''}" ${readonly?'':`draggable="true" ondragstart="dragCard(event,${p.id})" ondragend="dragEndCard(event)"`}>
             <div class="nm serif kcard-name" onclick="open_(${p.id})">${esc(p.name)}</div>
             <div class="sub2">${esc(p.region)}</div>
             <div class="sub2" style="font-size:11.5px">From: ${esc(evName(p.src))}</div>
             <div class="sub2" style="font-size:11.5px;${od?'color:var(--amber)':''}">
               ${since(p)} days since contact</div>
-            <div class="kcard-actions">
-              <button class="mini" onclick="moveCategory(${p.id},-1)" ${i===0?'disabled':''} title="Move back">‹</button>
+            ${readonly ? '' : `<div class="kcard-actions">
+              <button class="mini" onclick="moveCategory(${p.id},-1)" ${i<=0?'disabled':''} title="Move back">‹</button>
               <span class="kcard-drag" title="Drag to another category">⠿ drag</span>
-              <button class="mini" onclick="moveCategory(${p.id},1)" ${i===LANES.length-1?'disabled':''} title="Move forward">›</button>
-            </div>
+              <button class="mini" onclick="moveCategory(${p.id},1)" ${i<0||i===LANES.length-1?'disabled':''} title="Move forward">›</button>
+            </div>`}
           </div>`;
         }).join('') : '<div class="klane-empty">Nobody here.</div>'}
         </div>
