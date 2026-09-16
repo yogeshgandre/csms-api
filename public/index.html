@@ -288,13 +288,13 @@ nav{
   padding:16px 12px;overflow-y:auto;overflow-x:hidden;
 }
 nav button{border-bottom:none;border-left:2px solid transparent;margin-bottom:0;text-align:left;
-  border-radius:0 8px 8px 0;padding:10px 12px}
+  border-radius:0 8px 8px 0;padding:10px 12px;white-space:normal;line-height:1.3}
 nav button.on{box-shadow:none;border-left-color:var(--deep)}
 main{grid-area:main;max-width:none;margin:0}
 @media(max-width:880px){
   .shell{grid-template-columns:1fr;grid-template-areas:"banner" "orgbanner" "header" "nav" "main"}
   nav{flex-direction:row;border-right:none;border-bottom:1px solid var(--line);padding:8px 22px 0;overflow-x:auto}
-  nav button{border-left:none;border-bottom:2px solid transparent;border-radius:0}
+  nav button{border-left:none;border-bottom:2px solid transparent;border-radius:0;white-space:nowrap}
   nav button.on{border-left:none;box-shadow:inset 0 -2px 0 var(--deep)}
 }
 @media(max-width:700px){
@@ -1816,7 +1816,7 @@ function subtab(s){
   document.getElementById('orgTeams').style.display = s==='teams' ? '' : 'none';
   document.querySelectorAll('#p-org .chip').forEach(c=>c.classList.toggle('on', c.dataset.sub===s));
   closeDeptModal();
-  if(s==='teams') renderTeamManagement(); else renderSevaDepartments();
+  if(s==='teams') renderTeamManagement(true); else renderSevaDepartments();
 }
 
 /* ============ organisation: shared state + actions ============
@@ -1839,7 +1839,7 @@ async function loadTeamData(){
     depts.forEach((d,i)=>{ LIVE_DEPT_ROLES[d.Seva_Dept_ID] = roleLists[i]; });
     LIVE_DEPTS = depts;
     renderSevaDepartments();
-    renderTeamManagement();
+    renderTeamManagement(true);
     if(CHART_MODAL) renderModalContent();
   }catch(err){
     const msg = `<div class="hidden-note" style="background:var(--rose-wash);border-color:#EBCBCE;color:var(--rose)">
@@ -2089,41 +2089,149 @@ function renderModalContent(){
 }
 
 /* ============ Team Management — flat list, no chart (people focus) ============ */
-function renderTeamManagement(){
+function renderTeamManagement(force){
   const el = document.getElementById('orgTeams');
   if(LIVE_DEPTS === null){ el.innerHTML = '<p class="sub2">Loading…</p>'; loadTeamData(); return; }
+  // Rebuilding this table wipes any in-progress edits (added rows, changed
+  // dropdowns, pending removals) — only do it on an explicit refresh
+  // (tab switch, after a save), not on every incidental global render()
+  // elsewhere in the app while this tab happens to be open.
+  if(!force && el.style.display!=='none' && document.getElementById('teamTableBody')) return;
 
-  function node(d, depth){
-    const kids = childrenOf(d.Seva_Dept_ID);
-    const roles = LIVE_DEPT_ROLES[d.Seva_Dept_ID] || [];
-    const filled = roles.filter(r=>r.holders && r.holders.length).length;
-    return `<div style="margin-left:${depth*24}px">
-      <details class="sub-card" style="margin-bottom:8px;padding:0">
-        <summary style="cursor:pointer;padding:12px 15px;font-weight:600;font-size:14px;display:flex;justify-content:space-between">
-          <span>${esc(d.Seva_Dept_Name)}</span>
-          <span class="sub2" style="font-weight:400">${filled} of ${roles.length} role${roles.length===1?'':'s'} filled</span>
-        </summary>
-        <div style="padding:0 15px 14px">
-          ${roles.length ? roles.map(r=>`<div class="oteamrow" style="cursor:default;flex-direction:column;align-items:stretch;gap:4px">
-              <div style="display:flex;align-items:center;justify-content:space-between">
-                <span>${esc(r.Dept_Role_Name)}</span>
-                <button class="mini" onclick="deleteRole(${r.Dept_Role_ID}, this)" title="Delete role" style="width:22px;height:22px;color:var(--rose)">&times;</button>
-              </div>
-              ${(r.holders&&r.holders.length) ? r.holders.map(h=>`<div class="sub2" style="display:flex;justify-content:space-between;padding-left:8px">
-                  <span style="color:var(--sage)">${esc(h.name)}</span>
-                  <span class="mini" onclick="removeMember(${h.usdrId}, this)" title="Remove" style="width:18px;height:18px;font-size:10px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center">&times;</span>
-                </div>`).join('') : '<div class="sub2" style="padding-left:8px;font-style:italic">vacant</div>'}
-            </div>`).join('') : '<p class="sub2">No roles defined yet.</p>'}
-          ${roleAndMemberFormsHTML(d, roles, 't'+d.Seva_Dept_ID, 'submitAssign')}
-        </div>
-      </details>
-      ${kids.map(k=>node(k,depth+1)).join('')}</div>`;
+  const deptOptions = d => LIVE_DEPTS.map(dd=>`<option value="${dd.Seva_Dept_ID}" ${dd.Seva_Dept_ID==d?'selected':''}>${esc(dd.Seva_Dept_Name)}</option>`).join('');
+  const roleOptionsFor = (deptId, roleId) => (LIVE_DEPT_ROLES[deptId]||[]).map(r=>`<option value="${r.Dept_Role_ID}" ${r.Dept_Role_ID==roleId?'selected':''}>${esc(r.Dept_Role_Name)}</option>`).join('');
+
+  const rows = [];
+  LIVE_DEPTS.forEach(d=>{
+    (LIVE_DEPT_ROLES[d.Seva_Dept_ID]||[]).forEach(r=>{
+      (r.holders||[]).forEach(h=>{
+        rows.push({usdrId:h.usdrId, csmsId:h.csmsId, name:h.name, email:h.email, deptId:d.Seva_Dept_ID, roleId:r.Dept_Role_ID});
+      });
+    });
+  });
+
+  function rowHTML(row){
+    const isNew = row.usdrId==null;
+    return `<tr data-usdr="${isNew?'':row.usdrId}" data-orig-dept="${row.deptId||''}" data-orig-role="${row.roleId||''}" data-new="${isNew?1:0}">
+      <td style="padding:8px 6px">${isNew
+        ? `<input class="rowName" placeholder="Name" style="width:100%;border-radius:999px;padding:5px 12px;font-size:12.5px;border:1px solid var(--line-2);margin-bottom:4px;box-sizing:border-box">
+           <input class="rowEmail" type="email" placeholder="name@ssrf.org" style="width:100%;border-radius:999px;padding:5px 12px;font-size:12.5px;border:1px solid var(--line-2);box-sizing:border-box">`
+        : `<div style="font-weight:500">${esc(row.name)}</div><div class="sub2">${esc(row.email||'')}</div>`}
+      </td>
+      <td style="padding:8px 6px">
+        <select class="rowDept" style="width:100%;border-radius:999px;padding:5px 10px;font-size:12.5px;border:1px solid var(--line-2)"
+          onchange="this.closest('tr').querySelector('.rowRole').innerHTML = teamRoleOptions(this.value)">
+          ${deptOptions(row.deptId)}
+        </select>
+      </td>
+      <td style="padding:8px 6px">
+        <select class="rowRole" style="width:100%;border-radius:999px;padding:5px 10px;font-size:12.5px;border:1px solid var(--line-2)">
+          ${roleOptionsFor(row.deptId, row.roleId)}
+        </select>
+      </td>
+      <td style="padding:8px 6px;text-align:center">
+        <button class="mini" onclick="markRowForRemoval(this)" title="Remove" style="width:24px;height:24px;color:var(--rose)">&times;</button>
+      </td>
+    </tr>`;
   }
 
-  const roots = rootDepts();
-  el.innerHTML = roots.map(r=>node(r,0)).join('') + `
-    <div class="note" style="margin-top:10px"><b>Add roles and members here, or in Seva Departments.</b>
-      Adding and removing departments happens in Seva Departments only.</div>`;
+  el.innerHTML = `
+    <details style="margin-bottom:14px">
+      <summary style="cursor:pointer;font-size:12px;color:var(--deep)">+ Add role to a department</summary>
+      <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
+        <select id="tmNewRoleDept" style="border-radius:999px;padding:6px 14px;font-size:13px;border:1px solid var(--line-2)">${deptOptions(null)}</select>
+        <input id="tmNewRoleName" placeholder="Role name" style="border-radius:999px;padding:6px 14px;font-size:13px;border:1px solid var(--line-2);flex:1;min-width:140px">
+        <button class="btn sm" onclick="createRole(Number(document.getElementById('tmNewRoleDept').value), document.getElementById('tmNewRoleName').value.trim(), '', this)"><span class="spin"></span><span class="lbl">Add role</span></button>
+      </div>
+    </details>
+    <div style="overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse;font-size:13px" id="teamTable">
+        <thead><tr style="text-align:left;border-bottom:1px solid var(--line-2)">
+          <th style="padding:6px">Member</th><th style="padding:6px">Department</th><th style="padding:6px">Role</th><th></th>
+        </tr></thead>
+        <tbody id="teamTableBody">${rows.map(rowHTML).join('')}</tbody>
+      </table>
+    </div>
+    <div class="btnrow">
+      <button class="btn ghost" onclick="addTeamRow()">+ Add row</button>
+      <button class="btn" id="teamSubmitBtn" onclick="submitTeamChanges(this)"><span class="spin"></span><span class="lbl">Submit changes</span></button>
+    </div>
+    <div class="err" id="teamErr" style="margin-top:8px"></div>
+    <p class="sub2" style="margin-top:6px">A person can hold roles in more than one department — add a row per role. New members don't need to have signed in yet.</p>`;
+}
+
+function teamRoleOptions(deptId){
+  return (LIVE_DEPT_ROLES[deptId]||[]).map(r=>`<option value="${r.Dept_Role_ID}">${esc(r.Dept_Role_Name)}</option>`).join('');
+}
+
+function addTeamRow(){
+  const tbody = document.getElementById('teamTableBody');
+  const firstDeptId = LIVE_DEPTS[0] ? LIVE_DEPTS[0].Seva_Dept_ID : null;
+  const tr = document.createElement('tr');
+  tr.dataset.usdr = ''; tr.dataset.origDept=''; tr.dataset.origRole=''; tr.dataset.new = '1';
+  tr.innerHTML = `<td style="padding:8px 6px">
+      <input class="rowName" placeholder="Name" style="width:100%;border-radius:999px;padding:5px 12px;font-size:12.5px;border:1px solid var(--line-2);margin-bottom:4px;box-sizing:border-box">
+      <input class="rowEmail" type="email" placeholder="name@ssrf.org" style="width:100%;border-radius:999px;padding:5px 12px;font-size:12.5px;border:1px solid var(--line-2);box-sizing:border-box">
+    </td>
+    <td style="padding:8px 6px">
+      <select class="rowDept" style="width:100%;border-radius:999px;padding:5px 10px;font-size:12.5px;border:1px solid var(--line-2)"
+        onchange="this.closest('tr').querySelector('.rowRole').innerHTML = teamRoleOptions(this.value)">
+        ${LIVE_DEPTS.map(dd=>`<option value="${dd.Seva_Dept_ID}">${esc(dd.Seva_Dept_Name)}</option>`).join('')}
+      </select>
+    </td>
+    <td style="padding:8px 6px"><select class="rowRole" style="width:100%;border-radius:999px;padding:5px 10px;font-size:12.5px;border:1px solid var(--line-2)">${teamRoleOptions(firstDeptId)}</select></td>
+    <td style="padding:8px 6px;text-align:center"><button class="mini" onclick="markRowForRemoval(this)" title="Remove" style="width:24px;height:24px;color:var(--rose)">&times;</button></td>`;
+  tbody.appendChild(tr);
+}
+
+function markRowForRemoval(btn){
+  const tr = btn.closest('tr');
+  if(tr.dataset.new === '1'){ tr.remove(); return; }
+  const marked = tr.classList.toggle('pending-remove');
+  tr.style.opacity = marked ? '.45' : '';
+  tr.style.textDecoration = marked ? 'line-through' : 'none';
+  tr.querySelectorAll('select,input').forEach(elm=>elm.disabled = marked);
+}
+
+async function submitTeamChanges(btn){
+  const errEl = document.getElementById('teamErr');
+  errEl.classList.remove('on');
+  const rows = Array.from(document.querySelectorAll('#teamTableBody tr'));
+  await withLoading(btn, async ()=>{
+    let changed = 0, failed = 0;
+    for(const tr of rows){
+      const isNew = tr.dataset.new === '1';
+      const removing = tr.classList.contains('pending-remove');
+      const usdrId = tr.dataset.usdr;
+      try{
+        if(removing && usdrId){
+          await apiFetch('/api/admin/assignments/'+usdrId, {method:'DELETE'});
+          changed++;
+          continue;
+        }
+        const deptSel = tr.querySelector('.rowDept'), roleSel = tr.querySelector('.rowRole');
+        const newDeptId = deptSel.value, newRoleId = roleSel.value;
+
+        if(isNew){
+          const nameEl = tr.querySelector('.rowName'), emailEl = tr.querySelector('.rowEmail');
+          const email = (emailEl.value||'').trim();
+          if(!email) continue;
+          await apiFetch('/api/admin/assign-role', {method:'POST', body: JSON.stringify({email, name:(nameEl.value||'').trim(), sevaDeptId:Number(newDeptId), deptRoleId:Number(newRoleId)})});
+          changed++;
+        } else if(String(newDeptId)!==String(tr.dataset.origDept) || String(newRoleId)!==String(tr.dataset.origRole)){
+          const nameCell = tr.querySelector('td');
+          const email = nameCell.querySelectorAll('div')[1] ? nameCell.querySelectorAll('div')[1].textContent.trim() : '';
+          if(usdrId) await apiFetch('/api/admin/assignments/'+usdrId, {method:'DELETE'});
+          await apiFetch('/api/admin/assign-role', {method:'POST', body: JSON.stringify({email, sevaDeptId:Number(newDeptId), deptRoleId:Number(newRoleId)})});
+          changed++;
+        }
+      }catch(err){ failed++; }
+    }
+    if(failed){ errEl.textContent = failed+' change(s) could not be saved.'; errEl.classList.add('on'); }
+    if(changed) toast(changed+' change(s) saved.');
+    if(!changed && !failed) toast('No changes to save.');
+    invalidateTeamData();
+  });
 }
 
 /* ============ unified inbox ============ */

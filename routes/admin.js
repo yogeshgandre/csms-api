@@ -52,7 +52,10 @@ router.get('/depts/:id/roles', requireAuth, async (req, res) => {
       `SELECT r.${qi('Dept_Role_ID')}, r.${qi('Dept_Role_Name')}, r.${qi('Dept_Role_Desc')},
               h.${qi('HRCHY_ID')},
               COALESCE(
-                json_agg(json_build_object('name', up.${qi('Seeker_Name')}, 'usdrId', usdr.${qi('USDR_ID')}))
+                json_agg(json_build_object(
+                  'name', up.${qi('Seeker_Name')}, 'usdrId', usdr.${qi('USDR_ID')},
+                  'csmsId', up.${qi('CSMS_ID')}, 'email', up.${qi('Seeker_Email')}
+                ))
                   FILTER (WHERE up.${qi('Seeker_Name')} IS NOT NULL),
                 '[]'
               ) AS holders
@@ -173,12 +176,11 @@ router.post('/hierarchy', requireAuth, async (req, res) => {
 // one is created here so assignment isn't blocked on a prior login —
 // CSMS_ID is generated with the same MAX+1-with-retry approach already
 // used for Dept_Role_ID above, since this schema doesn't give every ID
-// column a real sequence. ASSUMPTION FLAGGED: this insert only sets
-// CSMS_ID/Seeker_Email/Seeker_Name/Ver_From_DT/Ver_To_DT — if User_Profile
-// has other NOT NULL columns (e.g. a required FK to MSR.Seeker) that
-// weren't visible from the queries built so far, this will fail loudly
-// with a clear Postgres error rather than silently — check the schema if
-// that happens.
+// column a real sequence. This insert sets only CSMS_ID/Seeker_Email/
+// Seeker_Name — confirmed by testing that User_Profile, unlike most tables
+// here, has no Ver_From_DT/Ver_To_DT (it isn't versioned). If it turns out
+// to have other required columns not yet seen, this fails with a clear
+// Postgres error rather than corrupting anything.
 router.post('/assign-role', requireAuth, async (req, res) => {
   const { email, sevaDeptId, deptRoleId, name } = req.body || {};
   if (!email || !sevaDeptId || !deptRoleId) {
@@ -208,12 +210,14 @@ router.post('/assign-role', requireAuth, async (req, res) => {
         );
         csmsId = maxQ.rows[0].next_id;
         personName = (name && name.trim()) || email.split('@')[0];
+        // Confirmed by testing: User_Profile has no Ver_From_DT/Ver_To_DT —
+        // unlike most tables in this schema, it isn't versioned.
         const insQ = await client.query(
           `INSERT INTO ${qi('RMS')}.${qi('User_Profile')}
-            (${qi('CSMS_ID')}, ${qi('Seeker_Email')}, ${qi('Seeker_Name')}, ${qi('Ver_From_DT')}, ${qi('Ver_To_DT')})
-           VALUES ($1, $2, $3, CURRENT_DATE, $4)
+            (${qi('CSMS_ID')}, ${qi('Seeker_Email')}, ${qi('Seeker_Name')})
+           VALUES ($1, $2, $3)
            RETURNING ${qi('CSMS_ID')}`,
-          [csmsId, email, personName, FAR_FUTURE]
+          [csmsId, email, personName]
         );
         csmsId = insQ.rows[0].CSMS_ID;
         profileCreated = true;
