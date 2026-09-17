@@ -351,6 +351,12 @@ nav .pip.r{background:var(--rose);color:#fff}
 .ochip.lvl1{background:var(--deep-wash);color:var(--deep)}
 .ochip.lvl1:hover{background:var(--deep);color:#fff}
 .osub2{font-size:11px;color:var(--ink-3);margin-top:4px}
+.oexpand-btn{border:none;background:none;cursor:pointer;color:var(--ink-3);font-size:11px;
+  padding:2px 6px;margin-top:3px;border-radius:999px}
+.oexpand-btn:hover{background:var(--line);color:var(--deep)}
+.olvl2row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:10px;max-width:280px}
+.ochip.lvl2{font-size:11.5px;padding:6px 12px;background:var(--card);color:var(--ink-2)}
+.ochip.lvl2:hover{background:var(--deep-wash);color:var(--deep)}
 .obackdrop{position:absolute;inset:0;background:rgba(22,51,74,.32);display:flex;align-items:center;
   justify-content:center;z-index:40;animation:fadein .16s var(--ease)}
 .omodal{width:min(380px,90vw);max-height:70vh;overflow-y:auto;background:var(--card);border-radius:16px;
@@ -2174,6 +2180,16 @@ function drillInto(deptId){ MODAL_STACK.push(deptId); renderModalContent(); }
 function backToParent(){ MODAL_STACK.pop(); if(MODAL_STACK.length) renderModalContent(); else closeDeptModal(); }
 function closeDeptModal(){ MODAL_STACK = []; const el=document.getElementById('deptModalRoot'); if(el) el.innerHTML=''; }
 
+// Which level-1 branches currently show their level-2 children inline.
+// Collapsed by default — expanding doesn't go past level 2, and doesn't
+// open the modal (that stays the way to add/delete/manage roles).
+let EXPANDED_DEPT_BRANCHES = new Set();
+function toggleDeptBranch(deptId){
+  if(EXPANDED_DEPT_BRANCHES.has(deptId)) EXPANDED_DEPT_BRANCHES.delete(deptId);
+  else EXPANDED_DEPT_BRANCHES.add(deptId);
+  renderSevaDepartments();
+}
+
 function renderSevaDepartments(){
   const el = document.getElementById('orgDepts');
   if(LIVE_DEPTS === null){ el.innerHTML = '<p class="sub2">Loading departments…</p>'; loadTeamData(); return; }
@@ -2190,10 +2206,15 @@ function renderSevaDepartments(){
       <div class="ostem"></div>
       <div class="orow">
         ${roots.map(d=>{
-          const kidCount = childrenOf(d.Seva_Dept_ID).length;
+          const kids = childrenOf(d.Seva_Dept_ID);
+          const expanded = EXPANDED_DEPT_BRANCHES.has(d.Seva_Dept_ID);
           return `<div class="obranch">
             <div class="ochip lvl1" onclick="openDeptModal(${d.Seva_Dept_ID})">${esc(d.Seva_Dept_Name)}</div>
-            <div class="osub2">${kidCount} sub-dept${kidCount===1?'':'s'}</div>
+            <div class="osub2">${kids.length} sub-dept${kids.length===1?'':'s'}</div>
+            ${kids.length ? `<button class="oexpand-btn" onclick="toggleDeptBranch(${d.Seva_Dept_ID})">${expanded?'\u25be hide':'\u25b8 show'} sub-depts</button>` : ''}
+            ${expanded && kids.length ? `<div class="olvl2row">
+              ${kids.map(k=>`<div class="ochip lvl2" onclick="openDeptModal(${k.Seva_Dept_ID})">${esc(k.Seva_Dept_Name)}</div>`).join('')}
+            </div>` : ''}
           </div>`;
         }).join('')}
       </div>
@@ -3556,12 +3577,8 @@ function journeySubtab(s){
   else renderMasterlistMgmt();
 }
 
-let ML_SEEKER_ID = null;
-let ML_SEEKER_NAME = '';
-let ML_SEEKER = null;
-let ML_CATEGORY_NAME = null;
-let ML_INFO = null;
-let ML_LINKS = null;
+let LIVE_ML_SEEKERS = null;
+let ML_ROW_DETAIL = {}; // seekerId -> {info, links} once that row's "Edit details" is opened
 
 function renderMasterlistMgmt(){
   const el = document.getElementById('journeyMasterlist');
@@ -3569,207 +3586,192 @@ function renderMasterlistMgmt(){
   if(LIVE_SATSANG_DEFS===null) loadSatsangDefs();
   if(LIVE_SEEKER_CATEGORIES===null) loadSeekerCategories();
   el.innerHTML = `
-    <div class="card pad" style="margin-bottom:14px;max-width:420px;position:relative">
-      <label class="sub2" style="font-weight:600">Seeker</label>
-      <input id="mlSearch" placeholder="Search by name or email" autocomplete="off" oninput="mlSeekerAutocomplete(this)"
-        value="${esc(ML_SEEKER_NAME)}" style="width:100%;margin-top:6px;border-radius:999px;padding:8px 14px;font-size:13.5px;border:1px solid var(--line-2);box-sizing:border-box">
-      <div id="mlSearch_ac" class="ac-dropdown" style="display:none"></div>
+    <div class="card pad" style="margin-bottom:14px;display:flex;gap:9px;align-items:center">
+      <input type="search" id="mlListQ" style="flex:1;font-size:14px;padding:10px 13px" placeholder="Search name or email (leave blank for everyone)" onkeydown="if(event.key==='Enter') loadMlList()">
+      <button class="btn ghost sm" onclick="document.getElementById('mlListQ').value='';loadMlList()">Clear</button>
     </div>
-    <div id="mlBody"></div>`;
-  if(ML_SEEKER_ID) renderMlBody(); else document.getElementById('mlBody').innerHTML = '<p class="sub2">Search and pick a seeker to edit their record.</p>';
+    <div id="mlListBody"><p class="sub2">Loading\u2026</p></div>`;
+  loadMlList();
 }
 
-function mlSeekerAutocomplete(inputEl){
-  clearTimeout(AC_DEBOUNCE['mlSearch']);
-  const dd = document.getElementById('mlSearch_ac');
-  const q = inputEl.value.trim();
-  if(q.length < 2){ dd.style.display='none'; dd.innerHTML=''; return; }
-  AC_DEBOUNCE['mlSearch'] = setTimeout(async ()=>{
-    try{
-      const seekers = await apiFetch('/api/seekers?q='+encodeURIComponent(q));
-      if(!seekers.length){ dd.innerHTML = '<div class="ac-item sub2">No matching seekers.</div>'; dd.style.display=''; return; }
-      dd.innerHTML = seekers.map(s=>{
-        const name = [s.First_Name,s.Last_Name].filter(Boolean).join(' ') || ('Seeker #'+s.Seeker_ID);
-        return `<div class="ac-item" onmousedown="selectMlSeeker(${s.Seeker_ID}, '${name.replace(/'/g,"\\'")}')">
-          <div>${esc(name)}</div><div class="sub2">${esc(s.Email||'')}</div>
-        </div>`;
-      }).join('');
-      dd.style.display = '';
-    }catch(err){ dd.style.display='none'; }
-  }, 250);
-}
-function selectMlSeeker(id, name){
-  ML_SEEKER_ID = id; ML_SEEKER_NAME = name;
-  document.getElementById('mlSearch').value = name;
-  document.getElementById('mlSearch_ac').style.display = 'none';
-  loadMlSeekerData();
-}
-
-async function loadMlSeekerData(){
-  const body = document.getElementById('mlBody');
-  body.innerHTML = '<p class="sub2">Loading\u2026</p>';
+async function loadMlList(){
+  const body = document.getElementById('mlListBody');
+  if(body) body.innerHTML = '<p class="sub2">Loading\u2026</p>';
   try{
-    const [seeker, info, links] = await Promise.all([
-      apiFetch('/api/seekers/'+ML_SEEKER_ID),
-      apiFetch('/api/seekers/'+ML_SEEKER_ID+'/masterlist'),
-      apiFetch('/api/seekers/'+ML_SEEKER_ID+'/satsang-links'),
-    ]);
-    ML_SEEKER = seeker;
-    const today = new Date().toISOString().slice(0,10);
-    const activeCat = (seeker.categories||[]).find(c=>!c.Ver_To_DT || c.Ver_To_DT.slice(0,10)>=today) || (seeker.categories||[])[0];
-    ML_CATEGORY_NAME = activeCat ? activeCat.Category_Name : null;
-    ML_INFO = info;
-    ML_LINKS = links;
-    renderMlBody();
+    const q = (document.getElementById('mlListQ')||{}).value || '';
+    const params = new URLSearchParams();
+    if(q) params.set('q', q);
+    LIVE_ML_SEEKERS = await apiFetch('/api/seekers'+(params.toString()?('?'+params.toString()):''));
+    ML_ROW_DETAIL = {};
+    renderMlList();
   }catch(err){
-    body.innerHTML = `<p class="sub2">Could not load: ${esc(err.message||'')}</p>`;
+    if(body) body.innerHTML = `<p class="sub2">Could not load: ${esc(err.message||'')}</p>`;
   }
 }
 
-function renderMlBody(){
-  const body = document.getElementById('mlBody');
-  if(!body || !ML_SEEKER) return;
-  const info = ML_INFO || {};
+function renderMlList(){
+  const body = document.getElementById('mlListBody');
+  if(!body) return;
+  const rows = LIVE_ML_SEEKERS || [];
+  if(!rows.length){ body.innerHTML = '<p class="sub2">No matching seekers.</p>'; return; }
   const cats = LIVE_SEEKER_CATEGORIES || [];
-
-  body.innerHTML = `
-    <div class="card pad" style="margin-bottom:12px;max-width:520px">
-      <h3 style="margin:0 0 10px">${esc(ML_SEEKER_NAME)}</h3>
-
-      <label class="sub2" style="font-weight:600">Seeker category</label>
-      <div style="display:flex;gap:8px;margin-top:6px;margin-bottom:16px">
-        <select id="mlCategory" style="flex:1;border-radius:999px;padding:7px 14px;font-size:13.5px;border:1px solid var(--line-2)">
-          ${cats.map(c=>`<option value="${c.Category_ID}" ${c.Category_Name===ML_CATEGORY_NAME?'selected':''}>${esc(c.Category_Name)}</option>`).join('')}
-        </select>
-        <button class="btn sm" onclick="saveMlCategory(this)"><span class="spin"></span><span class="lbl">Save</span></button>
+  body.innerHTML = rows.map(s=>{
+    const name = [s.Sal,s.First_Name,s.Last_Name].filter(Boolean).join(' ') || ('Seeker #'+s.Seeker_ID);
+    const detail = ML_ROW_DETAIL[s.Seeker_ID];
+    return `<div class="card pad" style="margin-bottom:8px">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
+        <div>
+          <div style="font-weight:600">${esc(name)}</div>
+          <div class="sub2">${esc(s.Email||'')}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <select id="mlCat_${s.Seeker_ID}" style="border-radius:999px;padding:6px 14px;font-size:13px;border:1px solid var(--line-2)">
+            ${cats.map(c=>`<option value="${c.Category_ID}" ${c.Category_Name===s.Category_Name?'selected':''}>${esc(c.Category_Name)}</option>`).join('')}
+          </select>
+          <button class="mini" onclick="saveMlRowCategory(${s.Seeker_ID}, this)" style="width:auto;padding:0 10px;height:26px;font-size:11.5px">Save category</button>
+          <button class="mini" onclick="toggleMlRowDetail(${s.Seeker_ID}, this)" style="width:auto;padding:0 10px;height:26px;font-size:11.5px">${detail?'Hide details':'Edit details'}</button>
+        </div>
       </div>
-
-      <label class="sub2" style="font-weight:600">MasterList info</label>
-      <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px">
-        <div>
-          <label class="sub2">Pranshakti</label>
-          <input id="mlPranshakti" value="${esc(info.Pranshakti||'')}" style="width:100%;border-radius:999px;padding:6px 14px;font-size:13px;border:1px solid var(--line-2);box-sizing:border-box;margin-top:3px">
-        </div>
-        <div>
-          <label class="sub2">Sub-region</label>
-          <input id="mlSubRegion" value="${esc(info.Sub_Region||'')}" style="width:100%;border-radius:999px;padding:6px 14px;font-size:13px;border:1px solid var(--line-2);box-sizing:border-box;margin-top:3px">
-        </div>
-        <div>
-          <label class="sub2">Sadhana start date</label>
-          <input id="mlSadhanaDt" type="date" value="${info.Sadhana_ST_DT?String(info.Sadhana_ST_DT).slice(0,10):''}" style="width:100%;border-radius:999px;padding:6px 14px;font-size:13px;border:1px solid var(--line-2);box-sizing:border-box;margin-top:3px">
-        </div>
-        <div>
-          <label class="sub2">Weekly seva hours</label>
-          <input id="mlWeeklySeva" type="number" value="${info.Weekly_Seva_Hrs!=null?info.Weekly_Seva_Hrs:''}" style="width:100%;border-radius:999px;padding:6px 14px;font-size:13px;border:1px solid var(--line-2);box-sizing:border-box;margin-top:3px">
-        </div>
-        <div>
-          <label class="sub2">Personal info</label>
-          <textarea id="mlPerInfo" rows="2" style="width:100%;border-radius:12px;padding:8px 14px;font-size:13px;border:1px solid var(--line-2);box-sizing:border-box;margin-top:3px;font-family:inherit;resize:vertical">${esc(info.Per_Info||'')}</textarea>
-        </div>
-        <div>
-          <label class="sub2">Opportunities at home</label>
-          <textarea id="mlOppHome" rows="2" style="width:100%;border-radius:12px;padding:8px 14px;font-size:13px;border:1px solid var(--line-2);box-sizing:border-box;margin-top:3px;font-family:inherit;resize:vertical">${esc(info.Opp_Home||'')}</textarea>
-        </div>
-        <div>
-          <label class="sub2">Visited Ashram</label>
-          <input id="mlVisitedAshram" value="${esc(info.Visited_Ashram||'')}" style="width:100%;border-radius:999px;padding:6px 14px;font-size:13px;border:1px solid var(--line-2);box-sizing:border-box;margin-top:3px">
-        </div>
-        <div>
-          <label class="sub2">Attended MAV workshop</label>
-          <input id="mlMavWorkshop" value="${esc(info.Attended_MAV_Workshop||'')}" style="width:100%;border-radius:999px;padding:6px 14px;font-size:13px;border:1px solid var(--line-2);box-sizing:border-box;margin-top:3px">
-        </div>
-        <div>
-          <label class="sub2">Sensitive list</label>
-          <input id="mlSensitiveList" value="${esc(info.Sensitive_List||'')}" style="width:100%;border-radius:999px;padding:6px 14px;font-size:13px;border:1px solid var(--line-2);box-sizing:border-box;margin-top:3px">
-        </div>
-        <button class="btn sm" onclick="saveMlInfo(this)" style="align-self:flex-start"><span class="spin"></span><span class="lbl">Save MasterList info</span></button>
-        <div class="err" id="mlInfoErr"></div>
-      </div>
-    </div>
-
-    ${mlSatsangLinksHTML('upay', 'Upay Satsang')}
-    ${mlSatsangLinksHTML('vyashti', 'Vyashti Satsang')}
-    ${mlSatsangLinksHTML('bhav', 'Bhav Satsang')}`;
+      <div id="mlDetail_${s.Seeker_ID}">${detail && detail!=='loading' ? mlRowDetailHTML(s.Seeker_ID, detail) : ''}</div>
+    </div>`;
+  }).join('');
 }
 
-function mlSatsangLinksHTML(type, label){
-  const links = (ML_LINKS && ML_LINKS[type]) || [];
-  // Only satsangs of the matching type belong in this lane's picker.
-  const options = (LIVE_SATSANG_DEFS||[]).filter(d=>(d.ST_Name||'').toLowerCase()===label.split(' ')[0].toLowerCase());
-  const linkedIds = new Set(links.map(l=>String(l.Satsang_ID)));
-  const pickable = options.filter(d=>!linkedIds.has(String(d.Satsang_ID)));
-  return `<div class="card pad" style="margin-bottom:12px;max-width:520px">
-    <p class="sub2" style="font-weight:600;margin-bottom:6px">${esc(label)}</p>
-    ${links.length ? links.map(l=>`<div class="oteamrow">
-        <span>${esc(l.Satsang_Name||('Satsang #'+l.Satsang_ID))}</span>
-        <button class="mini" onclick="removeMlSatsangLink('${type}', ${l.Satsang_ID}, this)" style="width:22px;height:22px;color:var(--rose)">&times;</button>
-      </div>`).join('') : '<p class="sub2">None linked.</p>'}
-    <div style="display:flex;gap:8px;margin-top:8px">
-      <select id="mlAdd_${type}" style="flex:1;border-radius:999px;padding:6px 14px;font-size:13px;border:1px solid var(--line-2)">
-        <option value="">${pickable.length?'Add a satsang\u2026':'No more '+esc(label)+' satsangs to add'}</option>
-        ${pickable.map(d=>`<option value="${d.Satsang_ID}">${esc(d.Satsang_Name)}</option>`).join('')}
-      </select>
-      <button class="mini" onclick="addMlSatsangLink('${type}', this)" style="width:auto;padding:0 12px;height:30px">Add</button>
-    </div>
-  </div>`;
-}
-
-async function saveMlCategory(btn){
+async function saveMlRowCategory(seekerId, btn){
   await withLoading(btn, async ()=>{
     try{
-      const categoryId = document.getElementById('mlCategory').value;
-      await apiFetch('/api/seekers/'+ML_SEEKER_ID+'/category', {method:'PUT', body: JSON.stringify({categoryId:Number(categoryId)})});
+      const categoryId = document.getElementById('mlCat_'+seekerId).value;
+      await apiFetch('/api/seekers/'+seekerId+'/category', {method:'PUT', body: JSON.stringify({categoryId:Number(categoryId)})});
       toast('Category saved.');
-      loadMlSeekerData();
     }catch(err){ toast('Could not save: '+(err.message||'')); }
   });
 }
 
-async function saveMlInfo(btn){
-  const errEl = document.getElementById('mlInfoErr'); errEl.classList.remove('on');
+async function toggleMlRowDetail(seekerId, btn){
+  const slot = document.getElementById('mlDetail_'+seekerId);
+  if(ML_ROW_DETAIL[seekerId]){
+    delete ML_ROW_DETAIL[seekerId];
+    slot.innerHTML = '';
+    btn.querySelector('.lbl')?.remove(); btn.textContent = 'Edit details';
+    return;
+  }
+  btn.textContent = 'Loading\u2026';
+  ML_ROW_DETAIL[seekerId] = 'loading';
+  try{
+    const [info, links] = await Promise.all([
+      apiFetch('/api/seekers/'+seekerId+'/masterlist'),
+      apiFetch('/api/seekers/'+seekerId+'/satsang-links'),
+    ]);
+    ML_ROW_DETAIL[seekerId] = {info, links};
+    slot.innerHTML = mlRowDetailHTML(seekerId, ML_ROW_DETAIL[seekerId]);
+    btn.textContent = 'Hide details';
+  }catch(err){
+    delete ML_ROW_DETAIL[seekerId];
+    btn.textContent = 'Edit details';
+    toast('Could not load details: '+(err.message||''));
+  }
+}
+
+function mlRowDetailHTML(seekerId, detail){
+  const info = detail.info || {};
+  return `<div style="border-top:1px solid var(--line-2);margin-top:12px;padding-top:12px;display:flex;flex-direction:column;gap:8px;max-width:460px">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <div><label class="sub2">Pranshakti</label>
+        <input id="mlPranshakti_${seekerId}" value="${esc(info.Pranshakti||'')}" style="width:100%;border-radius:999px;padding:6px 12px;font-size:12.5px;border:1px solid var(--line-2);box-sizing:border-box;margin-top:3px"></div>
+      <div><label class="sub2">Sub-region</label>
+        <input id="mlSubRegion_${seekerId}" value="${esc(info.Sub_Region||'')}" style="width:100%;border-radius:999px;padding:6px 12px;font-size:12.5px;border:1px solid var(--line-2);box-sizing:border-box;margin-top:3px"></div>
+      <div><label class="sub2">Sadhana start date</label>
+        <input id="mlSadhanaDt_${seekerId}" type="date" value="${info.Sadhana_ST_DT?String(info.Sadhana_ST_DT).slice(0,10):''}" style="width:100%;border-radius:999px;padding:6px 12px;font-size:12.5px;border:1px solid var(--line-2);box-sizing:border-box;margin-top:3px"></div>
+      <div><label class="sub2">Weekly seva hours</label>
+        <input id="mlWeeklySeva_${seekerId}" type="number" value="${info.Weekly_Seva_Hrs!=null?info.Weekly_Seva_Hrs:''}" style="width:100%;border-radius:999px;padding:6px 12px;font-size:12.5px;border:1px solid var(--line-2);box-sizing:border-box;margin-top:3px"></div>
+      <div><label class="sub2">Visited Ashram</label>
+        <input id="mlVisitedAshram_${seekerId}" value="${esc(info.Visited_Ashram||'')}" style="width:100%;border-radius:999px;padding:6px 12px;font-size:12.5px;border:1px solid var(--line-2);box-sizing:border-box;margin-top:3px"></div>
+      <div><label class="sub2">Attended MAV workshop</label>
+        <input id="mlMavWorkshop_${seekerId}" value="${esc(info.Attended_MAV_Workshop||'')}" style="width:100%;border-radius:999px;padding:6px 12px;font-size:12.5px;border:1px solid var(--line-2);box-sizing:border-box;margin-top:3px"></div>
+      <div style="grid-column:1/-1"><label class="sub2">Sensitive list</label>
+        <input id="mlSensitiveList_${seekerId}" value="${esc(info.Sensitive_List||'')}" style="width:100%;border-radius:999px;padding:6px 12px;font-size:12.5px;border:1px solid var(--line-2);box-sizing:border-box;margin-top:3px"></div>
+    </div>
+    <div><label class="sub2">Personal info</label>
+      <textarea id="mlPerInfo_${seekerId}" rows="2" style="width:100%;border-radius:12px;padding:7px 12px;font-size:12.5px;border:1px solid var(--line-2);box-sizing:border-box;margin-top:3px;font-family:inherit;resize:vertical">${esc(info.Per_Info||'')}</textarea></div>
+    <div><label class="sub2">Opportunities at home</label>
+      <textarea id="mlOppHome_${seekerId}" rows="2" style="width:100%;border-radius:12px;padding:7px 12px;font-size:12.5px;border:1px solid var(--line-2);box-sizing:border-box;margin-top:3px;font-family:inherit;resize:vertical">${esc(info.Opp_Home||'')}</textarea></div>
+    <button class="mini" onclick="saveMlRowInfo(${seekerId}, this)" style="width:auto;padding:0 12px;height:28px;align-self:flex-start">Save MasterList info</button>
+    <div class="err" id="mlInfoErr_${seekerId}"></div>
+
+    ${mlRowSatsangLinksHTML(seekerId, 'upay', 'Upay Satsang', detail.links)}
+    ${mlRowSatsangLinksHTML(seekerId, 'vyashti', 'Vyashti Satsang', detail.links)}
+    ${mlRowSatsangLinksHTML(seekerId, 'bhav', 'Bhav Satsang', detail.links)}
+  </div>`;
+}
+
+function mlRowSatsangLinksHTML(seekerId, type, label, allLinks){
+  const links = (allLinks && allLinks[type]) || [];
+  const options = (LIVE_SATSANG_DEFS||[]).filter(d=>(d.ST_Name||'').toLowerCase()===label.split(' ')[0].toLowerCase());
+  const linkedIds = new Set(links.map(l=>String(l.Satsang_ID)));
+  const pickable = options.filter(d=>!linkedIds.has(String(d.Satsang_ID)));
+  return `<div style="margin-top:4px">
+    <p class="sub2" style="font-weight:600">${esc(label)}</p>
+    ${links.length ? links.map(l=>`<div class="sub2" style="display:flex;justify-content:space-between;padding:2px 0">
+        <span>${esc(l.Satsang_Name||('Satsang #'+l.Satsang_ID))}</span>
+        <span class="mini" onclick="removeMlRowSatsangLink(${seekerId}, '${type}', ${l.Satsang_ID}, this)" style="width:16px;height:16px;font-size:10px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;color:var(--rose)">&times;</span>
+      </div>`).join('') : '<p class="sub2">None linked.</p>'}
+    <div style="display:flex;gap:6px;margin-top:4px">
+      <select id="mlAdd_${type}_${seekerId}" style="flex:1;border-radius:999px;padding:5px 12px;font-size:12px;border:1px solid var(--line-2)">
+        <option value="">${pickable.length?'Add\u2026':'None left to add'}</option>
+        ${pickable.map(d=>`<option value="${d.Satsang_ID}">${esc(d.Satsang_Name)}</option>`).join('')}
+      </select>
+      <button class="mini" onclick="addMlRowSatsangLink(${seekerId}, '${type}', this)" style="width:auto;padding:0 10px;height:26px;font-size:11px">Add</button>
+    </div>
+  </div>`;
+}
+
+async function saveMlRowInfo(seekerId, btn){
+  const errEl = document.getElementById('mlInfoErr_'+seekerId); errEl.classList.remove('on');
   await withLoading(btn, async ()=>{
     try{
-      const weeklyRaw = document.getElementById('mlWeeklySeva').value;
-      await apiFetch('/api/seekers/'+ML_SEEKER_ID+'/masterlist', {method:'PUT', body: JSON.stringify({
-        pranshakti: document.getElementById('mlPranshakti').value.trim(),
-        subRegion: document.getElementById('mlSubRegion').value.trim(),
-        sadhanaStartDt: document.getElementById('mlSadhanaDt').value || null,
+      const weeklyRaw = document.getElementById('mlWeeklySeva_'+seekerId).value;
+      await apiFetch('/api/seekers/'+seekerId+'/masterlist', {method:'PUT', body: JSON.stringify({
+        pranshakti: document.getElementById('mlPranshakti_'+seekerId).value.trim(),
+        subRegion: document.getElementById('mlSubRegion_'+seekerId).value.trim(),
+        sadhanaStartDt: document.getElementById('mlSadhanaDt_'+seekerId).value || null,
         weeklySevaHrs: weeklyRaw ? Number(weeklyRaw) : null,
-        perInfo: document.getElementById('mlPerInfo').value.trim(),
-        oppHome: document.getElementById('mlOppHome').value.trim(),
-        visitedAshram: document.getElementById('mlVisitedAshram').value.trim(),
-        attendedMavWorkshop: document.getElementById('mlMavWorkshop').value.trim(),
-        sensitiveList: document.getElementById('mlSensitiveList').value.trim(),
+        perInfo: document.getElementById('mlPerInfo_'+seekerId).value.trim(),
+        oppHome: document.getElementById('mlOppHome_'+seekerId).value.trim(),
+        visitedAshram: document.getElementById('mlVisitedAshram_'+seekerId).value.trim(),
+        attendedMavWorkshop: document.getElementById('mlMavWorkshop_'+seekerId).value.trim(),
+        sensitiveList: document.getElementById('mlSensitiveList_'+seekerId).value.trim(),
       })});
       toast('MasterList info saved.');
-      loadMlSeekerData();
     }catch(err){ errEl.textContent = err.message||'Could not save.'; errEl.classList.add('on'); }
   });
 }
 
-async function addMlSatsangLink(type, btn){
-  const sel = document.getElementById('mlAdd_'+type);
+async function addMlRowSatsangLink(seekerId, type, btn){
+  const sel = document.getElementById('mlAdd_'+type+'_'+seekerId);
   const satsangId = sel.value;
   if(!satsangId) return;
   await withLoading(btn, async ()=>{
     try{
-      await apiFetch('/api/seekers/'+ML_SEEKER_ID+'/satsang-links', {method:'POST', body: JSON.stringify({type, satsangId:Number(satsangId)})});
+      await apiFetch('/api/seekers/'+seekerId+'/satsang-links', {method:'POST', body: JSON.stringify({type, satsangId:Number(satsangId)})});
       toast('Linked.');
-      loadMlSeekerData();
+      const links = await apiFetch('/api/seekers/'+seekerId+'/satsang-links');
+      ML_ROW_DETAIL[seekerId].links = links;
+      document.getElementById('mlDetail_'+seekerId).innerHTML = mlRowDetailHTML(seekerId, ML_ROW_DETAIL[seekerId]);
     }catch(err){ toast('Could not link: '+(err.message||'')); }
   });
 }
 
-async function removeMlSatsangLink(type, satsangId, btn){
+async function removeMlRowSatsangLink(seekerId, type, satsangId, el){
   if(!confirm('Remove this link?')) return;
-  await withLoading(btn, async ()=>{
-    try{
-      await apiFetch('/api/seekers/'+ML_SEEKER_ID+'/satsang-links/'+type+'/'+satsangId, {method:'DELETE'});
-      toast('Removed.');
-      loadMlSeekerData();
-    }catch(err){ toast('Could not remove: '+(err.message||'')); }
-  });
+  try{
+    await apiFetch('/api/seekers/'+seekerId+'/satsang-links/'+type+'/'+satsangId, {method:'DELETE'});
+    toast('Removed.');
+    const links = await apiFetch('/api/seekers/'+seekerId+'/satsang-links');
+    ML_ROW_DETAIL[seekerId].links = links;
+    document.getElementById('mlDetail_'+seekerId).innerHTML = mlRowDetailHTML(seekerId, ML_ROW_DETAIL[seekerId]);
+  }catch(err){ toast('Could not remove: '+(err.message||'')); }
 }
+
 
 /* ============ about ============ */
 function renderAbout(){
