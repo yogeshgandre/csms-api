@@ -921,4 +921,63 @@ router.delete('/access-config/:id', requireAuth, async (req, res) => {
   }
 });
 
+/* ============ Satsang Comments (per attending seeker, per event) ============
+   No surrogate PK given in the schema — added Comment_ID here since a
+   seeker can reasonably get more than one comment over time, same
+   reasoning as MSD_ID/SEFV_ID elsewhere in this file. SC_CSMS_ID is
+   attributed to one of the EVENT's own two conductors (SC1/SC2), not
+   just whoever's logged in — matches Satsang_Conductor's own identity. */
+
+router.get('/events/:seId/comments', requireAuth, async (req, res) => {
+  try {
+    const r = await pool.query(
+      `SELECT c.${qi('Comment_ID')}, c.${qi('Seeker_ID')}, c.${qi('SC_CSMS_ID')}, c.${qi('Comments')}, c.${qi('Comments_Date')},
+              sk.${qi('First_Name')}, sk.${qi('Last_Name')}, up.${qi('Seeker_Name')} AS conductor_name
+       FROM ${qi('SCS')}.${qi('Satsang_Comments')} c
+       LEFT JOIN ${qi('MSR')}.${qi('Seeker')} sk ON sk.${qi('Seeker_ID')} = c.${qi('Seeker_ID')}
+       LEFT JOIN ${qi('RMS')}.${qi('User_Profile')} up ON up.${qi('CSMS_ID')} = c.${qi('SC_CSMS_ID')}
+       WHERE c.${qi('SE_ID')} = $1
+       ORDER BY c.${qi('Comments_Date')} DESC, c.${qi('Comment_ID')} DESC`,
+      [req.params.seId]
+    );
+    res.json(r.rows);
+  } catch (err) {
+    console.error('[GET /satsangs/events/:seId/comments] error', err);
+    res.status(500).json({ error: 'INTERNAL' });
+  }
+});
+
+router.post('/events/:seId/comments', requireAuth, async (req, res) => {
+  const { seekerId, scCsmsId, comments } = req.body || {};
+  if (!seekerId || !scCsmsId || !comments) {
+    return res.status(400).json({ error: 'seekerId, scCsmsId and comments are all required' });
+  }
+  try {
+    const maxQ = await pool.query(
+      `SELECT COALESCE(MAX(${qi('Comment_ID')}), 0) + 1 AS next_id FROM ${qi('SCS')}.${qi('Satsang_Comments')}`
+    );
+    const id = maxQ.rows[0].next_id;
+    await pool.query(
+      `INSERT INTO ${qi('SCS')}.${qi('Satsang_Comments')}
+        (${qi('Comment_ID')}, ${qi('SE_ID')}, ${qi('SC_CSMS_ID')}, ${qi('Seeker_ID')}, ${qi('Comments')}, ${qi('Comments_Date')})
+       VALUES ($1,$2,$3,$4,$5,CURRENT_DATE)`,
+      [id, req.params.seId, scCsmsId, seekerId, comments]
+    );
+    res.status(201).json({ ok: true, commentId: id });
+  } catch (err) {
+    console.error('[POST /satsangs/events/:seId/comments] error', err);
+    res.status(500).json({ error: 'INTERNAL', message: err.message });
+  }
+});
+
+router.delete('/comments/:commentId', requireAuth, async (req, res) => {
+  try {
+    await pool.query(`DELETE FROM ${qi('SCS')}.${qi('Satsang_Comments')} WHERE ${qi('Comment_ID')} = $1`, [req.params.commentId]);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('[DELETE /satsangs/comments/:commentId] error', err);
+    res.status(500).json({ error: 'INTERNAL' });
+  }
+});
+
 module.exports = router;

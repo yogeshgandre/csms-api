@@ -501,11 +501,13 @@ nav .pip.r{background:var(--rose);color:#fff}
     <div class="filters" style="border-bottom:1px solid var(--line-2);padding-bottom:0;margin-bottom:16px">
       <button class="chip on" data-sub="defs" onclick="satsangSubtab('defs')">Satsang Definitions</button>
       <button class="chip" data-sub="events" onclick="satsangSubtab('events')">Satsang Events</button>
+      <button class="chip" data-sub="comments" onclick="satsangSubtab('comments')">Comments</button>
       <button class="chip" data-sub="transfers" onclick="satsangSubtab('transfers')">Transfers</button>
       <button class="chip" data-sub="access" onclick="satsangSubtab('access')">Access Configuration</button>
     </div>
     <div id="satsangDefs"></div>
     <div id="satsangEvents" style="display:none"></div>
+    <div id="satsangComments" style="display:none"></div>
     <div id="satsangTransfers" style="display:none"></div>
     <div id="satsangAccess" style="display:none"></div>
   </section>
@@ -2440,10 +2442,12 @@ function statusBadge(s){
 function satsangSubtab(s){
   document.getElementById('satsangDefs').style.display = s==='defs' ? '' : 'none';
   document.getElementById('satsangEvents').style.display = s==='events' ? '' : 'none';
+  document.getElementById('satsangComments').style.display = s==='comments' ? '' : 'none';
   document.getElementById('satsangTransfers').style.display = s==='transfers' ? '' : 'none';
   document.getElementById('satsangAccess').style.display = s==='access' ? '' : 'none';
   document.querySelectorAll('#p-satsangmgmt .chip').forEach(c=>c.classList.toggle('on', c.dataset.sub===s));
   if(s==='events') renderSatsangEvents(true);
+  else if(s==='comments') renderSatsangComments(true);
   else if(s==='transfers') renderSatsangTransfers(true);
   else if(s==='access') renderSatsangAccess(true);
   else renderSatsangDefs(true);
@@ -2921,6 +2925,139 @@ async function cancelSatsangEvent(seId, btn){
   await withLoading(btn, async ()=>{
     try{ await apiFetch('/api/satsangs/events/'+seId+'/cancel', {method:'POST'}); toast('Event cancelled.'); LIVE_SATSANG_UPCOMING = null; loadSatsangEvents(true); }
     catch(err){ toast('Could not cancel: '+(err.message||'')); }
+  });
+}
+
+/* ---- Comments (Satsang_Comments, per attending seeker per event) ---- */
+let SATSANG_COMMENTS_DEF_ID = null;
+let SATSANG_COMMENTS_SE_ID = null;
+let LIVE_SATSANG_COMMENTS_EVENTS = null; // events for the currently-picked satsang, for the event dropdown
+let LIVE_SATSANG_COMMENTS_ATTENDEES = null; // attendees of the currently-picked satsang, for the seeker dropdown
+let LIVE_SATSANG_COMMENTS = null;
+
+function renderSatsangComments(force){
+  const el = document.getElementById('satsangComments');
+  if(!el) return;
+  if(!SATSANG_COMMENTS_DEF_ID && LIVE_SATSANG_DEFS.length) SATSANG_COMMENTS_DEF_ID = LIVE_SATSANG_DEFS[0].Satsang_ID;
+  if(!LIVE_SATSANG_DEFS.length){ el.innerHTML = '<p class="sub2">No satsang definitions yet.</p>'; return; }
+
+  el.innerHTML = `
+    <div style="display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap">
+      <select id="scDefPicker" style="border-radius:999px;padding:6px 14px;font-size:13px;border:1px solid var(--line-2)"
+        onchange="SATSANG_COMMENTS_DEF_ID=Number(this.value); SATSANG_COMMENTS_SE_ID=null; loadSatsangCommentsContext()">
+        ${LIVE_SATSANG_DEFS.map(d=>`<option value="${d.Satsang_ID}" ${d.Satsang_ID==SATSANG_COMMENTS_DEF_ID?'selected':''}>${esc(d.Satsang_Name)}</option>`).join('')}
+      </select>
+      <select id="scEventPicker" style="border-radius:999px;padding:6px 14px;font-size:13px;border:1px solid var(--line-2)"
+        onchange="SATSANG_COMMENTS_SE_ID=Number(this.value)||null; loadSatsangComments()">
+        <option value="">Loading events\u2026</option>
+      </select>
+    </div>
+    <div id="satsangCommentsBody"><p class="sub2">Loading\u2026</p></div>`;
+  loadSatsangCommentsContext();
+}
+
+async function loadSatsangCommentsContext(){
+  if(!SATSANG_COMMENTS_DEF_ID) return;
+  const evSel = document.getElementById('scEventPicker');
+  const body = document.getElementById('satsangCommentsBody');
+  try{
+    const [events, attendees] = await Promise.all([
+      apiFetch('/api/satsangs/defs/'+SATSANG_COMMENTS_DEF_ID+'/events'),
+      apiFetch('/api/satsangs/defs/'+SATSANG_COMMENTS_DEF_ID+'/attendees'),
+    ]);
+    LIVE_SATSANG_COMMENTS_EVENTS = events;
+    LIVE_SATSANG_COMMENTS_ATTENDEES = attendees;
+    if(!events.length){
+      if(evSel) evSel.innerHTML = '<option value="">No events for this satsang yet</option>';
+      if(body) body.innerHTML = '<p class="sub2">This satsang has no events yet \u2014 create one under Satsang Events first.</p>';
+      return;
+    }
+    if(!SATSANG_COMMENTS_SE_ID) SATSANG_COMMENTS_SE_ID = events[0].SE_ID;
+    if(evSel){
+      evSel.innerHTML = events.map(e=>{
+        const when = e.Event_ST_DT_TIME ? new Date(e.Event_ST_DT_TIME).toLocaleString() : '\u2014';
+        return `<option value="${e.SE_ID}" ${e.SE_ID==SATSANG_COMMENTS_SE_ID?'selected':''}>${esc(when)} \u00b7 ${esc(e.Event_Time_City||'')}</option>`;
+      }).join('');
+    }
+    loadSatsangComments();
+  }catch(err){
+    if(body) body.innerHTML = `<p class="sub2">Could not load: ${esc(err.message||'')}</p>`;
+  }
+}
+
+async function loadSatsangComments(){
+  if(!SATSANG_COMMENTS_SE_ID) return;
+  const body = document.getElementById('satsangCommentsBody');
+  if(body) body.innerHTML = '<p class="sub2">Loading\u2026</p>';
+  try{
+    LIVE_SATSANG_COMMENTS = await apiFetch('/api/satsangs/events/'+SATSANG_COMMENTS_SE_ID+'/comments');
+    renderSatsangCommentsBody();
+  }catch(err){
+    if(body) body.innerHTML = `<p class="sub2">Could not load: ${esc(err.message||'')}</p>`;
+  }
+}
+
+function renderSatsangCommentsBody(){
+  const body = document.getElementById('satsangCommentsBody');
+  if(!body) return;
+  const ev = (LIVE_SATSANG_COMMENTS_EVENTS||[]).find(e=>e.SE_ID===SATSANG_COMMENTS_SE_ID);
+  const attendees = LIVE_SATSANG_COMMENTS_ATTENDEES || [];
+  const comments = LIVE_SATSANG_COMMENTS || [];
+  const conductorOptions = ev
+    ? [ev.SC1_CSMS_ID ? `<option value="${ev.SC1_CSMS_ID}">${esc(ev.sc1_name||'Conductor 1')}</option>` : '',
+       ev.SC2_CSMS_ID ? `<option value="${ev.SC2_CSMS_ID}">${esc(ev.sc2_name||'Conductor 2')}</option>` : ''].join('')
+    : '';
+
+  body.innerHTML = `
+    ${comments.length ? comments.map(c=>`<div class="card pad" style="margin-bottom:8px">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
+          <div>
+            <div style="font-weight:600">${esc([c.First_Name,c.Last_Name].filter(Boolean).join(' ')||('Seeker #'+c.Seeker_ID))}</div>
+            <div class="sub2">${esc(c.Comments||'')}</div>
+            <div class="sub2" style="font-size:11px;margin-top:4px">${esc(c.conductor_name||'')} \u00b7 ${esc(c.Comments_Date ? new Date(c.Comments_Date).toLocaleDateString() : '')}</div>
+          </div>
+          <button class="mini" onclick="deleteSatsangComment(${c.Comment_ID}, this)" title="Delete" style="width:22px;height:22px;color:var(--rose);flex-shrink:0">&times;</button>
+        </div>
+      </div>`).join('') : '<p class="sub2">No comments on this event yet.</p>'}
+
+    <details style="margin-top:10px" open>
+      <summary style="cursor:pointer;font-size:12px;color:var(--deep)">+ Add comment</summary>
+      <div class="card pad" style="margin-top:8px;display:flex;flex-direction:column;gap:8px;max-width:460px">
+        <select id="scSeeker" style="border-radius:999px;padding:7px 14px;font-size:13px;border:1px solid var(--line-2)">
+          <option value="">${attendees.length?'Choose attending seeker\u2026':'No attendees on this satsang yet'}</option>
+          ${attendees.map(a=>`<option value="${a.Seeker_ID}">${esc([a.First_Name,a.Last_Name].filter(Boolean).join(' ')||('Seeker #'+a.Seeker_ID))}</option>`).join('')}
+        </select>
+        <select id="scConductor" style="border-radius:999px;padding:7px 14px;font-size:13px;border:1px solid var(--line-2)">
+          <option value="">${conductorOptions?'Choose conductor\u2026':'No conductor set on this event'}</option>
+          ${conductorOptions}
+        </select>
+        <textarea id="scText" placeholder="Comments and guidance for seeker" rows="3" style="border-radius:12px;padding:9px 14px;font-size:13px;border:1px solid var(--line-2);font-family:inherit;resize:vertical"></textarea>
+        <button class="btn sm" onclick="addSatsangComment(this)"><span class="spin"></span><span class="lbl">Add comment</span></button>
+        <div class="err" id="scErr"></div>
+      </div>
+    </details>`;
+}
+
+async function addSatsangComment(btn){
+  const errEl = document.getElementById('scErr'); errEl.classList.remove('on');
+  await withLoading(btn, async ()=>{
+    try{
+      const seekerId = document.getElementById('scSeeker').value;
+      const scCsmsId = document.getElementById('scConductor').value;
+      const comments = document.getElementById('scText').value.trim();
+      if(!seekerId || !scCsmsId || !comments){ errEl.textContent='Pick a seeker and conductor, and enter a comment.'; errEl.classList.add('on'); return; }
+      await apiFetch('/api/satsangs/events/'+SATSANG_COMMENTS_SE_ID+'/comments', {method:'POST', body: JSON.stringify({seekerId:Number(seekerId), scCsmsId:Number(scCsmsId), comments})});
+      toast('Comment added.');
+      loadSatsangComments();
+    }catch(err){ errEl.textContent = err.message||'Could not add.'; errEl.classList.add('on'); }
+  });
+}
+
+async function deleteSatsangComment(commentId, btn){
+  if(!confirm('Delete this comment?')) return;
+  await withLoading(btn, async ()=>{
+    try{ await apiFetch('/api/satsangs/comments/'+commentId, {method:'DELETE'}); toast('Deleted.'); loadSatsangComments(); }
+    catch(err){ toast('Could not delete: '+(err.message||'')); }
   });
 }
 
