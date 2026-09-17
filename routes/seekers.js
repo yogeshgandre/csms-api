@@ -131,4 +131,123 @@ router.put('/:id/category', requireAuth, async (req, res) => {
   }
 });
 
+// GET /api/seekers/:id/masterlist — current active Seeker_Other_MasterList_Info row (or null)
+router.get('/:id/masterlist', requireAuth, async (req, res) => {
+  try {
+    const r = await pool.query(
+      `SELECT * FROM ${qi('MSR')}.${qi('Seeker_Other_MasterList_Info')}
+       WHERE ${qi('Seeker_ID')} = $1 AND ${qi('Ver_To_DT')} >= CURRENT_DATE
+       ORDER BY ${qi('Created_DT_TIME')} DESC LIMIT 1`,
+      [req.params.id]
+    );
+    res.json(r.rowCount ? r.rows[0] : null);
+  } catch (err) {
+    console.error('[GET /seekers/:id/masterlist] error', err);
+    res.status(500).json({ error: 'INTERNAL' });
+  }
+});
+
+// PUT /api/seekers/:id/masterlist — versioned upsert: closes the current
+// active row (if any) and inserts a fresh full snapshot. Body carries all
+// nine editable fields; send the current values for anything unchanged —
+// this isn't a partial patch.
+router.put('/:id/masterlist', requireAuth, async (req, res) => {
+  const {
+    pranshakti, subRegion, sadhanaStartDt, weeklySevaHrs, perInfo,
+    oppHome, visitedAshram, attendedMavWorkshop, sensitiveList,
+  } = req.body || {};
+  let client;
+  try {
+    client = await pool.connect();
+    await client.query('BEGIN');
+    await client.query(
+      `UPDATE ${qi('MSR')}.${qi('Seeker_Other_MasterList_Info')} SET ${qi('Ver_To_DT')} = CURRENT_DATE - INTERVAL '1 day'
+       WHERE ${qi('Seeker_ID')} = $1 AND ${qi('Ver_To_DT')} >= CURRENT_DATE`,
+      [req.params.id]
+    );
+    await client.query(
+      `INSERT INTO ${qi('MSR')}.${qi('Seeker_Other_MasterList_Info')}
+        (${qi('Seeker_ID')}, ${qi('Pranshakti')}, ${qi('Sub_Region')}, ${qi('Sadhana_ST_DT')}, ${qi('Weekly_Seva_Hrs')},
+         ${qi('Per_Info')}, ${qi('Opp_Home')}, ${qi('Visited_Ashram')}, ${qi('Attended_MAV_Workshop')}, ${qi('Sensitive_List')},
+         ${qi('Ver_From_DT')}, ${qi('Ver_To_DT')}, ${qi('Created_By_CSMS_ID')}, ${qi('Created_DT_TIME')})
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,CURRENT_DATE,'9999-12-31',$11,now())`,
+      [req.params.id, pranshakti || null, subRegion || null, sadhanaStartDt || null, weeklySevaHrs || null,
+       perInfo || null, oppHome || null, visitedAshram || null, attendedMavWorkshop || null, sensitiveList || null,
+       req.user.csmsId]
+    );
+    await client.query('COMMIT');
+    res.json({ ok: true });
+  } catch (err) {
+    if (client) await client.query('ROLLBACK');
+    console.error('[PUT /seekers/:id/masterlist] error', err);
+    res.status(500).json({ error: 'INTERNAL', message: err.message });
+  } finally {
+    if (client) client.release();
+  }
+});
+
+// ---- Satsang links (Seeker_Upay_Satsang / Seeker_Vyashti_Satsang / Seeker_Bhav_Satsang) ----
+// Same shape across all three: Seeker_ID, Satsang_ID, Ver_From_DT, Ver_To_DT,
+// no surrogate PK — a seeker can't have the same satsang linked twice while
+// both rows are active, so the natural key is enough (matches the
+// Satsang_Conductor / Satsang_Attending_Seekers pattern already used).
+const SATSANG_LINK_TABLES = { upay: 'Seeker_Upay_Satsang', vyashti: 'Seeker_Vyashti_Satsang', bhav: 'Seeker_Bhav_Satsang' };
+
+router.get('/:id/satsang-links', requireAuth, async (req, res) => {
+  try {
+    const out = {};
+    for (const [key, table] of Object.entries(SATSANG_LINK_TABLES)) {
+      const r = await pool.query(
+        `SELECT sl.${qi('Satsang_ID')}, ms.${qi('Satsang_Name')}
+         FROM ${qi('MSR')}.${qi(table)} sl
+         LEFT JOIN ${qi('SCS')}.${qi('M_Satsang')} ms ON ms.${qi('Satsang_ID')} = sl.${qi('Satsang_ID')}
+         WHERE sl.${qi('Seeker_ID')} = $1 AND sl.${qi('Ver_To_DT')} >= CURRENT_DATE`,
+        [req.params.id]
+      );
+      out[key] = r.rows;
+    }
+    res.json(out);
+  } catch (err) {
+    console.error('[GET /seekers/:id/satsang-links] error', err);
+    res.status(500).json({ error: 'INTERNAL' });
+  }
+});
+
+router.post('/:id/satsang-links', requireAuth, async (req, res) => {
+  const { type, satsangId } = req.body || {};
+  const table = SATSANG_LINK_TABLES[type];
+  if (!table || !satsangId) return res.status(400).json({ error: 'type (upay|vyashti|bhav) and satsangId are required' });
+  try {
+    await pool.query(
+      `INSERT INTO ${qi('MSR')}.${qi(table)} (${qi('Seeker_ID')}, ${qi('Satsang_ID')}, ${qi('Ver_From_DT')}, ${qi('Ver_To_DT')})
+       SELECT $1, $2, CURRENT_DATE, '9999-12-31'
+       WHERE NOT EXISTS (
+         SELECT 1 FROM ${qi('MSR')}.${qi(table)}
+         WHERE ${qi('Seeker_ID')} = $1 AND ${qi('Satsang_ID')} = $2 AND ${qi('Ver_To_DT')} >= CURRENT_DATE
+       )`,
+      [req.params.id, satsangId]
+    );
+    res.status(201).json({ ok: true });
+  } catch (err) {
+    console.error('[POST /seekers/:id/satsang-links] error', err);
+    res.status(500).json({ error: 'INTERNAL', message: err.message });
+  }
+});
+
+router.delete('/:id/satsang-links/:type/:satsangId', requireAuth, async (req, res) => {
+  const table = SATSANG_LINK_TABLES[req.params.type];
+  if (!table) return res.status(400).json({ error: 'Unknown link type' });
+  try {
+    await pool.query(
+      `UPDATE ${qi('MSR')}.${qi(table)} SET ${qi('Ver_To_DT')} = CURRENT_DATE - INTERVAL '1 day'
+       WHERE ${qi('Seeker_ID')} = $1 AND ${qi('Satsang_ID')} = $2 AND ${qi('Ver_To_DT')} >= CURRENT_DATE`,
+      [req.params.id, req.params.satsangId]
+    );
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('[DELETE /seekers/:id/satsang-links] error', err);
+    res.status(500).json({ error: 'INTERNAL' });
+  }
+});
+
 module.exports = router;

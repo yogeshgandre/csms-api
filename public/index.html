@@ -417,12 +417,12 @@ nav .pip.r{background:var(--rose);color:#fff}
 <nav>
   <button data-p="overview" onclick="tab('overview')">Overview<span class="pip r" id="pip6">0</span></button>
   <button class="on" data-p="seekers" onclick="tab('seekers')">Seekers</button>
-  <button data-p="alerts" onclick="tab('alerts')">My work<span class="pip" id="pip">0</span></button>
+  <button data-p="alerts" onclick="tab('alerts')">My Seva Activities<span class="pip" id="pip">0</span></button>
   <button data-p="inbox" onclick="tab('inbox')">Inbox<span class="pip" id="pip4">0</span></button>
   <button data-p="journey" onclick="tab('journey')">Curious and Seeker Spiritual Journey</button>
   <button data-p="calendar" onclick="tab('calendar'); renderCalendar()">Calendar</button>
   <button data-p="reports" onclick="tab('reports')">Reports<span class="pip r" id="pip5">0</span></button>
-  <button data-p="sevahub" onclick="tab('sevahub')">Seva</button>
+  <button data-p="sevahub" onclick="tab('sevahub')">Seva Management</button>
   <button data-p="profiles" onclick="tab('profiles')">Profiles</button>
   <button data-p="dash" onclick="tab('dash')">Dashboard</button>
   <button data-p="org" onclick="tab('org')">Organisation and Team Management</button>
@@ -501,19 +501,21 @@ nav .pip.r{background:var(--rose);color:#fff}
     <div class="filters" style="border-bottom:1px solid var(--line-2);padding-bottom:0;margin-bottom:16px">
       <button class="chip on" data-sub="defs" onclick="satsangSubtab('defs')">Satsang Definitions</button>
       <button class="chip" data-sub="events" onclick="satsangSubtab('events')">Satsang Events</button>
-      <button class="chip" data-sub="comments" onclick="satsangSubtab('comments')">Comments</button>
+      <button class="chip" data-sub="attendees" onclick="satsangSubtab('attendees')">Attendee Addition</button>
+      <button class="chip" data-sub="comments" onclick="satsangSubtab('comments')">Attendee Notes</button>
       <button class="chip" data-sub="transfers" onclick="satsangSubtab('transfers')">Transfers</button>
       <button class="chip" data-sub="access" onclick="satsangSubtab('access')">Access Configuration</button>
     </div>
     <div id="satsangDefs"></div>
     <div id="satsangEvents" style="display:none"></div>
+    <div id="satsangAttendeesTab" style="display:none"></div>
     <div id="satsangComments" style="display:none"></div>
     <div id="satsangTransfers" style="display:none"></div>
     <div id="satsangAccess" style="display:none"></div>
   </section>
 
   <section class="pane" id="p-alerts">
-    <h2 class="sec">My work</h2>
+    <h2 class="sec">My Seva Activities</h2>
     <p class="sub">Tasks you have taken on, what the system is raising — contact overdue against the fixed window
       and sensitivity flags — and form submissions awaiting review before they become seeker records.</p>
     <div id="alerts"></div>
@@ -522,7 +524,12 @@ nav .pip.r{background:var(--rose);color:#fff}
   <section class="pane" id="p-journey">
     <h2 class="sec">Curious and Seeker Spiritual Journey</h2>
     <p class="sub">Where every seeker sits, and what brought them in. Not a sales pipeline — there is no close, and moving backwards is ordinary.</p>
+    <div class="filters" style="border-bottom:1px solid var(--line-2);padding-bottom:0;margin-bottom:16px">
+      <button class="chip on" data-jsub="board" onclick="journeySubtab('board')">Board</button>
+      <button class="chip" data-jsub="masterlist" onclick="journeySubtab('masterlist')">MasterList Management</button>
+    </div>
     <div id="journey"></div>
+    <div id="journeyMasterlist" style="display:none"></div>
   </section>
 
   <section class="pane" id="p-calendar">
@@ -2442,11 +2449,13 @@ function statusBadge(s){
 function satsangSubtab(s){
   document.getElementById('satsangDefs').style.display = s==='defs' ? '' : 'none';
   document.getElementById('satsangEvents').style.display = s==='events' ? '' : 'none';
+  document.getElementById('satsangAttendeesTab').style.display = s==='attendees' ? '' : 'none';
   document.getElementById('satsangComments').style.display = s==='comments' ? '' : 'none';
   document.getElementById('satsangTransfers').style.display = s==='transfers' ? '' : 'none';
   document.getElementById('satsangAccess').style.display = s==='access' ? '' : 'none';
   document.querySelectorAll('#p-satsangmgmt .chip').forEach(c=>c.classList.toggle('on', c.dataset.sub===s));
   if(s==='events') renderSatsangEvents(true);
+  else if(s==='attendees') renderSatsangAttendees(true);
   else if(s==='comments') renderSatsangComments(true);
   else if(s==='transfers') renderSatsangTransfers(true);
   else if(s==='access') renderSatsangAccess(true);
@@ -2593,7 +2602,7 @@ function renderSatsangDetail(){
   if(!root || !SATSANG_DETAIL_ID || !SATSANG_DETAIL_DATA || !LIVE_SATSANG_DEFS) return;
   const d = LIVE_SATSANG_DEFS.find(x=>x.Satsang_ID==SATSANG_DETAIL_ID);
   if(!d){ closeSatsangDetail(); return; }
-  const {fields, conductors, attendees} = SATSANG_DETAIL_DATA;
+  const {fields, conductors} = SATSANG_DETAIL_DATA;
   root.innerHTML = `<div class="obackdrop" onclick="if(event.target===this) closeSatsangDetail()">
     <div class="omodal" style="max-width:520px;max-height:80vh;overflow-y:auto">
       <button class="oclose" onclick="closeSatsangDetail()">&times;</button>
@@ -2632,26 +2641,6 @@ function renderSatsangDetail(){
           <button class="btn sm" onclick="addSatsangConductor(${d.Satsang_ID}, this)"><span class="spin"></span><span class="lbl">Add</span></button>
         </div>
         <p class="sub2" style="margin-top:4px">Doesn't need to have signed in yet \u2014 open to anyone.</p>
-      </details>
-
-      <p class="sub2" style="font-weight:600;margin-top:16px">Attending seekers</p>
-      ${attendees.length ? attendees.map(a=>`<div class="oteamrow" style="cursor:default">
-          <span>${esc([a.First_Name,a.Last_Name].filter(Boolean).join(' ')||('Seeker #'+a.Seeker_ID))}${a.Remarks?(' <span class="sub2">\u2014 '+esc(a.Remarks)+'</span>'):''}</span>
-          <button class="mini" onclick="removeSatsangAttendee(${d.Satsang_ID}, ${a.Seeker_ID}, this)" style="width:22px;height:22px;color:var(--rose)">&times;</button>
-        </div>`).join('') : '<p class="sub2">None yet.</p>'}
-      <details style="margin-top:6px">
-        <summary style="cursor:pointer;font-size:12px;color:var(--deep)">+ Add attending seeker</summary>
-        <div style="display:flex;flex-direction:column;gap:6px;margin-top:8px">
-          <div style="position:relative">
-            <input id="attSearch" placeholder="Search by name or email" autocomplete="off" oninput="seekerAutocomplete(this)" style="width:100%;border-radius:999px;padding:5px 12px;font-size:12.5px;border:1px solid var(--line-2);box-sizing:border-box">
-            <div id="attSearch_ac" class="ac-dropdown" style="display:none"></div>
-          </div>
-          <input id="attSeekerId" type="hidden">
-          <input id="attRemarks" placeholder="Remarks (optional)" style="border-radius:999px;padding:5px 12px;font-size:12.5px;border:1px solid var(--line-2)">
-          <button class="btn sm" onclick="addSatsangAttendee(${d.Satsang_ID}, this)"><span class="spin"></span><span class="lbl">Add</span></button>
-          <div class="err" id="attErr"></div>
-        </div>
-        <p class="sub2" style="margin-top:4px">Must already be a real seeker record \u2014 search by name or email and pick from the list.</p>
       </details>
     </div>
   </div>`;
@@ -2732,27 +2721,83 @@ function selectSeeker(seekerId, name){
   document.getElementById('attSeekerId').value = seekerId;
   document.getElementById('attSearch_ac').style.display = 'none';
 }
-async function addSatsangAttendee(defId, btn){
+/* ---- Attendee Addition \u2014 standalone tab (was nested in the definition modal) ---- */
+let SATSANG_ATTENDEES_DEF_ID = null;
+let LIVE_SATSANG_ATTENDEES_LIST = null;
+
+function renderSatsangAttendees(force){
+  const el = document.getElementById('satsangAttendeesTab');
+  if(!el) return;
+  if(!SATSANG_ATTENDEES_DEF_ID && LIVE_SATSANG_DEFS.length) SATSANG_ATTENDEES_DEF_ID = LIVE_SATSANG_DEFS[0].Satsang_ID;
+  if(!LIVE_SATSANG_DEFS.length){ el.innerHTML = '<p class="sub2">No satsang definitions yet.</p>'; return; }
+
+  el.innerHTML = `
+    <select id="attDefPicker" style="border-radius:999px;padding:6px 14px;font-size:13px;border:1px solid var(--line-2);margin-bottom:14px"
+      onchange="SATSANG_ATTENDEES_DEF_ID=Number(this.value); loadSatsangAttendeesList()">
+      ${LIVE_SATSANG_DEFS.map(d=>`<option value="${d.Satsang_ID}" ${d.Satsang_ID==SATSANG_ATTENDEES_DEF_ID?'selected':''}>${esc(d.Satsang_Name)}</option>`).join('')}
+    </select>
+    <div id="satsangAttendeesBody"><p class="sub2">Loading\u2026</p></div>`;
+  loadSatsangAttendeesList();
+}
+
+async function loadSatsangAttendeesList(){
+  if(!SATSANG_ATTENDEES_DEF_ID) return;
+  const body = document.getElementById('satsangAttendeesBody');
+  if(body) body.innerHTML = '<p class="sub2">Loading\u2026</p>';
+  try{
+    LIVE_SATSANG_ATTENDEES_LIST = await apiFetch('/api/satsangs/defs/'+SATSANG_ATTENDEES_DEF_ID+'/attendees');
+    renderSatsangAttendeesBody();
+  }catch(err){
+    if(body) body.innerHTML = `<p class="sub2">Could not load: ${esc(err.message||'')}</p>`;
+  }
+}
+
+function renderSatsangAttendeesBody(){
+  const body = document.getElementById('satsangAttendeesBody');
+  if(!body) return;
+  const attendees = LIVE_SATSANG_ATTENDEES_LIST || [];
+  body.innerHTML = `
+    <div class="card pad">
+      ${attendees.length ? attendees.map(a=>`<div class="oteamrow">
+          <span>${esc([a.First_Name,a.Last_Name].filter(Boolean).join(' ')||('Seeker #'+a.Seeker_ID))}${a.Remarks?(' <span class="sub2">\u2014 '+esc(a.Remarks)+'</span>'):''}</span>
+          <button class="mini" onclick="removeSatsangAttendee(${a.Seeker_ID}, this)" style="width:22px;height:22px;color:var(--rose)">&times;</button>
+        </div>`).join('') : '<p class="sub2">None yet.</p>'}
+    </div>
+    <details style="margin-top:10px" open>
+      <summary style="cursor:pointer;font-size:12px;color:var(--deep)">+ Add attending seeker</summary>
+      <div class="card pad" style="margin-top:8px;display:flex;flex-direction:column;gap:6px;max-width:420px">
+        <div style="position:relative">
+          <input id="attSearch" placeholder="Search by name or email" autocomplete="off" oninput="seekerAutocomplete(this)" style="width:100%;border-radius:999px;padding:7px 14px;font-size:13px;border:1px solid var(--line-2);box-sizing:border-box">
+          <div id="attSearch_ac" class="ac-dropdown" style="display:none"></div>
+        </div>
+        <input id="attSeekerId" type="hidden">
+        <input id="attRemarks" placeholder="Remarks (optional)" style="border-radius:999px;padding:7px 14px;font-size:13px;border:1px solid var(--line-2)">
+        <button class="btn sm" onclick="addSatsangAttendee(this)"><span class="spin"></span><span class="lbl">Add</span></button>
+        <div class="err" id="attErr"></div>
+      </div>
+      <p class="sub2" style="margin-top:4px">Must already be a real seeker record \u2014 search by name or email and pick from the list.</p>
+    </details>`;
+}
+
+async function addSatsangAttendee(btn){
   const errEl = document.getElementById('attErr'); errEl.classList.remove('on');
   await withLoading(btn, async ()=>{
     try{
       const seekerId = document.getElementById('attSeekerId').value;
       if(!seekerId){ errEl.textContent='Search and pick a seeker from the list first.'; errEl.classList.add('on'); return; }
-      await apiFetch('/api/satsangs/defs/'+defId+'/attendees', {method:'POST', body: JSON.stringify({seekerId:Number(seekerId), remarks: document.getElementById('attRemarks').value.trim()})});
+      await apiFetch('/api/satsangs/defs/'+SATSANG_ATTENDEES_DEF_ID+'/attendees', {method:'POST', body: JSON.stringify({seekerId:Number(seekerId), remarks: document.getElementById('attRemarks').value.trim()})});
       toast('Attendee added.');
-      SATSANG_DETAIL_DATA.attendees = await apiFetch('/api/satsangs/defs/'+defId+'/attendees');
-      renderSatsangDetail();
+      loadSatsangAttendeesList();
     }catch(err){ errEl.textContent = err.message||'Could not add.'; errEl.classList.add('on'); }
   });
 }
-async function removeSatsangAttendee(defId, seekerId, btn){
+async function removeSatsangAttendee(seekerId, btn){
   if(!confirm('Remove this attending seeker?')) return;
   await withLoading(btn, async ()=>{
     try{
-      await apiFetch('/api/satsangs/defs/'+defId+'/attendees/'+seekerId, {method:'DELETE'});
+      await apiFetch('/api/satsangs/defs/'+SATSANG_ATTENDEES_DEF_ID+'/attendees/'+seekerId, {method:'DELETE'});
       toast('Removed.');
-      SATSANG_DETAIL_DATA.attendees = await apiFetch('/api/satsangs/defs/'+defId+'/attendees');
-      renderSatsangDetail();
+      loadSatsangAttendeesList();
     }catch(err){ toast('Could not remove: '+(err.message||'')); }
   });
 }
@@ -3496,6 +3541,234 @@ function renderJourney(){
     <div class="hidden-note"><b>Why this is not called a pipeline.</b> There is no close and no win.
       Moving a card backwards is ordinary — a seeker who goes quiet has not been lost, and the day the
       screen implies otherwise is the day someone stops contacting them.</div>`;
+}
+
+/* ============ MasterList Management (Journey sub-tab) ============
+   Edits Seeker_Category (same write Journey's own drag-drop uses),
+   MSR.Seeker_Other_MasterList_Info (all 9 columns), and the three
+   per-type satsang link tables (Upay/Vyashti/Bhav). One seeker at a
+   time, picked by search. */
+function journeySubtab(s){
+  document.getElementById('journey').style.display = s==='board' ? '' : 'none';
+  document.getElementById('journeyMasterlist').style.display = s==='masterlist' ? '' : 'none';
+  document.querySelectorAll('#p-journey .chip').forEach(c=>c.classList.toggle('on', c.dataset.jsub===s));
+  if(s==='board') renderJourney();
+  else renderMasterlistMgmt();
+}
+
+let ML_SEEKER_ID = null;
+let ML_SEEKER_NAME = '';
+let ML_SEEKER = null;
+let ML_CATEGORY_NAME = null;
+let ML_INFO = null;
+let ML_LINKS = null;
+
+function renderMasterlistMgmt(){
+  const el = document.getElementById('journeyMasterlist');
+  if(!el) return;
+  if(LIVE_SATSANG_DEFS===null) loadSatsangDefs();
+  if(LIVE_SEEKER_CATEGORIES===null) loadSeekerCategories();
+  el.innerHTML = `
+    <div class="card pad" style="margin-bottom:14px;max-width:420px;position:relative">
+      <label class="sub2" style="font-weight:600">Seeker</label>
+      <input id="mlSearch" placeholder="Search by name or email" autocomplete="off" oninput="mlSeekerAutocomplete(this)"
+        value="${esc(ML_SEEKER_NAME)}" style="width:100%;margin-top:6px;border-radius:999px;padding:8px 14px;font-size:13.5px;border:1px solid var(--line-2);box-sizing:border-box">
+      <div id="mlSearch_ac" class="ac-dropdown" style="display:none"></div>
+    </div>
+    <div id="mlBody"></div>`;
+  if(ML_SEEKER_ID) renderMlBody(); else document.getElementById('mlBody').innerHTML = '<p class="sub2">Search and pick a seeker to edit their record.</p>';
+}
+
+function mlSeekerAutocomplete(inputEl){
+  clearTimeout(AC_DEBOUNCE['mlSearch']);
+  const dd = document.getElementById('mlSearch_ac');
+  const q = inputEl.value.trim();
+  if(q.length < 2){ dd.style.display='none'; dd.innerHTML=''; return; }
+  AC_DEBOUNCE['mlSearch'] = setTimeout(async ()=>{
+    try{
+      const seekers = await apiFetch('/api/seekers?q='+encodeURIComponent(q));
+      if(!seekers.length){ dd.innerHTML = '<div class="ac-item sub2">No matching seekers.</div>'; dd.style.display=''; return; }
+      dd.innerHTML = seekers.map(s=>{
+        const name = [s.First_Name,s.Last_Name].filter(Boolean).join(' ') || ('Seeker #'+s.Seeker_ID);
+        return `<div class="ac-item" onmousedown="selectMlSeeker(${s.Seeker_ID}, '${name.replace(/'/g,"\\'")}')">
+          <div>${esc(name)}</div><div class="sub2">${esc(s.Email||'')}</div>
+        </div>`;
+      }).join('');
+      dd.style.display = '';
+    }catch(err){ dd.style.display='none'; }
+  }, 250);
+}
+function selectMlSeeker(id, name){
+  ML_SEEKER_ID = id; ML_SEEKER_NAME = name;
+  document.getElementById('mlSearch').value = name;
+  document.getElementById('mlSearch_ac').style.display = 'none';
+  loadMlSeekerData();
+}
+
+async function loadMlSeekerData(){
+  const body = document.getElementById('mlBody');
+  body.innerHTML = '<p class="sub2">Loading\u2026</p>';
+  try{
+    const [seeker, info, links] = await Promise.all([
+      apiFetch('/api/seekers/'+ML_SEEKER_ID),
+      apiFetch('/api/seekers/'+ML_SEEKER_ID+'/masterlist'),
+      apiFetch('/api/seekers/'+ML_SEEKER_ID+'/satsang-links'),
+    ]);
+    ML_SEEKER = seeker;
+    const today = new Date().toISOString().slice(0,10);
+    const activeCat = (seeker.categories||[]).find(c=>!c.Ver_To_DT || c.Ver_To_DT.slice(0,10)>=today) || (seeker.categories||[])[0];
+    ML_CATEGORY_NAME = activeCat ? activeCat.Category_Name : null;
+    ML_INFO = info;
+    ML_LINKS = links;
+    renderMlBody();
+  }catch(err){
+    body.innerHTML = `<p class="sub2">Could not load: ${esc(err.message||'')}</p>`;
+  }
+}
+
+function renderMlBody(){
+  const body = document.getElementById('mlBody');
+  if(!body || !ML_SEEKER) return;
+  const info = ML_INFO || {};
+  const cats = LIVE_SEEKER_CATEGORIES || [];
+
+  body.innerHTML = `
+    <div class="card pad" style="margin-bottom:12px;max-width:520px">
+      <h3 style="margin:0 0 10px">${esc(ML_SEEKER_NAME)}</h3>
+
+      <label class="sub2" style="font-weight:600">Seeker category</label>
+      <div style="display:flex;gap:8px;margin-top:6px;margin-bottom:16px">
+        <select id="mlCategory" style="flex:1;border-radius:999px;padding:7px 14px;font-size:13.5px;border:1px solid var(--line-2)">
+          ${cats.map(c=>`<option value="${c.Category_ID}" ${c.Category_Name===ML_CATEGORY_NAME?'selected':''}>${esc(c.Category_Name)}</option>`).join('')}
+        </select>
+        <button class="btn sm" onclick="saveMlCategory(this)"><span class="spin"></span><span class="lbl">Save</span></button>
+      </div>
+
+      <label class="sub2" style="font-weight:600">MasterList info</label>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px">
+        <div>
+          <label class="sub2">Pranshakti</label>
+          <input id="mlPranshakti" value="${esc(info.Pranshakti||'')}" style="width:100%;border-radius:999px;padding:6px 14px;font-size:13px;border:1px solid var(--line-2);box-sizing:border-box;margin-top:3px">
+        </div>
+        <div>
+          <label class="sub2">Sub-region</label>
+          <input id="mlSubRegion" value="${esc(info.Sub_Region||'')}" style="width:100%;border-radius:999px;padding:6px 14px;font-size:13px;border:1px solid var(--line-2);box-sizing:border-box;margin-top:3px">
+        </div>
+        <div>
+          <label class="sub2">Sadhana start date</label>
+          <input id="mlSadhanaDt" type="date" value="${info.Sadhana_ST_DT?String(info.Sadhana_ST_DT).slice(0,10):''}" style="width:100%;border-radius:999px;padding:6px 14px;font-size:13px;border:1px solid var(--line-2);box-sizing:border-box;margin-top:3px">
+        </div>
+        <div>
+          <label class="sub2">Weekly seva hours</label>
+          <input id="mlWeeklySeva" type="number" value="${info.Weekly_Seva_Hrs!=null?info.Weekly_Seva_Hrs:''}" style="width:100%;border-radius:999px;padding:6px 14px;font-size:13px;border:1px solid var(--line-2);box-sizing:border-box;margin-top:3px">
+        </div>
+        <div>
+          <label class="sub2">Personal info</label>
+          <textarea id="mlPerInfo" rows="2" style="width:100%;border-radius:12px;padding:8px 14px;font-size:13px;border:1px solid var(--line-2);box-sizing:border-box;margin-top:3px;font-family:inherit;resize:vertical">${esc(info.Per_Info||'')}</textarea>
+        </div>
+        <div>
+          <label class="sub2">Opportunities at home</label>
+          <textarea id="mlOppHome" rows="2" style="width:100%;border-radius:12px;padding:8px 14px;font-size:13px;border:1px solid var(--line-2);box-sizing:border-box;margin-top:3px;font-family:inherit;resize:vertical">${esc(info.Opp_Home||'')}</textarea>
+        </div>
+        <div>
+          <label class="sub2">Visited Ashram</label>
+          <input id="mlVisitedAshram" value="${esc(info.Visited_Ashram||'')}" style="width:100%;border-radius:999px;padding:6px 14px;font-size:13px;border:1px solid var(--line-2);box-sizing:border-box;margin-top:3px">
+        </div>
+        <div>
+          <label class="sub2">Attended MAV workshop</label>
+          <input id="mlMavWorkshop" value="${esc(info.Attended_MAV_Workshop||'')}" style="width:100%;border-radius:999px;padding:6px 14px;font-size:13px;border:1px solid var(--line-2);box-sizing:border-box;margin-top:3px">
+        </div>
+        <div>
+          <label class="sub2">Sensitive list</label>
+          <input id="mlSensitiveList" value="${esc(info.Sensitive_List||'')}" style="width:100%;border-radius:999px;padding:6px 14px;font-size:13px;border:1px solid var(--line-2);box-sizing:border-box;margin-top:3px">
+        </div>
+        <button class="btn sm" onclick="saveMlInfo(this)" style="align-self:flex-start"><span class="spin"></span><span class="lbl">Save MasterList info</span></button>
+        <div class="err" id="mlInfoErr"></div>
+      </div>
+    </div>
+
+    ${mlSatsangLinksHTML('upay', 'Upay Satsang')}
+    ${mlSatsangLinksHTML('vyashti', 'Vyashti Satsang')}
+    ${mlSatsangLinksHTML('bhav', 'Bhav Satsang')}`;
+}
+
+function mlSatsangLinksHTML(type, label){
+  const links = (ML_LINKS && ML_LINKS[type]) || [];
+  // Only satsangs of the matching type belong in this lane's picker.
+  const options = (LIVE_SATSANG_DEFS||[]).filter(d=>(d.ST_Name||'').toLowerCase()===label.split(' ')[0].toLowerCase());
+  const linkedIds = new Set(links.map(l=>String(l.Satsang_ID)));
+  const pickable = options.filter(d=>!linkedIds.has(String(d.Satsang_ID)));
+  return `<div class="card pad" style="margin-bottom:12px;max-width:520px">
+    <p class="sub2" style="font-weight:600;margin-bottom:6px">${esc(label)}</p>
+    ${links.length ? links.map(l=>`<div class="oteamrow">
+        <span>${esc(l.Satsang_Name||('Satsang #'+l.Satsang_ID))}</span>
+        <button class="mini" onclick="removeMlSatsangLink('${type}', ${l.Satsang_ID}, this)" style="width:22px;height:22px;color:var(--rose)">&times;</button>
+      </div>`).join('') : '<p class="sub2">None linked.</p>'}
+    <div style="display:flex;gap:8px;margin-top:8px">
+      <select id="mlAdd_${type}" style="flex:1;border-radius:999px;padding:6px 14px;font-size:13px;border:1px solid var(--line-2)">
+        <option value="">${pickable.length?'Add a satsang\u2026':'No more '+esc(label)+' satsangs to add'}</option>
+        ${pickable.map(d=>`<option value="${d.Satsang_ID}">${esc(d.Satsang_Name)}</option>`).join('')}
+      </select>
+      <button class="mini" onclick="addMlSatsangLink('${type}', this)" style="width:auto;padding:0 12px;height:30px">Add</button>
+    </div>
+  </div>`;
+}
+
+async function saveMlCategory(btn){
+  await withLoading(btn, async ()=>{
+    try{
+      const categoryId = document.getElementById('mlCategory').value;
+      await apiFetch('/api/seekers/'+ML_SEEKER_ID+'/category', {method:'PUT', body: JSON.stringify({categoryId:Number(categoryId)})});
+      toast('Category saved.');
+      loadMlSeekerData();
+    }catch(err){ toast('Could not save: '+(err.message||'')); }
+  });
+}
+
+async function saveMlInfo(btn){
+  const errEl = document.getElementById('mlInfoErr'); errEl.classList.remove('on');
+  await withLoading(btn, async ()=>{
+    try{
+      const weeklyRaw = document.getElementById('mlWeeklySeva').value;
+      await apiFetch('/api/seekers/'+ML_SEEKER_ID+'/masterlist', {method:'PUT', body: JSON.stringify({
+        pranshakti: document.getElementById('mlPranshakti').value.trim(),
+        subRegion: document.getElementById('mlSubRegion').value.trim(),
+        sadhanaStartDt: document.getElementById('mlSadhanaDt').value || null,
+        weeklySevaHrs: weeklyRaw ? Number(weeklyRaw) : null,
+        perInfo: document.getElementById('mlPerInfo').value.trim(),
+        oppHome: document.getElementById('mlOppHome').value.trim(),
+        visitedAshram: document.getElementById('mlVisitedAshram').value.trim(),
+        attendedMavWorkshop: document.getElementById('mlMavWorkshop').value.trim(),
+        sensitiveList: document.getElementById('mlSensitiveList').value.trim(),
+      })});
+      toast('MasterList info saved.');
+      loadMlSeekerData();
+    }catch(err){ errEl.textContent = err.message||'Could not save.'; errEl.classList.add('on'); }
+  });
+}
+
+async function addMlSatsangLink(type, btn){
+  const sel = document.getElementById('mlAdd_'+type);
+  const satsangId = sel.value;
+  if(!satsangId) return;
+  await withLoading(btn, async ()=>{
+    try{
+      await apiFetch('/api/seekers/'+ML_SEEKER_ID+'/satsang-links', {method:'POST', body: JSON.stringify({type, satsangId:Number(satsangId)})});
+      toast('Linked.');
+      loadMlSeekerData();
+    }catch(err){ toast('Could not link: '+(err.message||'')); }
+  });
+}
+
+async function removeMlSatsangLink(type, satsangId, btn){
+  if(!confirm('Remove this link?')) return;
+  await withLoading(btn, async ()=>{
+    try{
+      await apiFetch('/api/seekers/'+ML_SEEKER_ID+'/satsang-links/'+type+'/'+satsangId, {method:'DELETE'});
+      toast('Removed.');
+      loadMlSeekerData();
+    }catch(err){ toast('Could not remove: '+(err.message||'')); }
+  });
 }
 
 /* ============ about ============ */
