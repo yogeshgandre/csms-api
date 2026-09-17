@@ -1221,6 +1221,7 @@ let LIVE_SEEKERS = null;
 let LIVE_SEEKER_DETAIL_ID = null;
 let LIVE_SEEKER_DETAIL = null;
 let LIVE_SEEKER_DETAIL_TAB = 'overview';
+let SEEKER_DETAIL_ROOT_ID = 'seekerDetailRoot'; // which tab's modal slot is currently in use — Live Seekers and Journey share this same detail view
 
 function seekersSubtab(s){
   document.getElementById('seekersMock').style.display = s==='mock' ? '' : 'none';
@@ -1271,9 +1272,10 @@ function renderLiveSeekersBody(){
   </table></div>`;
 }
 
-async function openLiveSeekerDetail(id){
+async function openLiveSeekerDetail(id, rootId){
+  SEEKER_DETAIL_ROOT_ID = rootId || 'seekerDetailRoot';
   LIVE_SEEKER_DETAIL_ID = id; LIVE_SEEKER_DETAIL_TAB = 'overview';
-  const root = document.getElementById('seekerDetailRoot');
+  const root = document.getElementById(SEEKER_DETAIL_ROOT_ID);
   if(!root) return;
   root.innerHTML = `<div class="obackdrop" onclick="if(event.target===this) closeLiveSeekerDetail()">
     <div class="omodal" style="max-width:560px"><button class="oclose" onclick="closeLiveSeekerDetail()">&times;</button><p class="sub2">Loading\u2026</p></div></div>`;
@@ -1285,11 +1287,11 @@ async function openLiveSeekerDetail(id){
     if(modal) modal.innerHTML = `<button class="oclose" onclick="closeLiveSeekerDetail()">&times;</button><p class="sub2">Could not load: ${esc(err.message||'')}</p>`;
   }
 }
-function closeLiveSeekerDetail(){ LIVE_SEEKER_DETAIL_ID=null; LIVE_SEEKER_DETAIL=null; const el=document.getElementById('seekerDetailRoot'); if(el) el.innerHTML=''; }
+function closeLiveSeekerDetail(){ LIVE_SEEKER_DETAIL_ID=null; LIVE_SEEKER_DETAIL=null; const el=document.getElementById(SEEKER_DETAIL_ROOT_ID); if(el) el.innerHTML=''; SEEKER_DETAIL_ROOT_ID='seekerDetailRoot'; }
 function switchLiveSeekerTab(t){ LIVE_SEEKER_DETAIL_TAB = t; renderLiveSeekerDetail(); }
 
 function renderLiveSeekerDetail(){
-  const root = document.getElementById('seekerDetailRoot');
+  const root = document.getElementById(SEEKER_DETAIL_ROOT_ID);
   if(!root || !LIVE_SEEKER_DETAIL) return;
   const s = LIVE_SEEKER_DETAIL;
   const tabs = [['overview','Overview'],['categories','Category history'],['platform','Platform engagement'],['satsangs','Satsangs']];
@@ -2167,8 +2169,12 @@ function renderSevaDepartments(){
   const el = document.getElementById('orgDepts');
   if(LIVE_DEPTS === null){ el.innerHTML = '<p class="sub2">Loading departments…</p>'; loadTeamData(); return; }
 
-  const roots = rootDepts();
   const rootDept = deptById(1);
+  // The real level-1 branches are department 1's actual children, plus
+  // anything genuinely orphaned (a missing/invalid parent) so it doesn't
+  // silently vanish from the chart — rootDepts() already excludes dept 1
+  // itself, so there's no overlap between the two lists.
+  const roots = (rootDept ? childrenOf(rootDept.Seva_Dept_ID) : []).concat(rootDepts());
   el.innerHTML = `
     <div class="orgchart">
       <div class="ochip root">${rootDept ? esc(rootDept.Seva_Dept_Name) : 'SSRF'}</div>
@@ -3247,38 +3253,48 @@ function toggleTask(id){ const t=TASKS.find(x=>x.id===id); t.done=!t.done; rende
   toast(t.done?"Marked done.":"Reopened."); }
 
 
-/* ============ journey board — grouped by category ============
-   Previously grouped by Stage (New/Semi-active/Active/Core). Stage has no
-   backing column in the schema — only MSR.Seeker_Category does — so this
-   now groups by category instead. Moving a card here reassigns category,
-   which maps to a real write against MSR.Seeker_Category once the API is
-   wired for it (not yet done — this still updates the in-memory record). */
+/* ============ journey board — grouped by category, real MSR.Seeker data ============
+   Was mock-only (SEEKERS array). Overview/Reports/Inbox/Tasks/Calendar still
+   run on that mock array — their features (skills, interaction timelines,
+   milestones, donations/attribution) have no real-schema equivalent yet, so
+   only Journey itself has been switched over here; wiring the rest is a
+   separate call once that's decided, not done silently as part of this. */
 let LANES = ["Curious","Well-wisher","Partner"]; // fallback until Master.M_Seeker_Category loads
 let LIVE_SEEKER_CATEGORIES = null;
+let LIVE_JOURNEY_SEEKERS = null;
 async function loadSeekerCategories(){
   try{
     const cats = await apiFetch('/api/master/categories');
     if(cats && cats.length){ LANES = cats.map(c=>c.Category_Name); LIVE_SEEKER_CATEGORIES = cats; renderJourney(); }
   }catch(err){ /* keep the fallback lanes — the illustrative board still works either way */ }
 }
+async function loadJourneySeekers(){
+  try{
+    LIVE_JOURNEY_SEEKERS = await apiFetch('/api/seekers');
+    renderJourney();
+  }catch(err){
+    const el = document.getElementById('journey');
+    if(el) el.innerHTML = `<div class="hidden-note" style="background:var(--rose-wash);border-color:#EBCBCE;color:var(--rose)"><b>Could not load seekers.</b> ${esc(err.message||'')}</div>`;
+  }
+}
 function laneIdx(cat){ return LANES.indexOf(cat); }
-function commitCategoryChange(p, to, method){
-  const from = p.category;
-  if(from===to) return;
-  p.category = to;
-  MOVES.push({pid:p.id, from, to, at:TODAY, by:R().name});
-  p.inter.push({dt:TODAY, type:"Call", by:R().name.split(" —")[0],
-    txt:"Category changed from "+from+" to "+to+(method?" ("+method+").":"." )});
-  render();
-  toast(p.name.split(" ")[0]+" moved to "+to+". Recorded with who and when.");
+async function commitJourneyCategoryChange(seekerId, toName, method){
+  const cat = (LIVE_SEEKER_CATEGORIES||[]).find(c=>c.Category_Name===toName);
+  if(!cat){ toast('Categories are still loading — try again in a moment.'); return; }
+  try{
+    await apiFetch('/api/seekers/'+seekerId+'/category', {method:'PUT', body: JSON.stringify({categoryId: cat.Category_ID})});
+    await loadJourneySeekers();
+    toast('Moved to '+toName+(method?' ('+method+').':'.'));
+  }catch(err){ toast('Could not move: '+(err.message||'')); }
 }
 function moveCategory(id, dir){
-  const p = SEEKERS.find(x=>x.id===id);
-  const cur = laneIdx(p.category);
+  const p = (LIVE_JOURNEY_SEEKERS||[]).find(x=>x.Seeker_ID===id);
+  if(!p) return;
+  const cur = laneIdx(p.Category_Name);
   if(cur<0) return;
   const i = cur + dir;
   if(i<0 || i>=LANES.length) return;
-  commitCategoryChange(p, LANES[i], "reordered");
+  commitJourneyCategoryChange(id, LANES[i], "reordered");
 }
 function dragCard(ev,id){
   ev.dataTransfer.setData('text/plain', String(id));
@@ -3292,21 +3308,24 @@ function dropOnLane(ev, lane){
   ev.preventDefault();
   ev.currentTarget.classList.remove('drag-over');
   const id = Number(ev.dataTransfer.getData('text/plain'));
-  const p = SEEKERS.find(x=>x.id===id);
+  const p = (LIVE_JOURNEY_SEEKERS||[]).find(x=>x.Seeker_ID===id);
   if(!p) return;
-  commitCategoryChange(p, lane, "dragged");
+  commitJourneyCategoryChange(id, lane, "dragged");
 }
 function renderJourney(){
-  const v = visible();
+  const el = document.getElementById('journey');
+  if(!el) return;
+  if(LIVE_JOURNEY_SEEKERS === null){ el.innerHTML = '<p class="sub2">Loading seekers\u2026</p>'; loadJourneySeekers(); return; }
+  const v = LIVE_JOURNEY_SEEKERS;
 
   const lanes = LANES.map(L=>{
-    const ppl = v.filter(p=>p.category===L).sort((a,b)=>since(b)-since(a));
+    const ppl = v.filter(p=>p.Category_Name===L);
     return {L, ppl};
   });
-  // Safety net: if the fetched category names don't match this mock data's
-  // hardcoded categories, nobody should silently vanish from the board —
-  // anything unmatched lands in a visible, read-only catch-all lane instead.
-  const unmatched = v.filter(p=>laneIdx(p.category)<0);
+  // Safety net: anyone whose category doesn't match a known lane (no
+  // category set yet, or a category outside the live list) lands in a
+  // visible, read-only catch-all lane instead of silently vanishing.
+  const unmatched = v.filter(p=>laneIdx(p.Category_Name)<0);
   if(unmatched.length) lanes.push({L:'Other / uncategorised', ppl: unmatched, readonly:true});
 
   const board = `<div class="kboard">
@@ -3318,17 +3337,16 @@ function renderJourney(){
         </div>
         <div class="klane-body">
         ${ppl.length ? ppl.map(p=>{
-          const od = overdue(p), i = laneIdx(p.category);
-          return `<div class="kcard${od?' od':''}" ${readonly?'':`draggable="true" ondragstart="dragCard(event,${p.id})" ondragend="dragEndCard(event)"`}>
-            <div class="nm serif kcard-name" onclick="open_(${p.id})">${esc(p.name)}</div>
-            <div class="sub2">${esc(p.region)}</div>
-            <div class="sub2" style="font-size:11.5px">From: ${esc(evName(p.src))}</div>
-            <div class="sub2" style="font-size:11.5px;${od?'color:var(--amber)':''}">
-              ${since(p)} days since contact</div>
+          const i = laneIdx(p.Category_Name);
+          const name = [p.Sal,p.First_Name,p.Last_Name].filter(Boolean).join(' ') || ('Seeker #'+p.Seeker_ID);
+          return `<div class="kcard" ${readonly?'':`draggable="true" ondragstart="dragCard(event,${p.Seeker_ID})" ondragend="dragEndCard(event)"`}>
+            <div class="nm serif kcard-name" onclick="openLiveSeekerDetail(${p.Seeker_ID}, 'journeySeekerDetailRoot')">${esc(name)}</div>
+            <div class="sub2">${esc([p.City,p.Country_Name].filter(Boolean).join(', ')||'\u2014')}</div>
+            <div class="sub2" style="font-size:11.5px">${esc(p.Email||'')}</div>
             ${readonly ? '' : `<div class="kcard-actions">
-              <button class="mini" onclick="moveCategory(${p.id},-1)" ${i<=0?'disabled':''} title="Move back">‹</button>
+              <button class="mini" onclick="moveCategory(${p.Seeker_ID},-1)" ${i<=0?'disabled':''} title="Move back">‹</button>
               <span class="kcard-drag" title="Drag to another category">⠿ drag</span>
-              <button class="mini" onclick="moveCategory(${p.id},1)" ${i<0||i===LANES.length-1?'disabled':''} title="Move forward">›</button>
+              <button class="mini" onclick="moveCategory(${p.Seeker_ID},1)" ${i<0||i===LANES.length-1?'disabled':''} title="Move forward">›</button>
             </div>`}
           </div>`;
         }).join('') : '<div class="klane-empty">Nobody here.</div>'}
@@ -3336,40 +3354,8 @@ function renderJourney(){
       </div>`).join('')}
   </div>`;
 
-  // attribution — what actually brings people in
-  const bySrc = {};
-  v.forEach(p=>{
-    const dn = DONATIONS.find(x=>x.pid===p.id);
-    const k = dn ? ("donation:"+dn.campaign) : (p.src||"none");
-    (bySrc[k]=bySrc[k]||{n:0,active:0}); bySrc[k].n++;
-    if(!overdue(p)) bySrc[k].active++;
-  });
-  const rows = Object.entries(bySrc).sort((a,b)=>b[1].n-a[1].n);
-  const mx = Math.max(1,...rows.map(r=>r[1].n));
-
-  const attribution = `
-    <div class="card pad" style="margin-top:18px">
-      <h2 class="sec">Where they came from</h2>
-      <p class="sub">The question a public talk cannot answer on its own: of the people who signed up, how many are still here?</p>
-      ${rows.map(([k,o])=>`<div class="bar">
-        <span style="color:var(--ink-2);font-size:12.5px">${esc(evName(k))}</span>
-        <span class="track"><span class="fill" style="width:${Math.round(o.n/mx*100)}%"></span></span>
-        <span class="num">${o.n}</span>
-      </div>
-      <div class="sub2" style="margin:-4px 0 9px 128px;font-size:11.5px">
-        ${o.active} of ${o.n} in regular contact</div>`).join('')}
-      <div class="note" style="margin-bottom:0"><b>This is the argument for recording the source.</b>
-        Without it, nobody can tell whether the Hamburg talk was worth running again.</div>
-    </div>`;
-
-  const recent = MOVES.slice(-4).reverse();
-  document.getElementById('journey').innerHTML = board + attribution + `
-    ${recent.length?`<div class="card pad" style="margin-top:12px">
-      <h2 class="sec">Recent movement</h2>
-      ${recent.map(m=>{const p=SEEKERS.find(x=>x.id===m.pid);
-        return `<div class="sub2" style="padding:5px 0">${esc(p.name)}: ${esc(m.from)} → ${esc(m.to)},
-          by ${esc(m.by)}</div>`;}).join('')}
-    </div>`:''}
+  el.innerHTML = board + `
+    <div id="journeySeekerDetailRoot"></div>
     <div class="hidden-note"><b>Why this is not called a pipeline.</b> There is no close and no win.
       Moving a card backwards is ordinary — a seeker who goes quiet has not been lost, and the day the
       screen implies otherwise is the day someone stops contacting them.</div>`;

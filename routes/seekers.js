@@ -100,4 +100,35 @@ router.get('/:id', requireAuth, async (req, res) => {
   }
 });
 
+// PUT /api/seekers/:id/category — moves a seeker to a new category (drag
+// between Journey lanes). Closes the current active Seeker_Category row
+// and opens a new one, same versioning pattern used everywhere else.
+router.put('/:id/category', requireAuth, async (req, res) => {
+  const { categoryId } = req.body || {};
+  if (!categoryId) return res.status(400).json({ error: 'categoryId is required' });
+  let client;
+  try {
+    client = await pool.connect();
+    await client.query('BEGIN');
+    await client.query(
+      `UPDATE ${qi('MSR')}.${qi('Seeker_Category')} SET ${qi('Ver_To_DT')} = CURRENT_DATE - INTERVAL '1 day'
+       WHERE ${qi('Seeker_ID')} = $1 AND ${qi('Ver_To_DT')} >= CURRENT_DATE`,
+      [req.params.id]
+    );
+    await client.query(
+      `INSERT INTO ${qi('MSR')}.${qi('Seeker_Category')} (${qi('Seeker_ID')}, ${qi('Seeker_Category_ID')}, ${qi('Ver_From_DT')}, ${qi('Ver_To_DT')})
+       VALUES ($1, $2, CURRENT_DATE, '9999-12-31')`,
+      [req.params.id, categoryId]
+    );
+    await client.query('COMMIT');
+    res.json({ ok: true });
+  } catch (err) {
+    if (client) await client.query('ROLLBACK');
+    console.error('[PUT /seekers/:id/category] error', err);
+    res.status(500).json({ error: 'INTERNAL', message: err.message });
+  } finally {
+    if (client) client.release();
+  }
+});
+
 module.exports = router;
