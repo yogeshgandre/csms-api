@@ -2014,9 +2014,12 @@ function childrenOf(id){ return LIVE_DEPTS.filter(d=>d.Parent_Seva_Dept_ID==id);
 // A department counts as a root if it has no parent, OR its stated parent
 // isn't among the currently-active departments (e.g. the parent was
 // deleted) — otherwise it would silently disappear from both views.
+// Excludes Seva_Dept_ID 1 itself: it also has no parent, so without this
+// it would match its own filter and render a second time as if it were
+// its own child underneath the org banner (which already shows dept 1).
 function rootDepts(){
   const activeIds = new Set(LIVE_DEPTS.map(d=>String(d.Seva_Dept_ID)));
-  return LIVE_DEPTS.filter(d=>d.Parent_Seva_Dept_ID==null || !activeIds.has(String(d.Parent_Seva_Dept_ID)));
+  return LIVE_DEPTS.filter(d=>String(d.Seva_Dept_ID)!=='1' && (d.Parent_Seva_Dept_ID==null || !activeIds.has(String(d.Parent_Seva_Dept_ID))));
 }
 
 /* ---- shared core actions: create/delete depts, roles, members ---- */
