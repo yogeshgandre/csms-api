@@ -281,12 +281,15 @@ router.delete('/defs/:id', requireAuth, async (req, res) => {
   }
 });
 
-/* ============ Dynamic fields (M_Satsang_Defn) ============ */
+/* ============ Dynamic fields (M_Satsang_Defn) ============
+   Review_Frequency ('One-time'|'Daily'|'Weekly') decides how often an
+   attendee is expected to submit a value for that field on the public
+   form — see routes/public-forms.js for how the period is worked out. */
 
 router.get('/defs/:id/fields', requireAuth, async (req, res) => {
   try {
     const r = await pool.query(
-      `SELECT ${qi('MSD_ID')}, ${qi('Field_Name')}, ${qi('Field_Data_Type')}, ${qi('QLT_FIELD')}, ${qi('QTY_FIELD')}, ${qi('Display_Order')}
+      `SELECT ${qi('MSD_ID')}, ${qi('Field_Name')}, ${qi('Field_Data_Type')}, ${qi('QLT_FIELD')}, ${qi('QTY_FIELD')}, ${qi('Display_Order')}, ${qi('Review_Frequency')}
        FROM ${qi('SCS')}.${qi('M_Satsang_Defn')}
        WHERE ${qi('Satsang_ID')} = $1 AND ${qi('Ver_To_DT')} >= CURRENT_DATE
        ORDER BY ${qi('Display_Order')} NULLS LAST, ${qi('Field_Name')}`,
@@ -300,8 +303,9 @@ router.get('/defs/:id/fields', requireAuth, async (req, res) => {
 });
 
 router.post('/defs/:id/fields', requireAuth, async (req, res) => {
-  const { fieldName, dataType, isQlt, isQty, displayOrder } = req.body || {};
+  const { fieldName, dataType, isQlt, isQty, displayOrder, reviewFrequency } = req.body || {};
   if (!fieldName) return res.status(400).json({ error: 'fieldName is required' });
+  const freq = ['One-time', 'Daily', 'Weekly'].includes(reviewFrequency) ? reviewFrequency : 'One-time';
   try {
     const maxQ = await pool.query(
       `SELECT COALESCE(MAX(${qi('MSD_ID')}), 0) + 1 AS next_id FROM ${qi('SCS')}.${qi('M_Satsang_Defn')}`
@@ -309,9 +313,9 @@ router.post('/defs/:id/fields', requireAuth, async (req, res) => {
     const id = maxQ.rows[0].next_id;
     await pool.query(
       `INSERT INTO ${qi('SCS')}.${qi('M_Satsang_Defn')}
-        (${qi('MSD_ID')}, ${qi('Satsang_ID')}, ${qi('Field_Name')}, ${qi('Field_Data_Type')}, ${qi('QLT_FIELD')}, ${qi('QTY_FIELD')}, ${qi('Display_Order')}, ${qi('Ver_from_DT')}, ${qi('Ver_To_DT')})
-       VALUES ($1,$2,$3,$4,$5,$6,$7,CURRENT_DATE,$8)`,
-      [id, req.params.id, fieldName, dataType || 'text', !!isQlt, !!isQty, displayOrder || null, FAR_FUTURE]
+        (${qi('MSD_ID')}, ${qi('Satsang_ID')}, ${qi('Field_Name')}, ${qi('Field_Data_Type')}, ${qi('QLT_FIELD')}, ${qi('QTY_FIELD')}, ${qi('Display_Order')}, ${qi('Review_Frequency')}, ${qi('Ver_from_DT')}, ${qi('Ver_To_DT')})
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,CURRENT_DATE,$9)`,
+      [id, req.params.id, fieldName, dataType || 'text', !!isQlt, !!isQty, displayOrder || null, freq, FAR_FUTURE]
     );
     res.status(201).json({ ok: true, fieldId: id });
   } catch (err) {
@@ -555,26 +559,12 @@ router.post('/events/:seId/cancel', requireAuth, async (req, res) => {
   await setEventStatus(req, res, 'Cancelled');
 });
 
-// Table name is built only from a Satsang_ID we've just read back out of our
-// own database (never raw user input) — the extra isInteger check is
-// defense in depth, not the only thing standing between this and injection.
-async function ensureEventFormsTable(client, satsangId) {
-  const id = Number(satsangId);
-  if (!Number.isInteger(id)) throw new Error('Invalid Satsang_ID for dynamic table');
-  await client.query(
-    `CREATE TABLE IF NOT EXISTS ${qi('SCS')}.${qi('SS_' + id + '_Event_Forms')} (
-       "SE_ID" BIGINT NOT NULL,
-       "Seeker_ID" BIGINT NOT NULL,
-       "Field_Name" TEXT NOT NULL,
-       "Field_Value" TEXT,
-       "Submitted_DT" TIMESTAMPTZ
-     )`
-  );
-}
-
 // One token per (event, attendee) — created once when the event is
 // Scheduled; also backfills anyone added as an attendee afterwards, since
-// this is safe to call again (ON CONFLICT DO NOTHING).
+// this is safe to call again (ON CONFLICT DO NOTHING). The token itself no
+// longer gets "used up" by a single submission — Daily/Weekly fields need
+// the same link to work again on a later visit; see routes/public-forms.js
+// for how each individual field's own eligibility is checked instead.
 async function generateFormTokensForEvent(client, seId, satsangId) {
   const attendeesQ = await client.query(
     `SELECT ${qi('Seeker_ID')} FROM ${qi('SCS')}.${qi('Satsang_Attending_Seekers')}
@@ -612,9 +602,7 @@ async function setEventStatus(req, res, newStatus) {
         [req.params.seId]
       );
       if (evQ.rowCount > 0) {
-        const satsangId = evQ.rows[0].Satsang_ID;
-        await ensureEventFormsTable(client, satsangId);
-        await generateFormTokensForEvent(client, req.params.seId, satsangId);
+        await generateFormTokensForEvent(client, req.params.seId, evQ.rows[0].Satsang_ID);
       }
     }
     await client.query('COMMIT');
@@ -640,9 +628,7 @@ router.get('/events/:seId/form-links', requireAuth, async (req, res) => {
       [req.params.seId]
     );
     if (evQ.rowCount === 0) return res.status(404).json({ error: 'NOT_FOUND' });
-    const satsangId = evQ.rows[0].Satsang_ID;
-    await ensureEventFormsTable(client, satsangId);
-    await generateFormTokensForEvent(client, req.params.seId, satsangId);
+    await generateFormTokensForEvent(client, req.params.seId, evQ.rows[0].Satsang_ID);
 
     const r = await client.query(
       `SELECT t.${qi('Token')}, t.${qi('Seeker_ID')}, t.${qi('Submitted_DT')}, sk.${qi('First_Name')}, sk.${qi('Last_Name')}

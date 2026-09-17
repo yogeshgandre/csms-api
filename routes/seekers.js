@@ -250,4 +250,28 @@ router.delete('/:id/satsang-links/:type/:satsangId', requireAuth, async (req, re
   }
 });
 
+// GET /api/seekers/:id/comments — every Satsang_Comments entry for this
+// seeker across all their events (unlike the event-scoped one in
+// satsangs.js), so it can surface on the seeker's own detail view —
+// reachable from a Journey card, not just from inside one event.
+router.get('/:id/comments', requireAuth, async (req, res) => {
+  try {
+    const r = await pool.query(
+      `SELECT c.${qi('Comment_ID')}, c.${qi('SE_ID')}, c.${qi('Comments')}, c.${qi('Comments_Date')},
+              up.${qi('Seeker_Name')} AS conductor_name, ms.${qi('Satsang_Name')}, se.${qi('Event_ST_DT_TIME')}
+       FROM ${qi('SCS')}.${qi('Satsang_Comments')} c
+       LEFT JOIN ${qi('RMS')}.${qi('User_Profile')} up ON up.${qi('CSMS_ID')} = c.${qi('SC_CSMS_ID')}
+       LEFT JOIN ${qi('SCS')}.${qi('Satsang_Event_Defn')} se ON se.${qi('SE_ID')} = c.${qi('SE_ID')}
+       LEFT JOIN ${qi('SCS')}.${qi('M_Satsang')} ms ON ms.${qi('Satsang_ID')} = se.${qi('Satsang_ID')}
+       WHERE c.${qi('Seeker_ID')} = $1
+       ORDER BY c.${qi('Comments_Date')} DESC, c.${qi('Comment_ID')} DESC`,
+      [req.params.id]
+    );
+    res.json(r.rows);
+  } catch (err) {
+    console.error('[GET /seekers/:id/comments] error', err);
+    res.status(500).json({ error: 'INTERNAL' });
+  }
+});
+
 module.exports = router;

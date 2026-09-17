@@ -1295,7 +1295,12 @@ async function openLiveSeekerDetail(id, rootId){
   root.innerHTML = `<div class="obackdrop" onclick="if(event.target===this) closeLiveSeekerDetail()">
     <div class="omodal" style="max-width:560px"><button class="oclose" onclick="closeLiveSeekerDetail()">&times;</button><p class="sub2">Loading\u2026</p></div></div>`;
   try{
-    LIVE_SEEKER_DETAIL = await apiFetch('/api/seekers/'+id);
+    const [seeker, notes] = await Promise.all([
+      apiFetch('/api/seekers/'+id),
+      apiFetch('/api/seekers/'+id+'/comments').catch(()=>[]), // don't let this block the rest of the detail view
+    ]);
+    LIVE_SEEKER_DETAIL = seeker;
+    LIVE_SEEKER_DETAIL.notes = notes;
     renderLiveSeekerDetail();
   }catch(err){
     const modal = root.querySelector('.omodal');
@@ -1309,7 +1314,7 @@ function renderLiveSeekerDetail(){
   const root = document.getElementById(SEEKER_DETAIL_ROOT_ID);
   if(!root || !LIVE_SEEKER_DETAIL) return;
   const s = LIVE_SEEKER_DETAIL;
-  const tabs = [['overview','Overview'],['categories','Category history'],['platform','Platform engagement'],['satsangs','Satsangs']];
+  const tabs = [['overview','Overview'],['categories','Category history'],['platform','Platform engagement'],['satsangs','Satsangs'],['notes','Notes']];
   const t = LIVE_SEEKER_DETAIL_TAB;
 
   let body = '';
@@ -1345,6 +1350,16 @@ function renderLiveSeekerDetail(){
         ${rows.length ? rows.map(r=>`<div class="oteamrow" style="cursor:default"><span>${esc(JSON.stringify(r).slice(0,80))}</span></div>`).join('')
           : '<p class="sub2">None recorded.</p>'}`;
     }).join('');
+  } else if(t==='notes'){
+    const notes = s.notes || [];
+    body = notes.length ? notes.map(n=>`<div class="card pad" style="margin-bottom:8px">
+        <div class="sub2">${esc(n.Comments||'')}</div>
+        <div class="sub2" style="font-size:11px;margin-top:5px">
+          ${esc(n.Satsang_Name||'')}${n.Event_ST_DT_TIME?(' \u00b7 '+esc(new Date(n.Event_ST_DT_TIME).toLocaleDateString())):''}
+          ${n.conductor_name?(' \u00b7 by '+esc(n.conductor_name)):''}
+          ${n.Comments_Date?(' \u00b7 '+esc(new Date(n.Comments_Date).toLocaleDateString())):''}
+        </div>
+      </div>`).join('') : '<p class="sub2">No attendee notes recorded yet \u2014 add them from Satsang Management \u2192 Attendee Notes.</p>';
   }
 
   root.innerHTML = `<div class="obackdrop" onclick="if(event.target===this) closeLiveSeekerDetail()">
@@ -2180,15 +2195,10 @@ function drillInto(deptId){ MODAL_STACK.push(deptId); renderModalContent(); }
 function backToParent(){ MODAL_STACK.pop(); if(MODAL_STACK.length) renderModalContent(); else closeDeptModal(); }
 function closeDeptModal(){ MODAL_STACK = []; const el=document.getElementById('deptModalRoot'); if(el) el.innerHTML=''; }
 
-// Which level-1 branches currently show their level-2 children inline.
-// Collapsed by default — expanding doesn't go past level 2, and doesn't
-// open the modal (that stays the way to add/delete/manage roles).
-let EXPANDED_DEPT_BRANCHES = new Set();
-function toggleDeptBranch(deptId){
-  if(EXPANDED_DEPT_BRANCHES.has(deptId)) EXPANDED_DEPT_BRANCHES.delete(deptId);
-  else EXPANDED_DEPT_BRANCHES.add(deptId);
-  renderSevaDepartments();
-}
+// Single tab-wide toggle — shows every level-1 branch's real children at
+// once, or none. (Was per-branch; simplified to one button per instruction.)
+let SHOW_ALL_SUBDEPTS = false;
+function toggleAllSubdepts(){ SHOW_ALL_SUBDEPTS = !SHOW_ALL_SUBDEPTS; renderSevaDepartments(); }
 
 function renderSevaDepartments(){
   const el = document.getElementById('orgDepts');
@@ -2201,18 +2211,19 @@ function renderSevaDepartments(){
   // itself, so there's no overlap between the two lists.
   const roots = (rootDept ? childrenOf(rootDept.Seva_Dept_ID) : []).concat(rootDepts());
   el.innerHTML = `
+    <div style="text-align:center;margin-bottom:6px">
+      <button class="btn ghost sm" onclick="toggleAllSubdepts()">${SHOW_ALL_SUBDEPTS?'Hide':'Show'} sub-depts</button>
+    </div>
     <div class="orgchart">
       <div class="ochip root">${rootDept ? esc(rootDept.Seva_Dept_Name) : 'SSRF'}</div>
       <div class="ostem"></div>
       <div class="orow">
         ${roots.map(d=>{
           const kids = childrenOf(d.Seva_Dept_ID);
-          const expanded = EXPANDED_DEPT_BRANCHES.has(d.Seva_Dept_ID);
           return `<div class="obranch">
             <div class="ochip lvl1" onclick="openDeptModal(${d.Seva_Dept_ID})">${esc(d.Seva_Dept_Name)}</div>
             <div class="osub2">${kids.length} sub-dept${kids.length===1?'':'s'}</div>
-            ${kids.length ? `<button class="oexpand-btn" onclick="toggleDeptBranch(${d.Seva_Dept_ID})">${expanded?'\u25be hide':'\u25b8 show'} sub-depts</button>` : ''}
-            ${expanded && kids.length ? `<div class="olvl2row">
+            ${SHOW_ALL_SUBDEPTS && kids.length ? `<div class="olvl2row">
               ${kids.map(k=>`<div class="ochip lvl2" onclick="openDeptModal(${k.Seva_Dept_ID})">${esc(k.Seva_Dept_Name)}</div>`).join('')}
             </div>` : ''}
           </div>`;
@@ -2632,7 +2643,7 @@ function renderSatsangDetail(){
 
       <p class="sub2" style="font-weight:600;margin-top:14px">Custom fields</p>
       ${fields.length ? fields.map(f=>`<div class="oteamrow" style="cursor:default">
-          <span>${esc(f.Field_Name)} <span class="sub2">(${esc(f.Field_Data_Type)}${f.QTY_FIELD?', qty':''}${f.QLT_FIELD?', QLT':''}${f.Display_Order!=null?(', order '+esc(f.Display_Order)):''})</span></span>
+          <span>${esc(f.Field_Name)} <span class="sub2">(${esc(f.Field_Data_Type)}${f.QTY_FIELD?', qty':''}${f.QLT_FIELD?', QLT':''}${f.Display_Order!=null?(', order '+esc(f.Display_Order)):''}, ${esc(f.Review_Frequency||'One-time')})</span></span>
           <button class="mini" onclick="deleteSatsangField(${f.MSD_ID}, this)" style="width:22px;height:22px;color:var(--rose)">&times;</button>
         </div>`).join('') : '<p class="sub2">None yet.</p>'}
       <details style="margin-top:6px">
@@ -2642,11 +2653,15 @@ function renderSatsangDetail(){
           <select id="fldType" style="border-radius:999px;padding:5px 12px;font-size:12.5px;border:1px solid var(--line-2)">
             <option value="text">Text</option><option value="number">Number</option><option value="date">Date</option><option value="boolean">Yes/No</option>
           </select>
+          <select id="fldFreq" style="border-radius:999px;padding:5px 12px;font-size:12.5px;border:1px solid var(--line-2)" title="How often an attendee is asked for this on the self-service form">
+            <option value="One-time">One-time</option><option value="Daily">Daily</option><option value="Weekly">Weekly</option>
+          </select>
           <input id="fldOrder" type="number" placeholder="Order" style="width:64px;border-radius:999px;padding:5px 10px;font-size:12.5px;border:1px solid var(--line-2)">
           <label class="sub2" style="display:flex;align-items:center;gap:4px"><input type="checkbox" id="fldQty">Qty</label>
           <label class="sub2" style="display:flex;align-items:center;gap:4px"><input type="checkbox" id="fldQlt">QLT</label>
           <button class="btn sm" onclick="addSatsangField(${d.Satsang_ID}, this)"><span class="spin"></span><span class="lbl">Add</span></button>
         </div>
+        <p class="sub2" style="margin-top:4px">Daily/Weekly fields can be answered again by the same attendee link once the day or week resets.</p>
       </details>
 
       <p class="sub2" style="font-weight:600;margin-top:16px">Conductors</p>
@@ -2675,7 +2690,8 @@ async function addSatsangField(defId, btn){
       await apiFetch('/api/satsangs/defs/'+defId+'/fields', {method:'POST', body: JSON.stringify({
         fieldName, dataType: document.getElementById('fldType').value,
         isQty: document.getElementById('fldQty').checked, isQlt: document.getElementById('fldQlt').checked,
-        displayOrder: document.getElementById('fldOrder').value ? Number(document.getElementById('fldOrder').value) : null
+        displayOrder: document.getElementById('fldOrder').value ? Number(document.getElementById('fldOrder').value) : null,
+        reviewFrequency: document.getElementById('fldFreq').value
       })});
       toast('Field added.');
       SATSANG_DETAIL_DATA.fields = await apiFetch('/api/satsangs/defs/'+defId+'/fields');

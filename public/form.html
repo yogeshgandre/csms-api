@@ -87,15 +87,25 @@ function renderForm(data){
     formEl.innerHTML = `<p class="sub">No additional details are needed for this satsang \u2014 just tap Submit to confirm.</p>`;
     return;
   }
+  const openFields = fields.filter(f=>!f.alreadySubmitted);
   formEl.innerHTML = fields.map(f=>{
     const id = 'f_' + f.Field_Name.replace(/[^a-zA-Z0-9]/g,'_');
+    const cadenceNote = f.Review_Frequency==='Daily' ? ' (daily)' : f.Review_Frequency==='Weekly' ? ' (weekly)' : '';
+    if(f.alreadySubmitted){
+      const periodNote = f.Review_Frequency==='Daily' ? 'Submitted for today.' : f.Review_Frequency==='Weekly' ? 'Submitted for this week.' : 'Already submitted.';
+      return `<div class="field"><label>${esc(f.Field_Name)}${cadenceNote}</label>
+        <div class="msg ok" style="margin-bottom:0">${esc(periodNote)}${f.lastValue?(' Last answer: '+esc(f.lastValue)):''}</div></div>`;
+    }
     let input;
     if(f.Field_Data_Type === 'number') input = `<input id="${id}" type="number" step="any">`;
     else if(f.Field_Data_Type === 'date') input = `<input id="${id}" type="date">`;
     else if(f.Field_Data_Type === 'boolean') input = `<select id="${id}"><option value="">Choose\u2026</option><option value="Yes">Yes</option><option value="No">No</option></select>`;
     else input = `<input id="${id}" type="text">`;
-    return `<div class="field"><label for="${id}">${esc(f.Field_Name)}</label>${input}</div>`;
+    return `<div class="field"><label for="${id}">${esc(f.Field_Name)}${cadenceNote}</label>${input}</div>`;
   }).join('');
+  if(!openFields.length){
+    document.getElementById('submitBtn').style.display = 'none';
+  }
 }
 
 async function submitForm(){
@@ -106,19 +116,16 @@ async function submitForm(){
   const values = {};
   fields.forEach(lbl=>{
     const input = document.getElementById(lbl.getAttribute('for'));
-    values[lbl.textContent] = input.value;
+    if(!input) return; // already-submitted fields render as a message, not an input
+    values[lbl.textContent.replace(/\s*\((daily|weekly)\)\s*$/i,'')] = input.value;
   });
   btn.disabled = true; btn.textContent = 'Submitting\u2026';
   try{
     const res = await fetch('/api/public/satsang-form/' + encodeURIComponent(token), {
       method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({values})
     });
-    if(res.status === 409){
-      app.innerHTML = `<div class="msg ok">This form has already been submitted \u2014 thank you!</div>`;
-      return;
-    }
     if(!res.ok) throw new Error('Submit failed');
-    app.innerHTML = `<div class="msg ok">Thank you \u2014 your response has been recorded.</div>`;
+    app.innerHTML = `<div class="msg ok">Thank you \u2014 your response has been recorded. This link stays valid for anything that needs a daily or weekly check-in.</div>`;
   }catch(err){
     errEl.innerHTML = `<div class="msg err">Could not submit \u2014 please check your connection and try again.</div>`;
     btn.disabled = false; btn.textContent = 'Submit';
