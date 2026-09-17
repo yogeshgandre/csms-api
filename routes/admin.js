@@ -355,4 +355,26 @@ router.delete('/assignments/:usdrId', requireAuth, async (req, res) => {
   }
 });
 
+// GET /api/admin/people/search?q=... — CSMS people search (User_Profile),
+// for autocomplete on any "pick a person" field (satsang conductors, etc).
+// Matches on name or email, case-insensitive, limited to 10 results.
+router.get('/people/search', requireAuth, async (req, res) => {
+  const q = (req.query.q || '').trim();
+  if (q.length < 2) return res.json([]);
+  try {
+    const r = await pool.query(
+      `SELECT ${qi('CSMS_ID')}, ${qi('Seeker_Name')}, ${qi('Seeker_Email')}
+       FROM ${qi('RMS')}.${qi('User_Profile')}
+       WHERE ${qi('Seeker_Name')} ILIKE $1 OR ${qi('Seeker_Email')} ILIKE $1
+       ORDER BY ${qi('Seeker_Name')}
+       LIMIT 10`,
+      [`%${q}%`]
+    );
+    res.json(r.rows);
+  } catch (err) {
+    console.error('[GET /admin/people/search] error', err);
+    res.status(500).json({ error: 'INTERNAL' });
+  }
+});
+
 module.exports = router;

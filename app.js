@@ -16,6 +16,7 @@ const intakeRoutes = require('./routes/intake');
 const masterRoutes = require('./routes/master');
 const adminRoutes = require('./routes/admin');
 const notificationRoutes = require('./routes/notifications');
+const publicFormRoutes = require('./routes/public-forms'); // deliberately unauthenticated — see file header
 
 const app = express();
 app.use(cors());
@@ -29,6 +30,7 @@ app.use('/api/intake', intakeRoutes);
 app.use('/api/master', masterRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/public', publicFormRoutes);
 
 app.get('/api/health', (_req, res) => res.json({ ok: true }));
 

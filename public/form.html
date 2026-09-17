@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Satsang Form — CSMS</title>
+<style>
+  :root{
+    --ink:#173A66; --paper:#F3F8FB; --card:#FFFFFF; --line:#E4EEF4; --line-2:#CFE0EA;
+    --deep:#0B8FC4; --deep-2:#2FA9DA; --deep-wash:#E1F3FA;
+    --sage:#4F8A66; --sage-wash:#E5F3EA; --rose:#B3571F; --rose-wash:#FCE5D5;
+    --r:14px; --sh:0 1px 2px rgba(22,51,74,.05), 0 6px 18px rgba(11,143,196,.09);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:32px 16px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh);
+    max-width:480px;width:100%;padding:28px 26px}
+  h1{font-size:20px;margin:0 0 4px}
+  .sub{font-size:13.5px;color:var(--ink);opacity:.7;margin:0 0 20px}
+  .field{margin-bottom:16px}
+  .field label{display:block;font-size:13px;font-weight:600;margin-bottom:6px}
+  .field input, .field select{width:100%;padding:9px 12px;font-size:14px;border:1px solid var(--line-2);
+    border-radius:10px;background:#fff;color:var(--ink);font-family:inherit}
+  .field input:focus, .field select:focus{outline:2px solid var(--deep-2);outline-offset:1px}
+  button{width:100%;padding:11px;border:none;border-radius:999px;background:var(--deep);color:#fff;
+    font-size:14.5px;font-weight:600;cursor:pointer;font-family:inherit}
+  button:disabled{opacity:.6;cursor:default}
+  button:hover:not(:disabled){background:var(--deep-2)}
+  .msg{padding:14px 16px;border-radius:10px;font-size:13.5px;margin-bottom:16px}
+  .msg.err{background:var(--rose-wash);color:var(--rose)}
+  .msg.ok{background:var(--sage-wash);color:var(--sage)}
+  .center{text-align:center;padding:24px 0}
+  .spin{display:inline-block;width:22px;height:22px;border:3px solid var(--line-2);border-top-color:var(--deep);
+    border-radius:50%;animation:sp .8s linear infinite}
+  @keyframes sp{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+  <div class="card" id="app">
+    <div class="center"><div class="spin"></div></div>
+  </div>
+
+<script>
+const token = new URLSearchParams(location.search).get('token');
+const app = document.getElementById('app');
+
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+async function init(){
+  if(!token){
+    app.innerHTML = `<div class="msg err">This link is missing its token — please use the exact link you were sent.</div>`;
+    return;
+  }
+  let data;
+  try{
+    const res = await fetch('/api/public/satsang-form/' + encodeURIComponent(token));
+    if(res.status === 404){
+      app.innerHTML = `<div class="msg err">This link isn't valid. Please check you copied the whole link, or ask for a new one.</div>`;
+      return;
+    }
+    if(res.status === 409){
+      app.innerHTML = `<div class="msg ok">This form has already been submitted \u2014 thank you!</div>`;
+      return;
+    }
+    if(!res.ok) throw new Error('Could not load the form.');
+    data = await res.json();
+  }catch(err){
+    app.innerHTML = `<div class="msg err">Something went wrong loading this form. Please try again shortly.</div>`;
+    return;
+  }
+  renderForm(data);
+}
+
+function renderForm(data){
+  const when = data.eventTime ? new Date(data.eventTime).toLocaleString(undefined, {dateStyle:'medium', timeStyle:'short'}) : '';
+  app.innerHTML = `
+    <h1>${esc(data.satsangName)}</h1>
+    <p class="sub">${data.seekerName ? 'Hi '+esc(data.seekerName)+' \u2014 ' : ''}${when ? esc(when) : ''}${data.eventCity ? (when?' \u00b7 ':'')+esc(data.eventCity) : ''}</p>
+    <div id="formErr"></div>
+    <form id="satsangForm"></form>
+    <button type="button" id="submitBtn" onclick="submitForm()">Submit</button>
+  `;
+  const formEl = document.getElementById('satsangForm');
+  const fields = data.fields || [];
+  if(!fields.length){
+    formEl.innerHTML = `<p class="sub">No additional details are needed for this satsang \u2014 just tap Submit to confirm.</p>`;
+    return;
+  }
+  formEl.innerHTML = fields.map(f=>{
+    const id = 'f_' + f.Field_Name.replace(/[^a-zA-Z0-9]/g,'_');
+    let input;
+    if(f.Field_Data_Type === 'number') input = `<input id="${id}" type="number" step="any">`;
+    else if(f.Field_Data_Type === 'date') input = `<input id="${id}" type="date">`;
+    else if(f.Field_Data_Type === 'boolean') input = `<select id="${id}"><option value="">Choose\u2026</option><option value="Yes">Yes</option><option value="No">No</option></select>`;
+    else input = `<input id="${id}" type="text">`;
+    return `<div class="field"><label for="${id}">${esc(f.Field_Name)}</label>${input}</div>`;
+  }).join('');
+}
+
+async function submitForm(){
+  const btn = document.getElementById('submitBtn');
+  const errEl = document.getElementById('formErr');
+  errEl.innerHTML = '';
+  const fields = document.querySelectorAll('#satsangForm .field label');
+  const values = {};
+  fields.forEach(lbl=>{
+    const input = document.getElementById(lbl.getAttribute('for'));
+    values[lbl.textContent] = input.value;
+  });
+  btn.disabled = true; btn.textContent = 'Submitting\u2026';
+  try{
+    const res = await fetch('/api/public/satsang-form/' + encodeURIComponent(token), {
+      method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({values})
+    });
+    if(res.status === 409){
+      app.innerHTML = `<div class="msg ok">This form has already been submitted \u2014 thank you!</div>`;
+      return;
+    }
+    if(!res.ok) throw new Error('Submit failed');
+    app.innerHTML = `<div class="msg ok">Thank you \u2014 your response has been recorded.</div>`;
+  }catch(err){
+    errEl.innerHTML = `<div class="msg err">Could not submit \u2014 please check your connection and try again.</div>`;
+    btn.disabled = false; btn.textContent = 'Submit';
+  }
+}
+
+init();
+</script>
+</body>
+</html>

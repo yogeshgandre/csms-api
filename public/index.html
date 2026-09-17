@@ -362,6 +362,12 @@ nav .pip.r{background:var(--rose);color:#fff}
   border-bottom:1px solid var(--line);font-size:13.5px;cursor:pointer}
 .oteamrow:last-of-type{border-bottom:none}
 .oteamrow:hover{color:var(--deep)}
+.ac-dropdown{position:absolute;top:100%;left:0;right:0;z-index:50;background:var(--card);
+  border:1px solid var(--line-2);border-radius:12px;box-shadow:var(--sh);margin-top:4px;
+  max-height:200px;overflow-y:auto}
+.ac-item{padding:8px 14px;font-size:13px;cursor:pointer}
+.ac-item:hover{background:var(--deep-wash)}
+.ac-item .sub2{font-size:11.5px}
 </style>
 </head>
 <body>
@@ -2617,18 +2623,22 @@ function renderSatsangDetail(){
 
       <p class="sub2" style="font-weight:600;margin-top:16px">Attending seekers</p>
       ${attendees.length ? attendees.map(a=>`<div class="oteamrow" style="cursor:default">
-          <span>${esc(a.Seeker_Name||a.Seeker_Email)}${a.Remarks?(' <span class="sub2">\u2014 '+esc(a.Remarks)+'</span>'):''}</span>
-          <button class="mini" onclick="removeSatsangAttendee(${d.Satsang_ID}, ${a.AS_CSMS_ID}, this)" style="width:22px;height:22px;color:var(--rose)">&times;</button>
+          <span>${esc([a.First_Name,a.Last_Name].filter(Boolean).join(' ')||('Seeker #'+a.Seeker_ID))}${a.Remarks?(' <span class="sub2">\u2014 '+esc(a.Remarks)+'</span>'):''}</span>
+          <button class="mini" onclick="removeSatsangAttendee(${d.Satsang_ID}, ${a.Seeker_ID}, this)" style="width:22px;height:22px;color:var(--rose)">&times;</button>
         </div>`).join('') : '<p class="sub2">None yet.</p>'}
       <details style="margin-top:6px">
         <summary style="cursor:pointer;font-size:12px;color:var(--deep)">+ Add attending seeker</summary>
         <div style="display:flex;flex-direction:column;gap:6px;margin-top:8px">
-          <input id="attName" placeholder="Name (optional)" style="border-radius:999px;padding:5px 12px;font-size:12.5px;border:1px solid var(--line-2)">
-          <input id="attEmail" type="email" placeholder="name@ssrf.org" style="border-radius:999px;padding:5px 12px;font-size:12.5px;border:1px solid var(--line-2)">
+          <div style="position:relative">
+            <input id="attSearch" placeholder="Search by name or email" autocomplete="off" oninput="seekerAutocomplete(this)" style="width:100%;border-radius:999px;padding:5px 12px;font-size:12.5px;border:1px solid var(--line-2);box-sizing:border-box">
+            <div id="attSearch_ac" class="ac-dropdown" style="display:none"></div>
+          </div>
+          <input id="attSeekerId" type="hidden">
           <input id="attRemarks" placeholder="Remarks (optional)" style="border-radius:999px;padding:5px 12px;font-size:12.5px;border:1px solid var(--line-2)">
           <button class="btn sm" onclick="addSatsangAttendee(${d.Satsang_ID}, this)"><span class="spin"></span><span class="lbl">Add</span></button>
+          <div class="err" id="attErr"></div>
         </div>
-        <p class="sub2" style="margin-top:4px">Doesn't need to have signed in yet.</p>
+        <p class="sub2" style="margin-top:4px">Must already be a real seeker record \u2014 search by name or email and pick from the list.</p>
       </details>
     </div>
   </div>`;
@@ -2684,23 +2694,49 @@ async function removeSatsangConductor(defId, csmsId, btn){
     }catch(err){ toast('Could not remove: '+(err.message||'')); }
   });
 }
+function seekerAutocomplete(inputEl){
+  clearTimeout(AC_DEBOUNCE['attSearch']);
+  const dd = document.getElementById('attSearch_ac');
+  const q = inputEl.value.trim();
+  document.getElementById('attSeekerId').value = ''; // any previous selection is invalid once they keep typing
+  if(q.length < 2){ dd.style.display='none'; dd.innerHTML=''; return; }
+  AC_DEBOUNCE['attSearch'] = setTimeout(async ()=>{
+    try{
+      const seekers = await apiFetch('/api/seekers?q='+encodeURIComponent(q));
+      if(!seekers.length){ dd.innerHTML = '<div class="ac-item sub2">No matching seekers.</div>'; dd.style.display=''; return; }
+      dd.innerHTML = seekers.map(s=>{
+        const name = [s.First_Name,s.Last_Name].filter(Boolean).join(' ') || ('Seeker #'+s.Seeker_ID);
+        return `<div class="ac-item" onmousedown="selectSeeker(${s.Seeker_ID}, '${name.replace(/'/g,"\\'")}')">
+          <div>${esc(name)}</div><div class="sub2">${esc(s.Email||'')}</div>
+        </div>`;
+      }).join('');
+      dd.style.display = '';
+    }catch(err){ dd.style.display='none'; }
+  }, 250);
+}
+function selectSeeker(seekerId, name){
+  document.getElementById('attSearch').value = name;
+  document.getElementById('attSeekerId').value = seekerId;
+  document.getElementById('attSearch_ac').style.display = 'none';
+}
 async function addSatsangAttendee(defId, btn){
+  const errEl = document.getElementById('attErr'); errEl.classList.remove('on');
   await withLoading(btn, async ()=>{
     try{
-      const email=document.getElementById('attEmail').value.trim();
-      if(!email) return;
-      await apiFetch('/api/satsangs/defs/'+defId+'/attendees', {method:'POST', body: JSON.stringify({email, name: document.getElementById('attName').value.trim(), remarks: document.getElementById('attRemarks').value.trim()})});
+      const seekerId = document.getElementById('attSeekerId').value;
+      if(!seekerId){ errEl.textContent='Search and pick a seeker from the list first.'; errEl.classList.add('on'); return; }
+      await apiFetch('/api/satsangs/defs/'+defId+'/attendees', {method:'POST', body: JSON.stringify({seekerId:Number(seekerId), remarks: document.getElementById('attRemarks').value.trim()})});
       toast('Attendee added.');
       SATSANG_DETAIL_DATA.attendees = await apiFetch('/api/satsangs/defs/'+defId+'/attendees');
       renderSatsangDetail();
-    }catch(err){ toast('Could not add: '+(err.message||'')); }
+    }catch(err){ errEl.textContent = err.message||'Could not add.'; errEl.classList.add('on'); }
   });
 }
-async function removeSatsangAttendee(defId, csmsId, btn){
+async function removeSatsangAttendee(defId, seekerId, btn){
   if(!confirm('Remove this attending seeker?')) return;
   await withLoading(btn, async ()=>{
     try{
-      await apiFetch('/api/satsangs/defs/'+defId+'/attendees/'+csmsId, {method:'DELETE'});
+      await apiFetch('/api/satsangs/defs/'+defId+'/attendees/'+seekerId, {method:'DELETE'});
       toast('Removed.');
       SATSANG_DETAIL_DATA.attendees = await apiFetch('/api/satsangs/defs/'+defId+'/attendees');
       renderSatsangDetail();
@@ -2742,17 +2778,43 @@ async function loadSatsangEvents(force){
 
 function eventRowHTML(e){
   const when = e.Event_ST_DT_TIME ? new Date(e.Event_ST_DT_TIME).toLocaleString() : '\u2014';
-  return `<div class="card pad" style="margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
-    <div>
-      <div style="font-weight:600">${esc(when)} \u00b7 ${esc(e.Event_Time_City)}</div>
-      <div class="sub2">${esc(e.Event_Duration||'')}${e.sc1_name?(' \u00b7 '+esc(e.sc1_name)):''}${e.sc2_name?(', '+esc(e.sc2_name)):''}</div>
+  return `<div class="card pad" style="margin-bottom:8px">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
+      <div>
+        <div style="font-weight:600">${esc(when)} \u00b7 ${esc(e.Event_Time_City)}</div>
+        <div class="sub2">${esc(e.Event_Duration||'')}${e.sc1_name?(' \u00b7 '+esc(e.sc1_name)):''}${e.sc2_name?(', '+esc(e.sc2_name)):''}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        ${statusBadge(e.Current_Status)}
+        ${e.Current_Status==='Pending Conductor Approval' ? `<button class="btn sm" onclick="approveSatsangEvent(${e.SE_ID}, this)"><span class="spin"></span><span class="lbl">Approve</span></button>` : ''}
+        ${e.Current_Status==='Scheduled' ? `<button class="mini" onclick="toggleFormLinks(${e.SE_ID}, this)" title="Self-service form links" style="width:auto;padding:0 10px;height:24px;font-size:11.5px">Links</button>` : ''}
+        ${e.Current_Status!=='Cancelled' ? `<button class="mini" onclick="cancelSatsangEvent(${e.SE_ID}, this)" title="Cancel" style="width:24px;height:24px;color:var(--rose)">&times;</button>` : ''}
+      </div>
     </div>
-    <div style="display:flex;align-items:center;gap:8px">
-      ${statusBadge(e.Current_Status)}
-      ${e.Current_Status==='Pending Conductor Approval' ? `<button class="btn sm" onclick="approveSatsangEvent(${e.SE_ID}, this)"><span class="spin"></span><span class="lbl">Approve</span></button>` : ''}
-      ${e.Current_Status!=='Cancelled' ? `<button class="mini" onclick="cancelSatsangEvent(${e.SE_ID}, this)" title="Cancel" style="width:24px;height:24px;color:var(--rose)">&times;</button>` : ''}
-    </div>
+    <div id="formLinks_${e.SE_ID}" style="display:none;margin-top:10px"></div>
   </div>`;
+}
+
+async function toggleFormLinks(seId, btn){
+  const el = document.getElementById('formLinks_'+seId);
+  if(el.style.display !== 'none' && el.innerHTML){ el.style.display = 'none'; return; }
+  el.style.display = ''; el.innerHTML = '<p class="sub2">Loading\u2026</p>';
+  await withLoading(btn, async ()=>{
+    try{
+      const links = await apiFetch('/api/satsangs/events/'+seId+'/form-links');
+      if(!links.length){ el.innerHTML = '<p class="sub2">No attendees yet to generate links for.</p>'; return; }
+      const base = location.origin + '/form.html?token=';
+      el.innerHTML = `<p class="sub2" style="font-weight:600;margin-bottom:6px">Self-service form links \u2014 email sending isn't wired up yet, so share these manually.</p>` +
+        links.map(l=>{
+          const name = [l.First_Name,l.Last_Name].filter(Boolean).join(' ') || ('Seeker #'+l.Seeker_ID);
+          const url = base + encodeURIComponent(l.Token);
+          return `<div class="oteamrow" style="cursor:default">
+            <span>${esc(name)}${l.Submitted_DT ? ' <span class="sub2">\u2014 submitted</span>' : ''}</span>
+            <button class="mini" onclick="navigator.clipboard.writeText('${url.replace(/'/g,"\\'")}');toast('Link copied.')" style="width:auto;padding:0 10px;height:22px;font-size:11px">Copy link</button>
+          </div>`;
+        }).join('');
+    }catch(err){ el.innerHTML = '<p class="sub2">Could not load links.</p>'; }
+  });
 }
 
 function renderSatsangEventsBody(){
@@ -2770,17 +2832,55 @@ function renderSatsangEventsBody(){
         <input id="evStart" type="datetime-local" style="border-radius:999px;padding:7px 14px;font-size:13px;border:1px solid var(--line-2)">
         <input id="evCity" placeholder="City" style="border-radius:999px;padding:7px 14px;font-size:13px;border:1px solid var(--line-2)">
         <input id="evDuration" placeholder="Duration (e.g. 1.5 hours)" style="border-radius:999px;padding:7px 14px;font-size:13px;border:1px solid var(--line-2)">
-        <input id="evSc1Name" placeholder="Conductor 1 name (optional)" style="border-radius:999px;padding:7px 14px;font-size:13px;border:1px solid var(--line-2)">
+        <div style="position:relative">
+          <input id="evSc1Name" placeholder="Conductor 1 name (optional)" autocomplete="off" oninput="peopleAutocomplete(this,'evSc1')" style="width:100%;border-radius:999px;padding:7px 14px;font-size:13px;border:1px solid var(--line-2);box-sizing:border-box">
+          <div id="evSc1_ac" class="ac-dropdown" style="display:none"></div>
+        </div>
         <input id="evSc1Email" type="email" placeholder="Conductor 1 email" style="border-radius:999px;padding:7px 14px;font-size:13px;border:1px solid var(--line-2)">
-        <input id="evSc2Name" placeholder="Conductor 2 name (optional)" style="border-radius:999px;padding:7px 14px;font-size:13px;border:1px solid var(--line-2)">
+        <div style="position:relative">
+          <input id="evSc2Name" placeholder="Conductor 2 name (optional)" autocomplete="off" oninput="peopleAutocomplete(this,'evSc2')" style="width:100%;border-radius:999px;padding:7px 14px;font-size:13px;border:1px solid var(--line-2);box-sizing:border-box">
+          <div id="evSc2_ac" class="ac-dropdown" style="display:none"></div>
+        </div>
         <input id="evSc2Email" type="email" placeholder="Conductor 2 email (optional)" style="border-radius:999px;padding:7px 14px;font-size:13px;border:1px solid var(--line-2)">
         <button class="btn sm" onclick="createSatsangEvent(this)"><span class="spin"></span><span class="lbl">Create event</span></button>
         <div class="err" id="evErr"></div>
-        <p class="sub2">Conductors don't need to have signed in yet \u2014 open to anyone. Conductor 1 approves the event before it's Scheduled.</p>
+        <p class="sub2">Start typing a conductor's name to pick an existing CSMS person, or just type a new name and email \u2014 they don't need to have signed in yet. Conductor 1 approves the event before it's Scheduled.</p>
       </div>
     </details>` : ''}
     ${events.length ? events.map(eventRowHTML).join('') : '<p class="sub2">No events yet.</p>'}`;
 }
+
+// Debounced CSMS-people autocomplete, reused for any "pick a person" field.
+// prefix is the id stem: fills <prefix>Name / <prefix>Email on selection.
+let AC_DEBOUNCE = {};
+function peopleAutocomplete(inputEl, prefix){
+  clearTimeout(AC_DEBOUNCE[prefix]);
+  const dd = document.getElementById(prefix+'_ac');
+  const q = inputEl.value.trim();
+  if(q.length < 2){ dd.style.display='none'; dd.innerHTML=''; return; }
+  AC_DEBOUNCE[prefix] = setTimeout(async ()=>{
+    try{
+      const people = await apiFetch('/api/admin/people/search?q='+encodeURIComponent(q));
+      if(!people.length){ dd.style.display='none'; dd.innerHTML=''; return; }
+      dd.innerHTML = people.map(p=>`<div class="ac-item" onmousedown="selectAcPerson('${prefix}', ${p.CSMS_ID}, '${esc(p.Seeker_Name||'').replace(/'/g,"\\'")}', '${esc(p.Seeker_Email||'').replace(/'/g,"\\'")}')">
+          <div>${esc(p.Seeker_Name||p.Seeker_Email)}</div><div class="sub2">${esc(p.Seeker_Email||'')}</div>
+        </div>`).join('');
+      dd.style.display = '';
+    }catch(err){ dd.style.display='none'; }
+  }, 250);
+}
+function selectAcPerson(prefix, csmsId, name, email){
+  document.getElementById(prefix+'Name').value = name;
+  const emailEl = document.getElementById(prefix+'Email');
+  if(emailEl) emailEl.value = email;
+  const dd = document.getElementById(prefix+'_ac');
+  dd.style.display = 'none'; dd.innerHTML = '';
+}
+document.addEventListener('click', (e)=>{
+  if(!e.target.closest('.ac-dropdown') && !e.target.matches('input[oninput*="Autocomplete"]')){
+    document.querySelectorAll('.ac-dropdown').forEach(dd=>{ dd.style.display='none'; });
+  }
+});
 
 async function createSatsangEvent(btn){
   const errEl = document.getElementById('evErr'); errEl.classList.remove('on');
@@ -2844,7 +2944,7 @@ function onTransferFromChange(){
   if(!fromId) return;
   apiFetch('/api/satsangs/defs/'+fromId+'/attendees').then(attendees=>{
     asSel.innerHTML = attendees.length
-      ? attendees.map(a=>`<option value="${a.AS_CSMS_ID}">${esc(a.Seeker_Name||a.Seeker_Email)}</option>`).join('')
+      ? attendees.map(a=>`<option value="${a.Seeker_ID}">${esc([a.First_Name,a.Last_Name].filter(Boolean).join(' ')||('Seeker #'+a.Seeker_ID))}</option>`).join('')
       : '<option value="">No attendees on this satsang</option>';
   }).catch(()=>{ asSel.innerHTML = '<option value="">Could not load attendees</option>'; });
 
@@ -2888,7 +2988,7 @@ function renderSatsangTransfersBody(){
 function transferRowHTML(t){
   return `<div class="card pad" style="margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
     <div>
-      <div style="font-weight:600">${esc(t.attendee_name||('CSMS #'+t.AS_CSMS_ID))}</div>
+      <div style="font-weight:600">${esc([t.attendee_first_name,t.attendee_last_name].filter(Boolean).join(' ')||('Seeker #'+t.seeker_id))}</div>
       <div class="sub2">${esc(t.from_satsang_name||'')} \u2192 ${esc(t.to_satsang_name||'')}${t.TR_Initiated_Remarks?(' \u00b7 '+esc(t.TR_Initiated_Remarks)):''}</div>
     </div>
     <div style="display:flex;align-items:center;gap:8px">
@@ -2914,12 +3014,12 @@ async function initiateTransfer(btn){
   const errEl = document.getElementById('trErr'); errEl.classList.remove('on');
   await withLoading(btn, async ()=>{
     try{
-      const asCsmsId = document.getElementById('trAttendee').value;
+      const seekerId = document.getElementById('trAttendee').value;
       const fromSatsangId = document.getElementById('trFrom').value;
       const toSatsangId = document.getElementById('trTo').value;
       const remarks = document.getElementById('trRemarks').value.trim();
-      if(!asCsmsId || !fromSatsangId || !toSatsangId){ errEl.textContent='Pick a satsang, an attendee, and a destination.'; errEl.classList.add('on'); return; }
-      await apiFetch('/api/satsangs/transfers', {method:'POST', body: JSON.stringify({asCsmsId:Number(asCsmsId), fromSatsangId:Number(fromSatsangId), toSatsangId:Number(toSatsangId), remarks})});
+      if(!seekerId || !fromSatsangId || !toSatsangId){ errEl.textContent='Pick a satsang, an attendee, and a destination.'; errEl.classList.add('on'); return; }
+      await apiFetch('/api/satsangs/transfers', {method:'POST', body: JSON.stringify({seekerId:Number(seekerId), fromSatsangId:Number(fromSatsangId), toSatsangId:Number(toSatsangId), remarks})});
       toast('Transfer requested.');
       loadSatsangTransfers();
     }catch(err){ errEl.textContent = err.message||'Could not request transfer.'; errEl.classList.add('on'); }

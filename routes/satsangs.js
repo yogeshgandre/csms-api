@@ -6,16 +6,20 @@
 // NOTE: Event_ST_DT_TIME is being migrated to TIMESTAMPTZ (was bigint unix
 // seconds) — the /upcoming query below already assumes the new type.
 //
-// NOTE: Satsang_Conductor and Satsang_Attending_Seekers have no surrogate
-// PK — just (Satsang_ID, *_CSMS_ID) — so those rows are addressed by that
-// pair rather than a single id, unlike everything else in this file.
+// NOTE: Satsang_Conductor has no surrogate PK — just (Satsang_ID,
+// SC_CSMS_ID) — so its rows are addressed by that pair rather than a
+// single id. Satsang_Attending_Seekers is the same shape, now keyed on
+// (Satsang_ID, Seeker_ID) after the AS_CSMS_ID -> Seeker_ID rename below.
 //
-// NOTE: "Attending Seeker" is modeled via AS_CSMS_ID, i.e. through the same
-// RMS.User_Profile/CSMS_ID identity used for staff — not MSR.Seeker. That's
-// what the schema gives us; flagging it as a modeling oddity worth a second
-// look, not something invented here.
+// NOTE: Attendees were originally modeled via AS_CSMS_ID (RMS.User_Profile
+// identity, same as staff) — corrected to Seeker_ID (real MSR.Seeker) per
+// instruction. Attendee_Transfer_Requests.AS_CSMS_ID was NOT renamed (only
+// Satsang_Attending_Seekers' column was), so that column name is now
+// misleading — it holds Seeker_ID values to stay consistent with the table
+// it interoperates with. Worth a rename script later; not done unprompted.
 
 const express = require('express');
+const crypto = require('crypto');
 const { pool, qi } = require('../db/pool');
 const { requireAuth } = require('../middleware/auth');
 const router = express.Router();
@@ -387,14 +391,18 @@ router.delete('/defs/:id/conductors/:csmsId', requireAuth, async (req, res) => {
 });
 
 /* ============ Attending seekers (Satsang_Attending_Seekers) ============
-   Same no-surrogate-PK situation as conductors. */
+   Same no-surrogate-PK situation as conductors. Unlike conductors, attendees
+   are now real MSR.Seeker people (Seeker_ID), not auto-provisioned CSMS
+   profiles — a seeker must already exist (via the Intake flow) to be added
+   here, so this takes a seekerId directly rather than an email to look up
+   or create. */
 
 router.get('/defs/:id/attendees', requireAuth, async (req, res) => {
   try {
     const r = await pool.query(
-      `SELECT sas.${qi('AS_CSMS_ID')}, sas.${qi('Remarks')}, up.${qi('Seeker_Name')}, up.${qi('Seeker_Email')}
+      `SELECT sas.${qi('Seeker_ID')}, sas.${qi('Remarks')}, sk.${qi('First_Name')}, sk.${qi('Last_Name')}, sk.${qi('Email')}
        FROM ${qi('SCS')}.${qi('Satsang_Attending_Seekers')} sas
-       LEFT JOIN ${qi('RMS')}.${qi('User_Profile')} up ON up.${qi('CSMS_ID')} = sas.${qi('AS_CSMS_ID')}
+       LEFT JOIN ${qi('MSR')}.${qi('Seeker')} sk ON sk.${qi('Seeker_ID')} = sas.${qi('Seeker_ID')}
        WHERE sas.${qi('Satsang_ID')} = $1 AND sas.${qi('Ver_To_DT')} >= CURRENT_DATE`,
       [req.params.id]
     );
@@ -406,40 +414,34 @@ router.get('/defs/:id/attendees', requireAuth, async (req, res) => {
 });
 
 router.post('/defs/:id/attendees', requireAuth, async (req, res) => {
-  const { email, name, remarks } = req.body || {};
-  if (!email) return res.status(400).json({ error: 'email is required' });
-  let client;
+  const { seekerId, remarks } = req.body || {};
+  if (!seekerId) return res.status(400).json({ error: 'seekerId is required' });
   try {
-    client = await pool.connect();
-    await client.query('BEGIN');
-    const profile = await findOrCreateProfile(client, email, name);
-    await client.query(
+    const skQ = await pool.query(`SELECT ${qi('Seeker_ID')} FROM ${qi('MSR')}.${qi('Seeker')} WHERE ${qi('Seeker_ID')} = $1`, [seekerId]);
+    if (skQ.rowCount === 0) return res.status(404).json({ error: 'SEEKER_NOT_FOUND', message: 'No such seeker.' });
+    await pool.query(
       `INSERT INTO ${qi('SCS')}.${qi('Satsang_Attending_Seekers')}
-        (${qi('Satsang_ID')}, ${qi('AS_CSMS_ID')}, ${qi('Remarks')}, ${qi('Ver_From_DT')}, ${qi('Ver_To_DT')})
+        (${qi('Satsang_ID')}, ${qi('Seeker_ID')}, ${qi('Remarks')}, ${qi('Ver_From_DT')}, ${qi('Ver_To_DT')})
        VALUES ($1, $2, $3, CURRENT_DATE, $4)`,
-      [req.params.id, profile.csmsId, remarks || null, FAR_FUTURE]
+      [req.params.id, seekerId, remarks || null, FAR_FUTURE]
     );
-    await client.query('COMMIT');
-    res.status(201).json({ ok: true, name: profile.name, profileCreated: profile.created });
+    res.status(201).json({ ok: true });
   } catch (err) {
-    if (client) await client.query('ROLLBACK');
     console.error('[POST /satsangs/defs/:id/attendees] error', err);
     res.status(500).json({ error: 'INTERNAL', message: err.message });
-  } finally {
-    if (client) client.release();
   }
 });
 
-router.delete('/defs/:id/attendees/:csmsId', requireAuth, async (req, res) => {
+router.delete('/defs/:id/attendees/:seekerId', requireAuth, async (req, res) => {
   try {
     await pool.query(
       `UPDATE ${qi('SCS')}.${qi('Satsang_Attending_Seekers')} SET ${qi('Ver_To_DT')} = CURRENT_DATE - INTERVAL '1 day'
-       WHERE ${qi('Satsang_ID')} = $1 AND ${qi('AS_CSMS_ID')} = $2`,
-      [req.params.id, req.params.csmsId]
+       WHERE ${qi('Satsang_ID')} = $1 AND ${qi('Seeker_ID')} = $2`,
+      [req.params.id, req.params.seekerId]
     );
     res.json({ ok: true });
   } catch (err) {
-    console.error('[DELETE /satsangs/defs/:id/attendees/:csmsId] error', err);
+    console.error('[DELETE /satsangs/defs/:id/attendees/:seekerId] error', err);
     res.status(500).json({ error: 'INTERNAL' });
   }
 });
@@ -553,29 +555,119 @@ router.post('/events/:seId/cancel', requireAuth, async (req, res) => {
   await setEventStatus(req, res, 'Cancelled');
 });
 
+// Table name is built only from a Satsang_ID we've just read back out of our
+// own database (never raw user input) — the extra isInteger check is
+// defense in depth, not the only thing standing between this and injection.
+async function ensureEventFormsTable(client, satsangId) {
+  const id = Number(satsangId);
+  if (!Number.isInteger(id)) throw new Error('Invalid Satsang_ID for dynamic table');
+  await client.query(
+    `CREATE TABLE IF NOT EXISTS ${qi('SCS')}.${qi('SS_' + id + '_Event_Forms')} (
+       "SE_ID" BIGINT NOT NULL,
+       "Seeker_ID" BIGINT NOT NULL,
+       "Field_Name" TEXT NOT NULL,
+       "Field_Value" TEXT,
+       "Submitted_DT" TIMESTAMPTZ
+     )`
+  );
+}
+
+// One token per (event, attendee) — created once when the event is
+// Scheduled; also backfills anyone added as an attendee afterwards, since
+// this is safe to call again (ON CONFLICT DO NOTHING).
+async function generateFormTokensForEvent(client, seId, satsangId) {
+  const attendeesQ = await client.query(
+    `SELECT ${qi('Seeker_ID')} FROM ${qi('SCS')}.${qi('Satsang_Attending_Seekers')}
+     WHERE ${qi('Satsang_ID')} = $1 AND ${qi('Ver_To_DT')} >= CURRENT_DATE`,
+    [satsangId]
+  );
+  for (const row of attendeesQ.rows) {
+    const token = crypto.randomBytes(24).toString('base64url');
+    await client.query(
+      `INSERT INTO ${qi('SCS')}.${qi('Satsang_Event_Form_Tokens')} (${qi('Token')}, ${qi('SE_ID')}, ${qi('Seeker_ID')})
+       SELECT $1, $2, $3
+       WHERE NOT EXISTS (
+         SELECT 1 FROM ${qi('SCS')}.${qi('Satsang_Event_Form_Tokens')}
+         WHERE ${qi('SE_ID')} = $2 AND ${qi('Seeker_ID')} = $3
+       )`,
+      [token, seId, row.Seeker_ID]
+    );
+  }
+}
+
 async function setEventStatus(req, res, newStatus) {
+  let client;
   try {
-    await pool.query(
+    client = await pool.connect();
+    await client.query('BEGIN');
+    await client.query(
       `UPDATE ${qi('SCS')}.${qi('Satsang_Event_Status')}
        SET ${qi('Current_Status')} = $1, ${qi('Current_Status_Change_Date')} = CURRENT_DATE
        WHERE ${qi('SE_ID')} = $2`,
       [newStatus, req.params.seId]
     );
+    if (newStatus === 'Scheduled') {
+      const evQ = await client.query(
+        `SELECT ${qi('Satsang_ID')} FROM ${qi('SCS')}.${qi('Satsang_Event_Defn')} WHERE ${qi('SE_ID')} = $1`,
+        [req.params.seId]
+      );
+      if (evQ.rowCount > 0) {
+        const satsangId = evQ.rows[0].Satsang_ID;
+        await ensureEventFormsTable(client, satsangId);
+        await generateFormTokensForEvent(client, req.params.seId, satsangId);
+      }
+    }
+    await client.query('COMMIT');
     res.json({ ok: true });
   } catch (err) {
+    if (client) await client.query('ROLLBACK');
     console.error('[setEventStatus] error', err);
-    res.status(500).json({ error: 'INTERNAL' });
+    res.status(500).json({ error: 'INTERNAL', message: err.message });
+  } finally {
+    if (client) client.release();
   }
 }
+
+// GET /events/:seId/form-links — for staff to copy/share manually (email
+// sending is on hold). Regenerates any missing tokens first (covers an
+// attendee added after the event was already Scheduled).
+router.get('/events/:seId/form-links', requireAuth, async (req, res) => {
+  let client;
+  try {
+    client = await pool.connect();
+    const evQ = await client.query(
+      `SELECT ${qi('Satsang_ID')} FROM ${qi('SCS')}.${qi('Satsang_Event_Defn')} WHERE ${qi('SE_ID')} = $1`,
+      [req.params.seId]
+    );
+    if (evQ.rowCount === 0) return res.status(404).json({ error: 'NOT_FOUND' });
+    const satsangId = evQ.rows[0].Satsang_ID;
+    await ensureEventFormsTable(client, satsangId);
+    await generateFormTokensForEvent(client, req.params.seId, satsangId);
+
+    const r = await client.query(
+      `SELECT t.${qi('Token')}, t.${qi('Seeker_ID')}, t.${qi('Submitted_DT')}, sk.${qi('First_Name')}, sk.${qi('Last_Name')}
+       FROM ${qi('SCS')}.${qi('Satsang_Event_Form_Tokens')} t
+       LEFT JOIN ${qi('MSR')}.${qi('Seeker')} sk ON sk.${qi('Seeker_ID')} = t.${qi('Seeker_ID')}
+       WHERE t.${qi('SE_ID')} = $1`,
+      [req.params.seId]
+    );
+    res.json(r.rows);
+  } catch (err) {
+    console.error('[GET /satsangs/events/:seId/form-links] error', err);
+    res.status(500).json({ error: 'INTERNAL', message: err.message });
+  } finally {
+    if (client) client.release();
+  }
+});
 
 /* ============ existing attendee/transfer read endpoints (unchanged) ============ */
 
 router.get('/:satsangId/attendees', requireAuth, async (req, res) => {
   try {
     const result = await pool.query(
-      `SELECT sas.${qi('AS_CSMS_ID')}, sas.${qi('Remarks')}, up.${qi('Seeker_Name')}
+      `SELECT sas.${qi('Seeker_ID')}, sas.${qi('Remarks')}, sk.${qi('First_Name')}, sk.${qi('Last_Name')}
        FROM ${qi('SCS')}.${qi('Satsang_Attending_Seekers')} sas
-       LEFT JOIN ${qi('RMS')}.${qi('User_Profile')} up ON up.${qi('CSMS_ID')} = sas.${qi('AS_CSMS_ID')}
+       LEFT JOIN ${qi('MSR')}.${qi('Seeker')} sk ON sk.${qi('Seeker_ID')} = sas.${qi('Seeker_ID')}
        WHERE sas.${qi('Satsang_ID')} = $1 AND sas.${qi('Ver_To_DT')} >= CURRENT_DATE`,
       [req.params.satsangId]
     );
@@ -586,19 +678,25 @@ router.get('/:satsangId/attendees', requireAuth, async (req, res) => {
   }
 });
 
+// NOTE: Attendee_Transfer_Requests.AS_CSMS_ID was NOT renamed (only
+// Satsang_Attending_Seekers.AS_CSMS_ID -> Seeker_ID was, per instruction).
+// The column name here is now misleading — it holds Seeker_ID values, to
+// stay consistent with the table it has to interoperate with — but I
+// haven't renamed it myself since that wasn't asked for. Worth a rename
+// script later for clarity; flagged in the response, not silently done.
 router.get('/transfers', requireAuth, async (req, res) => {
   try {
     const result = await pool.query(
-      `SELECT tr.${qi('TR_ID')}, tr.${qi('AS_CSMS_ID')}, tr.${qi('TR_From_Satsang_ID')}, tr.${qi('TR_To_Satsang_ID')},
+      `SELECT tr.${qi('TR_ID')}, tr.${qi('AS_CSMS_ID')} AS seeker_id, tr.${qi('TR_From_Satsang_ID')}, tr.${qi('TR_To_Satsang_ID')},
               tr.${qi('TR_Status_ID')}, ts.${qi('TR_Status_Name')},
               tr.${qi('TR_Initiated_Remarks')}, tr.${qi('TR_Initiated_DT')}, tr.${qi('TR_Initiated_By_CSMS_ID')},
               tr.${qi('TR_Approver_CSMS_ID')}, tr.${qi('TR_Approver_Remarks')}, tr.${qi('TR_Approved_DT')},
               tr.${qi('TR_To_SC_CSMS_ID')}, tr.${qi('TR_Remarks')}, tr.${qi('TR_Accepted_DT')},
-              asu.${qi('Seeker_Name')} AS attendee_name,
+              sk.${qi('First_Name')} AS attendee_first_name, sk.${qi('Last_Name')} AS attendee_last_name,
               fs.${qi('Satsang_Name')} AS from_satsang_name, ts2.${qi('Satsang_Name')} AS to_satsang_name
        FROM ${qi('SCS')}.${qi('Attendee_Transfer_Requests')} tr
        LEFT JOIN ${qi('SCS')}.${qi('Transfer_Status')} ts ON ts.${qi('TR_Status_ID')} = tr.${qi('TR_Status_ID')}
-       LEFT JOIN ${qi('RMS')}.${qi('User_Profile')} asu ON asu.${qi('CSMS_ID')} = tr.${qi('AS_CSMS_ID')}
+       LEFT JOIN ${qi('MSR')}.${qi('Seeker')} sk ON sk.${qi('Seeker_ID')} = tr.${qi('AS_CSMS_ID')}
        LEFT JOIN ${qi('SCS')}.${qi('M_Satsang')} fs ON fs.${qi('Satsang_ID')} = tr.${qi('TR_From_Satsang_ID')}
        LEFT JOIN ${qi('SCS')}.${qi('M_Satsang')} ts2 ON ts2.${qi('Satsang_ID')} = tr.${qi('TR_To_Satsang_ID')}
        ORDER BY tr.${qi('TR_Initiated_DT')} DESC`
@@ -616,9 +714,9 @@ router.get('/transfers', requireAuth, async (req, res) => {
 // hardcoded, since Transfer_Status rows are seeded separately and their
 // actual IDs aren't guaranteed.
 router.post('/transfers', requireAuth, async (req, res) => {
-  const { asCsmsId, fromSatsangId, toSatsangId, remarks } = req.body || {};
-  if (!asCsmsId || !fromSatsangId || !toSatsangId) {
-    return res.status(400).json({ error: 'asCsmsId, fromSatsangId and toSatsangId are required' });
+  const { seekerId, fromSatsangId, toSatsangId, remarks } = req.body || {};
+  if (!seekerId || !fromSatsangId || !toSatsangId) {
+    return res.status(400).json({ error: 'seekerId, fromSatsangId and toSatsangId are required' });
   }
   if (String(fromSatsangId) === String(toSatsangId)) {
     return res.status(400).json({ error: 'SAME_SATSANG', message: 'From and To satsangs must be different.' });
@@ -650,7 +748,7 @@ router.post('/transfers', requireAuth, async (req, res) => {
         (${qi('TR_ID')}, ${qi('AS_CSMS_ID')}, ${qi('TR_From_Satsang_ID')}, ${qi('TR_To_Satsang_ID')},
          ${qi('TR_Status_ID')}, ${qi('TR_Initiated_Remarks')}, ${qi('TR_Initiated_DT')}, ${qi('TR_Initiated_By_CSMS_ID')})
        VALUES ($1,$2,$3,$4,$5,$6,CURRENT_DATE,$7)`,
-      [id, asCsmsId, fromSatsangId, toSatsangId, statusQ.rows[0].TR_Status_ID, remarks || null, req.user.csmsId]
+      [id, seekerId, fromSatsangId, toSatsangId, statusQ.rows[0].TR_Status_ID, remarks || null, req.user.csmsId]
     );
     res.status(201).json({ ok: true, trId: id });
   } catch (err) {
@@ -692,20 +790,24 @@ router.post('/transfers/:id/accept', requireAuth, async (req, res) => {
     fromStatuses: ['Approved'], toStatus: 'Accepted',
     apply: async (client, id) => {
       const trQ = await client.query(
-        `SELECT ${qi('AS_CSMS_ID')}, ${qi('TR_From_Satsang_ID')}, ${qi('TR_To_Satsang_ID')}
+        `SELECT ${qi('AS_CSMS_ID')} AS seeker_id, ${qi('TR_From_Satsang_ID')}, ${qi('TR_To_Satsang_ID')}
          FROM ${qi('SCS')}.${qi('Attendee_Transfer_Requests')} WHERE ${qi('TR_ID')} = $1`,
         [id]
       );
       const tr = trQ.rows[0];
+      // Satsang_Attending_Seekers uses Seeker_ID (renamed from AS_CSMS_ID);
+      // Attendee_Transfer_Requests still calls the same value AS_CSMS_ID
+      // (that column wasn't renamed) — the value read above is used as a
+      // Seeker_ID against the other table.
       await client.query(
         `UPDATE ${qi('SCS')}.${qi('Satsang_Attending_Seekers')} SET ${qi('Ver_To_DT')} = CURRENT_DATE - INTERVAL '1 day'
-         WHERE ${qi('Satsang_ID')} = $1 AND ${qi('AS_CSMS_ID')} = $2 AND ${qi('Ver_To_DT')} >= CURRENT_DATE`,
-        [tr.TR_From_Satsang_ID, tr.AS_CSMS_ID]
+         WHERE ${qi('Satsang_ID')} = $1 AND ${qi('Seeker_ID')} = $2 AND ${qi('Ver_To_DT')} >= CURRENT_DATE`,
+        [tr.TR_From_Satsang_ID, tr.seeker_id]
       );
       await client.query(
-        `INSERT INTO ${qi('SCS')}.${qi('Satsang_Attending_Seekers')} (${qi('Satsang_ID')}, ${qi('AS_CSMS_ID')}, ${qi('Ver_From_DT')}, ${qi('Ver_To_DT')})
+        `INSERT INTO ${qi('SCS')}.${qi('Satsang_Attending_Seekers')} (${qi('Satsang_ID')}, ${qi('Seeker_ID')}, ${qi('Ver_From_DT')}, ${qi('Ver_To_DT')})
          VALUES ($1, $2, CURRENT_DATE, $3)`,
-        [tr.TR_To_Satsang_ID, tr.AS_CSMS_ID, FAR_FUTURE]
+        [tr.TR_To_Satsang_ID, tr.seeker_id, FAR_FUTURE]
       );
       await client.query(
         `UPDATE ${qi('SCS')}.${qi('Attendee_Transfer_Requests')}
