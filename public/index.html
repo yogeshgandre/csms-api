@@ -3476,14 +3476,14 @@ function formRowHTML(f){
       <div class="sub2">Owner: ${esc(f.owner_name||'\u2014')} \u00b7 Last changed ${esc(f.Current_Status_Change_Date||'\u2014')}${f.Form_Published_URL?(' \u00b7 <a href="'+esc(f.Form_Published_URL)+'" target="_blank" rel="noopener">'+esc(f.Form_Published_URL)+'</a>'):''}</div>
     </div>
     <div style="display:flex;align-items:center;gap:8px">
-      ${statusBadge(f.Current_Status)}
+      ${statusBadge(f.Form_Status_Name)}
       ${formActionsHTML(f)}
     </div>
   </div>`;
 }
 
 function formActionsHTML(f){
-  const s = f.Current_Status;
+  const s = f.Form_Status_Name;
   if(s==='Draft') return `<button class="btn sm" onclick="submitFormForReview(${f.Form_ID}, this)"><span class="spin"></span><span class="lbl">Submit for review</span></button>
     <button class="mini" onclick="archiveForm(${f.Form_ID}, this)" title="Archive" style="width:24px;height:24px;color:var(--rose)">&times;</button>`;
   if(s==='In Review') return `<button class="btn sm" onclick="publishForm(${f.Form_ID}, this)"><span class="spin"></span><span class="lbl">Publish</span></button>
@@ -3566,7 +3566,7 @@ function renderFormDetail(){
     <div class="omodal">
       <button class="oclose" onclick="closeFormDetail()">&times;</button>
       <h3 style="margin:0 0 4px">Form #${FORM_DETAIL_ID}</h3>
-      <p class="sub2" style="margin-bottom:14px">${f?statusBadge(f.Current_Status):''}</p>
+      <p class="sub2" style="margin-bottom:14px">${f?statusBadge(f.Form_Status_Name):''}</p>
       <p class="sub2" style="font-weight:600">Additional fields (this form's own questions)</p>
       ${fields.length ? fields.map(ff=>`<div class="oteamrow">
           <span>${esc(ff.Question_Name)} <span class="sub2">(${esc(ff.Question_Type)}, ${esc(ff.Component_Type)})</span></span>

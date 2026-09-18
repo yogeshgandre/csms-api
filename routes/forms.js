@@ -20,15 +20,20 @@ const router = express.Router();
 
 const FAR_FUTURE = '9999-12-31';
 
-/* ============ Form_Creation_Process (definitions + lifecycle) ============ */
+/* ============ Form_Creation_Process (definitions + lifecycle) ============
+   Current_Status is bigint, not text — a real FK into Form_Status (same
+   shape as Transfer_Status in Satsang Management), not a free string like
+   M_Satsang's Satsang_Status. Looked up by name each time rather than
+   hardcoding IDs, same reasoning as the Transfer_Status code. */
 
 router.get('/', requireAuth, async (req, res) => {
   try {
     const r = await pool.query(
-      `SELECT fc.${qi('Form_ID')}, fc.${qi('Current_Status')}, fc.${qi('Current_Owner_CSMS_ID')},
+      `SELECT fc.${qi('Form_ID')}, fc.${qi('Current_Status')}, fs.${qi('Form_Status_Name')}, fc.${qi('Current_Owner_CSMS_ID')},
               fc.${qi('Form_Published_URL')}, fc.${qi('Current_Status_Change_Date')},
               up.${qi('Seeker_Name')} AS owner_name
        FROM ${qi('FMS')}.${qi('Form_Creation_Process')} fc
+       LEFT JOIN ${qi('FMS')}.${qi('Form_Status')} fs ON fs.${qi('Form_Status_ID')} = fc.${qi('Current_Status')}
        LEFT JOIN ${qi('RMS')}.${qi('User_Profile')} up ON up.${qi('CSMS_ID')} = fc.${qi('Current_Owner_CSMS_ID')}
        ORDER BY fc.${qi('Current_Status_Change_Date')} DESC NULLS LAST, fc.${qi('Form_ID')} DESC`
     );
@@ -39,15 +44,22 @@ router.get('/', requireAuth, async (req, res) => {
   }
 });
 
+async function statusIdByName(name) {
+  const q = await pool.query(`SELECT ${qi('Form_Status_ID')} FROM ${qi('FMS')}.${qi('Form_Status')} WHERE ${qi('Form_Status_Name')} = $1`, [name]);
+  return q.rowCount ? q.rows[0].Form_Status_ID : null;
+}
+
 router.post('/', requireAuth, async (req, res) => {
   try {
+    const draftId = await statusIdByName('Draft');
+    if (!draftId) return res.status(500).json({ error: 'NO_STATUS_ROW', message: '"Draft" is missing from Form_Status — seed it first.' });
     const maxQ = await pool.query(`SELECT COALESCE(MAX(${qi('Form_ID')}), 0) + 1 AS next_id FROM ${qi('FMS')}.${qi('Form_Creation_Process')}`);
     const id = maxQ.rows[0].next_id;
     await pool.query(
       `INSERT INTO ${qi('FMS')}.${qi('Form_Creation_Process')}
         (${qi('Form_ID')}, ${qi('Current_Status')}, ${qi('Current_Owner_CSMS_ID')}, ${qi('Current_Status_Change_Date')})
-       VALUES ($1,'Draft',$2,CURRENT_DATE)`,
-      [id, req.user.csmsId]
+       VALUES ($1,$2,$3,CURRENT_DATE)`,
+      [id, draftId, req.user.csmsId]
     );
     res.status(201).json({ ok: true, formId: id });
   } catch (err) {
@@ -56,17 +68,26 @@ router.post('/', requireAuth, async (req, res) => {
   }
 });
 
-async function setFormStatus(req, res, fromStatuses, toStatus, extraSet, extraVals) {
+async function setFormStatus(req, res, fromNames, toName, extraSet, extraVals) {
   try {
-    const curQ = await pool.query(`SELECT ${qi('Current_Status')} FROM ${qi('FMS')}.${qi('Form_Creation_Process')} WHERE ${qi('Form_ID')} = $1`, [req.params.id]);
+    const toId = await statusIdByName(toName);
+    if (!toId) return res.status(500).json({ error: 'NO_STATUS_ROW', message: `"${toName}" is missing from Form_Status — seed it first.` });
+
+    const curQ = await pool.query(
+      `SELECT fc.${qi('Current_Status')}, fs.${qi('Form_Status_Name')}
+       FROM ${qi('FMS')}.${qi('Form_Creation_Process')} fc
+       LEFT JOIN ${qi('FMS')}.${qi('Form_Status')} fs ON fs.${qi('Form_Status_ID')} = fc.${qi('Current_Status')}
+       WHERE fc.${qi('Form_ID')} = $1`,
+      [req.params.id]
+    );
     if (curQ.rowCount === 0) return res.status(404).json({ error: 'NOT_FOUND' });
-    if (!fromStatuses.includes(curQ.rows[0].Current_Status)) {
-      return res.status(409).json({ error: 'WRONG_STATUS', message: `Must be ${fromStatuses.join(' or ')} — currently ${curQ.rows[0].Current_Status}.` });
+    if (!fromNames.includes(curQ.rows[0].Form_Status_Name)) {
+      return res.status(409).json({ error: 'WRONG_STATUS', message: `Must be ${fromNames.join(' or ')} — currently ${curQ.rows[0].Form_Status_Name}.` });
     }
     const setClauses = [`${qi('Current_Status')} = $2`, `${qi('Current_Status_Change_Date')} = CURRENT_DATE`].concat(extraSet || []);
     await pool.query(
       `UPDATE ${qi('FMS')}.${qi('Form_Creation_Process')} SET ${setClauses.join(', ')} WHERE ${qi('Form_ID')} = $1`,
-      [req.params.id, toStatus, ...(extraVals || [])]
+      [req.params.id, toId, ...(extraVals || [])]
     );
     res.json({ ok: true });
   } catch (err) {
