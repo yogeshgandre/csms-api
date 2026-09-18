@@ -351,12 +351,13 @@ nav .pip.r{background:var(--rose);color:#fff}
 .ochip.lvl1{background:var(--deep-wash);color:var(--deep)}
 .ochip.lvl1:hover{background:var(--deep);color:#fff}
 .osub2{font-size:11px;color:var(--ink-3);margin-top:4px}
-.oexpand-btn{border:none;background:none;cursor:pointer;color:var(--ink-3);font-size:11px;
-  padding:2px 6px;margin-top:3px;border-radius:999px}
-.oexpand-btn:hover{background:var(--line);color:var(--deep)}
-.olvl2row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:10px;max-width:280px}
-.ochip.lvl2{font-size:11.5px;padding:6px 12px;background:var(--card);color:var(--ink-2)}
-.ochip.lvl2:hover{background:var(--deep-wash);color:var(--deep)}
+.olvl2panel{background:var(--deep-wash);border-radius:12px;padding:12px 14px;margin-top:10px;
+  display:flex;flex-direction:column;gap:6px;min-width:180px;position:relative}
+.olvl2panel::before{content:"";position:absolute;top:-10px;left:50%;width:1px;height:10px;background:var(--line-2)}
+.olvl2count{font-size:11px;color:var(--deep);font-weight:600;margin-bottom:2px}
+.ochip.lvl2{font-size:12px;padding:6px 12px;background:var(--card);color:var(--ink-2);
+  border-radius:var(--r-sm);cursor:pointer}
+.ochip.lvl2:hover{background:var(--deep);color:#fff}
 .obackdrop{position:absolute;inset:0;background:rgba(22,51,74,.32);display:flex;align-items:center;
   justify-content:center;z-index:40;animation:fadein .16s var(--ease)}
 .omodal{width:min(380px,90vw);max-height:70vh;overflow-y:auto;background:var(--card);border-radius:16px;
@@ -433,6 +434,7 @@ nav .pip.r{background:var(--rose);color:#fff}
   <button data-p="dash" onclick="tab('dash')">Dashboard</button>
   <button data-p="org" onclick="tab('org')">Organisation and Team Management</button>
   <button data-p="satsangmgmt" onclick="tab('satsangmgmt'); satsangSubtab('defs')">Satsang Management</button>
+  <button data-p="formmgmt" onclick="tab('formmgmt'); formSubtab('defs')">Form Management System</button>
   <button data-p="ops" onclick="tab('ops')">Operations<span class="pip" id="pip3">0</span></button>
   <button data-p="about" onclick="tab('about')">What this shows</button>
 </nav>
@@ -518,6 +520,18 @@ nav .pip.r{background:var(--rose);color:#fff}
     <div id="satsangComments" style="display:none"></div>
     <div id="satsangTransfers" style="display:none"></div>
     <div id="satsangAccess" style="display:none"></div>
+  </section>
+
+  <section class="pane" id="p-formmgmt">
+    <h2 class="sec">Form Management System</h2>
+    <p class="sub">Definitions go Draft \u2192 In Review \u2192 Published before a form is live. Submissions
+      themselves are still reviewed from My Seva Activities, not here.</p>
+    <div class="filters" style="border-bottom:1px solid var(--line-2);padding-bottom:0;margin-bottom:16px">
+      <button class="chip on" data-fsub="defs" onclick="formSubtab('defs')">Form Definitions</button>
+      <button class="chip" data-fsub="access" onclick="formSubtab('access')">Access Configuration</button>
+    </div>
+    <div id="formDefs"></div>
+    <div id="formAccess" style="display:none"></div>
   </section>
 
   <section class="pane" id="p-alerts">
@@ -1633,14 +1647,20 @@ function renderAlerts(){
    than faked as a client-side-only state that resets on reload. */
 let LIVE_INTAKE = null;
 let LIVE_INTAKE_CANDIDATES = {};
+let LIVE_INTAKE_ANSWERS = {};
+let LIVE_COUNTRIES = null;
 
-function invalidateIntakeData(){ LIVE_INTAKE = null; LIVE_INTAKE_CANDIDATES = {}; loadIntakeData(); }
+function invalidateIntakeData(){ LIVE_INTAKE = null; LIVE_INTAKE_CANDIDATES = {}; LIVE_INTAKE_ANSWERS = {}; loadIntakeData(); }
 
 async function loadIntakeData(){
   try{
+    if(LIVE_COUNTRIES === null) LIVE_COUNTRIES = await apiFetch('/api/master/countries');
     const subs = await apiFetch('/api/intake');
-    const cands = await Promise.all(subs.map(s => apiFetch('/api/intake/'+s.Submission_ID+'/candidates')));
-    subs.forEach((s,i)=>{ LIVE_INTAKE_CANDIDATES[s.Submission_ID] = cands[i].candidates; });
+    const details = await Promise.all(subs.map(s => apiFetch('/api/intake/'+s.Submission_ID+'/candidates')));
+    subs.forEach((s,i)=>{
+      LIVE_INTAKE_CANDIDATES[s.Submission_ID] = details[i].candidates;
+      LIVE_INTAKE_ANSWERS[s.Submission_ID] = details[i].additionalAnswers || [];
+    });
     LIVE_INTAKE = subs;
     renderIntakeSection();
   }catch(err){
@@ -1657,14 +1677,27 @@ function renderIntakeSection(){
 
   el.innerHTML = LIVE_INTAKE.length ? LIVE_INTAKE.map(s=>{
     const candidates = LIVE_INTAKE_CANDIDATES[s.Submission_ID] || [];
+    const answers = LIVE_INTAKE_ANSWERS[s.Submission_ID] || [];
     const fullName = [s.First_Name, s.Last_Name].filter(Boolean).join(' ');
     return `<div class="sub-card">
       <div class="nm serif">${esc(fullName)}</div>
-      <div class="sub2">${esc(s.City||'')}${s.Country?(', '+esc(s.Country)):''}</div>
+      <div class="sub2">${esc(s.City||'')}${s.Country_Name?(', '+esc(s.Country_Name)):''}${s.Platform_Name?(' \u00b7 via '+esc(s.Platform_Name)):''}</div>
       <dl class="kv" style="margin-top:11px">
         <dt>WhatsApp</dt><dd>${mv('whatsapp',esc(String(s.WhatsApp_Number||'')))}</dd>
         <dt>Email</dt><dd>${mv('email',esc(s.Email||''))}</dd>
       </dl>
+      <div style="display:flex;align-items:center;gap:8px;margin-top:9px">
+        <label class="sub2" style="white-space:nowrap">${s.Country_Name?'Country':'Country (not set \u2014 pick one before promoting)'}</label>
+        <select id="intakeCountry_${s.Submission_ID}" style="flex:1;border-radius:999px;padding:5px 12px;font-size:12.5px;border:1px solid var(--line-2)">
+          <option value="">${s.Country_Name?'\u2014 leave as '+esc(s.Country_Name)+' \u2014':'Choose\u2026'}</option>
+          ${(LIVE_COUNTRIES||[]).map(c=>`<option value="${c.Country_ID}">${esc(c.Country_Name)}</option>`).join('')}
+        </select>
+        <button class="mini" onclick="saveIntakeCountry(${s.Submission_ID}, this)" style="width:auto;padding:0 10px;height:26px;font-size:11px">Save</button>
+      </div>
+      ${answers.length ? `<div style="margin-top:9px">
+        <p class="sub2" style="font-weight:600">Additional answers</p>
+        ${answers.map(a=>`<div class="sub2">${esc(JSON.stringify(a))}</div>`).join('')}
+      </div>` : ''}
       <div class="match ${candidates.length===0?'clean':''}">
         <div style="font-size:13px">${ candidates.length===0
           ? `<span class="score">No match found</span> — no existing seeker shares this WhatsApp number or email.`
@@ -1681,6 +1714,19 @@ function renderIntakeSection(){
       </div>
     </div>`;
   }).join('') : `<div class="card pad" style="color:var(--ink-3)">No submissions awaiting review.</div>`;
+}
+
+async function saveIntakeCountry(id, btn){
+  const sel = document.getElementById('intakeCountry_'+id);
+  const countryId = sel.value;
+  if(!countryId) return;
+  await withLoading(btn, async ()=>{
+    try{
+      await apiFetch('/api/intake/'+id+'/country', {method:'PUT', body: JSON.stringify({countryId:Number(countryId)})});
+      toast('Country updated.');
+      invalidateIntakeData();
+    }catch(err){ toast('Could not update: '+(err.message||'')); }
+  });
 }
 
 async function promoteSubmission(id, btn){
@@ -2220,12 +2266,16 @@ function renderSevaDepartments(){
       <div class="orow">
         ${roots.map(d=>{
           const kids = childrenOf(d.Seva_Dept_ID);
+          const cap = 6;
+          const visible = kids.slice(0, cap);
+          const overflow = kids.length - visible.length;
           return `<div class="obranch">
             <div class="ochip lvl1" onclick="openDeptModal(${d.Seva_Dept_ID})">${esc(d.Seva_Dept_Name)}</div>
-            <div class="osub2">${kids.length} sub-dept${kids.length===1?'':'s'}</div>
-            ${SHOW_ALL_SUBDEPTS && kids.length ? `<div class="olvl2row">
-              ${kids.map(k=>`<div class="ochip lvl2" onclick="openDeptModal(${k.Seva_Dept_ID})">${esc(k.Seva_Dept_Name)}</div>`).join('')}
-            </div>` : ''}
+            ${SHOW_ALL_SUBDEPTS && kids.length ? `<div class="olvl2panel">
+              <div class="olvl2count">${kids.length} sub-dept${kids.length===1?'':'s'}</div>
+              ${visible.map(k=>`<div class="ochip lvl2" onclick="openDeptModal(${k.Seva_Dept_ID})">${esc(k.Seva_Dept_Name)}</div>`).join('')}
+              ${overflow>0 ? `<div class="osub2" style="cursor:pointer" onclick="openDeptModal(${d.Seva_Dept_ID})">+ ${overflow} more \u2014 open to see all</div>` : ''}
+            </div>` : `<div class="osub2">${kids.length} sub-dept${kids.length===1?'':'s'}</div>`}
           </div>`;
         }).join('')}
       </div>
@@ -2471,7 +2521,10 @@ const SATSANG_STATUS_COLORS = {
   'Cancelled': {bg:'#FBE7E7', fg:'var(--rose)'},
   'Completed': {bg:'#E1F3FA', fg:'var(--deep)'},
   'Requested': {bg:'#FDF0DC', fg:'#9A6A0E'},
-  'Accepted': {bg:'#E1F3FA', fg:'var(--deep)'}
+  'Accepted': {bg:'#E1F3FA', fg:'var(--deep)'},
+  'Published': {bg:'#E7F3EC', fg:'var(--sage)'},
+  'Paused': {bg:'#FDF0DC', fg:'#9A6A0E'},
+  'Archived': {bg:'#EEF1F4', fg:'var(--ink-3)'}
 };
 function statusBadge(s){
   const c = SATSANG_STATUS_COLORS[s] || {bg:'#EEF1F4', fg:'var(--ink-2)'};
@@ -3366,6 +3419,281 @@ async function deleteAccessRule(id, btn){
   if(!confirm('Delete this access rule?')) return;
   await withLoading(btn, async ()=>{
     try{ await apiFetch('/api/satsangs/access-config/'+id, {method:'DELETE'}); toast('Deleted.'); loadSatsangAccess(); }
+    catch(err){ toast('Could not delete: '+(err.message||'')); }
+  });
+}
+
+/* ============ Form Management System (FMS) ============
+   Mirrors Satsang Management: Form_Creation_Process is a Draft -> In
+   Review -> Published lifecycle (same shape as M_Satsang), with Paused
+   and Archived as terminal-ish states Satsang definitions don't have.
+   Form_Additional_Fields is the same idea as M_Satsang_Defn's custom
+   fields. Form_Seva_Dept_Access is the same idea as
+   Satsangs_Seva_Dept_Access — configuration only, not enforced.
+   "Submissions" (Curious Intake) deliberately stays in My Seva
+   Activities, not moved in here, per instruction. */
+
+function formSubtab(s){
+  document.getElementById('formDefs').style.display = s==='defs' ? '' : 'none';
+  document.getElementById('formAccess').style.display = s==='access' ? '' : 'none';
+  document.querySelectorAll('#p-formmgmt .chip').forEach(c=>c.classList.toggle('on', c.dataset.fsub===s));
+  if(s==='access') renderFormAccess(true);
+  else renderFormDefs(true);
+}
+
+let LIVE_FORMS = null;
+let FORM_DETAIL_ID = null;
+let FORM_DETAIL_FIELDS = null;
+
+async function loadForms(){
+  try{
+    LIVE_FORMS = await apiFetch('/api/forms');
+    renderFormDefs(true);
+    if(FORM_DETAIL_ID) openFormDetail(FORM_DETAIL_ID);
+  }catch(err){
+    const el = document.getElementById('formDefs');
+    if(el) el.innerHTML = `<div class="hidden-note" style="background:var(--rose-wash);border-color:#EBCBCE;color:var(--rose)"><b>Could not load forms.</b> ${esc(err.message||'')}</div>`;
+  }
+}
+
+function renderFormDefs(force){
+  const el = document.getElementById('formDefs');
+  if(!el) return;
+  if(LIVE_FORMS === null){ el.innerHTML = '<p class="sub2">Loading\u2026</p>'; loadForms(); return; }
+  el.innerHTML = `
+    <button class="btn sm" onclick="createForm(this)" style="margin-bottom:14px"><span class="spin"></span><span class="lbl">+ New form (Draft)</span></button>
+    <div id="formDefTable">
+      ${LIVE_FORMS.length ? LIVE_FORMS.map(formRowHTML).join('') : '<p class="sub2">No forms yet.</p>'}
+    </div>
+    <div id="formDetailRoot"></div>`;
+  if(FORM_DETAIL_ID && FORM_DETAIL_FIELDS) renderFormDetail();
+}
+
+function formRowHTML(f){
+  return `<div class="card pad" style="margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
+    <div style="cursor:pointer" onclick="openFormDetail(${f.Form_ID})">
+      <div style="font-weight:600">Form #${f.Form_ID}</div>
+      <div class="sub2">Owner: ${esc(f.owner_name||'\u2014')} \u00b7 Last changed ${esc(f.Current_Status_Change_Date||'\u2014')}${f.Form_Published_URL?(' \u00b7 <a href="'+esc(f.Form_Published_URL)+'" target="_blank" rel="noopener">'+esc(f.Form_Published_URL)+'</a>'):''}</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      ${statusBadge(f.Current_Status)}
+      ${formActionsHTML(f)}
+    </div>
+  </div>`;
+}
+
+function formActionsHTML(f){
+  const s = f.Current_Status;
+  if(s==='Draft') return `<button class="btn sm" onclick="submitFormForReview(${f.Form_ID}, this)"><span class="spin"></span><span class="lbl">Submit for review</span></button>
+    <button class="mini" onclick="archiveForm(${f.Form_ID}, this)" title="Archive" style="width:24px;height:24px;color:var(--rose)">&times;</button>`;
+  if(s==='In Review') return `<button class="btn sm" onclick="publishForm(${f.Form_ID}, this)"><span class="spin"></span><span class="lbl">Publish</span></button>
+    <button class="btn ghost sm" style="color:var(--rose);border-color:var(--rose)" onclick="rejectForm(${f.Form_ID}, this)"><span class="spin"></span><span class="lbl">Reject</span></button>`;
+  if(s==='Published') return `<button class="mini" onclick="pauseForm(${f.Form_ID}, this)" style="width:auto;padding:0 10px;height:26px;font-size:11.5px">Pause</button>
+    <button class="mini" onclick="archiveForm(${f.Form_ID}, this)" title="Archive" style="width:24px;height:24px;color:var(--rose)">&times;</button>`;
+  if(s==='Paused') return `<button class="mini" onclick="resumeForm(${f.Form_ID}, this)" style="width:auto;padding:0 10px;height:26px;font-size:11.5px">Resume</button>
+    <button class="mini" onclick="archiveForm(${f.Form_ID}, this)" title="Archive" style="width:24px;height:24px;color:var(--rose)">&times;</button>`;
+  return '';
+}
+
+async function createForm(btn){
+  await withLoading(btn, async ()=>{
+    try{ await apiFetch('/api/forms', {method:'POST'}); toast('Draft form created.'); LIVE_FORMS=null; loadForms(); }
+    catch(err){ toast('Could not create: '+(err.message||'')); }
+  });
+}
+async function submitFormForReview(id, btn){
+  await withLoading(btn, async ()=>{
+    try{ await apiFetch('/api/forms/'+id+'/submit-review', {method:'POST'}); toast('Submitted for review.'); LIVE_FORMS=null; loadForms(); }
+    catch(err){ toast('Could not submit: '+(err.message||'')); }
+  });
+}
+async function rejectForm(id, btn){
+  await withLoading(btn, async ()=>{
+    try{ await apiFetch('/api/forms/'+id+'/reject', {method:'POST'}); toast('Sent back to Draft.'); LIVE_FORMS=null; loadForms(); }
+    catch(err){ toast('Could not reject: '+(err.message||'')); }
+  });
+}
+async function publishForm(id, btn){
+  const url = prompt('URL where this form actually lives (Google Form, etc.):');
+  if(!url) return;
+  await withLoading(btn, async ()=>{
+    try{ await apiFetch('/api/forms/'+id+'/publish', {method:'POST', body: JSON.stringify({publishedUrl:url})}); toast('Published.'); LIVE_FORMS=null; loadForms(); }
+    catch(err){ toast('Could not publish: '+(err.message||'')); }
+  });
+}
+async function pauseForm(id, btn){
+  await withLoading(btn, async ()=>{
+    try{ await apiFetch('/api/forms/'+id+'/pause', {method:'POST'}); toast('Paused.'); LIVE_FORMS=null; loadForms(); }
+    catch(err){ toast('Could not pause: '+(err.message||'')); }
+  });
+}
+async function resumeForm(id, btn){
+  await withLoading(btn, async ()=>{
+    try{ await apiFetch('/api/forms/'+id+'/resume', {method:'POST'}); toast('Resumed.'); LIVE_FORMS=null; loadForms(); }
+    catch(err){ toast('Could not resume: '+(err.message||'')); }
+  });
+}
+async function archiveForm(id, btn){
+  if(!confirm('Archive this form? It cannot be un-archived from here.')) return;
+  await withLoading(btn, async ()=>{
+    try{ await apiFetch('/api/forms/'+id+'/archive', {method:'POST'}); toast('Archived.'); LIVE_FORMS=null; loadForms(); }
+    catch(err){ toast('Could not archive: '+(err.message||'')); }
+  });
+}
+
+async function openFormDetail(id){
+  FORM_DETAIL_ID = id;
+  const root = document.getElementById('formDetailRoot');
+  if(!root) return;
+  root.innerHTML = `<div class="obackdrop" onclick="if(event.target===this) closeFormDetail()">
+    <div class="omodal"><button class="oclose" onclick="closeFormDetail()">&times;</button><p class="sub2">Loading\u2026</p></div></div>`;
+  try{
+    FORM_DETAIL_FIELDS = await apiFetch('/api/forms/'+id+'/fields');
+    renderFormDetail();
+  }catch(err){
+    const modal = root.querySelector('.omodal');
+    if(modal) modal.innerHTML = `<button class="oclose" onclick="closeFormDetail()">&times;</button><p class="sub2">Could not load: ${esc(err.message||'')}</p>`;
+  }
+}
+function closeFormDetail(){ FORM_DETAIL_ID=null; FORM_DETAIL_FIELDS=null; const el=document.getElementById('formDetailRoot'); if(el) el.innerHTML=''; }
+
+function renderFormDetail(){
+  const root = document.getElementById('formDetailRoot');
+  if(!root) return;
+  const f = (LIVE_FORMS||[]).find(x=>x.Form_ID===FORM_DETAIL_ID);
+  const fields = FORM_DETAIL_FIELDS || [];
+  root.innerHTML = `<div class="obackdrop" onclick="if(event.target===this) closeFormDetail()">
+    <div class="omodal">
+      <button class="oclose" onclick="closeFormDetail()">&times;</button>
+      <h3 style="margin:0 0 4px">Form #${FORM_DETAIL_ID}</h3>
+      <p class="sub2" style="margin-bottom:14px">${f?statusBadge(f.Current_Status):''}</p>
+      <p class="sub2" style="font-weight:600">Additional fields (this form's own questions)</p>
+      ${fields.length ? fields.map(ff=>`<div class="oteamrow">
+          <span>${esc(ff.Question_Name)} <span class="sub2">(${esc(ff.Question_Type)}, ${esc(ff.Component_Type)})</span></span>
+          <button class="mini" onclick="deleteFormField(${ff.FAF_ID}, this)" style="width:22px;height:22px;color:var(--rose)">&times;</button>
+        </div>`).join('') : '<p class="sub2">None yet.</p>'}
+      <details style="margin-top:6px">
+        <summary style="cursor:pointer;font-size:12px;color:var(--deep)">+ Add question</summary>
+        <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;align-items:center">
+          <input id="ffName" placeholder="Question" style="border-radius:999px;padding:5px 12px;font-size:12.5px;border:1px solid var(--line-2);flex:1;min-width:120px">
+          <select id="ffQType" style="border-radius:999px;padding:5px 12px;font-size:12.5px;border:1px solid var(--line-2)">
+            <option value="STRING">String</option><option value="INTEGER">Integer</option><option value="BOOLEAN">Boolean</option><option value="DATE">Date</option>
+          </select>
+          <select id="ffCType" style="border-radius:999px;padding:5px 12px;font-size:12.5px;border:1px solid var(--line-2)">
+            <option value="INPUT">Input</option><option value="CHECKBOX">Checkbox</option><option value="CONSENT">Consent</option>
+            <option value="INFORMATION">Information</option><option value="WARNING">Warning</option><option value="HIGHLIGHT">Highlight</option>
+          </select>
+          <button class="btn sm" onclick="addFormField(this)"><span class="spin"></span><span class="lbl">Add</span></button>
+        </div>
+      </details>
+    </div>
+  </div>`;
+}
+
+async function addFormField(btn){
+  await withLoading(btn, async ()=>{
+    try{
+      const questionName = document.getElementById('ffName').value.trim();
+      if(!questionName) return;
+      await apiFetch('/api/forms/'+FORM_DETAIL_ID+'/fields', {method:'POST', body: JSON.stringify({
+        questionName, questionType: document.getElementById('ffQType').value, componentType: document.getElementById('ffCType').value
+      })});
+      toast('Question added.');
+      FORM_DETAIL_FIELDS = await apiFetch('/api/forms/'+FORM_DETAIL_ID+'/fields');
+      renderFormDetail();
+    }catch(err){ toast('Could not add: '+(err.message||'')); }
+  });
+}
+async function deleteFormField(fafId, btn){
+  if(!confirm('Remove this question?')) return;
+  await withLoading(btn, async ()=>{
+    try{
+      await apiFetch('/api/forms/fields/'+fafId, {method:'DELETE'});
+      toast('Removed.');
+      FORM_DETAIL_FIELDS = await apiFetch('/api/forms/'+FORM_DETAIL_ID+'/fields');
+      renderFormDetail();
+    }catch(err){ toast('Could not remove: '+(err.message||'')); }
+  });
+}
+
+/* ---- Form_Seva_Dept_Access — configuration only, not enforced, same as
+   Satsangs_Seva_Dept_Access ---- */
+let LIVE_FORM_ACCESS = null;
+async function loadFormAccess(){
+  try{ LIVE_FORM_ACCESS = await apiFetch('/api/forms/access-config'); renderFormAccessBody(); }
+  catch(err){
+    const el = document.getElementById('formAccessBody');
+    if(el) el.innerHTML = `<p class="sub2">Could not load: ${esc(err.message||'')}</p>`;
+  }
+}
+function renderFormAccess(force){
+  const el = document.getElementById('formAccess');
+  if(!el) return;
+  if(LIVE_DEPTS === null){ el.innerHTML = '<p class="sub2">Loading\u2026</p>'; loadTeamData(); return; }
+  el.innerHTML = `<div id="formAccessBody"><p class="sub2">Loading\u2026</p></div>`;
+  loadFormAccess();
+}
+function renderFormAccessBody(){
+  const body = document.getElementById('formAccessBody');
+  if(!body || !LIVE_DEPTS) return;
+  const rows = LIVE_FORM_ACCESS || [];
+  body.innerHTML = `
+    <div class="hidden-note" style="margin-bottom:12px">Not enforced yet — same as Satsang Management's Access Configuration. This screen defines the rules ahead of enforcement.</div>
+    <details style="margin-bottom:14px">
+      <summary style="cursor:pointer;font-size:12px;color:var(--deep)">+ Add access rule</summary>
+      <div class="card pad" style="margin-top:8px;display:flex;flex-direction:column;gap:8px;max-width:460px">
+        <label class="sub2">Form Type ID</label>
+        <input id="fac_FormTypeId" type="number" placeholder="Form_Type_ID" style="border-radius:999px;padding:7px 14px;font-size:13px;border:1px solid var(--line-2)">
+        <label class="sub2">Department</label>
+        <select id="fac_Dept" style="border-radius:999px;padding:7px 14px;font-size:13px;border:1px solid var(--line-2)">
+          ${LIVE_DEPTS.map(d=>`<option value="${d.Seva_Dept_ID}">${esc(d.Seva_Dept_Name)}</option>`).join('')}
+        </select>
+        <label class="sub2">Create role ID</label>
+        <input id="fac_Create" type="number" placeholder="Single Dept_Role_ID" style="border-radius:999px;padding:7px 14px;font-size:13px;border:1px solid var(--line-2)">
+        <label class="sub2">Review role IDs</label>
+        <input id="fac_Review" placeholder="Comma-separated" style="border-radius:999px;padding:7px 14px;font-size:13px;border:1px solid var(--line-2)">
+        <label class="sub2">Approve role IDs</label>
+        <input id="fac_Approve" placeholder="Comma-separated" style="border-radius:999px;padding:7px 14px;font-size:13px;border:1px solid var(--line-2)">
+        <label class="sub2">Notify role IDs</label>
+        <input id="fac_Notify" placeholder="Comma-separated" style="border-radius:999px;padding:7px 14px;font-size:13px;border:1px solid var(--line-2)">
+        <button class="btn sm" onclick="addFormAccessRule(this)"><span class="spin"></span><span class="lbl">Add rule</span></button>
+        <div class="err" id="facErr"></div>
+      </div>
+    </details>
+    ${rows.length ? rows.map(formAccessRowHTML).join('') : '<p class="sub2">No access rules configured yet.</p>'}`;
+}
+function formAccessRowHTML(r){
+  return `<div class="card pad" style="margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
+    <div>
+      <div style="font-weight:600">Form Type #${r.Form_Type_ID} \u2014 ${esc(r.Seva_Dept_Name||('Dept #'+r.Seva_Dept_ID))}</div>
+      <div class="sub2">Create: ${esc(r.Dept_Create_Role_ID||'\u2014')} \u00b7 Review: ${esc(r.Dept_Review_Role_ID||'\u2014')} \u00b7 Approve: ${esc(r.Dept_Approve_Role_ID||'\u2014')} \u00b7 Notify: ${esc(r.Notify_Role_ID||'\u2014')}</div>
+    </div>
+    <button class="mini" onclick="deleteFormAccessRule(${r.Form_Access_ID}, this)" title="Delete" style="width:24px;height:24px;color:var(--rose)">&times;</button>
+  </div>`;
+}
+async function addFormAccessRule(btn){
+  const errEl = document.getElementById('facErr'); errEl.classList.remove('on');
+  await withLoading(btn, async ()=>{
+    try{
+      const formTypeId = document.getElementById('fac_FormTypeId').value;
+      if(!formTypeId){ errEl.textContent='Form Type ID is required.'; errEl.classList.add('on'); return; }
+      await apiFetch('/api/forms/access-config', {method:'POST', body: JSON.stringify({
+        formTypeId: Number(formTypeId),
+        sevaDeptId: Number(document.getElementById('fac_Dept').value),
+        createRoleId: document.getElementById('fac_Create').value ? Number(document.getElementById('fac_Create').value) : null,
+        reviewRoleIds: document.getElementById('fac_Review').value.trim() || null,
+        approveRoleIds: document.getElementById('fac_Approve').value.trim() || null,
+        notifyRoleIds: document.getElementById('fac_Notify').value.trim() || null,
+      })});
+      toast('Access rule added.');
+      loadFormAccess();
+    }catch(err){ errEl.textContent = err.message||'Could not add rule.'; errEl.classList.add('on'); }
+  });
+}
+async function deleteFormAccessRule(id, btn){
+  if(!confirm('Delete this access rule?')) return;
+  await withLoading(btn, async ()=>{
+    try{ await apiFetch('/api/forms/access-config/'+id, {method:'DELETE'}); toast('Deleted.'); loadFormAccess(); }
     catch(err){ toast('Could not delete: '+(err.message||'')); }
   });
 }
