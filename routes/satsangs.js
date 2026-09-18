@@ -956,6 +956,46 @@ router.post('/events/:seId/comments', requireAuth, async (req, res) => {
   }
 });
 
+// POST /events/:seId/comments/bulk — one conductor, notes for several
+// attendees in a single submit (grid-style entry). Entries with an empty
+// comment are skipped rather than saved as blank rows.
+router.post('/events/:seId/comments/bulk', requireAuth, async (req, res) => {
+  const { scCsmsId, entries } = req.body || {};
+  if (!scCsmsId || !Array.isArray(entries) || !entries.length) {
+    return res.status(400).json({ error: 'scCsmsId and a non-empty entries array are required' });
+  }
+  let client;
+  try {
+    client = await pool.connect();
+    await client.query('BEGIN');
+    let saved = 0;
+    for (const entry of entries) {
+      const comments = (entry.comments || '').trim();
+      if (!entry.seekerId || !comments) continue;
+      const maxQ = await client.query(
+        `SELECT COALESCE(MAX(${qi('Comment_ID')}), 0) + 1 AS next_id FROM ${qi('SCS')}.${qi('Satsang_Comments')}`
+      );
+      const id = maxQ.rows[0].next_id;
+      await client.query(
+        `INSERT INTO ${qi('SCS')}.${qi('Satsang_Comments')}
+          (${qi('Comment_ID')}, ${qi('SE_ID')}, ${qi('SC_CSMS_ID')}, ${qi('Seeker_ID')}, ${qi('Comments')}, ${qi('Comments_Date')})
+         VALUES ($1,$2,$3,$4,$5,CURRENT_DATE)`,
+        [id, req.params.seId, scCsmsId, entry.seekerId, comments]
+      );
+      saved++;
+    }
+    await client.query('COMMIT');
+    res.status(201).json({ ok: true, saved });
+  } catch (err) {
+    if (client) await client.query('ROLLBACK');
+    console.error('[POST /satsangs/events/:seId/comments/bulk] error', err);
+    res.status(500).json({ error: 'INTERNAL', message: err.message });
+  } finally {
+    if (client) client.release();
+  }
+});
+
+
 router.delete('/comments/:commentId', requireAuth, async (req, res) => {
   try {
     await pool.query(`DELETE FROM ${qi('SCS')}.${qi('Satsang_Comments')} WHERE ${qi('Comment_ID')} = $1`, [req.params.commentId]);

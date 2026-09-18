@@ -3144,6 +3144,27 @@ function renderSatsangCommentsBody(){
     : '';
 
   body.innerHTML = `
+    <div class="card pad" style="margin-bottom:14px">
+      <p class="sub2" style="font-weight:600;margin-bottom:8px">Add notes \u2014 one conductor, all attendees, one submit</p>
+      <select id="scConductor" style="border-radius:999px;padding:7px 14px;font-size:13px;border:1px solid var(--line-2);margin-bottom:10px;width:100%;max-width:320px;box-sizing:border-box">
+        <option value="">${conductorOptions?'Choose conductor\u2026':'No conductor set on this event'}</option>
+        ${conductorOptions}
+      </select>
+      ${attendees.length ? `<div style="display:flex;flex-direction:column;gap:6px">
+          ${attendees.map(a=>{
+            const name = esc([a.First_Name,a.Last_Name].filter(Boolean).join(' ')||('Seeker #'+a.Seeker_ID));
+            return `<div style="display:grid;grid-template-columns:160px 1fr;gap:8px;align-items:center">
+              <span class="sub2" style="font-weight:500;color:var(--ink)">${name}</span>
+              <input id="scGrid_${a.Seeker_ID}" placeholder="Note for ${name}" style="border-radius:999px;padding:6px 14px;font-size:13px;border:1px solid var(--line-2)">
+            </div>`;
+          }).join('')}
+        </div>
+        <button class="btn sm" onclick="submitSatsangCommentsGrid(this)" style="margin-top:12px"><span class="spin"></span><span class="lbl">Submit all notes</span></button>
+        <div class="err" id="scErr"></div>`
+        : '<p class="sub2">No attendees on this satsang yet.</p>'}
+    </div>
+
+    <p class="sub2" style="font-weight:600;margin-bottom:6px">History</p>
     ${comments.length ? comments.map(c=>`<div class="card pad" style="margin-bottom:8px">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
           <div>
@@ -3153,38 +3174,25 @@ function renderSatsangCommentsBody(){
           </div>
           <button class="mini" onclick="deleteSatsangComment(${c.Comment_ID}, this)" title="Delete" style="width:22px;height:22px;color:var(--rose);flex-shrink:0">&times;</button>
         </div>
-      </div>`).join('') : '<p class="sub2">No comments on this event yet.</p>'}
-
-    <details style="margin-top:10px" open>
-      <summary style="cursor:pointer;font-size:12px;color:var(--deep)">+ Add comment</summary>
-      <div class="card pad" style="margin-top:8px;display:flex;flex-direction:column;gap:8px;max-width:460px">
-        <select id="scSeeker" style="border-radius:999px;padding:7px 14px;font-size:13px;border:1px solid var(--line-2)">
-          <option value="">${attendees.length?'Choose attending seeker\u2026':'No attendees on this satsang yet'}</option>
-          ${attendees.map(a=>`<option value="${a.Seeker_ID}">${esc([a.First_Name,a.Last_Name].filter(Boolean).join(' ')||('Seeker #'+a.Seeker_ID))}</option>`).join('')}
-        </select>
-        <select id="scConductor" style="border-radius:999px;padding:7px 14px;font-size:13px;border:1px solid var(--line-2)">
-          <option value="">${conductorOptions?'Choose conductor\u2026':'No conductor set on this event'}</option>
-          ${conductorOptions}
-        </select>
-        <textarea id="scText" placeholder="Comments and guidance for seeker" rows="3" style="border-radius:12px;padding:9px 14px;font-size:13px;border:1px solid var(--line-2);font-family:inherit;resize:vertical"></textarea>
-        <button class="btn sm" onclick="addSatsangComment(this)"><span class="spin"></span><span class="lbl">Add comment</span></button>
-        <div class="err" id="scErr"></div>
-      </div>
-    </details>`;
+      </div>`).join('') : '<p class="sub2">No comments on this event yet.</p>'}`;
 }
 
-async function addSatsangComment(btn){
+async function submitSatsangCommentsGrid(btn){
   const errEl = document.getElementById('scErr'); errEl.classList.remove('on');
   await withLoading(btn, async ()=>{
     try{
-      const seekerId = document.getElementById('scSeeker').value;
       const scCsmsId = document.getElementById('scConductor').value;
-      const comments = document.getElementById('scText').value.trim();
-      if(!seekerId || !scCsmsId || !comments){ errEl.textContent='Pick a seeker and conductor, and enter a comment.'; errEl.classList.add('on'); return; }
-      await apiFetch('/api/satsangs/events/'+SATSANG_COMMENTS_SE_ID+'/comments', {method:'POST', body: JSON.stringify({seekerId:Number(seekerId), scCsmsId:Number(scCsmsId), comments})});
-      toast('Comment added.');
+      if(!scCsmsId){ errEl.textContent='Pick a conductor first.'; errEl.classList.add('on'); return; }
+      const attendees = LIVE_SATSANG_COMMENTS_ATTENDEES || [];
+      const entries = attendees.map(a=>{
+        const el = document.getElementById('scGrid_'+a.Seeker_ID);
+        return { seekerId: a.Seeker_ID, comments: el ? el.value.trim() : '' };
+      }).filter(e=>e.comments);
+      if(!entries.length){ errEl.textContent='Enter at least one note before submitting.'; errEl.classList.add('on'); return; }
+      const res = await apiFetch('/api/satsangs/events/'+SATSANG_COMMENTS_SE_ID+'/comments/bulk', {method:'POST', body: JSON.stringify({scCsmsId:Number(scCsmsId), entries})});
+      toast(res.saved+' note'+(res.saved===1?'':'s')+' saved.');
       loadSatsangComments();
-    }catch(err){ errEl.textContent = err.message||'Could not add.'; errEl.classList.add('on'); }
+    }catch(err){ errEl.textContent = err.message||'Could not save.'; errEl.classList.add('on'); }
   });
 }
 
@@ -3484,15 +3492,53 @@ function formRowHTML(f){
 
 function formActionsHTML(f){
   const s = f.Form_Status_Name;
-  if(s==='Draft') return `<button class="btn sm" onclick="submitFormForReview(${f.Form_ID}, this)"><span class="spin"></span><span class="lbl">Submit for review</span></button>
+  const previewBtn = (s==='Draft'||s==='In Review') ? `<button class="mini" onclick="previewForm(${f.Form_ID}, this)" style="width:auto;padding:0 10px;height:26px;font-size:11.5px">Preview</button>` : '';
+  if(s==='Draft') return previewBtn + `<button class="btn sm" onclick="submitFormForReview(${f.Form_ID}, this)"><span class="spin"></span><span class="lbl">Submit for review</span></button>
     <button class="mini" onclick="archiveForm(${f.Form_ID}, this)" title="Archive" style="width:24px;height:24px;color:var(--rose)">&times;</button>`;
-  if(s==='In Review') return `<button class="btn sm" onclick="publishForm(${f.Form_ID}, this)"><span class="spin"></span><span class="lbl">Publish</span></button>
+  if(s==='In Review') return previewBtn + `<button class="btn sm" onclick="publishForm(${f.Form_ID}, this)"><span class="spin"></span><span class="lbl">Publish</span></button>
     <button class="btn ghost sm" style="color:var(--rose);border-color:var(--rose)" onclick="rejectForm(${f.Form_ID}, this)"><span class="spin"></span><span class="lbl">Reject</span></button>`;
   if(s==='Published') return `<button class="mini" onclick="pauseForm(${f.Form_ID}, this)" style="width:auto;padding:0 10px;height:26px;font-size:11.5px">Pause</button>
     <button class="mini" onclick="archiveForm(${f.Form_ID}, this)" title="Archive" style="width:24px;height:24px;color:var(--rose)">&times;</button>`;
   if(s==='Paused') return `<button class="mini" onclick="resumeForm(${f.Form_ID}, this)" style="width:auto;padding:0 10px;height:26px;font-size:11.5px">Resume</button>
     <button class="mini" onclick="archiveForm(${f.Form_ID}, this)" title="Archive" style="width:24px;height:24px;color:var(--rose)">&times;</button>`;
   return '';
+}
+
+// Preview renders a visual mockup from Form_Additional_Fields — there's no
+// public submission page yet, so this is what staff get in the meantime:
+// a look at what the form's questions and components would look like,
+// not a working form (nothing here can actually be submitted).
+async function previewForm(id, btn){
+  const root = document.getElementById('formDetailRoot') || document.body;
+  const holder = document.createElement('div');
+  holder.id = 'formPreviewRoot';
+  document.body.appendChild(holder);
+  holder.innerHTML = `<div class="obackdrop" onclick="if(event.target===this) closeFormPreview()">
+    <div class="omodal"><button class="oclose" onclick="closeFormPreview()">&times;</button><p class="sub2">Loading\u2026</p></div></div>`;
+  try{
+    const fields = await apiFetch('/api/forms/'+id+'/fields');
+    const modal = holder.querySelector('.omodal');
+    modal.innerHTML = `<button class="oclose" onclick="closeFormPreview()">&times;</button>
+      <h3 style="margin:0 0 4px">Preview \u2014 Form #${id}</h3>
+      <p class="sub2" style="margin-bottom:14px">A mockup of the questions, not a working form \u2014 there's no public submission page yet.</p>
+      ${fields.length ? fields.map(formPreviewFieldHTML).join('') : '<p class="sub2">No additional fields defined yet.</p>'}`;
+  }catch(err){
+    const modal = holder.querySelector('.omodal');
+    if(modal) modal.innerHTML = `<button class="oclose" onclick="closeFormPreview()">&times;</button><p class="sub2">Could not load: ${esc(err.message||'')}</p>`;
+  }
+}
+function closeFormPreview(){ const el=document.getElementById('formPreviewRoot'); if(el) el.remove(); }
+function formPreviewFieldHTML(f){
+  const label = `<label class="sub2" style="font-weight:600;display:block;margin-bottom:4px">${esc(f.Question_Name)}</label>`;
+  const wrap = (inner) => `<div style="margin-bottom:14px">${label}${inner}</div>`;
+  const disabledStyle = 'width:100%;border-radius:999px;padding:7px 14px;font-size:13px;border:1px solid var(--line-2);box-sizing:border-box;background:var(--paper)';
+  if(f.Component_Type==='CHECKBOX') return wrap(`<label class="sub2" style="display:flex;align-items:center;gap:6px"><input type="checkbox" disabled> Yes</label>`);
+  if(f.Component_Type==='CONSENT') return wrap(`<label class="sub2" style="display:flex;align-items:center;gap:6px"><input type="checkbox" disabled> I agree</label>`);
+  if(f.Component_Type==='INFORMATION') return `<div class="hidden-note" style="margin-bottom:14px">${esc(f.Question_Name)}</div>`;
+  if(f.Component_Type==='WARNING') return `<div class="hidden-note" style="margin-bottom:14px;background:var(--amber-wash);border-color:#EBD9A6;color:var(--amber)">${esc(f.Question_Name)}</div>`;
+  if(f.Component_Type==='HIGHLIGHT') return `<div class="hidden-note" style="margin-bottom:14px;background:var(--deep-wash);border-color:var(--line-2);color:var(--deep)">${esc(f.Question_Name)}</div>`;
+  const type = f.Question_Type==='DATE' ? 'date' : f.Question_Type==='INTEGER' ? 'number' : 'text';
+  return wrap(`<input type="${type}" disabled style="${disabledStyle}">`);
 }
 
 async function createForm(btn){
