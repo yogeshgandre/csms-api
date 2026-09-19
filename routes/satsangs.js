@@ -13,10 +13,8 @@
 //
 // NOTE: Attendees were originally modeled via AS_CSMS_ID (RMS.User_Profile
 // identity, same as staff) — corrected to Seeker_ID (real MSR.Seeker) per
-// instruction. Attendee_Transfer_Requests.AS_CSMS_ID was NOT renamed (only
-// Satsang_Attending_Seekers' column was), so that column name is now
-// misleading — it holds Seeker_ID values to stay consistent with the table
-// it interoperates with. Worth a rename script later; not done unprompted.
+// instruction. Attendee_Transfer_Requests.AS_CSMS_ID was renamed to
+// Seeker_ID too (confirmed run) — code below now matches.
 
 const express = require('express');
 const crypto = require('crypto');
@@ -664,16 +662,13 @@ router.get('/:satsangId/attendees', requireAuth, async (req, res) => {
   }
 });
 
-// NOTE: Attendee_Transfer_Requests.AS_CSMS_ID was NOT renamed (only
-// Satsang_Attending_Seekers.AS_CSMS_ID -> Seeker_ID was, per instruction).
-// The column name here is now misleading — it holds Seeker_ID values, to
-// stay consistent with the table it has to interoperate with — but I
-// haven't renamed it myself since that wasn't asked for. Worth a rename
-// script later for clarity; flagged in the response, not silently done.
+// Attendee_Transfer_Requests.AS_CSMS_ID was renamed to Seeker_ID (confirmed
+// run) — this code previously assumed it hadn't been, which broke this
+// endpoint. Fixed to match the live column name.
 router.get('/transfers', requireAuth, async (req, res) => {
   try {
     const result = await pool.query(
-      `SELECT tr.${qi('TR_ID')}, tr.${qi('AS_CSMS_ID')} AS seeker_id, tr.${qi('TR_From_Satsang_ID')}, tr.${qi('TR_To_Satsang_ID')},
+      `SELECT tr.${qi('TR_ID')}, tr.${qi('Seeker_ID')} AS seeker_id, tr.${qi('TR_From_Satsang_ID')}, tr.${qi('TR_To_Satsang_ID')},
               tr.${qi('TR_Status_ID')}, ts.${qi('TR_Status_Name')},
               tr.${qi('TR_Initiated_Remarks')}, tr.${qi('TR_Initiated_DT')}, tr.${qi('TR_Initiated_By_CSMS_ID')},
               tr.${qi('TR_Approver_CSMS_ID')}, tr.${qi('TR_Approver_Remarks')}, tr.${qi('TR_Approved_DT')},
@@ -682,7 +677,7 @@ router.get('/transfers', requireAuth, async (req, res) => {
               fs.${qi('Satsang_Name')} AS from_satsang_name, ts2.${qi('Satsang_Name')} AS to_satsang_name
        FROM ${qi('SCS')}.${qi('Attendee_Transfer_Requests')} tr
        LEFT JOIN ${qi('SCS')}.${qi('Transfer_Status')} ts ON ts.${qi('TR_Status_ID')} = tr.${qi('TR_Status_ID')}
-       LEFT JOIN ${qi('MSR')}.${qi('Seeker')} sk ON sk.${qi('Seeker_ID')} = tr.${qi('AS_CSMS_ID')}
+       LEFT JOIN ${qi('MSR')}.${qi('Seeker')} sk ON sk.${qi('Seeker_ID')} = tr.${qi('Seeker_ID')}
        LEFT JOIN ${qi('SCS')}.${qi('M_Satsang')} fs ON fs.${qi('Satsang_ID')} = tr.${qi('TR_From_Satsang_ID')}
        LEFT JOIN ${qi('SCS')}.${qi('M_Satsang')} ts2 ON ts2.${qi('Satsang_ID')} = tr.${qi('TR_To_Satsang_ID')}
        ORDER BY tr.${qi('TR_Initiated_DT')} DESC`
@@ -731,7 +726,7 @@ router.post('/transfers', requireAuth, async (req, res) => {
     const id = maxQ.rows[0].next_id;
     await pool.query(
       `INSERT INTO ${qi('SCS')}.${qi('Attendee_Transfer_Requests')}
-        (${qi('TR_ID')}, ${qi('AS_CSMS_ID')}, ${qi('TR_From_Satsang_ID')}, ${qi('TR_To_Satsang_ID')},
+        (${qi('TR_ID')}, ${qi('Seeker_ID')}, ${qi('TR_From_Satsang_ID')}, ${qi('TR_To_Satsang_ID')},
          ${qi('TR_Status_ID')}, ${qi('TR_Initiated_Remarks')}, ${qi('TR_Initiated_DT')}, ${qi('TR_Initiated_By_CSMS_ID')})
        VALUES ($1,$2,$3,$4,$5,$6,CURRENT_DATE,$7)`,
       [id, seekerId, fromSatsangId, toSatsangId, statusQ.rows[0].TR_Status_ID, remarks || null, req.user.csmsId]
@@ -776,15 +771,11 @@ router.post('/transfers/:id/accept', requireAuth, async (req, res) => {
     fromStatuses: ['Approved'], toStatus: 'Accepted',
     apply: async (client, id) => {
       const trQ = await client.query(
-        `SELECT ${qi('AS_CSMS_ID')} AS seeker_id, ${qi('TR_From_Satsang_ID')}, ${qi('TR_To_Satsang_ID')}
+        `SELECT ${qi('Seeker_ID')} AS seeker_id, ${qi('TR_From_Satsang_ID')}, ${qi('TR_To_Satsang_ID')}
          FROM ${qi('SCS')}.${qi('Attendee_Transfer_Requests')} WHERE ${qi('TR_ID')} = $1`,
         [id]
       );
       const tr = trQ.rows[0];
-      // Satsang_Attending_Seekers uses Seeker_ID (renamed from AS_CSMS_ID);
-      // Attendee_Transfer_Requests still calls the same value AS_CSMS_ID
-      // (that column wasn't renamed) — the value read above is used as a
-      // Seeker_ID against the other table.
       await client.query(
         `UPDATE ${qi('SCS')}.${qi('Satsang_Attending_Seekers')} SET ${qi('Ver_To_DT')} = CURRENT_DATE - INTERVAL '1 day'
          WHERE ${qi('Satsang_ID')} = $1 AND ${qi('Seeker_ID')} = $2 AND ${qi('Ver_To_DT')} >= CURRENT_DATE`,
