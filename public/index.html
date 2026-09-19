@@ -7,7 +7,7 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232E76A8'/%3E%3Ctext x='16' y='21' font-family='Georgia,serif' font-size='13' fill='white' text-anchor='middle'%3ECSMS%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Source+Sans+3:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Source+Sans+3:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Caveat:wght@500;600&display=swap" rel="stylesheet">
 <style>
 :root{
   /* ink — shifted to a more confidently blue navy, per request */
@@ -23,6 +23,9 @@
   --amber:#96690F; --amber-wash:#FDF2D0;
   /* orange */
   --rose:#B3571F; --rose-wash:#FCE5D5;
+  /* violet — new, added only for the org banner's "Grow Together" chip;
+     keeps the same tint/wash pairing convention as the other accents */
+  --violet:#6B5B95; --violet-wash:#EDEAF7;
   /* shape — varied, not uniform */
   --r:14px; --r-sm:9px; --r-tag:7px;
   --ease:cubic-bezier(.2,.7,.3,1);
@@ -31,6 +34,7 @@
   --font-head:"Outfit", Calibri, Arial, sans-serif;
   --font-body:"Source Sans 3", Calibri, Arial, sans-serif;
   --font-org:Calibri, Carlito, "Segoe UI", Arial, sans-serif;
+  --font-script:"Caveat", cursive;
 }
 *{box-sizing:border-box}
 html,body{margin:0;padding:0}
@@ -261,12 +265,14 @@ tbody tr:last-child td{border-bottom:none}
 .ticker-item.type-Warning .ticker-dot{background:#FFC94D}
 .ticker-item.type-Information .ticker-dot{background:#5AC8E8}
 .org-banner{
-  grid-area:orgbanner;
-  background:linear-gradient(135deg,#EAF3FA 0%,#DCEAF6 55%,#CFE1F2 100%);
+  grid-area:orgbanner;position:relative;overflow:hidden;
+  background:linear-gradient(120deg,#EAF3FA 0%,#DCEAF6 45%,#ECF5EE 78%,#FBF3E2 100%);
   box-shadow:0 2px 10px rgba(23,58,102,.08);
   border-bottom:1px solid var(--line-2);
-  padding:20px 28px;display:flex;align-items:center;gap:18px;
+  padding:22px 32px;min-height:118px;
 }
+.org-banner .scenery{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0}
+.org-banner .org-inner{position:relative;z-index:1;display:flex;align-items:center;gap:18px;height:100%;flex-wrap:wrap}
 .org-banner .mark{
   flex:0 0 auto;width:52px;height:52px;border-radius:50%;
   background:radial-gradient(circle at 32% 28%,#BFE0F5,var(--deep) 68%,#1A4E70 100%);
@@ -282,6 +288,15 @@ tbody tr:last-child td{border-bottom:none}
   font-size:14px;color:var(--deep);letter-spacing:.03em;margin-top:4px;
 }
 .org-banner img.logo{height:56px;width:auto;flex:0 0 auto}
+.org-values{display:flex;align-items:center;gap:12px;margin-top:9px;flex-wrap:wrap}
+.org-values .v{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--ink-2)}
+.org-values .v .ic{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.org-values .sep{width:1px;height:13px;background:var(--line-2)}
+.org-tagline{
+  margin-left:auto;position:relative;z-index:1;text-align:right;padding-right:8px;
+  font-family:var(--font-script);font-size:24px;line-height:1.2;color:var(--deep);
+}
+@media(max-width:880px){ .org-tagline{display:none} }
 header{grid-area:header}
 nav{
   grid-area:nav;flex-direction:column;align-items:stretch;gap:2px;
@@ -420,10 +435,39 @@ nav .pip.r{background:var(--rose);color:#fff}
 <div class="shell" id="shell" style="display:none">
 
 <div class="org-banner">
-  <img class="logo" src="assets/ssrf-logo.webp" alt="SSRF logo">
-  <div class="org-text">
-    <div class="name">CSMS<span class="full">Curious and Seeker Management System</span></div>
-    <div class="tag">Spiritual Science Research Foundation</div>
+  <svg class="scenery" viewBox="0 0 1200 160" preserveAspectRatio="xMaxYMax slice" aria-hidden="true">
+    <defs>
+      <radialGradient id="sunGlow" cx="82%" cy="25%" r="55%">
+        <stop offset="0%" stop-color="#FDF2D0" stop-opacity=".95"/>
+        <stop offset="100%" stop-color="#FDF2D0" stop-opacity="0"/>
+      </radialGradient>
+    </defs>
+    <circle cx="990" cy="40" r="120" fill="url(#sunGlow)"/>
+    <polygon points="650,160 780,70 860,120 950,55 1060,130 1200,85 1200,160" fill="#C9DFF0" opacity=".85"/>
+    <polygon points="720,160 830,95 930,140 1030,80 1140,120 1200,95 1200,160" fill="#B3D0E7" opacity=".8"/>
+    <path d="M1140 4 Q1168 22 1158 48 Q1190 34 1200 56 L1200 0 L1140 0 Z" fill="#4F8A66" opacity=".16"/>
+    <path d="M1095 12 Q1118 26 1109 48 Q1137 39 1150 58 L1150 0 L1095 0 Z" fill="#4F8A66" opacity=".11"/>
+  </svg>
+  <div class="org-inner">
+    <img class="logo" src="assets/ssrf-logo.webp" alt="SSRF logo">
+    <div class="org-text">
+      <div class="name">CSMS<span class="full">Curious and Seeker Management System</span></div>
+      <div class="tag">Spiritual Science Research Foundation</div>
+      <div class="org-values">
+        <div class="v"><span class="ic" style="background:var(--deep-wash);color:var(--deep)">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          </span>Connect</div>
+        <span class="sep"></span>
+        <div class="v"><span class="ic" style="background:var(--sage-wash);color:var(--sage)">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 20A7 7 0 0 1 4 13c0-4 3-6 7-11 4 5 7 7 7 11a7 7 0 0 1-7 7Z"/></svg>
+          </span>Serve</div>
+        <span class="sep"></span>
+        <div class="v"><span class="ic" style="background:var(--violet-wash);color:var(--violet)">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21c-4-2-7-5-7-9a7 7 0 0 1 7-6 7 7 0 0 1 7 6c0 4-3 7-7 9Z"/><path d="M12 12V6"/></svg>
+          </span>Grow Together</div>
+      </div>
+    </div>
+    <div class="org-tagline">Towards a More<br>Awakened World</div>
   </div>
 </div>
 
@@ -3244,7 +3288,7 @@ function eventRowHTML(e){
         ${statusBadge(e.Current_Status)}
         ${e.Current_Status==='Pending Conductor Approval' ? `<button class="btn sm" onclick="approveSatsangEvent(${e.SE_ID}, this)"><span class="spin"></span><span class="lbl">Approve</span></button>` : ''}
         <button class="mini" onclick="toggleEventAttendees(${e.SE_ID}, this)" title="Add attendees to this satsang" style="width:auto;padding:0 10px;height:24px;font-size:11.5px">Attendees</button>
-        <button class="mini" onclick="openEventNotes(${e.SE_ID}, this)" title="Satsang report &amp; attendee notes" style="width:auto;padding:0 10px;height:24px;font-size:11.5px">Notes</button>
+        <button class="mini" onclick="openEventNotes(${e.SE_ID}, this)" title="Conductor's overall satsang report" style="width:auto;padding:0 10px;height:24px;font-size:11.5px">Notes</button>
         ${e.Current_Status==='Scheduled' ? `<button class="mini" onclick="toggleFormLinks(${e.SE_ID}, this)" title="Self-service form links" style="width:auto;padding:0 10px;height:24px;font-size:11.5px">Links</button>` : ''}
         ${e.Current_Status!=='Cancelled' ? `<button class="mini" onclick="cancelSatsangEvent(${e.SE_ID}, this)" title="Cancel" style="width:24px;height:24px;color:var(--rose)">&times;</button>` : ''}
       </div>
@@ -3259,6 +3303,7 @@ function eventRowHTML(e){
    schema; every event of a satsang shares one roster). Same endpoint as
    the Attendee Addition tab, just reachable without switching tabs. ---- */
 let EVENT_ATTENDEES_CACHE = {};
+let EVENT_COMMENTS_CACHE = {}; // per-event comments, keyed by SE_ID, filtered per seeker for the inline note + history
 async function toggleEventAttendees(seId, btn){
   const box = document.getElementById('evAttendees_'+seId);
   if(!box) return;
@@ -3267,29 +3312,98 @@ async function toggleEventAttendees(seId, btn){
   box.innerHTML = '<p class="sub2">Loading\u2026</p>';
   await withLoading(btn, async ()=>{
     try{
-      EVENT_ATTENDEES_CACHE[seId] = await apiFetch('/api/satsangs/defs/'+SATSANG_EVENTS_DEF_ID+'/attendees');
+      const [attendees, comments] = await Promise.all([
+        apiFetch('/api/satsangs/defs/'+SATSANG_EVENTS_DEF_ID+'/attendees'),
+        apiFetch('/api/satsangs/events/'+seId+'/comments'),
+      ]);
+      EVENT_ATTENDEES_CACHE[seId] = attendees;
+      EVENT_COMMENTS_CACHE[seId] = comments;
       box.innerHTML = eventAttendeesPanelHTML(seId);
     }catch(err){ box.innerHTML = `<p class="sub2">Could not load: ${esc(err.message||'')}</p>`; }
   });
 }
+// Roster + inline note + collapsed history, all in one row per attendee \u2014
+// replaces the old separate "grid of inputs" + "History" list further down.
 function eventAttendeesPanelHTML(seId){
   const list = EVENT_ATTENDEES_CACHE[seId] || [];
+  const comments = EVENT_COMMENTS_CACHE[seId] || [];
+  const events = LIVE_SATSANG_EVENTS[SATSANG_EVENTS_DEF_ID] || [];
+  const ev = events.find(x=>x.SE_ID==seId);
+  const conductorOptions = ev
+    ? [ev.SC1_CSMS_ID ? `<option value="${ev.SC1_CSMS_ID}">${esc(ev.sc1_name||'Conductor 1')}</option>` : '',
+       ev.SC2_CSMS_ID ? `<option value="${ev.SC2_CSMS_ID}">${esc(ev.sc2_name||'Conductor 2')}</option>` : ''].join('')
+    : '';
   return `<div class="card pad" style="background:var(--paper)">
     <p class="sub2" style="font-weight:600;margin-bottom:6px">Satsang roster \u2014 shared across every event of this satsang</p>
-    ${list.length ? list.map(a=>`<div class="oteamrow">
-        <span>${esc([a.First_Name,a.Last_Name].filter(Boolean).join(' ')||('Seeker #'+a.Seeker_ID))}</span>
-        <button class="mini" onclick="removeEventRosterAttendee(${seId}, ${a.Seeker_ID}, this)" style="width:22px;height:22px;color:var(--rose)">&times;</button>
-      </div>`).join('') : '<p class="sub2">None yet.</p>'}
-    <div style="display:flex;gap:6px;margin-top:8px;position:relative">
+    <select id="evAttCond_${seId}" style="border-radius:999px;padding:6px 14px;font-size:12.5px;border:1px solid var(--line-2);margin-bottom:10px;width:100%;max-width:280px;box-sizing:border-box">
+      <option value="">${conductorOptions?'Noting as\u2026':'No conductor set on this event'}</option>
+      ${conductorOptions}
+    </select>
+    ${list.length ? list.map(a=>{
+        const own = comments.filter(c=>String(c.Seeker_ID)===String(a.Seeker_ID));
+        const latest = own[0]; // API already orders newest-first
+        const rest = own.slice(1);
+        const name = esc([a.First_Name,a.Last_Name].filter(Boolean).join(' ')||('Seeker #'+a.Seeker_ID));
+        return `<div style="border-top:1px solid var(--line-2);padding:8px 0">
+          <div style="display:grid;grid-template-columns:150px 1fr auto auto;gap:8px;align-items:center">
+            <span style="font-weight:500;font-size:12.5px">${name}</span>
+            <input id="evNote_${seId}_${a.Seeker_ID}" placeholder="${latest?'Add another note\u2026':'Add a note\u2026'}" style="border-radius:999px;padding:5px 12px;font-size:12.5px;border:1px solid var(--line-2)">
+            <button class="mini" onclick="saveEventAttendeeNote(${seId}, ${a.Seeker_ID}, this)" style="width:auto;padding:0 10px;height:26px;font-size:11px">Save</button>
+            <button class="mini" onclick="removeEventRosterAttendee(${seId}, ${a.Seeker_ID}, this)" title="Remove from roster" style="width:22px;height:22px;color:var(--rose)">&times;</button>
+          </div>
+          ${latest ? `<div class="sub2" style="margin-top:5px;padding-left:2px">${esc(latest.Comments)} <span style="font-size:10.5px">\u2014 ${esc(latest.conductor_name||'')}${latest.Comments_Date?(', '+esc(new Date(latest.Comments_Date).toLocaleDateString())):''}</span></div>` : ''}
+          ${rest.length ? `<button class="mini" onclick="toggleAttendeeHistory(${seId}, ${a.Seeker_ID}, this)" style="width:auto;padding:0 8px;height:20px;font-size:10.5px;background:var(--paper);color:var(--ink-2);margin-top:4px">Show ${rest.length} more</button>
+            <div id="evHist_${seId}_${a.Seeker_ID}" style="display:none;margin-top:4px;padding-left:2px"></div>` : ''}
+        </div>`;
+      }).join('') : '<p class="sub2">None yet.</p>'}
+    <div style="display:flex;gap:6px;margin-top:10px;position:relative">
       <div style="flex:1;position:relative">
         <input id="evAtt_${seId}_search" placeholder="Search by name or email" autocomplete="off" oninput="eventAttendeeAutocomplete(this, ${seId})" style="width:100%;border-radius:999px;padding:6px 14px;font-size:12.5px;border:1px solid var(--line-2);box-sizing:border-box">
         <div id="evAtt_${seId}_ac" class="ac-dropdown" style="display:none"></div>
       </div>
       <input id="evAtt_${seId}_seekerId" type="hidden">
-      <button class="mini" onclick="addEventRosterAttendee(${seId}, this)" style="width:auto;padding:0 12px;height:28px">Add</button>
+      <button class="mini" onclick="addEventRosterAttendee(${seId}, this)" style="width:auto;padding:0 12px;height:28px">Add to roster</button>
     </div>
     <div class="err" id="evAttErr_${seId}"></div>
   </div>`;
+}
+async function saveEventAttendeeNote(seId, seekerId, btn){
+  const input = document.getElementById('evNote_'+seId+'_'+seekerId);
+  const text = input ? input.value.trim() : '';
+  if(!text) return;
+  const condSel = document.getElementById('evAttCond_'+seId);
+  const scCsmsId = condSel ? condSel.value : '';
+  if(!scCsmsId){ toast('Pick a conductor above first.'); return; }
+  await withLoading(btn, async ()=>{
+    try{
+      await apiFetch('/api/satsangs/events/'+seId+'/comments', {method:'POST', body: JSON.stringify({seekerId, scCsmsId:Number(scCsmsId), comments:text})});
+      toast('Note saved.');
+      EVENT_COMMENTS_CACHE[seId] = await apiFetch('/api/satsangs/events/'+seId+'/comments');
+      document.getElementById('evAttendees_'+seId).innerHTML = eventAttendeesPanelHTML(seId);
+    }catch(err){ toast('Could not save: '+(err.message||'')); }
+  });
+}
+function toggleAttendeeHistory(seId, seekerId, btn){
+  const box = document.getElementById('evHist_'+seId+'_'+seekerId);
+  if(!box) return;
+  if(box.style.display !== 'none'){ box.style.display = 'none'; return; }
+  const rest = (EVENT_COMMENTS_CACHE[seId]||[]).filter(c=>String(c.Seeker_ID)===String(seekerId)).slice(1);
+  box.innerHTML = rest.map(c=>`<div class="sub2" style="padding:3px 0;display:flex;justify-content:space-between;gap:8px">
+      <span>${esc(c.Comments)} <span style="font-size:10.5px">\u2014 ${esc(c.conductor_name||'')}${c.Comments_Date?(', '+esc(new Date(c.Comments_Date).toLocaleDateString())):''}</span></span>
+      <button class="mini" onclick="deleteEventAttendeeComment(${seId}, ${seekerId}, ${c.Comment_ID}, this)" style="width:18px;height:18px;color:var(--rose);flex-shrink:0">&times;</button>
+    </div>`).join('');
+  box.style.display = '';
+}
+async function deleteEventAttendeeComment(seId, seekerId, commentId, btn){
+  if(!confirm('Delete this note?')) return;
+  await withLoading(btn, async ()=>{
+    try{
+      await apiFetch('/api/satsangs/comments/'+commentId, {method:'DELETE'});
+      toast('Deleted.');
+      EVENT_COMMENTS_CACHE[seId] = await apiFetch('/api/satsangs/events/'+seId+'/comments');
+      document.getElementById('evAttendees_'+seId).innerHTML = eventAttendeesPanelHTML(seId);
+    }catch(err){ toast('Could not delete: '+(err.message||'')); }
+  });
 }
 function eventAttendeeAutocomplete(inputEl, seId){
   const key = 'evAtt_'+seId;
@@ -3342,23 +3456,21 @@ async function removeEventRosterAttendee(seId, seekerId, btn){
   });
 }
 
-/* ---- Notes, inline per event row \u2014 opens the shared notes panel
-   (conductor report + attendee notes grid + history) below the event
-   list, scoped to whichever event's "Notes" button was clicked. ---- */
+/* ---- Notes, inline per event row \u2014 opens the conductor's overall
+   satsang report below the event list. Per-attendee notes now live on
+   each row under "Attendees" above, not here. ---- */
 async function openEventNotes(seId, btn){
   SATSANG_COMMENTS_SE_ID = seId;
   LIVE_SATSANG_COMMENTS_EVENTS = LIVE_SATSANG_EVENTS[SATSANG_EVENTS_DEF_ID] || [];
   const hint = document.getElementById('satsangNotesHint');
-  const ev = LIVE_SATSANG_COMMENTS_EVENTS.find(x=>x.SE_ID===seId);
-  if(hint) hint.textContent = ev ? ('Showing notes for '+(ev.Event_ST_DT_TIME?new Date(ev.Event_ST_DT_TIME).toLocaleString():'this event')) : '';
+  const ev = LIVE_SATSANG_COMMENTS_EVENTS.find(x=>x.SE_ID==seId);
+  if(hint) hint.textContent = ev ? ('Showing the report for '+(ev.Event_ST_DT_TIME?new Date(ev.Event_ST_DT_TIME).toLocaleString():'this event')) : '';
   await withLoading(btn, async ()=>{
     try{
-      EVENT_ATTENDEES_CACHE[seId] = EVENT_ATTENDEES_CACHE[seId] || await apiFetch('/api/satsangs/defs/'+SATSANG_EVENTS_DEF_ID+'/attendees');
-      LIVE_SATSANG_COMMENTS_ATTENDEES = EVENT_ATTENDEES_CACHE[seId];
       await loadSatsangComments();
       const body = document.getElementById('satsangCommentsBody');
       if(body) body.scrollIntoView({behavior:'smooth', block:'start'});
-    }catch(err){ toast('Could not load notes: '+(err.message||'')); }
+    }catch(err){ toast('Could not load: '+(err.message||'')); }
   });
 }
 
@@ -3483,13 +3595,11 @@ async function cancelSatsangEvent(seId, btn){
 }
 
 /* ---- Comments (Satsang_Comments, per attending seeker per event) ----
-   Entry point is now openEventNotes() from an event row, not a standalone
-   sub-tab \u2014 SATSANG_COMMENTS_SE_ID and the attendee/event context are set
-   there before loadSatsangComments() runs. */
+   Entry point is openEventNotes() from an event row's "Notes" button. This
+   panel is now just the conductor's own overall report \u2014 per-attendee
+   notes and their history live inline on the Attendees roster instead. */
 let SATSANG_COMMENTS_SE_ID = null;
 let LIVE_SATSANG_COMMENTS_EVENTS = null; // events of the currently-open satsang, for conductorOptions lookup
-let LIVE_SATSANG_COMMENTS_ATTENDEES = null; // attendees of the currently-open satsang, for the notes grid
-let LIVE_SATSANG_COMMENTS = null;
 let LIVE_CONDUCTOR_REPORTS = null; // Conductor_Satsang_Comments rows for the currently-picked event
 
 async function loadSatsangComments(){
@@ -3497,12 +3607,7 @@ async function loadSatsangComments(){
   const body = document.getElementById('satsangCommentsBody');
   if(body) body.innerHTML = '<p class="sub2">Loading\u2026</p>';
   try{
-    const [comments, reports] = await Promise.all([
-      apiFetch('/api/satsangs/events/'+SATSANG_COMMENTS_SE_ID+'/comments'),
-      apiFetch('/api/satsangs/events/'+SATSANG_COMMENTS_SE_ID+'/conductor-report').catch(()=>[]),
-    ]);
-    LIVE_SATSANG_COMMENTS = comments;
-    LIVE_CONDUCTOR_REPORTS = reports;
+    LIVE_CONDUCTOR_REPORTS = await apiFetch('/api/satsangs/events/'+SATSANG_COMMENTS_SE_ID+'/conductor-report').catch(()=>[]);
     renderSatsangCommentsBody();
   }catch(err){
     if(body) body.innerHTML = `<p class="sub2">Could not load: ${esc(err.message||'')}</p>`;
@@ -3512,51 +3617,22 @@ async function loadSatsangComments(){
 function renderSatsangCommentsBody(){
   const body = document.getElementById('satsangCommentsBody');
   if(!body) return;
-  const ev = (LIVE_SATSANG_COMMENTS_EVENTS||[]).find(e=>e.SE_ID===SATSANG_COMMENTS_SE_ID);
-  const attendees = LIVE_SATSANG_COMMENTS_ATTENDEES || [];
-  const comments = LIVE_SATSANG_COMMENTS || [];
+  const ev = (LIVE_SATSANG_COMMENTS_EVENTS||[]).find(e=>e.SE_ID==SATSANG_COMMENTS_SE_ID);
   const conductorOptions = ev
     ? [ev.SC1_CSMS_ID ? `<option value="${ev.SC1_CSMS_ID}">${esc(ev.sc1_name||'Conductor 1')}</option>` : '',
        ev.SC2_CSMS_ID ? `<option value="${ev.SC2_CSMS_ID}">${esc(ev.sc2_name||'Conductor 2')}</option>` : ''].join('')
     : '';
 
   body.innerHTML = `
-    <div class="card pad" style="margin-bottom:14px">
-      <p class="sub2" style="font-weight:600;margin-bottom:8px">Pick a conductor \u2014 drives both the report below and the attendee notes grid</p>
+    <div class="card pad">
+      <p class="sub2" style="font-weight:600;margin-bottom:8px">Conductor's overall satsang report</p>
       <select id="scConductor" onchange="renderConductorReportBox()" style="border-radius:999px;padding:7px 14px;font-size:13px;border:1px solid var(--line-2);margin-bottom:10px;width:100%;max-width:320px;box-sizing:border-box">
         <option value="">${conductorOptions?'Choose conductor\u2026':'No conductor set on this event'}</option>
         ${conductorOptions}
       </select>
       <div id="conductorReportBox"></div>
     </div>
-
-    <div class="card pad" style="margin-bottom:14px">
-      <p class="sub2" style="font-weight:600;margin-bottom:8px">Add attendee notes \u2014 all attendees, one submit</p>
-      ${attendees.length ? `<div style="display:flex;flex-direction:column;gap:6px">
-          ${attendees.map(a=>{
-            const name = esc([a.First_Name,a.Last_Name].filter(Boolean).join(' ')||('Seeker #'+a.Seeker_ID));
-            return `<div style="display:grid;grid-template-columns:160px 1fr;gap:8px;align-items:center">
-              <span class="sub2" style="font-weight:500;color:var(--ink)">${name}</span>
-              <input id="scGrid_${a.Seeker_ID}" placeholder="Note for ${name}" style="border-radius:999px;padding:6px 14px;font-size:13px;border:1px solid var(--line-2)">
-            </div>`;
-          }).join('')}
-        </div>
-        <button class="btn sm" onclick="submitSatsangCommentsGrid(this)" style="margin-top:12px"><span class="spin"></span><span class="lbl">Submit all notes</span></button>
-        <div class="err" id="scErr"></div>`
-        : '<p class="sub2">No attendees on this satsang yet.</p>'}
-    </div>
-
-    <p class="sub2" style="font-weight:600;margin-bottom:6px">History</p>
-    ${comments.length ? comments.map(c=>`<div class="card pad" style="margin-bottom:8px">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
-          <div>
-            <div style="font-weight:600">${esc([c.First_Name,c.Last_Name].filter(Boolean).join(' ')||('Seeker #'+c.Seeker_ID))}</div>
-            <div class="sub2">${esc(c.Comments||'')}</div>
-            <div class="sub2" style="font-size:11px;margin-top:4px">${esc(c.conductor_name||'')} \u00b7 ${esc(c.Comments_Date ? new Date(c.Comments_Date).toLocaleDateString() : '')}</div>
-          </div>
-          <button class="mini" onclick="deleteSatsangComment(${c.Comment_ID}, this)" title="Delete" style="width:22px;height:22px;color:var(--rose);flex-shrink:0">&times;</button>
-        </div>
-      </div>`).join('') : '<p class="sub2">No comments on this event yet.</p>'}`;
+    <p class="sub2" style="margin-top:8px">Looking for per-attendee notes? They're on each row under this event's <b>Attendees</b> button.</p>`;
   renderConductorReportBox();
 }
 
@@ -3593,32 +3669,7 @@ async function saveConductorReport(btn){
   });
 }
 
-async function submitSatsangCommentsGrid(btn){
-  const errEl = document.getElementById('scErr'); errEl.classList.remove('on');
-  await withLoading(btn, async ()=>{
-    try{
-      const scCsmsId = document.getElementById('scConductor').value;
-      if(!scCsmsId){ errEl.textContent='Pick a conductor first.'; errEl.classList.add('on'); return; }
-      const attendees = LIVE_SATSANG_COMMENTS_ATTENDEES || [];
-      const entries = attendees.map(a=>{
-        const el = document.getElementById('scGrid_'+a.Seeker_ID);
-        return { seekerId: a.Seeker_ID, comments: el ? el.value.trim() : '' };
-      }).filter(e=>e.comments);
-      if(!entries.length){ errEl.textContent='Enter at least one note before submitting.'; errEl.classList.add('on'); return; }
-      const res = await apiFetch('/api/satsangs/events/'+SATSANG_COMMENTS_SE_ID+'/comments/bulk', {method:'POST', body: JSON.stringify({scCsmsId:Number(scCsmsId), entries})});
-      toast(res.saved+' note'+(res.saved===1?'':'s')+' saved.');
-      loadSatsangComments();
-    }catch(err){ errEl.textContent = err.message||'Could not save.'; errEl.classList.add('on'); }
-  });
-}
 
-async function deleteSatsangComment(commentId, btn){
-  if(!confirm('Delete this comment?')) return;
-  await withLoading(btn, async ()=>{
-    try{ await apiFetch('/api/satsangs/comments/'+commentId, {method:'DELETE'}); toast('Deleted.'); loadSatsangComments(); }
-    catch(err){ toast('Could not delete: '+(err.message||'')); }
-  });
-}
 
 
 /* ---- Transfers (Attendee_Transfer_Requests, 3-stage workflow) ---- */
