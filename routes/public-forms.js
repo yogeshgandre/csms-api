@@ -104,7 +104,7 @@ router.get('/satsang-form/:token', async (req, res) => {
     });
   } catch (err) {
     console.error('[GET /public/satsang-form/:token] error', err);
-    res.status(500).json({ error: 'INTERNAL' });
+    res.status(500).json({ error: 'INTERNAL', message: err.message });
   }
 });
 
@@ -230,7 +230,7 @@ router.get('/intake-form/:formId', async (req, res) => {
     });
   } catch (err) {
     console.error('[GET /public/intake-form/:formId] error', err);
-    res.status(500).json({ error: 'INTERNAL' });
+    res.status(500).json({ error: 'INTERNAL', message: err.message });
   }
 });
 

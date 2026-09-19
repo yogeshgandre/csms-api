@@ -63,10 +63,15 @@ async function init(){
       app.innerHTML = `<div class="msg ok">This form has already been submitted \u2014 thank you!</div>`;
       return;
     }
-    if(!res.ok) throw new Error('Could not load the form.');
+    if(!res.ok){
+      let detail = '';
+      try{ const body = await res.json(); detail = body.message || body.error || ''; }catch(e){}
+      throw new Error(detail || 'Could not load the form.');
+    }
     data = await res.json();
   }catch(err){
-    app.innerHTML = `<div class="msg err">Something went wrong loading this form. Please try again shortly.</div>`;
+    app.innerHTML = `<div class="msg err">Something went wrong loading this form. Please try again shortly.</div>
+      <p style="font-size:11px;color:#94a3b8;margin-top:10px">Technical detail (for whoever's fixing this): ${esc(err.message||'')}</p>`;
     return;
   }
   renderForm(data);

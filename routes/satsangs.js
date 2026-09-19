@@ -1006,4 +1006,64 @@ router.delete('/comments/:commentId', requireAuth, async (req, res) => {
   }
 });
 
+/* ============ Conductor_Satsang_Comments (one overall report, per
+   conductor, per event \u2014 distinct from Satsang_Comments above, which is
+   per-attendee) ============
+   Built exactly as specified: CSC_ID surrogate PK, CS_CSMS_ID (conductor,
+   same FK meaning as SC_CSMS_ID elsewhere), SE_ID (event), Satsang_Report
+   (TEXT). No date column was given, so this is treated as ONE report per
+   (SE_ID, CS_CSMS_ID) that gets overwritten on save, not a running log \u2014
+   flagged in chat, not silently added. */
+
+router.get('/events/:seId/conductor-report', requireAuth, async (req, res) => {
+  try {
+    const r = await pool.query(
+      `SELECT cr.${qi('CSC_ID')}, cr.${qi('CS_CSMS_ID')}, cr.${qi('Satsang_Report')}, up.${qi('Seeker_Name')} AS conductor_name
+       FROM ${qi('SCS')}.${qi('Conductor_Satsang_Comments')} cr
+       LEFT JOIN ${qi('RMS')}.${qi('User_Profile')} up ON up.${qi('CSMS_ID')} = cr.${qi('CS_CSMS_ID')}
+       WHERE cr.${qi('SE_ID')} = $1`,
+      [req.params.seId]
+    );
+    res.json(r.rows);
+  } catch (err) {
+    console.error('[GET /satsangs/events/:seId/conductor-report] error', err);
+    res.status(500).json({ error: 'INTERNAL' });
+  }
+});
+
+// Upsert: one row per (SE_ID, CS_CSMS_ID). Saving again overwrites the
+// same report rather than adding a new row.
+router.put('/events/:seId/conductor-report', requireAuth, async (req, res) => {
+  const { csCsmsId, report } = req.body || {};
+  if (!csCsmsId) return res.status(400).json({ error: 'csCsmsId is required' });
+  try {
+    const existing = await pool.query(
+      `SELECT ${qi('CSC_ID')} FROM ${qi('SCS')}.${qi('Conductor_Satsang_Comments')}
+       WHERE ${qi('SE_ID')} = $1 AND ${qi('CS_CSMS_ID')} = $2`,
+      [req.params.seId, csCsmsId]
+    );
+    if (existing.rowCount) {
+      await pool.query(
+        `UPDATE ${qi('SCS')}.${qi('Conductor_Satsang_Comments')} SET ${qi('Satsang_Report')} = $1 WHERE ${qi('CSC_ID')} = $2`,
+        [report || null, existing.rows[0].CSC_ID]
+      );
+      return res.json({ ok: true, cscId: existing.rows[0].CSC_ID });
+    }
+    const maxQ = await pool.query(
+      `SELECT COALESCE(MAX(${qi('CSC_ID')}), 0) + 1 AS next_id FROM ${qi('SCS')}.${qi('Conductor_Satsang_Comments')}`
+    );
+    const id = maxQ.rows[0].next_id;
+    await pool.query(
+      `INSERT INTO ${qi('SCS')}.${qi('Conductor_Satsang_Comments')}
+        (${qi('CSC_ID')}, ${qi('CS_CSMS_ID')}, ${qi('SE_ID')}, ${qi('Satsang_Report')})
+       VALUES ($1,$2,$3,$4)`,
+      [id, csCsmsId, req.params.seId, report || null]
+    );
+    res.status(201).json({ ok: true, cscId: id });
+  } catch (err) {
+    console.error('[PUT /satsangs/events/:seId/conductor-report] error', err);
+    res.status(500).json({ error: 'INTERNAL', message: err.message });
+  }
+});
+
 module.exports = router;
