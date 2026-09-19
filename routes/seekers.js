@@ -274,4 +274,59 @@ router.get('/:id/comments', requireAuth, async (req, res) => {
   }
 });
 
+// ---- Seeker Skills (SMS.Skills + MSR.Seeker_Skills) ----
+
+router.get('/:id/skills', requireAuth, async (req, res) => {
+  try {
+    const r = await pool.query(
+      `SELECT sk.${qi('Skill_ID')}, s.${qi('Skill_Name')}, sk.${qi('Skill_Proficiency')}
+       FROM ${qi('MSR')}.${qi('Seeker_Skills')} sk
+       LEFT JOIN ${qi('SMS')}.${qi('Skills')} s ON s.${qi('Skill_ID')} = sk.${qi('Skill_ID')}
+       WHERE sk.${qi('Seeker_ID')} = $1
+       ORDER BY s.${qi('Skill_Name')}`,
+      [req.params.id]
+    );
+    res.json(r.rows);
+  } catch (err) {
+    console.error('[GET /seekers/:id/skills] error', err);
+    res.status(500).json({ error: 'INTERNAL' });
+  }
+});
+
+const SKILL_PROFICIENCIES = ['High', 'Medium', 'Low'];
+
+// Upsert — re-adding a skill with a new proficiency updates it, rather
+// than needing a separate edit path. (Seeker_ID, Skill_ID) is the real PK.
+router.post('/:id/skills', requireAuth, async (req, res) => {
+  const { skillId, proficiency } = req.body || {};
+  if (!skillId || !SKILL_PROFICIENCIES.includes(proficiency)) {
+    return res.status(400).json({ error: 'skillId and a valid proficiency (High/Medium/Low) are required' });
+  }
+  try {
+    await pool.query(
+      `INSERT INTO ${qi('MSR')}.${qi('Seeker_Skills')} (${qi('Seeker_ID')}, ${qi('Skill_ID')}, ${qi('Skill_Proficiency')})
+       VALUES ($1,$2,$3)
+       ON CONFLICT (${qi('Seeker_ID')}, ${qi('Skill_ID')}) DO UPDATE SET ${qi('Skill_Proficiency')} = EXCLUDED.${qi('Skill_Proficiency')}`,
+      [req.params.id, skillId, proficiency]
+    );
+    res.status(201).json({ ok: true });
+  } catch (err) {
+    console.error('[POST /seekers/:id/skills] error', err);
+    res.status(500).json({ error: 'INTERNAL', message: err.message });
+  }
+});
+
+router.delete('/:id/skills/:skillId', requireAuth, async (req, res) => {
+  try {
+    await pool.query(
+      `DELETE FROM ${qi('MSR')}.${qi('Seeker_Skills')} WHERE ${qi('Seeker_ID')} = $1 AND ${qi('Skill_ID')} = $2`,
+      [req.params.id, req.params.skillId]
+    );
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('[DELETE /seekers/:id/skills/:skillId] error', err);
+    res.status(500).json({ error: 'INTERNAL' });
+  }
+});
+
 module.exports = router;

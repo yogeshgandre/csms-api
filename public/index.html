@@ -251,6 +251,15 @@ tbody tr:last-child td{border-bottom:none}
   display:grid;grid-template-columns:220px 1fr;grid-template-rows:auto auto 1fr;
   grid-template-areas:"orgbanner orgbanner" "header header" "nav main";
 }
+.ticker-bar{width:100%;overflow:hidden;background:var(--ink);padding:7px 0;white-space:nowrap}
+.ticker-track{display:inline-flex;animation:ticker-scroll 40s linear infinite}
+.ticker-track:hover{animation-play-state:paused}
+@keyframes ticker-scroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+.ticker-item{display:inline-flex;align-items:center;gap:7px;padding:0 32px;font-size:13px;color:#fff;font-weight:500}
+.ticker-item .ticker-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.ticker-item.type-Alert .ticker-dot{background:#FF6B6B}
+.ticker-item.type-Warning .ticker-dot{background:#FFC94D}
+.ticker-item.type-Information .ticker-dot{background:#5AC8E8}
 .org-banner{
   grid-area:orgbanner;
   background:linear-gradient(135deg,#EAF3FA 0%,#DCEAF6 55%,#CFE1F2 100%);
@@ -393,6 +402,9 @@ nav .pip.r{background:var(--rose);color:#fff}
   </div>
 </div>
 
+<div id="tickerBar" class="ticker-bar" style="display:none">
+  <div id="tickerTrack" class="ticker-track"></div>
+</div>
 <div class="shell" id="shell" style="display:none">
 
 <div class="org-banner">
@@ -435,6 +447,7 @@ nav .pip.r{background:var(--rose);color:#fff}
   <button data-p="org" onclick="tab('org')">Organisation and Team Management</button>
   <button data-p="satsangmgmt" onclick="tab('satsangmgmt'); satsangSubtab('defs')">Satsang Management</button>
   <button data-p="formmgmt" onclick="tab('formmgmt'); formSubtab('defs')">Form Management System</button>
+  <button data-p="tickermgmt" onclick="tab('tickermgmt'); renderTickerMgmt()">Ticker Management</button>
   <button data-p="ops" onclick="tab('ops')">Operations<span class="pip" id="pip3">0</span></button>
   <button data-p="about" onclick="tab('about')">What this shows</button>
 </nav>
@@ -532,6 +545,12 @@ nav .pip.r{background:var(--rose);color:#fff}
     </div>
     <div id="formDefs"></div>
     <div id="formAccess" style="display:none"></div>
+  </section>
+
+  <section class="pane" id="p-tickermgmt">
+    <h2 class="sec">Ticker Management</h2>
+    <p class="sub">Notifications that scroll across the top of every screen, for everyone signed in \u2014 not scoped to a single tab.</p>
+    <div id="tickerMgmt"></div>
   </section>
 
   <section class="pane" id="p-alerts">
@@ -692,19 +711,19 @@ const CONTACT_SLA_DAYS = 60; /* flat window — there is no longer a per-stage S
 const ROLES = {
   abroad:{name:"Abroad RS — global admin", regions:null, mask:[],
     can:"Full access to all regions and all fields.",
-    tabs:["overview","seekers","alerts","inbox","journey","calendar","reports","sevahub","profiles","dash","org","satsangmgmt","formmgmt","about"],
+    tabs:["overview","seekers","alerts","inbox","journey","calendar","reports","sevahub","profiles","dash","org","satsangmgmt","formmgmt","tickermgmt","about"],
     landing:"overview"},
   tech:{name:"Technical Admin", regions:null, mask:[],
     can:"System health and infrastructure. Not scoped to any region.",
-    tabs:["overview","org","satsangmgmt","formmgmt","ops","about"],
+    tabs:["overview","org","satsangmgmt","formmgmt","tickermgmt","ops","about"],
     landing:"ops"},
   rs_de:{name:"Regional RS — Germany", regions:["Germany"], mask:[],
     can:"Germany only. All fields within that region.",
-    tabs:["overview","seekers","alerts","inbox","journey","calendar","reports","sevahub","profiles","dash","org","satsangmgmt","formmgmt","about"],
+    tabs:["overview","seekers","alerts","inbox","journey","calendar","reports","sevahub","profiles","dash","org","satsangmgmt","formmgmt","tickermgmt","about"],
     landing:"overview"},
   rs_fr:{name:"Regional RS — France", regions:["France"], mask:[],
     can:"France only. All fields within that region.",
-    tabs:["overview","seekers","alerts","inbox","journey","calendar","reports","sevahub","profiles","dash","org","satsangmgmt","formmgmt","about"],
+    tabs:["overview","seekers","alerts","inbox","journey","calendar","reports","sevahub","profiles","dash","org","satsangmgmt","formmgmt","tickermgmt","about"],
     landing:"overview"},
   seva:{name:"Seva RS — service allocation", regions:null, mask:["whatsapp","email","dob"],
     can:"All regions, but personal contact details and date of birth are hidden.",
@@ -1005,6 +1024,7 @@ function initRole(){
   setRole('abroad');
   loadNotifications();
   loadSeekerCategories();
+  loadActiveTickers();
 }
 function setRole(r){
   ROLE=r; OPEN=null; REPORT_OPEN=null;
@@ -1309,12 +1329,14 @@ async function openLiveSeekerDetail(id, rootId){
   root.innerHTML = `<div class="obackdrop" onclick="if(event.target===this) closeLiveSeekerDetail()">
     <div class="omodal" style="max-width:560px"><button class="oclose" onclick="closeLiveSeekerDetail()">&times;</button><p class="sub2">Loading\u2026</p></div></div>`;
   try{
-    const [seeker, notes] = await Promise.all([
+    const [seeker, notes, skills] = await Promise.all([
       apiFetch('/api/seekers/'+id),
       apiFetch('/api/seekers/'+id+'/comments').catch(()=>[]), // don't let this block the rest of the detail view
+      apiFetch('/api/seekers/'+id+'/skills').catch(()=>[]),
     ]);
     LIVE_SEEKER_DETAIL = seeker;
     LIVE_SEEKER_DETAIL.notes = notes;
+    LIVE_SEEKER_DETAIL.skills = skills;
     renderLiveSeekerDetail();
   }catch(err){
     const modal = root.querySelector('.omodal');
@@ -1324,11 +1346,41 @@ async function openLiveSeekerDetail(id, rootId){
 function closeLiveSeekerDetail(){ LIVE_SEEKER_DETAIL_ID=null; LIVE_SEEKER_DETAIL=null; const el=document.getElementById(SEEKER_DETAIL_ROOT_ID); if(el) el.innerHTML=''; SEEKER_DETAIL_ROOT_ID='seekerDetailRoot'; }
 function switchLiveSeekerTab(t){ LIVE_SEEKER_DETAIL_TAB = t; renderLiveSeekerDetail(); }
 
+let LIVE_MASTER_SKILLS = null;
+async function loadMasterSkills(){
+  try{ LIVE_MASTER_SKILLS = await apiFetch('/api/master/skills'); if(LIVE_SEEKER_DETAIL_TAB==='skills') renderLiveSeekerDetail(); }
+  catch(err){ /* the add-skill dropdown just stays empty */ }
+}
+async function addSeekerSkill(btn){
+  const skillId = document.getElementById('skAdd_skill').value;
+  const proficiency = document.getElementById('skAdd_prof').value;
+  if(!skillId) return;
+  await withLoading(btn, async ()=>{
+    try{
+      await apiFetch('/api/seekers/'+LIVE_SEEKER_DETAIL_ID+'/skills', {method:'POST', body: JSON.stringify({skillId:Number(skillId), proficiency})});
+      toast('Skill added.');
+      LIVE_SEEKER_DETAIL.skills = await apiFetch('/api/seekers/'+LIVE_SEEKER_DETAIL_ID+'/skills');
+      renderLiveSeekerDetail();
+    }catch(err){ toast('Could not add: '+(err.message||'')); }
+  });
+}
+async function removeSeekerSkill(skillId, btn){
+  if(!confirm('Remove this skill?')) return;
+  await withLoading(btn, async ()=>{
+    try{
+      await apiFetch('/api/seekers/'+LIVE_SEEKER_DETAIL_ID+'/skills/'+skillId, {method:'DELETE'});
+      toast('Removed.');
+      LIVE_SEEKER_DETAIL.skills = await apiFetch('/api/seekers/'+LIVE_SEEKER_DETAIL_ID+'/skills');
+      renderLiveSeekerDetail();
+    }catch(err){ toast('Could not remove: '+(err.message||'')); }
+  });
+}
+
 function renderLiveSeekerDetail(){
   const root = document.getElementById(SEEKER_DETAIL_ROOT_ID);
   if(!root || !LIVE_SEEKER_DETAIL) return;
   const s = LIVE_SEEKER_DETAIL;
-  const tabs = [['overview','Overview'],['categories','Category history'],['platform','Platform engagement'],['satsangs','Satsangs'],['notes','Notes']];
+  const tabs = [['overview','Overview'],['categories','Category history'],['platform','Platform engagement'],['satsangs','Satsangs'],['notes','Notes'],['skills','Skills']];
   const t = LIVE_SEEKER_DETAIL_TAB;
 
   let body = '';
@@ -1374,6 +1426,25 @@ function renderLiveSeekerDetail(){
           ${n.Comments_Date?(' \u00b7 '+esc(new Date(n.Comments_Date).toLocaleDateString())):''}
         </div>
       </div>`).join('') : '<p class="sub2">No attendee notes recorded yet \u2014 add them from Satsang Management \u2192 Attendee Notes.</p>';
+  } else if(t==='skills'){
+    const skills = s.skills || [];
+    if(LIVE_MASTER_SKILLS===null) loadMasterSkills();
+    const options = (LIVE_MASTER_SKILLS||[]).filter(sk=>!skills.some(x=>x.Skill_ID===sk.Skill_ID));
+    body = `
+      ${skills.length ? skills.map(sk=>`<div class="oteamrow">
+          <span>${esc(sk.Skill_Name||('Skill #'+sk.Skill_ID))} <span class="sub2">(${esc(sk.Skill_Proficiency)})</span></span>
+          <button class="mini" onclick="removeSeekerSkill(${sk.Skill_ID}, this)" style="width:22px;height:22px;color:var(--rose)">&times;</button>
+        </div>`).join('') : '<p class="sub2">No skills recorded yet.</p>'}
+      <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;align-items:center">
+        <select id="skAdd_skill" style="flex:1;min-width:140px;border-radius:999px;padding:6px 14px;font-size:12.5px;border:1px solid var(--line-2)">
+          <option value="">${options.length?'Choose skill\u2026':(LIVE_MASTER_SKILLS===null?'Loading\u2026':'No more skills to add')}</option>
+          ${options.map(sk=>`<option value="${sk.Skill_ID}">${esc(sk.Skill_Name)}</option>`).join('')}
+        </select>
+        <select id="skAdd_prof" style="border-radius:999px;padding:6px 14px;font-size:12.5px;border:1px solid var(--line-2)">
+          <option value="High">High</option><option value="Medium">Medium</option><option value="Low">Low</option>
+        </select>
+        <button class="mini" onclick="addSeekerSkill(this)" style="width:auto;padding:0 12px;height:28px">Add</button>
+      </div>`;
   }
 
   root.innerHTML = `<div class="obackdrop" onclick="if(event.target===this) closeLiveSeekerDetail()">
@@ -3744,6 +3815,134 @@ async function deleteFormAccessRule(id, btn){
   });
 }
 
+/* ============ Ticker Management (Master.M_Ticker) ============ */
+let LIVE_TICKERS = null;
+let TICKER_EDIT_ID = null;
+
+async function loadTickers(){
+  try{ LIVE_TICKERS = await apiFetch('/api/master/tickers'); renderTickerMgmt(); }
+  catch(err){
+    const el = document.getElementById('tickerMgmt');
+    if(el) el.innerHTML = `<div class="hidden-note" style="background:var(--rose-wash);border-color:#EBCBCE;color:var(--rose)"><b>Could not load tickers.</b> ${esc(err.message||'')}</div>`;
+  }
+}
+
+const TICKER_TYPE_COLORS = { Alert:{bg:'#FBE7E7',fg:'var(--rose)'}, Warning:{bg:'#FDF0DC',fg:'#9A6A0E'}, Information:{bg:'#E1F3FA',fg:'var(--deep)'} };
+function tickerTypeBadge(t){
+  const c = TICKER_TYPE_COLORS[t] || {bg:'#EEF1F4', fg:'var(--ink-2)'};
+  return `<span class="badge" style="background:${c.bg};color:${c.fg}">${esc(t)}</span>`;
+}
+
+function renderTickerMgmt(){
+  const el = document.getElementById('tickerMgmt');
+  if(!el) return;
+  if(LIVE_TICKERS === null){ el.innerHTML = '<p class="sub2">Loading\u2026</p>'; loadTickers(); return; }
+
+  const editing = TICKER_EDIT_ID !== null ? LIVE_TICKERS.find(t=>t.Ticker_ID===TICKER_EDIT_ID) : null;
+
+  el.innerHTML = `
+    <div class="card pad" style="margin-bottom:16px;max-width:520px">
+      <p class="sub2" style="font-weight:600;margin-bottom:8px">${editing ? 'Edit ticker #'+editing.Ticker_ID : '+ New ticker'}</p>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <textarea id="tkText" placeholder="Ticker text" rows="2" style="border-radius:12px;padding:9px 14px;font-size:13.5px;border:1px solid var(--line-2);font-family:inherit;resize:vertical">${editing?esc(editing.Ticker_Text):''}</textarea>
+        <select id="tkType" style="border-radius:999px;padding:7px 14px;font-size:13.5px;border:1px solid var(--line-2)">
+          <option value="Alert" ${editing&&editing.Ticker_Type==='Alert'?'selected':''}>Alert</option>
+          <option value="Warning" ${editing&&editing.Ticker_Type==='Warning'?'selected':''}>Warning</option>
+          <option value="Information" ${(!editing||editing.Ticker_Type==='Information')?'selected':''}>Information</option>
+        </select>
+        <div style="display:flex;gap:8px">
+          <div style="flex:1"><label class="sub2">Priority (higher shows first)</label>
+            <input id="tkPriority" type="number" value="${editing&&editing.Priority!=null?editing.Priority:''}" style="width:100%;border-radius:999px;padding:6px 14px;font-size:13px;border:1px solid var(--line-2);box-sizing:border-box;margin-top:3px"></div>
+          <div style="flex:1"><label class="sub2">Display order</label>
+            <input id="tkOrder" type="number" value="${editing&&editing.Display_Order!=null?editing.Display_Order:''}" style="width:100%;border-radius:999px;padding:6px 14px;font-size:13px;border:1px solid var(--line-2);box-sizing:border-box;margin-top:3px"></div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <div style="flex:1"><label class="sub2">Starts (optional)</label>
+            <input id="tkStart" type="datetime-local" value="${editing&&editing.Start_DT?toLocalDatetimeInput(editing.Start_DT):''}" style="width:100%;border-radius:999px;padding:6px 14px;font-size:13px;border:1px solid var(--line-2);box-sizing:border-box;margin-top:3px"></div>
+          <div style="flex:1"><label class="sub2">Ends (optional)</label>
+            <input id="tkEnd" type="datetime-local" value="${editing&&editing.End_DT?toLocalDatetimeInput(editing.End_DT):''}" style="width:100%;border-radius:999px;padding:6px 14px;font-size:13px;border:1px solid var(--line-2);box-sizing:border-box;margin-top:3px"></div>
+        </div>
+        <label class="sub2" style="display:flex;align-items:center;gap:6px"><input type="checkbox" id="tkActive" ${!editing||editing.Is_Active?'checked':''}> Active</label>
+        <div style="display:flex;gap:8px">
+          <button class="btn sm" onclick="saveTicker(this)"><span class="spin"></span><span class="lbl">${editing?'Save changes':'Create ticker'}</span></button>
+          ${editing?`<button class="btn ghost sm" onclick="TICKER_EDIT_ID=null; renderTickerMgmt()">Cancel</button>`:''}
+        </div>
+        <div class="err" id="tkErr"></div>
+      </div>
+    </div>
+    ${LIVE_TICKERS.length ? LIVE_TICKERS.map(t=>`<div class="card pad" style="margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
+        <div>
+          <div style="font-weight:600">${esc(t.Ticker_Text)}</div>
+          <div class="sub2">${t.Is_Active?'Active':'Inactive'}${t.Start_DT?(' \u00b7 from '+esc(new Date(t.Start_DT).toLocaleString())):''}${t.End_DT?(' \u00b7 until '+esc(new Date(t.End_DT).toLocaleString())):''}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          ${tickerTypeBadge(t.Ticker_Type)}
+          <button class="mini" onclick="TICKER_EDIT_ID=${t.Ticker_ID}; renderTickerMgmt()" style="width:auto;padding:0 10px;height:26px;font-size:11.5px">Edit</button>
+          <button class="mini" onclick="deleteTicker(${t.Ticker_ID}, this)" title="Delete" style="width:24px;height:24px;color:var(--rose)">&times;</button>
+        </div>
+      </div>`).join('') : '<p class="sub2">No tickers yet.</p>'}`;
+}
+
+function toLocalDatetimeInput(iso){
+  const d = new Date(iso);
+  const pad = n => String(n).padStart(2,'0');
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+async function saveTicker(btn){
+  const errEl = document.getElementById('tkErr'); errEl.classList.remove('on');
+  await withLoading(btn, async ()=>{
+    try{
+      const tickerText = document.getElementById('tkText').value.trim();
+      if(!tickerText){ errEl.textContent='Ticker text is required.'; errEl.classList.add('on'); return; }
+      const body = {
+        tickerText,
+        tickerType: document.getElementById('tkType').value,
+        priority: document.getElementById('tkPriority').value ? Number(document.getElementById('tkPriority').value) : null,
+        displayOrder: document.getElementById('tkOrder').value ? Number(document.getElementById('tkOrder').value) : null,
+        startDt: document.getElementById('tkStart').value || null,
+        endDt: document.getElementById('tkEnd').value || null,
+        isActive: document.getElementById('tkActive').checked,
+      };
+      if(TICKER_EDIT_ID !== null) await apiFetch('/api/master/tickers/'+TICKER_EDIT_ID, {method:'PUT', body: JSON.stringify(body)});
+      else await apiFetch('/api/master/tickers', {method:'POST', body: JSON.stringify(body)});
+      toast('Saved.');
+      TICKER_EDIT_ID = null;
+      LIVE_TICKERS = null;
+      loadTickers();
+      loadActiveTickers();
+    }catch(err){ errEl.textContent = err.message||'Could not save.'; errEl.classList.add('on'); }
+  });
+}
+
+async function deleteTicker(id, btn){
+  if(!confirm('Delete this ticker?')) return;
+  await withLoading(btn, async ()=>{
+    try{
+      await apiFetch('/api/master/tickers/'+id, {method:'DELETE'});
+      toast('Deleted.');
+      LIVE_TICKERS = null;
+      loadTickers();
+      loadActiveTickers();
+    }catch(err){ toast('Could not delete: '+(err.message||'')); }
+  });
+}
+
+/* ---- Global ticker banner (Master.M_Ticker) ---- */
+async function loadActiveTickers(){
+  try{
+    const tickers = await apiFetch('/api/master/tickers/active');
+    const bar = document.getElementById('tickerBar');
+    const track = document.getElementById('tickerTrack');
+    if(!bar || !track) return;
+    if(!tickers.length){ bar.style.display = 'none'; return; }
+    const itemsHtml = tickers.map(t=>`<span class="ticker-item type-${esc(t.Ticker_Type)}"><span class="ticker-dot"></span>${esc(t.Ticker_Text)}</span>`).join('');
+    // Duplicated once so the marquee loop (translateX 0 -> -50%) has no visible seam.
+    track.innerHTML = itemsHtml + itemsHtml;
+    bar.style.display = '';
+  }catch(err){ /* banner just stays hidden if this fails */ }
+}
+
 /* ---- Notifications ---- */
 let LIVE_NOTIFS = null;
 async function loadNotifications(){
@@ -4740,7 +4939,45 @@ function renderSevahub(){
     </div>
     <div class="hidden-note"><b>What "match" means here.</b> Skill and region overlap, ranked by hours already
       given — a proxy for reliability, not a guarantee. A human still decides; Propose creates a follow-up task,
-      it does not assign anyone anything.</div>`;
+      it does not assign anyone anything.</div>
+
+    <div class="card pad" style="margin-top:16px">
+      <h2 class="sec">Skill search (live)</h2>
+      <p class="sub">Real seekers and skills from Postgres — separate from the illustrative search above, which still runs on demo data.</p>
+      <select id="sevaLiveSkill" style="border-radius:999px;padding:7px 14px;font-size:13px;border:1px solid var(--line-2);margin-bottom:10px"
+        onchange="loadSevaLiveSkillResults(this.value)">
+        <option value="">${LIVE_MASTER_SKILLS===null?'Loading skills\u2026':'Choose a skill\u2026'}</option>
+        ${(LIVE_MASTER_SKILLS||[]).map(sk=>`<option value="${sk.Skill_ID}" ${String(sk.Skill_ID)===String(SEVA_LIVE_SKILL_ID)?'selected':''}>${esc(sk.Skill_Name)}</option>`).join('')}
+      </select>
+      <div id="sevaLiveSkillResults">${SEVA_LIVE_SKILL_ID ? '<p class="sub2">Loading\u2026</p>' : '<p class="sub2">Pick a skill to see who has it.</p>'}</div>
+    </div>
+    <div id="sevahubSeekerDetailRoot"></div>`;
+  if(LIVE_MASTER_SKILLS===null) loadMasterSkills();
+  else if(SEVA_LIVE_SKILL_ID) renderSevaLiveSkillResults();
+}
+
+let SEVA_LIVE_SKILL_ID = null;
+let SEVA_LIVE_SKILL_RESULTS = null;
+async function loadSevaLiveSkillResults(skillId){
+  SEVA_LIVE_SKILL_ID = skillId || null;
+  const el = document.getElementById('sevaLiveSkillResults');
+  if(!SEVA_LIVE_SKILL_ID){ if(el) el.innerHTML = '<p class="sub2">Pick a skill to see who has it.</p>'; return; }
+  if(el) el.innerHTML = '<p class="sub2">Loading\u2026</p>';
+  try{
+    SEVA_LIVE_SKILL_RESULTS = await apiFetch('/api/master/skills/'+SEVA_LIVE_SKILL_ID+'/seekers');
+    renderSevaLiveSkillResults();
+  }catch(err){
+    if(el) el.innerHTML = `<p class="sub2">Could not load: ${esc(err.message||'')}</p>`;
+  }
+}
+function renderSevaLiveSkillResults(){
+  const el = document.getElementById('sevaLiveSkillResults');
+  if(!el) return;
+  const rows = SEVA_LIVE_SKILL_RESULTS || [];
+  el.innerHTML = rows.length ? rows.map(r=>`<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--line)">
+      <span style="cursor:pointer" onclick="openLiveSeekerDetail(${r.Seeker_ID}, 'sevahubSeekerDetailRoot')">${esc([r.First_Name,r.Last_Name].filter(Boolean).join(' ')||('Seeker #'+r.Seeker_ID))}</span>
+      <span class="sub2">${esc(r.Skill_Proficiency)}</span>
+    </div>`).join('') : '<p class="sub2">Nobody recorded with this skill yet.</p>';
 }
 /* Boot: initRole() (and everything downstream) only runs after attemptLogin()
    succeeds — see the session block near the top of this script. */

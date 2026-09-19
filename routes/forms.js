@@ -30,10 +30,13 @@ router.get('/', requireAuth, async (req, res) => {
   try {
     const r = await pool.query(
       `SELECT fc.${qi('Form_ID')}, fc.${qi('Current_Status')}, fs.${qi('Form_Status_Name')}, fc.${qi('Current_Owner_CSMS_ID')},
-              fc.${qi('Form_Published_URL')}, fc.${qi('Current_Status_Change_Date')},
+              fc.${qi('Form_Published_URL')}, fc.${qi('Current_Status_Change_Date')}, fc.${qi('Form_Type_ID')},
+              mp.${qi('Platform_Name')},
               up.${qi('Seeker_Name')} AS owner_name
        FROM ${qi('FMS')}.${qi('Form_Creation_Process')} fc
        LEFT JOIN ${qi('FMS')}.${qi('Form_Status')} fs ON fs.${qi('Form_Status_ID')} = fc.${qi('Current_Status')}
+       LEFT JOIN ${qi('FMS')}.${qi('Form_Type')} ft ON ft.${qi('Form_Type_ID')} = fc.${qi('Form_Type_ID')}
+       LEFT JOIN ${qi('Master')}.${qi('M_Platform')} mp ON mp.${qi('Platform_ID')} = ft.${qi('Platform_ID')}
        LEFT JOIN ${qi('RMS')}.${qi('User_Profile')} up ON up.${qi('CSMS_ID')} = fc.${qi('Current_Owner_CSMS_ID')}
        ORDER BY fc.${qi('Current_Status_Change_Date')} DESC NULLS LAST, fc.${qi('Form_ID')} DESC`
     );
@@ -49,17 +52,35 @@ async function statusIdByName(name) {
   return q.rowCount ? q.rows[0].Form_Status_ID : null;
 }
 
+// Form_Type is a thin pointer to M_Platform (Form_Type_Name = that
+// platform's Platform_Name, per instruction) — reused if a Form_Type row
+// for this platform already exists, created on first use otherwise.
+async function formTypeIdForPlatform(platformId) {
+  const existing = await pool.query(
+    `SELECT ${qi('Form_Type_ID')} FROM ${qi('FMS')}.${qi('Form_Type')} WHERE ${qi('Platform_ID')} = $1 LIMIT 1`,
+    [platformId]
+  );
+  if (existing.rowCount) return existing.rows[0].Form_Type_ID;
+  const maxQ = await pool.query(`SELECT COALESCE(MAX(${qi('Form_Type_ID')}), 0) + 1 AS next_id FROM ${qi('FMS')}.${qi('Form_Type')}`);
+  const id = maxQ.rows[0].next_id;
+  await pool.query(`INSERT INTO ${qi('FMS')}.${qi('Form_Type')} (${qi('Form_Type_ID')}, ${qi('Platform_ID')}) VALUES ($1,$2)`, [id, platformId]);
+  return id;
+}
+
 router.post('/', requireAuth, async (req, res) => {
+  const { platformId } = req.body || {};
+  if (!platformId) return res.status(400).json({ error: 'platformId is required' });
   try {
     const draftId = await statusIdByName('Draft');
     if (!draftId) return res.status(500).json({ error: 'NO_STATUS_ROW', message: '"Draft" is missing from Form_Status — seed it first.' });
+    const formTypeId = await formTypeIdForPlatform(platformId);
     const maxQ = await pool.query(`SELECT COALESCE(MAX(${qi('Form_ID')}), 0) + 1 AS next_id FROM ${qi('FMS')}.${qi('Form_Creation_Process')}`);
     const id = maxQ.rows[0].next_id;
     await pool.query(
       `INSERT INTO ${qi('FMS')}.${qi('Form_Creation_Process')}
-        (${qi('Form_ID')}, ${qi('Current_Status')}, ${qi('Current_Owner_CSMS_ID')}, ${qi('Current_Status_Change_Date')})
-       VALUES ($1,$2,$3,CURRENT_DATE)`,
-      [id, draftId, req.user.csmsId]
+        (${qi('Form_ID')}, ${qi('Current_Status')}, ${qi('Current_Owner_CSMS_ID')}, ${qi('Current_Status_Change_Date')}, ${qi('Form_Type_ID')})
+       VALUES ($1,$2,$3,CURRENT_DATE,$4)`,
+      [id, draftId, req.user.csmsId, formTypeId]
     );
     res.status(201).json({ ok: true, formId: id });
   } catch (err) {
@@ -102,6 +123,9 @@ router.post('/:id/submit-review', requireAuth, async (req, res) => {
 router.post('/:id/reject', requireAuth, async (req, res) => {
   await setFormStatus(req, res, ['In Review'], 'Draft');
 });
+// The app generates its own URL now (the frontend computes it from
+// location.origin, same as the satsang self-service links) — no more
+// asking staff to paste in an external link.
 router.post('/:id/publish', requireAuth, async (req, res) => {
   const { publishedUrl } = req.body || {};
   if (!publishedUrl) return res.status(400).json({ error: 'publishedUrl is required to publish' });

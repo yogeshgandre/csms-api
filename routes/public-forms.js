@@ -181,4 +181,144 @@ router.post('/satsang-form/:token', async (req, res) => {
   }
 });
 
+/* ============ Curious Intake public form (FMS) ============
+   A plain public page per form — no token, same form for everyone, per
+   instruction. Only reachable while the form's Current_Status resolves to
+   Published (Paused/Draft/In Review/Archived all reject). Collects the
+   mandatory Form_Submission_Key_Details fields plus whatever
+   Form_Additional_Fields questions that form defines. */
+
+const MANDATORY_INTAKE_FIELDS = [
+  { name: 'Sal', label: 'Salutation', type: 'text', required: false },
+  { name: 'First_Name', label: 'First name', type: 'text', required: true },
+  { name: 'Last_Name', label: 'Last name', type: 'text', required: true },
+  { name: 'City', label: 'City', type: 'text', required: true },
+  { name: 'Country_ID', label: 'Country', type: 'country', required: true },
+  { name: 'WhatsApp_Number', label: 'WhatsApp number', type: 'number', required: true },
+  { name: 'Email', label: 'Email', type: 'email', required: true },
+];
+
+router.get('/intake-form/:formId', async (req, res) => {
+  try {
+    const formQ = await pool.query(
+      `SELECT fc.${qi('Form_ID')}, fs.${qi('Form_Status_Name')}
+       FROM ${qi('FMS')}.${qi('Form_Creation_Process')} fc
+       LEFT JOIN ${qi('FMS')}.${qi('Form_Status')} fs ON fs.${qi('Form_Status_ID')} = fc.${qi('Current_Status')}
+       WHERE fc.${qi('Form_ID')} = $1`,
+      [req.params.formId]
+    );
+    if (formQ.rowCount === 0) return res.status(404).json({ error: 'NOT_FOUND' });
+    if (formQ.rows[0].Form_Status_Name !== 'Published') {
+      return res.status(409).json({ error: 'NOT_PUBLISHED', message: 'This form is not currently open.' });
+    }
+
+    const fieldsQ = await pool.query(
+      `SELECT ${qi('Question_Name')}, ${qi('Question_Type')}, ${qi('Component_Type')}
+       FROM ${qi('FMS')}.${qi('Form_Additional_Fields')}
+       WHERE ${qi('Form_ID')} = $1 AND ${qi('Ver_To_DT')} >= CURRENT_DATE
+       ORDER BY ${qi('FAF_ID')}`,
+      [req.params.formId]
+    );
+    const countriesQ = await pool.query(
+      `SELECT ${qi('Country_ID')}, ${qi('Country_Name')} FROM ${qi('Master')}.${qi('M_Country')} ORDER BY ${qi('Country_Name')}`
+    );
+
+    res.json({
+      mandatoryFields: MANDATORY_INTAKE_FIELDS,
+      additionalFields: fieldsQ.rows,
+      countries: countriesQ.rows,
+    });
+  } catch (err) {
+    console.error('[GET /public/intake-form/:formId] error', err);
+    res.status(500).json({ error: 'INTERNAL' });
+  }
+});
+
+router.post('/intake-form/:formId', async (req, res) => {
+  const { mandatory, additional } = req.body || {};
+  if (!mandatory) return res.status(400).json({ error: 'mandatory is required' });
+  for (const f of MANDATORY_INTAKE_FIELDS) {
+    if (f.required && !mandatory[f.name]) return res.status(400).json({ error: 'MISSING_FIELD', message: `${f.label} is required.` });
+  }
+  let client;
+  try {
+    const formQ = await pool.query(
+      `SELECT fc.${qi('Form_ID')}, fs.${qi('Form_Status_Name')}
+       FROM ${qi('FMS')}.${qi('Form_Creation_Process')} fc
+       LEFT JOIN ${qi('FMS')}.${qi('Form_Status')} fs ON fs.${qi('Form_Status_ID')} = fc.${qi('Current_Status')}
+       WHERE fc.${qi('Form_ID')} = $1`,
+      [req.params.formId]
+    );
+    if (formQ.rowCount === 0) return res.status(404).json({ error: 'NOT_FOUND' });
+    if (formQ.rows[0].Form_Status_Name !== 'Published') {
+      return res.status(409).json({ error: 'NOT_PUBLISHED', message: 'This form is not currently open.' });
+    }
+
+    client = await pool.connect();
+    await client.query('BEGIN');
+
+    // Country and Country_ISD are NOT NULL in the original schema, even
+    // though Country_ID is now the real source of truth — derive both
+    // from the selected country so old NOT NULL constraints don't break
+    // the submission, instead of just passing null.
+    let countryName = null, countryIsd = null;
+    if (mandatory.Country_ID) {
+      const cQ = await client.query(
+        `SELECT ${qi('Country_Name')}, ${qi('Country_ISD')} FROM ${qi('Master')}.${qi('M_Country')} WHERE ${qi('Country_ID')} = $1`,
+        [mandatory.Country_ID]
+      );
+      if (cQ.rowCount) { countryName = cQ.rows[0].Country_Name; countryIsd = cQ.rows[0].Country_ISD; }
+    }
+
+    const maxQ = await client.query(`SELECT COALESCE(MAX(${qi('Submission_ID')}), 0) + 1 AS next_id FROM ${qi('FMS')}.${qi('Form_Submission_Key_Details')}`);
+    const submissionId = maxQ.rows[0].next_id;
+    await client.query(
+      `INSERT INTO ${qi('FMS')}.${qi('Form_Submission_Key_Details')}
+        (${qi('Submission_ID')}, ${qi('Form_ID')}, ${qi('Sal')}, ${qi('First_Name')}, ${qi('Last_Name')}, ${qi('City')},
+         ${qi('Country')}, ${qi('Country_ISD')}, ${qi('Country_ID')}, ${qi('WhatsApp_Number')}, ${qi('Email')})
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`,
+      [submissionId, req.params.formId, mandatory.Sal || null, mandatory.First_Name, mandatory.Last_Name, mandatory.City,
+       countryName, countryIsd, mandatory.Country_ID, mandatory.WhatsApp_Number, mandatory.Email]
+    );
+
+    if (additional && typeof additional === 'object') {
+      const formIdNum = Number(req.params.formId);
+      if (!Number.isInteger(formIdNum)) throw new Error('Invalid Form_ID for dynamic table');
+      const defQ = await client.query(
+        `SELECT ${qi('Question_Name')} FROM ${qi('FMS')}.${qi('Form_Additional_Fields')}
+         WHERE ${qi('Form_ID')} = $1 AND ${qi('Ver_To_DT')} >= CURRENT_DATE`,
+        [req.params.formId]
+      );
+      const validQuestions = new Set(defQ.rows.map(r => r.Question_Name));
+      const answered = Object.entries(additional).filter(([k, v]) => validQuestions.has(k) && v != null && v !== '');
+      if (answered.length) {
+        await client.query(
+          `CREATE TABLE IF NOT EXISTS ${qi('FMS')}.${qi('Form_ID_' + formIdNum + '_Details')} (
+             "Submission_ID" BIGINT NOT NULL,
+             "Question_Name" TEXT NOT NULL,
+             "Answer_Value" TEXT,
+             "Submitted_DT" TIMESTAMPTZ NOT NULL DEFAULT now()
+           )`
+        );
+        for (const [question, value] of answered) {
+          await client.query(
+            `INSERT INTO ${qi('FMS')}.${qi('Form_ID_' + formIdNum + '_Details')} ("Submission_ID", "Question_Name", "Answer_Value")
+             VALUES ($1,$2,$3)`,
+            [submissionId, question, String(value)]
+          );
+        }
+      }
+    }
+
+    await client.query('COMMIT');
+    res.status(201).json({ ok: true, submissionId });
+  } catch (err) {
+    if (client) await client.query('ROLLBACK');
+    console.error('[POST /public/intake-form/:formId] error', err);
+    res.status(500).json({ error: 'INTERNAL', message: err.message });
+  } finally {
+    if (client) client.release();
+  }
+});
+
 module.exports = router;
