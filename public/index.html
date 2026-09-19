@@ -364,6 +364,18 @@ nav .pip.r{background:var(--rose);color:#fff}
   display:flex;flex-direction:column;gap:6px;min-width:180px;position:relative}
 .olvl2panel::before{content:"";position:absolute;top:-10px;left:50%;width:1px;height:10px;background:var(--line-2)}
 .olvl2count{font-size:11px;color:var(--deep);font-weight:600;margin-bottom:2px}
+.sp-header{display:flex;align-items:center;gap:16px;padding-bottom:20px;border-bottom:1px solid var(--line-2);margin-bottom:22px}
+.sp-avatar{width:56px;height:56px;border-radius:50%;background:var(--deep-wash);color:var(--deep);
+  display:flex;align-items:center;justify-content:center;font-weight:600;font-size:18px;flex-shrink:0}
+.sp-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
+.sp-stat{background:var(--paper);border-radius:var(--r-sm);padding:14px 16px}
+.sp-stat .lbl2{font-size:12px;color:var(--ink-3);margin-bottom:3px}
+.sp-stat .val{font-size:20px;font-weight:600}
+.sp-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.sp-card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px}
+.sp-card h3{margin:0 0 10px;font-size:15px;display:flex;align-items:center;gap:8px}
+.sp-card .dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+@media (max-width:760px){.sp-grid{grid-template-columns:1fr}.sp-stats{grid-template-columns:1fr}}
 .ochip.lvl2{font-size:12px;padding:6px 12px;background:var(--card);color:var(--ink-2);
   border-radius:var(--r-sm);cursor:pointer}
 .ochip.lvl2:hover{background:var(--deep);color:#fff}
@@ -606,6 +618,8 @@ nav .pip.r{background:var(--rose);color:#fff}
     <p class="sub">What the technical owner looks at each morning. Everything here is machine-generated — nobody maintains it by hand.</p>
     <div id="ops"></div>
   </section>
+
+  <section class="pane" id="p-seekerpage"><div id="seekerPage"></div></section>
 
   <section class="pane" id="p-about">
     <h2 class="sec">What this prototype demonstrates</h2>
@@ -1269,8 +1283,6 @@ function render(){
 let LIVE_SEEKERS = null;
 let LIVE_SEEKER_DETAIL_ID = null;
 let LIVE_SEEKER_DETAIL = null;
-let LIVE_SEEKER_DETAIL_TAB = 'overview';
-let SEEKER_DETAIL_ROOT_ID = 'seekerDetailRoot'; // which tab's modal slot is currently in use — Live Seekers and Journey share this same detail view
 
 function seekersSubtab(s){
   document.getElementById('seekersMock').style.display = s==='mock' ? '' : 'none';
@@ -1311,7 +1323,7 @@ function renderLiveSeekersBody(){
   const list = LIVE_SEEKERS || [];
   body.innerHTML = `<div class="card" style="overflow:hidden"><table>
     <thead><tr><th>Seeker</th><th>Category</th><th class="hide-sm">Country</th><th class="hide-sm">WhatsApp</th><th>Weekly seva hrs</th></tr></thead>
-    <tbody>${list.length ? list.map(s=>`<tr onclick="openLiveSeekerDetail(${s.Seeker_ID})" style="cursor:pointer">
+    <tbody>${list.length ? list.map(s=>`<tr onclick="openSeekerPage(${s.Seeker_ID})" style="cursor:pointer">
         <td><div class="nm serif">${esc([s.Sal,s.First_Name,s.Last_Name].filter(Boolean).join(' '))}</div><div class="sub2">${esc(s.Email||'')}</div></td>
         <td>${s.Category_Name ? categoryTag(s.Category_Name) : '<span class="sub2">Uncategorised</span>'}</td>
         <td class="hide-sm">${esc(s.Country_Name||'')}</td>
@@ -1321,46 +1333,86 @@ function renderLiveSeekersBody(){
   </table></div>`;
 }
 
-async function openLiveSeekerDetail(id, rootId){
-  SEEKER_DETAIL_ROOT_ID = rootId || 'seekerDetailRoot';
-  LIVE_SEEKER_DETAIL_ID = id; LIVE_SEEKER_DETAIL_TAB = 'overview';
-  const root = document.getElementById(SEEKER_DETAIL_ROOT_ID);
-  if(!root) return;
-  root.innerHTML = `<div class="obackdrop" onclick="if(event.target===this) closeLiveSeekerDetail()">
-    <div class="omodal" style="max-width:560px"><button class="oclose" onclick="closeLiveSeekerDetail()">&times;</button><p class="sub2">Loading\u2026</p></div></div>`;
+let SEEKER_PAGE_RETURN_TAB = null;
+async function openSeekerPage(id){
+  SEEKER_PAGE_RETURN_TAB = document.querySelector('nav button.on')?.dataset.p || null;
+  LIVE_SEEKER_DETAIL_ID = id;
+  document.querySelectorAll('.pane').forEach(x=>x.classList.remove('on'));
+  document.getElementById('p-seekerpage').classList.add('on');
+  const el = document.getElementById('seekerPage');
+  el.innerHTML = '<p class="sub2">Loading\u2026</p>';
   try{
-    const [seeker, notes, skills] = await Promise.all([
+    const [seeker, notes, skills, masterlist] = await Promise.all([
       apiFetch('/api/seekers/'+id),
-      apiFetch('/api/seekers/'+id+'/comments').catch(()=>[]), // don't let this block the rest of the detail view
+      apiFetch('/api/seekers/'+id+'/comments').catch(()=>[]),
       apiFetch('/api/seekers/'+id+'/skills').catch(()=>[]),
+      apiFetch('/api/seekers/'+id+'/masterlist').catch(()=>null),
     ]);
     LIVE_SEEKER_DETAIL = seeker;
     LIVE_SEEKER_DETAIL.notes = notes;
     LIVE_SEEKER_DETAIL.skills = skills;
-    renderLiveSeekerDetail();
+    LIVE_SEEKER_DETAIL.masterlist = masterlist;
+    renderSeekerPage();
   }catch(err){
-    const modal = root.querySelector('.omodal');
-    if(modal) modal.innerHTML = `<button class="oclose" onclick="closeLiveSeekerDetail()">&times;</button><p class="sub2">Could not load: ${esc(err.message||'')}</p>`;
+    el.innerHTML = `<button class="btn ghost sm" onclick="closeSeekerPage()">\u2190 Back</button>
+      <p class="sub2" style="margin-top:10px">Could not load: ${esc(err.message||'')}</p>`;
   }
 }
-function closeLiveSeekerDetail(){ LIVE_SEEKER_DETAIL_ID=null; LIVE_SEEKER_DETAIL=null; const el=document.getElementById(SEEKER_DETAIL_ROOT_ID); if(el) el.innerHTML=''; SEEKER_DETAIL_ROOT_ID='seekerDetailRoot'; }
-function switchLiveSeekerTab(t){ LIVE_SEEKER_DETAIL_TAB = t; renderLiveSeekerDetail(); }
+function closeSeekerPage(){
+  LIVE_SEEKER_DETAIL_ID=null; LIVE_SEEKER_DETAIL=null;
+  document.querySelectorAll('.pane').forEach(x=>x.classList.remove('on'));
+  if(SEEKER_PAGE_RETURN_TAB) tab(SEEKER_PAGE_RETURN_TAB);
+  else document.getElementById('p-overview').classList.add('on');
+}
 
 let LIVE_MASTER_SKILLS = null;
 async function loadMasterSkills(){
-  try{ LIVE_MASTER_SKILLS = await apiFetch('/api/master/skills'); if(LIVE_SEEKER_DETAIL_TAB==='skills') renderLiveSeekerDetail(); }
-  catch(err){ /* the add-skill dropdown just stays empty */ }
+  try{ LIVE_MASTER_SKILLS = await apiFetch('/api/master/skills'); renderSeekerPage(); }
+  catch(err){ /* the add-skill field just won't suggest anything */ }
+}
+function skillAutocomplete(inputEl){
+  const dd = document.getElementById('skAdd_ac');
+  document.getElementById('skAdd_skillId').value = ''; // any previous selection is invalid once they keep typing
+  const q = inputEl.value.trim().toLowerCase();
+  if(!q){ dd.style.display='none'; dd.innerHTML=''; return; }
+  const matches = (LIVE_MASTER_SKILLS||[]).filter(sk=>sk.Skill_Name.toLowerCase().includes(q));
+  if(!matches.length){ dd.innerHTML = '<div class="ac-item sub2">No matching skill yet \u2014 Add will offer to create it.</div>'; dd.style.display=''; return; }
+  dd.innerHTML = matches.map(sk=>`<div class="ac-item" onmousedown="selectSkill(${sk.Skill_ID}, '${esc(sk.Skill_Name).replace(/'/g,"\\'")}')">${esc(sk.Skill_Name)}</div>`).join('');
+  dd.style.display = '';
+}
+function selectSkill(id, name){
+  document.getElementById('skAdd_search').value = name;
+  document.getElementById('skAdd_skillId').value = id;
+  document.getElementById('skAdd_ac').style.display = 'none';
 }
 async function addSeekerSkill(btn){
-  const skillId = document.getElementById('skAdd_skill').value;
+  const typedName = document.getElementById('skAdd_search').value.trim();
+  let skillId = document.getElementById('skAdd_skillId').value;
   const proficiency = document.getElementById('skAdd_prof').value;
-  if(!skillId) return;
+  if(!typedName) return;
   await withLoading(btn, async ()=>{
     try{
+      if(!skillId){
+        // Nothing explicitly picked from the dropdown — check for an exact
+        // name match first (same Skill_ID, no duplicate), then look for
+        // anything similar to suggest before offering to create new.
+        const exact = (LIVE_MASTER_SKILLS||[]).find(sk=>sk.Skill_Name.toLowerCase()===typedName.toLowerCase());
+        if(exact){
+          skillId = exact.Skill_ID;
+        }else{
+          const similar = (LIVE_MASTER_SKILLS||[]).filter(sk=>
+            sk.Skill_Name.toLowerCase().includes(typedName.toLowerCase()) || typedName.toLowerCase().includes(sk.Skill_Name.toLowerCase()));
+          const suggestionNote = similar.length ? ('\n\nSimilar existing skill(s): '+similar.map(sk=>sk.Skill_Name).join(', ')) : '';
+          if(!confirm('No exact match for "'+typedName+'".'+suggestionNote+'\n\nCreate it as a new skill?')) return;
+          const created = await apiFetch('/api/master/skills', {method:'POST', body: JSON.stringify({skillName:typedName})});
+          skillId = created.skillId;
+          LIVE_MASTER_SKILLS = await apiFetch('/api/master/skills');
+        }
+      }
       await apiFetch('/api/seekers/'+LIVE_SEEKER_DETAIL_ID+'/skills', {method:'POST', body: JSON.stringify({skillId:Number(skillId), proficiency})});
       toast('Skill added.');
       LIVE_SEEKER_DETAIL.skills = await apiFetch('/api/seekers/'+LIVE_SEEKER_DETAIL_ID+'/skills');
-      renderLiveSeekerDetail();
+      renderSeekerPage();
     }catch(err){ toast('Could not add: '+(err.message||'')); }
   });
 }
@@ -1371,92 +1423,103 @@ async function removeSeekerSkill(skillId, btn){
       await apiFetch('/api/seekers/'+LIVE_SEEKER_DETAIL_ID+'/skills/'+skillId, {method:'DELETE'});
       toast('Removed.');
       LIVE_SEEKER_DETAIL.skills = await apiFetch('/api/seekers/'+LIVE_SEEKER_DETAIL_ID+'/skills');
-      renderLiveSeekerDetail();
+      renderSeekerPage();
     }catch(err){ toast('Could not remove: '+(err.message||'')); }
   });
 }
 
-function renderLiveSeekerDetail(){
-  const root = document.getElementById(SEEKER_DETAIL_ROOT_ID);
-  if(!root || !LIVE_SEEKER_DETAIL) return;
-  const s = LIVE_SEEKER_DETAIL;
-  const tabs = [['overview','Overview'],['categories','Category history'],['platform','Platform engagement'],['satsangs','Satsangs'],['notes','Notes'],['skills','Skills']];
-  const t = LIVE_SEEKER_DETAIL_TAB;
-
-  let body = '';
-  if(t==='overview'){
-    body = `<div class="kv">
-      <div>Name</div><div>${esc([s.Sal,s.First_Name,s.Last_Name].filter(Boolean).join(' '))}</div>
-      <div>Email</div><div>${esc(s.Email||'\u2014')}</div>
-      <div>WhatsApp</div><div>${esc((s.Country_ISD||'')+' '+(s.WhatsApp_Number||'')||'\u2014')}</div>
-      <div>City</div><div>${esc(s.City||'\u2014')}</div>
-      <div>Weekly seva hrs</div><div>${s.Weekly_Seva_Hrs!=null?esc(s.Weekly_Seva_Hrs):'\u2014'}</div>
-      <div>Pranshakti</div><div>${esc(s.Pranshakti||'\u2014')}</div>
-      <div>Sensitive list</div><div>${s.Sensitive_List ? 'Yes' : 'No'}</div>
-    </div>`;
-  } else if(t==='categories'){
-    body = (s.categories||[]).length
-      ? s.categories.map(c=>`<div class="oteamrow" style="cursor:default">
-          <span>${categoryTag(c.Category_Name)}</span>
-          <span class="sub2">${esc(c.Ver_From_DT||'')} \u2192 ${c.Ver_To_DT ? esc(c.Ver_To_DT) : 'current'}</span>
-        </div>`).join('')
-      : '<p class="sub2">No category history recorded.</p>';
-  } else if(t==='platform'){
-    body = (s.platformEngagements||[]).length
-      ? s.platformEngagements.map(p=>`<div class="oteamrow" style="cursor:default">
-          <span>${esc(p.Platform_Name||'')}</span>
-          <span class="sub2">${esc(p.Engagement_DT||'')}</span>
-        </div>`).join('')
-      : '<p class="sub2">No platform engagement recorded.</p>';
-  } else if(t==='satsangs'){
-    const groups = [['bhav','Bhav satsang'],['upay','Upay satsang'],['vyashti','Vyashti satsang']];
-    body = groups.map(([key,label])=>{
-      const rows = (s.satsangs && s.satsangs[key]) || [];
-      return `<p class="sub2" style="font-weight:600;margin-top:10px">${esc(label)}</p>
-        ${rows.length ? rows.map(r=>`<div class="oteamrow" style="cursor:default"><span>${esc(JSON.stringify(r).slice(0,80))}</span></div>`).join('')
-          : '<p class="sub2">None recorded.</p>'}`;
-    }).join('');
-  } else if(t==='notes'){
-    const notes = s.notes || [];
-    body = notes.length ? notes.map(n=>`<div class="card pad" style="margin-bottom:8px">
-        <div class="sub2">${esc(n.Comments||'')}</div>
-        <div class="sub2" style="font-size:11px;margin-top:5px">
-          ${esc(n.Satsang_Name||'')}${n.Event_ST_DT_TIME?(' \u00b7 '+esc(new Date(n.Event_ST_DT_TIME).toLocaleDateString())):''}
-          ${n.conductor_name?(' \u00b7 by '+esc(n.conductor_name)):''}
-          ${n.Comments_Date?(' \u00b7 '+esc(new Date(n.Comments_Date).toLocaleDateString())):''}
-        </div>
-      </div>`).join('') : '<p class="sub2">No attendee notes recorded yet \u2014 add them from Satsang Management \u2192 Attendee Notes.</p>';
-  } else if(t==='skills'){
-    const skills = s.skills || [];
-    if(LIVE_MASTER_SKILLS===null) loadMasterSkills();
-    const options = (LIVE_MASTER_SKILLS||[]).filter(sk=>!skills.some(x=>x.Skill_ID===sk.Skill_ID));
-    body = `
-      ${skills.length ? skills.map(sk=>`<div class="oteamrow">
-          <span>${esc(sk.Skill_Name||('Skill #'+sk.Skill_ID))} <span class="sub2">(${esc(sk.Skill_Proficiency)})</span></span>
-          <button class="mini" onclick="removeSeekerSkill(${sk.Skill_ID}, this)" style="width:22px;height:22px;color:var(--rose)">&times;</button>
-        </div>`).join('') : '<p class="sub2">No skills recorded yet.</p>'}
-      <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;align-items:center">
-        <select id="skAdd_skill" style="flex:1;min-width:140px;border-radius:999px;padding:6px 14px;font-size:12.5px;border:1px solid var(--line-2)">
-          <option value="">${options.length?'Choose skill\u2026':(LIVE_MASTER_SKILLS===null?'Loading\u2026':'No more skills to add')}</option>
-          ${options.map(sk=>`<option value="${sk.Skill_ID}">${esc(sk.Skill_Name)}</option>`).join('')}
-        </select>
-        <select id="skAdd_prof" style="border-radius:999px;padding:6px 14px;font-size:12.5px;border:1px solid var(--line-2)">
-          <option value="High">High</option><option value="Medium">Medium</option><option value="Low">Low</option>
-        </select>
-        <button class="mini" onclick="addSeekerSkill(this)" style="width:auto;padding:0 12px;height:28px">Add</button>
-      </div>`;
-  }
-
-  root.innerHTML = `<div class="obackdrop" onclick="if(event.target===this) closeLiveSeekerDetail()">
-    <div class="omodal" style="max-width:560px;max-height:80vh;overflow-y:auto">
-      <button class="oclose" onclick="closeLiveSeekerDetail()">&times;</button>
-      <h3 style="margin:0 0 10px">${esc([s.First_Name,s.Last_Name].filter(Boolean).join(' '))}</h3>
-      <div class="filters" style="border-bottom:1px solid var(--line-2);padding-bottom:0;margin-bottom:12px">
-        ${tabs.map(([key,label])=>`<button class="chip ${t===key?'on':''}" onclick="switchLiveSeekerTab('${key}')">${esc(label)}</button>`).join('')}
-      </div>
-      ${body}
-    </div>
+function seekerInitials(s){
+  return [(s.First_Name||'')[0], (s.Last_Name||'')[0]].filter(Boolean).join('').toUpperCase() || '?';
+}
+function spCard(colorVar, icon, title, innerHtml){
+  return `<div class="sp-card">
+    <h3><span class="dot" style="background:${colorVar}"></span>${esc(title)}</h3>
+    ${innerHtml}
   </div>`;
+}
+function renderSeekerPage(){
+  const el = document.getElementById('seekerPage');
+  if(!el || !LIVE_SEEKER_DETAIL) return;
+  const s = LIVE_SEEKER_DETAIL;
+  const ml = s.masterlist || {};
+  const name = [s.Sal,s.First_Name,s.Last_Name].filter(Boolean).join(' ');
+  const activeCat = (s.categories||[])[0];
+  const satsangCount = ['bhav','upay','vyashti'].reduce((n,k)=>n+((s.satsangs&&s.satsangs[k])||[]).length, 0);
+
+  const contactCard = spCard('var(--deep)', '', 'Contact', `<div class="kv">
+      <div>Email</div><div>${esc(s.Email||'\u2014')}</div>
+      <div>WhatsApp</div><div>${esc((s.Country_ISD?('+'+s.Country_ISD+' '):'')+(s.WhatsApp_Number||'')||'\u2014')}</div>
+      <div>City</div><div>${esc(s.City||'\u2014')}</div>
+      <div>Sub-region</div><div>${esc(ml.Sub_Region||'\u2014')}</div>
+    </div>`);
+
+  const sevaCard = spCard('var(--sage)', '', 'Seva', ml && LIVE_SEEKER_DETAIL.masterlist!==null ? `<div class="kv">
+      <div>Sadhana start</div><div>${esc(ml.Sadhana_ST_DT ? new Date(ml.Sadhana_ST_DT).toLocaleDateString() : '\u2014')}</div>
+      <div>Visited Ashram</div><div>${esc(ml.Visited_Ashram||'\u2014')}</div>
+      <div>Attended MAV workshop</div><div>${esc(ml.Attended_MAV_Workshop||'\u2014')}</div>
+      <div>Opportunities at home</div><div>${esc(ml.Opp_Home||'\u2014')}</div>
+    </div>` : '<p class="sub2">No MasterList info recorded yet.</p>');
+
+  const skills = s.skills || [];
+  if(LIVE_MASTER_SKILLS===null) loadMasterSkills();
+  const skillsCard = spCard('var(--ink-3)', '', 'Skills', `
+    ${skills.length ? skills.map(sk=>`<div class="oteamrow">
+        <span>${esc(sk.Skill_Name||('Skill #'+sk.Skill_ID))} <span class="sub2">(${esc(sk.Skill_Proficiency)})</span></span>
+        <button class="mini" onclick="removeSeekerSkill(${sk.Skill_ID}, this)" style="width:22px;height:22px;color:var(--rose)">&times;</button>
+      </div>`).join('') : '<p class="sub2">No skills recorded yet.</p>'}
+    <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;align-items:center;position:relative">
+      <div style="position:relative;flex:1;min-width:120px">
+        <input id="skAdd_search" placeholder="${LIVE_MASTER_SKILLS===null?'Loading\u2026':'Type a skill\u2026'}" autocomplete="off"
+          oninput="skillAutocomplete(this)" style="width:100%;border-radius:999px;padding:6px 14px;font-size:12.5px;border:1px solid var(--line-2);box-sizing:border-box">
+        <input id="skAdd_skillId" type="hidden">
+        <div id="skAdd_ac" class="ac-dropdown" style="display:none"></div>
+      </div>
+      <select id="skAdd_prof" style="border-radius:999px;padding:6px 10px;font-size:12.5px;border:1px solid var(--line-2)">
+        <option value="High">High</option><option value="Medium">Medium</option><option value="Low">Low</option>
+      </select>
+      <button class="mini" onclick="addSeekerSkill(this)" style="width:auto;padding:0 12px;height:28px">Add</button>
+    </div>`);
+
+  const satsangGroups = [['bhav','Bhav satsang'],['upay','Upay satsang'],['vyashti','Vyashti satsang']];
+  const satsangsCard = spCard('var(--deep-2)', '', 'Satsangs', satsangGroups.map(([key,label])=>{
+    const rows = (s.satsangs && s.satsangs[key]) || [];
+    return `<p class="sub2" style="font-weight:600;margin-top:8px">${esc(label)}</p>
+      ${rows.length ? rows.map(r=>`<div class="sub2">${esc(JSON.stringify(r).slice(0,80))}</div>`).join('') : '<p class="sub2">None recorded.</p>'}`;
+  }).join(''));
+
+  const engagements = s.platformEngagements || [];
+  const platformCard = spCard('var(--amber)', '', 'Platform engagement', engagements.length
+    ? engagements.map(p=>`<div class="oteamrow" style="cursor:default"><span>${esc(p.Platform_Name||'')}</span><span class="sub2">${esc(p.Engagement_DT||'')}</span></div>`).join('')
+    : '<p class="sub2">No platform engagement recorded.</p>');
+
+  const notes = s.notes || [];
+  const notesCard = spCard('var(--rose)', '', 'Recent notes', notes.length
+    ? notes.slice(0,5).map(n=>`<div style="margin-bottom:8px">
+        <div class="sub2">${esc(n.Comments||'')}</div>
+        <div class="sub2" style="font-size:11px;margin-top:3px">${esc(n.Satsang_Name||'')}${n.conductor_name?(' \u00b7 by '+esc(n.conductor_name)):''}${n.Comments_Date?(' \u00b7 '+esc(new Date(n.Comments_Date).toLocaleDateString())):''}</div>
+      </div>`).join('') : '<p class="sub2">No attendee notes recorded yet.</p>');
+
+  const catHistoryCard = spCard('var(--sage)', '', 'Category history', (s.categories||[]).length
+    ? s.categories.map(c=>`<div class="oteamrow" style="cursor:default"><span>${categoryTag(c.Category_Name)}</span><span class="sub2">${esc(c.Ver_From_DT||'')} \u2192 ${c.Ver_To_DT ? esc(c.Ver_To_DT) : 'current'}</span></div>`).join('')
+    : '<p class="sub2">No category history recorded.</p>');
+
+  el.innerHTML = `
+    <button class="btn ghost sm" onclick="closeSeekerPage()" style="margin-bottom:16px">\u2190 Back</button>
+    <div class="sp-header">
+      <div class="sp-avatar">${esc(seekerInitials(s))}</div>
+      <div style="flex:1">
+        <h2 class="sec" style="margin:0">${esc(name)}</h2>
+        <p class="sub2">${esc(s.City||'')}${activeCat?(' \u00b7 '+esc(activeCat.Category_Name)):''}</p>
+      </div>
+    </div>
+    <div class="sp-stats">
+      <div class="sp-stat"><div class="lbl2">Category</div><div class="val">${esc(activeCat?activeCat.Category_Name:'\u2014')}</div></div>
+      <div class="sp-stat"><div class="lbl2">Weekly seva hours</div><div class="val">${ml.Weekly_Seva_Hrs!=null?esc(ml.Weekly_Seva_Hrs):'\u2014'}</div></div>
+      <div class="sp-stat"><div class="lbl2">Satsangs attended</div><div class="val">${satsangCount}</div></div>
+    </div>
+    <div class="sp-grid">
+      ${contactCard}${sevaCard}${skillsCard}${satsangsCard}${platformCard}${notesCard}${catHistoryCard}
+    </div>`;
 }
 
 /* ============ drawer ============ */
@@ -4132,7 +4195,7 @@ function renderJourney(){
           const i = laneIdx(p.Category_Name);
           const name = [p.Sal,p.First_Name,p.Last_Name].filter(Boolean).join(' ') || ('Seeker #'+p.Seeker_ID);
           return `<div class="kcard" ${readonly?'':`draggable="true" ondragstart="dragCard(event,${p.Seeker_ID})" ondragend="dragEndCard(event)"`}>
-            <div class="nm serif kcard-name" onclick="openLiveSeekerDetail(${p.Seeker_ID}, 'journeySeekerDetailRoot')">${esc(name)}</div>
+            <div class="nm serif kcard-name" onclick="openSeekerPage(${p.Seeker_ID})">${esc(name)}</div>
             <div class="sub2">${esc([p.City,p.Country_Name].filter(Boolean).join(', ')||'\u2014')}</div>
             <div class="sub2" style="font-size:11.5px">${esc(p.Email||'')}</div>
             ${readonly ? '' : `<div class="kcard-actions">
@@ -4975,7 +5038,7 @@ function renderSevaLiveSkillResults(){
   if(!el) return;
   const rows = SEVA_LIVE_SKILL_RESULTS || [];
   el.innerHTML = rows.length ? rows.map(r=>`<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--line)">
-      <span style="cursor:pointer" onclick="openLiveSeekerDetail(${r.Seeker_ID}, 'sevahubSeekerDetailRoot')">${esc([r.First_Name,r.Last_Name].filter(Boolean).join(' ')||('Seeker #'+r.Seeker_ID))}</span>
+      <span style="cursor:pointer" onclick="openSeekerPage(${r.Seeker_ID})">${esc([r.First_Name,r.Last_Name].filter(Boolean).join(' ')||('Seeker #'+r.Seeker_ID))}</span>
       <span class="sub2">${esc(r.Skill_Proficiency)}</span>
     </div>`).join('') : '<p class="sub2">Nobody recorded with this skill yet.</p>';
 }
