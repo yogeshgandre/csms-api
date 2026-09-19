@@ -535,7 +535,7 @@ nav .pip.r{background:var(--rose);color:#fff}
       <button class="chip on" data-sub="defs" onclick="satsangSubtab('defs')">Satsang Definitions</button>
       <button class="chip" data-sub="events" onclick="satsangSubtab('events')">Satsang Events</button>
       <button class="chip" data-sub="attendees" onclick="satsangSubtab('attendees')">Attendee Addition</button>
-      <button class="chip" data-sub="comments" onclick="satsangSubtab('comments')">Attendee Notes</button>
+      <button class="chip" data-sub="comments" onclick="satsangSubtab('comments')">Attendee and Satsang Notes</button>
       <button class="chip" data-sub="transfers" onclick="satsangSubtab('transfers')">Transfers</button>
       <button class="chip" data-sub="access" onclick="satsangSubtab('access')">Access Configuration</button>
     </div>
@@ -1342,16 +1342,19 @@ async function openSeekerPage(id){
   const el = document.getElementById('seekerPage');
   el.innerHTML = '<p class="sub2">Loading\u2026</p>';
   try{
-    const [seeker, notes, skills, masterlist] = await Promise.all([
+    const [seeker, notes, skills, masterlist, satsangLinks] = await Promise.all([
       apiFetch('/api/seekers/'+id),
       apiFetch('/api/seekers/'+id+'/comments').catch(()=>[]),
       apiFetch('/api/seekers/'+id+'/skills').catch(()=>[]),
       apiFetch('/api/seekers/'+id+'/masterlist').catch(()=>null),
+      apiFetch('/api/seekers/'+id+'/satsang-links').catch(()=>({upay:[],vyashti:[],bhav:[]})),
     ]);
     LIVE_SEEKER_DETAIL = seeker;
     LIVE_SEEKER_DETAIL.notes = notes;
     LIVE_SEEKER_DETAIL.skills = skills;
     LIVE_SEEKER_DETAIL.masterlist = masterlist;
+    LIVE_SEEKER_DETAIL.satsangLinks = satsangLinks;
+    SP_EDIT_FIELD = null;
     renderSeekerPage();
   }catch(err){
     el.innerHTML = `<button class="btn ghost sm" onclick="closeSeekerPage()">\u2190 Back</button>
@@ -1428,6 +1431,141 @@ async function removeSeekerSkill(skillId, btn){
   });
 }
 
+/* ---- Seeker Profile page: inline single-field editing ----
+   Everything on this page is editable except identity/contact fields that
+   live outside the MasterList row: Sal/First_Name/Last_Name, Email,
+   WhatsApp_Number, City, Country. Only one field opens for editing at a
+   time (click value -> Edit -> input -> Save/Cancel), matching the
+   dashboard mockup's "no dropdowns / no clutter" direction. The
+   masterlist PUT is a full-snapshot upsert, not a patch, so saving one
+   field still sends all nine masterlist columns \u2014 the other eight
+   come from the currently loaded row. */
+let SP_EDIT_FIELD = null;
+function spStartEdit(key){ SP_EDIT_FIELD = key; renderSeekerPage(); }
+function spCancelEdit(){ SP_EDIT_FIELD = null; renderSeekerPage(); }
+
+const SP_ML_FIELDS = ['pranshakti','subRegion','sadhanaStartDt','weeklySevaHrs','perInfo','oppHome','visitedAshram','attendedMavWorkshop','sensitiveList'];
+const SP_ML_COLUMN = { pranshakti:'Pranshakti', subRegion:'Sub_Region', sadhanaStartDt:'Sadhana_ST_DT', weeklySevaHrs:'Weekly_Seva_Hrs', perInfo:'Per_Info', oppHome:'Opp_Home', visitedAshram:'Visited_Ashram', attendedMavWorkshop:'Attended_MAV_Workshop', sensitiveList:'Sensitive_List' };
+
+async function saveSpMasterlistField(key, btn){
+  const ml = (LIVE_SEEKER_DETAIL && LIVE_SEEKER_DETAIL.masterlist) || {};
+  const input = document.getElementById('spInput_'+key);
+  if(!input) return;
+  let val = input.value;
+  const payload = {};
+  SP_ML_FIELDS.forEach(f=>{
+    if(f===key){
+      payload[f] = f==='weeklySevaHrs' ? (val===''?null:Number(val)) : (val.trim ? val.trim() : val) || null;
+    }else{
+      const col = ml[SP_ML_COLUMN[f]];
+      payload[f] = (f==='sadhanaStartDt' && col) ? String(col).slice(0,10) : (col!=null ? col : null);
+    }
+  });
+  await withLoading(btn, async ()=>{
+    try{
+      await apiFetch('/api/seekers/'+LIVE_SEEKER_DETAIL_ID+'/masterlist', {method:'PUT', body: JSON.stringify(payload)});
+      LIVE_SEEKER_DETAIL.masterlist = await apiFetch('/api/seekers/'+LIVE_SEEKER_DETAIL_ID+'/masterlist');
+      SP_EDIT_FIELD = null;
+      toast('Saved.');
+      renderSeekerPage();
+    }catch(err){ toast('Could not save: '+(err.message||'')); }
+  });
+}
+
+async function saveSpCategory(btn){
+  const sel = document.getElementById('spInput_category');
+  if(!sel || !sel.value) return;
+  await withLoading(btn, async ()=>{
+    try{
+      await apiFetch('/api/seekers/'+LIVE_SEEKER_DETAIL_ID+'/category', {method:'PUT', body: JSON.stringify({categoryId:Number(sel.value)})});
+      LIVE_SEEKER_DETAIL = await apiFetch('/api/seekers/'+LIVE_SEEKER_DETAIL_ID);
+      LIVE_SEEKER_DETAIL.notes = LIVE_SEEKER_DETAIL.notes || (await apiFetch('/api/seekers/'+LIVE_SEEKER_DETAIL_ID+'/comments').catch(()=>[]));
+      LIVE_SEEKER_DETAIL.skills = LIVE_SEEKER_DETAIL.skills || (await apiFetch('/api/seekers/'+LIVE_SEEKER_DETAIL_ID+'/skills').catch(()=>[]));
+      LIVE_SEEKER_DETAIL.masterlist = LIVE_SEEKER_DETAIL.masterlist || (await apiFetch('/api/seekers/'+LIVE_SEEKER_DETAIL_ID+'/masterlist').catch(()=>null));
+      SP_EDIT_FIELD = null;
+      toast('Category updated.');
+      renderSeekerPage();
+    }catch(err){ toast('Could not save: '+(err.message||'')); }
+  });
+}
+
+// One field's display <-> edit-input toggle, as exactly two grid cells
+// (label + value) so it stays aligned inside .kv's fixed 2-column grid.
+// `kind` is 'text'|'number'|'date'.
+function spField(key, label, value, kind){
+  kind = kind || 'text';
+  const displayVal = value==null || value==='' ? '\u2014' : (kind==='date' ? new Date(value).toLocaleDateString() : esc(String(value)));
+  if(SP_EDIT_FIELD === key){
+    const raw = value==null ? '' : (kind==='date' ? String(value).slice(0,10) : value);
+    return `<div>${esc(label)}</div><div>
+        <input id="spInput_${key}" type="${kind==='number'?'number':kind==='date'?'date':'text'}" value="${esc(String(raw))}" style="width:100%;border-radius:999px;padding:5px 10px;font-size:12.5px;border:1px solid var(--line-2);box-sizing:border-box">
+        <div style="display:flex;gap:6px;margin-top:5px">
+          <button class="mini" onclick="saveSpMasterlistField('${key}', this)" style="width:auto;padding:0 10px;height:24px;font-size:11px">Save</button>
+          <button class="mini" onclick="spCancelEdit()" style="width:auto;padding:0 10px;height:24px;font-size:11px;background:var(--paper);color:var(--ink-2)">Cancel</button>
+        </div>
+      </div>`;
+  }
+  return `<div>${esc(label)}</div><div style="display:flex;align-items:center;gap:8px">
+      <span>${displayVal}</span>
+      <button class="mini" onclick="spStartEdit('${key}')" style="width:auto;padding:0 8px;height:20px;font-size:10px;background:var(--paper);color:var(--ink-2)">Edit</button>
+    </div>`;
+}
+
+// Full-width variant for long-text masterlist fields (Opp_Home, Per_Info) \u2014
+// rendered as its own block below the .kv grid, not inside it.
+function spFieldBlock(key, label, value){
+  if(SP_EDIT_FIELD === key){
+    return `<div style="margin-top:10px">
+        <p class="sub2" style="font-weight:600;margin-bottom:4px">${esc(label)}</p>
+        <textarea id="spInput_${key}" rows="2" style="width:100%;border-radius:10px;padding:6px 10px;font-size:12.5px;border:1px solid var(--line-2);box-sizing:border-box;font-family:inherit;resize:vertical">${esc(value||'')}</textarea>
+        <div style="display:flex;gap:6px;margin-top:5px">
+          <button class="mini" onclick="saveSpMasterlistField('${key}', this)" style="width:auto;padding:0 10px;height:24px;font-size:11px">Save</button>
+          <button class="mini" onclick="spCancelEdit()" style="width:auto;padding:0 10px;height:24px;font-size:11px;background:var(--paper);color:var(--ink-2)">Cancel</button>
+        </div>
+      </div>`;
+  }
+  return `<div style="margin-top:10px;display:flex;align-items:baseline;gap:8px">
+      <p class="sub2" style="font-weight:600;margin:0">${esc(label)}</p>
+      <button class="mini" onclick="spStartEdit('${key}')" style="width:auto;padding:0 8px;height:20px;font-size:10px;background:var(--paper);color:var(--ink-2)">Edit</button>
+    </div>
+    <p class="sub2">${esc(value||'\u2014')}</p>`;
+}
+
+async function loadSatsangDefsForSp(){
+  try{ const [defs, types] = await Promise.all([apiFetch('/api/satsangs/defs'), apiFetch('/api/satsangs/types')]); LIVE_SATSANG_DEFS = defs; LIVE_SATSANG_TYPES = types; renderSeekerPage(); }
+  catch(err){ /* the add-satsang dropdowns just won't populate */ }
+}
+async function addSpSatsangLink(type, btn){
+  const sel = document.getElementById('spSatsangAdd_'+type);
+  const satsangId = sel && sel.value;
+  if(!satsangId) return;
+  await withLoading(btn, async ()=>{
+    try{
+      await apiFetch('/api/seekers/'+LIVE_SEEKER_DETAIL_ID+'/satsang-links', {method:'POST', body: JSON.stringify({type, satsangId:Number(satsangId)})});
+      toast('Linked.');
+      LIVE_SEEKER_DETAIL.satsangLinks = await apiFetch('/api/seekers/'+LIVE_SEEKER_DETAIL_ID+'/satsang-links');
+      renderSeekerPage();
+    }catch(err){ toast('Could not link: '+(err.message||'')); }
+  });
+}
+async function removeSpSatsangLink(type, satsangId, btn){
+  if(!confirm('Remove this link?')) return;
+  await withLoading(btn, async ()=>{
+    try{
+      await apiFetch('/api/seekers/'+LIVE_SEEKER_DETAIL_ID+'/satsang-links/'+type+'/'+satsangId, {method:'DELETE'});
+      toast('Removed.');
+      LIVE_SEEKER_DETAIL.satsangLinks = await apiFetch('/api/seekers/'+LIVE_SEEKER_DETAIL_ID+'/satsang-links');
+      renderSeekerPage();
+    }catch(err){ toast('Could not remove: '+(err.message||'')); }
+  });
+}
+
+let LIVE_SEEKER_CATEGORIES_FOR_SP = null;
+async function loadCategoriesForSp(){
+  try{ LIVE_SEEKER_CATEGORIES_FOR_SP = LIVE_SEEKER_CATEGORIES || await apiFetch('/api/master/categories'); renderSeekerPage(); }
+  catch(err){ /* Category edit control just won't populate options */ }
+}
+
 function seekerInitials(s){
   return [(s.First_Name||'')[0], (s.Last_Name||'')[0]].filter(Boolean).join('').toUpperCase() || '?';
 }
@@ -1450,15 +1588,20 @@ function renderSeekerPage(){
       <div>Email</div><div>${esc(s.Email||'\u2014')}</div>
       <div>WhatsApp</div><div>${esc((s.Country_ISD?('+'+s.Country_ISD+' '):'')+(s.WhatsApp_Number||'')||'\u2014')}</div>
       <div>City</div><div>${esc(s.City||'\u2014')}</div>
-      <div>Sub-region</div><div>${esc(ml.Sub_Region||'\u2014')}</div>
-    </div>`);
+      ${spField('subRegion','Sub-region', ml.Sub_Region)}
+    </div>
+    <p class="sub2" style="margin-top:8px">Email, WhatsApp, city and country are set elsewhere and can't be edited here.</p>`);
 
-  const sevaCard = spCard('var(--sage)', '', 'Seva', ml && LIVE_SEEKER_DETAIL.masterlist!==null ? `<div class="kv">
-      <div>Sadhana start</div><div>${esc(ml.Sadhana_ST_DT ? new Date(ml.Sadhana_ST_DT).toLocaleDateString() : '\u2014')}</div>
-      <div>Visited Ashram</div><div>${esc(ml.Visited_Ashram||'\u2014')}</div>
-      <div>Attended MAV workshop</div><div>${esc(ml.Attended_MAV_Workshop||'\u2014')}</div>
-      <div>Opportunities at home</div><div>${esc(ml.Opp_Home||'\u2014')}</div>
-    </div>` : '<p class="sub2">No MasterList info recorded yet.</p>');
+  const sevaCard = spCard('var(--sage)', '', 'Seva', `<div class="kv">
+      ${spField('sadhanaStartDt','Sadhana start', ml.Sadhana_ST_DT, 'date')}
+      ${spField('pranshakti','Pranshakti', ml.Pranshakti)}
+      ${spField('weeklySevaHrs','Weekly seva hours', ml.Weekly_Seva_Hrs, 'number')}
+      ${spField('visitedAshram','Visited Ashram', ml.Visited_Ashram)}
+      ${spField('attendedMavWorkshop','Attended MAV workshop', ml.Attended_MAV_Workshop)}
+      ${spField('sensitiveList','Sensitive list', ml.Sensitive_List)}
+    </div>
+    ${spFieldBlock('oppHome','Opportunities at home', ml.Opp_Home)}
+    ${spFieldBlock('perInfo','Personal info', ml.Per_Info)}`);
 
   const skills = s.skills || [];
   if(LIVE_MASTER_SKILLS===null) loadMasterSkills();
@@ -1480,11 +1623,24 @@ function renderSeekerPage(){
       <button class="mini" onclick="addSeekerSkill(this)" style="width:auto;padding:0 12px;height:28px">Add</button>
     </div>`);
 
+  if(LIVE_SATSANG_DEFS===null) loadSatsangDefsForSp();
+  const satsangLinks = s.satsangLinks || {upay:[],vyashti:[],bhav:[]};
   const satsangGroups = [['bhav','Bhav satsang'],['upay','Upay satsang'],['vyashti','Vyashti satsang']];
-  const satsangsCard = spCard('var(--deep-2)', '', 'Satsangs', satsangGroups.map(([key,label])=>{
-    const rows = (s.satsangs && s.satsangs[key]) || [];
+  const satsangsCard = spCard('var(--deep-2)', '', 'Satsangs', satsangGroups.map(([type,label])=>{
+    const rows = satsangLinks[type] || [];
+    const linkedIds = new Set(rows.map(r=>String(r.Satsang_ID)));
+    const pickable = (LIVE_SATSANG_DEFS||[]).filter(d=>(d.ST_Name||'').toLowerCase()===type && !linkedIds.has(String(d.Satsang_ID)));
     return `<p class="sub2" style="font-weight:600;margin-top:8px">${esc(label)}</p>
-      ${rows.length ? rows.map(r=>`<div class="sub2">${esc(JSON.stringify(r).slice(0,80))}</div>`).join('') : '<p class="sub2">None recorded.</p>'}`;
+      ${rows.length ? rows.map(r=>`<div class="oteamrow"><span>${esc(r.Satsang_Name||('Satsang #'+r.Satsang_ID))}</span>
+          <button class="mini" onclick="removeSpSatsangLink('${type}', ${r.Satsang_ID}, this)" style="width:22px;height:22px;color:var(--rose)">&times;</button>
+        </div>`).join('') : '<p class="sub2">None linked.</p>'}
+      <div style="display:flex;gap:6px;margin-top:4px">
+        <select id="spSatsangAdd_${type}" style="flex:1;border-radius:999px;padding:5px 12px;font-size:12px;border:1px solid var(--line-2)">
+          <option value="">${LIVE_SATSANG_DEFS===null?'Loading\u2026':(pickable.length?'Add\u2026':'None left to add')}</option>
+          ${pickable.map(d=>`<option value="${d.Satsang_ID}">${esc(d.Satsang_Name)}</option>`).join('')}
+        </select>
+        <button class="mini" onclick="addSpSatsangLink('${type}', this)" style="width:auto;padding:0 10px;height:26px;font-size:11px">Add</button>
+      </div>`;
   }).join(''));
 
   const engagements = s.platformEngagements || [];
@@ -1513,7 +1669,21 @@ function renderSeekerPage(){
       </div>
     </div>
     <div class="sp-stats">
-      <div class="sp-stat"><div class="lbl2">Category</div><div class="val">${esc(activeCat?activeCat.Category_Name:'\u2014')}</div></div>
+      <div class="sp-stat">
+        <div class="lbl2">Category</div>
+        ${SP_EDIT_FIELD==='category' ? (()=>{
+          if(LIVE_SEEKER_CATEGORIES_FOR_SP===null) loadCategoriesForSp();
+          const cats = LIVE_SEEKER_CATEGORIES_FOR_SP || [];
+          return `<select id="spInput_category" style="width:100%;border-radius:999px;padding:5px 10px;font-size:12.5px;border:1px solid var(--line-2);margin-top:4px">
+              ${cats.map(c=>`<option value="${c.Category_ID}" ${activeCat&&activeCat.Category_Name===c.Category_Name?'selected':''}>${esc(c.Category_Name)}</option>`).join('')}
+            </select>
+            <div style="display:flex;gap:6px;margin-top:5px">
+              <button class="mini" onclick="saveSpCategory(this)" style="width:auto;padding:0 10px;height:24px;font-size:11px">Save</button>
+              <button class="mini" onclick="spCancelEdit()" style="width:auto;padding:0 10px;height:24px;font-size:11px;background:var(--paper);color:var(--ink-2)">Cancel</button>
+            </div>`;
+        })() : `<div class="val" style="display:flex;align-items:center;gap:8px">${esc(activeCat?activeCat.Category_Name:'\u2014')}
+            <button class="mini" onclick="spStartEdit('category')" style="width:auto;padding:0 8px;height:20px;font-size:10px;background:var(--paper);color:var(--ink-2)">Edit</button></div>`}
+      </div>
       <div class="sp-stat"><div class="lbl2">Weekly seva hours</div><div class="val">${ml.Weekly_Seva_Hrs!=null?esc(ml.Weekly_Seva_Hrs):'\u2014'}</div></div>
       <div class="sp-stat"><div class="lbl2">Satsangs attended</div><div class="val">${satsangCount}</div></div>
     </div>
