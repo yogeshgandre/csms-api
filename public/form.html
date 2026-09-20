@@ -42,6 +42,12 @@
   </div>
 
 <script>
+// Same reason index.html has this: Firebase Hosting (Spark plan) can't
+// proxy /api/** to the Render backend, so this page has to call the API's
+// full URL directly, not a relative path (a relative /api/... 404s on
+// Firebase and gets served index.html back \u2014 which shows up as
+// "Unexpected token '<'... is not valid JSON").
+const API_BASE = 'https://csms-api.onrender.com';
 const token = new URLSearchParams(location.search).get('token');
 const app = document.getElementById('app');
 
@@ -54,7 +60,7 @@ async function init(){
   }
   let data;
   try{
-    const res = await fetch('/api/public/satsang-form/' + encodeURIComponent(token));
+    const res = await fetch(API_BASE + '/api/public/satsang-form/' + encodeURIComponent(token));
     if(res.status === 404){
       app.innerHTML = `<div class="msg err">This link isn't valid. Please check you copied the whole link, or ask for a new one.</div>`;
       return;
@@ -126,7 +132,7 @@ async function submitForm(){
   });
   btn.disabled = true; btn.textContent = 'Submitting\u2026';
   try{
-    const res = await fetch('/api/public/satsang-form/' + encodeURIComponent(token), {
+    const res = await fetch(API_BASE + '/api/public/satsang-form/' + encodeURIComponent(token), {
       method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({values})
     });
     if(!res.ok) throw new Error('Submit failed');
