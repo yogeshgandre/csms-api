@@ -664,15 +664,18 @@ router.get('/:satsangId/attendees', requireAuth, async (req, res) => {
 
 // Attendee_Transfer_Requests.AS_CSMS_ID was renamed to Seeker_ID (confirmed
 // run) — this code previously assumed it hadn't been, which broke this
-// endpoint. Fixed to match the live column name.
+// endpoint. Also fixed TR_Initiated_By_CSMS_ID -> TR_Initiated_CSMS_ID and
+// TR_Remarks -> TR_To_Remarks against the real column list, and added the
+// TR_From_* columns (new Release stage, below) to the select.
 router.get('/transfers', requireAuth, async (req, res) => {
   try {
     const result = await pool.query(
       `SELECT tr.${qi('TR_ID')}, tr.${qi('Seeker_ID')} AS seeker_id, tr.${qi('TR_From_Satsang_ID')}, tr.${qi('TR_To_Satsang_ID')},
               tr.${qi('TR_Status_ID')}, ts.${qi('TR_Status_Name')},
-              tr.${qi('TR_Initiated_Remarks')}, tr.${qi('TR_Initiated_DT')}, tr.${qi('TR_Initiated_By_CSMS_ID')},
+              tr.${qi('TR_Initiated_Remarks')}, tr.${qi('TR_Initiated_DT')}, tr.${qi('TR_Initiated_CSMS_ID')},
               tr.${qi('TR_Approver_CSMS_ID')}, tr.${qi('TR_Approver_Remarks')}, tr.${qi('TR_Approved_DT')},
-              tr.${qi('TR_To_SC_CSMS_ID')}, tr.${qi('TR_Remarks')}, tr.${qi('TR_Accepted_DT')},
+              tr.${qi('TR_From_SC_CSMS_ID')}, tr.${qi('TR_From_Remarks')}, tr.${qi('TR_From_DT')},
+              tr.${qi('TR_To_SC_CSMS_ID')}, tr.${qi('TR_To_Remarks')}, tr.${qi('TR_Accepted_DT')},
               sk.${qi('First_Name')} AS attendee_first_name, sk.${qi('Last_Name')} AS attendee_last_name,
               fs.${qi('Satsang_Name')} AS from_satsang_name, ts2.${qi('Satsang_Name')} AS to_satsang_name
        FROM ${qi('SCS')}.${qi('Attendee_Transfer_Requests')} tr
@@ -727,7 +730,7 @@ router.post('/transfers', requireAuth, async (req, res) => {
     await pool.query(
       `INSERT INTO ${qi('SCS')}.${qi('Attendee_Transfer_Requests')}
         (${qi('TR_ID')}, ${qi('Seeker_ID')}, ${qi('TR_From_Satsang_ID')}, ${qi('TR_To_Satsang_ID')},
-         ${qi('TR_Status_ID')}, ${qi('TR_Initiated_Remarks')}, ${qi('TR_Initiated_DT')}, ${qi('TR_Initiated_By_CSMS_ID')})
+         ${qi('TR_Status_ID')}, ${qi('TR_Initiated_Remarks')}, ${qi('TR_Initiated_DT')}, ${qi('TR_Initiated_CSMS_ID')})
        VALUES ($1,$2,$3,$4,$5,$6,CURRENT_DATE,$7)`,
       [id, seekerId, fromSatsangId, toSatsangId, statusQ.rows[0].TR_Status_ID, remarks || null, req.user.csmsId]
     );
@@ -763,12 +766,30 @@ router.post('/transfers/:id/reject', requireAuth, async (req, res) => {
   });
 });
 
-// Stage 3: Accept — this is what actually moves the attendee. Expires their
+// Stage 3 (new): the SENDING satsang's conductor releases the attendee \u2014
+// confirms they're letting them go, before the actual move happens. Sits
+// between Approve and Accept, matching the TR_From_* / TR_To_* column
+// pairing in the schema (TR_To_* is the receiving side's own confirmation,
+// set at Accept below).
+router.post('/transfers/:id/release', requireAuth, async (req, res) => {
+  await setTransferStage(req, res, {
+    fromStatuses: ['Approved'], toStatus: 'Released',
+    apply: (client, id) => client.query(
+      `UPDATE ${qi('SCS')}.${qi('Attendee_Transfer_Requests')}
+       SET ${qi('TR_From_SC_CSMS_ID')} = $1, ${qi('TR_From_Remarks')} = $2, ${qi('TR_From_DT')} = CURRENT_DATE
+       WHERE ${qi('TR_ID')} = $3`,
+      [req.user.csmsId, (req.body || {}).remarks || null, id]
+    ),
+  });
+});
+
+// Stage 4: Accept — this is what actually moves the attendee. Expires their
 // Satsang_Attending_Seekers row on the sending satsang and creates a fresh
-// one on the receiving satsang.
+// one on the receiving satsang. Now gated on Released (the sending
+// conductor's own confirmation), not directly on Approved.
 router.post('/transfers/:id/accept', requireAuth, async (req, res) => {
   await setTransferStage(req, res, {
-    fromStatuses: ['Approved'], toStatus: 'Accepted',
+    fromStatuses: ['Released'], toStatus: 'Accepted',
     apply: async (client, id) => {
       const trQ = await client.query(
         `SELECT ${qi('Seeker_ID')} AS seeker_id, ${qi('TR_From_Satsang_ID')}, ${qi('TR_To_Satsang_ID')}
@@ -788,7 +809,7 @@ router.post('/transfers/:id/accept', requireAuth, async (req, res) => {
       );
       await client.query(
         `UPDATE ${qi('SCS')}.${qi('Attendee_Transfer_Requests')}
-         SET ${qi('TR_To_SC_CSMS_ID')} = $1, ${qi('TR_Remarks')} = $2, ${qi('TR_Accepted_DT')} = CURRENT_DATE
+         SET ${qi('TR_To_SC_CSMS_ID')} = $1, ${qi('TR_To_Remarks')} = $2, ${qi('TR_Accepted_DT')} = CURRENT_DATE
          WHERE ${qi('TR_ID')} = $3`,
         [req.user.csmsId, (req.body || {}).remarks || null, id]
       );

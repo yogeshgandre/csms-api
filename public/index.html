@@ -266,37 +266,11 @@ tbody tr:last-child td{border-bottom:none}
 .ticker-item.type-Information .ticker-dot{background:#5AC8E8}
 .org-banner{
   grid-area:orgbanner;position:relative;overflow:hidden;
-  background:linear-gradient(120deg,#EAF3FA 0%,#DCEAF6 45%,#ECF5EE 78%,#FBF3E2 100%);
-  box-shadow:0 2px 10px rgba(23,58,102,.08);
+  min-height:118px;
   border-bottom:1px solid var(--line-2);
-  padding:22px 32px;min-height:118px;
+  box-shadow:0 2px 10px rgba(23,58,102,.08);
 }
-.org-banner .scenery{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0}
-.org-banner .org-inner{position:relative;z-index:1;display:flex;align-items:center;gap:18px;height:100%;flex-wrap:wrap}
-.org-banner .mark{
-  flex:0 0 auto;width:52px;height:52px;border-radius:50%;
-  background:radial-gradient(circle at 32% 28%,#BFE0F5,var(--deep) 68%,#1A4E70 100%);
-  display:flex;align-items:center;justify-content:center;
-  box-shadow:0 2px 6px rgba(11,143,196,.35), inset 0 1px 1px rgba(255,255,255,.4);
-  font-family:var(--font-org);font-weight:600;font-size:15px;color:#fff;letter-spacing:.01em;
-}
-.org-banner .org-text .name{
-  font-family:var(--font-org);font-weight:700;font-size:36px;color:var(--ink);letter-spacing:-.01em;line-height:1.15;
-}
-.org-banner .org-text .name .full{font-weight:400;color:var(--ink-2);font-size:20px;margin-left:9px}
-.org-banner .org-text .tag{
-  font-size:14px;color:var(--deep);letter-spacing:.03em;margin-top:4px;
-}
-.org-banner img.logo{height:56px;width:auto;flex:0 0 auto}
-.org-values{display:flex;align-items:center;gap:12px;margin-top:9px;flex-wrap:wrap}
-.org-values .v{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--ink-2)}
-.org-values .v .ic{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.org-values .sep{width:1px;height:13px;background:var(--line-2)}
-.org-tagline{
-  margin-left:auto;position:relative;z-index:1;text-align:right;padding-right:8px;
-  font-family:var(--font-script);font-size:24px;line-height:1.2;color:var(--deep);
-}
-@media(max-width:880px){ .org-tagline{display:none} }
+.org-banner img.banner-img{display:block;width:100%;height:auto;max-height:230px;object-fit:cover;object-position:center}
 header{grid-area:header}
 nav{
   grid-area:nav;flex-direction:column;align-items:stretch;gap:2px;
@@ -435,40 +409,7 @@ nav .pip.r{background:var(--rose);color:#fff}
 <div class="shell" id="shell" style="display:none">
 
 <div class="org-banner">
-  <svg class="scenery" viewBox="0 0 1200 160" preserveAspectRatio="xMaxYMax slice" aria-hidden="true">
-    <defs>
-      <radialGradient id="sunGlow" cx="82%" cy="25%" r="55%">
-        <stop offset="0%" stop-color="#FDF2D0" stop-opacity=".95"/>
-        <stop offset="100%" stop-color="#FDF2D0" stop-opacity="0"/>
-      </radialGradient>
-    </defs>
-    <circle cx="990" cy="40" r="120" fill="url(#sunGlow)"/>
-    <polygon points="650,160 780,70 860,120 950,55 1060,130 1200,85 1200,160" fill="#C9DFF0" opacity=".85"/>
-    <polygon points="720,160 830,95 930,140 1030,80 1140,120 1200,95 1200,160" fill="#B3D0E7" opacity=".8"/>
-    <path d="M1140 4 Q1168 22 1158 48 Q1190 34 1200 56 L1200 0 L1140 0 Z" fill="#4F8A66" opacity=".16"/>
-    <path d="M1095 12 Q1118 26 1109 48 Q1137 39 1150 58 L1150 0 L1095 0 Z" fill="#4F8A66" opacity=".11"/>
-  </svg>
-  <div class="org-inner">
-    <img class="logo" src="assets/ssrf-logo.webp" alt="SSRF logo">
-    <div class="org-text">
-      <div class="name">CSMS<span class="full">Curious and Seeker Management System</span></div>
-      <div class="tag">Spiritual Science Research Foundation</div>
-      <div class="org-values">
-        <div class="v"><span class="ic" style="background:var(--deep-wash);color:var(--deep)">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-          </span>Connect</div>
-        <span class="sep"></span>
-        <div class="v"><span class="ic" style="background:var(--sage-wash);color:var(--sage)">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 20A7 7 0 0 1 4 13c0-4 3-6 7-11 4 5 7 7 7 11a7 7 0 0 1-7 7Z"/></svg>
-          </span>Serve</div>
-        <span class="sep"></span>
-        <div class="v"><span class="ic" style="background:var(--violet-wash);color:var(--violet)">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21c-4-2-7-5-7-9a7 7 0 0 1 7-6 7 7 0 0 1 7 6c0 4-3 7-7 9Z"/><path d="M12 12V6"/></svg>
-          </span>Grow Together</div>
-      </div>
-    </div>
-    <div class="org-tagline">Towards a More<br>Awakened World</div>
-  </div>
+  <img class="banner-img" src="assets/csms-banner.png" alt="CSMS \u2014 Curious and Seeker Management System, Spiritual Science Research Foundation">
 </div>
 
 <header>
@@ -2867,7 +2808,8 @@ const SATSANG_STATUS_COLORS = {
   'Cancelled': {bg:'#FBE7E7', fg:'var(--rose)'},
   'Completed': {bg:'#E1F3FA', fg:'var(--deep)'},
   'Requested': {bg:'#FDF0DC', fg:'#9A6A0E'},
-  'Accepted': {bg:'#E1F3FA', fg:'var(--deep)'},
+  'Released': {bg:'#E1F3FA', fg:'var(--deep)'},
+  'Accepted': {bg:'#E7F3EC', fg:'var(--sage)'},
   'Published': {bg:'#E7F3EC', fg:'var(--sage)'},
   'Paused': {bg:'#FDF0DC', fg:'#9A6A0E'},
   'Archived': {bg:'#EEF1F4', fg:'var(--ink-3)'}
@@ -3760,8 +3702,11 @@ function transferActionsHTML(t){
       <button class="btn ghost sm" style="color:var(--rose);border-color:var(--rose)" onclick="rejectTransfer(${t.TR_ID}, this)"><span class="spin"></span><span class="lbl">Reject</span></button>`;
   }
   if(t.TR_Status_Name==='Approved'){
-    return `<button class="btn sm" onclick="acceptTransfer(${t.TR_ID}, this)"><span class="spin"></span><span class="lbl">Accept</span></button>
+    return `<button class="btn sm" onclick="releaseTransfer(${t.TR_ID}, this)" title="Sending satsang's conductor confirms they're letting this attendee go"><span class="spin"></span><span class="lbl">Release (sending conductor)</span></button>
       <button class="btn ghost sm" style="color:var(--rose);border-color:var(--rose)" onclick="rejectTransfer(${t.TR_ID}, this)"><span class="spin"></span><span class="lbl">Reject</span></button>`;
+  }
+  if(t.TR_Status_Name==='Released'){
+    return `<button class="btn sm" onclick="acceptTransfer(${t.TR_ID}, this)" title="Receiving satsang's conductor accepts \u2014 moves the attendee"><span class="spin"></span><span class="lbl">Accept</span></button>`;
   }
   return '';
 }
@@ -3794,6 +3739,14 @@ async function rejectTransfer(id, btn){
   await withLoading(btn, async ()=>{
     try{ await apiFetch('/api/satsangs/transfers/'+id+'/reject', {method:'POST', body: JSON.stringify({remarks})}); toast('Transfer rejected.'); loadSatsangTransfers(); }
     catch(err){ toast('Could not reject: '+(err.message||'')); }
+  });
+}
+async function releaseTransfer(id, btn){
+  const remarks = prompt('Remarks from the sending conductor (optional):') || '';
+  if(!confirm('Release this attendee to the receiving satsang?')) return;
+  await withLoading(btn, async ()=>{
+    try{ await apiFetch('/api/satsangs/transfers/'+id+'/release', {method:'POST', body: JSON.stringify({remarks})}); toast('Released \u2014 waiting on the receiving conductor to accept.'); loadSatsangTransfers(); }
+    catch(err){ toast('Could not release: '+(err.message||'')); }
   });
 }
 async function acceptTransfer(id, btn){
