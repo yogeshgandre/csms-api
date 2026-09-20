@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Curious Intake — CSMS</title>
+<style>
+  :root{
+    --ink:#173A66; --paper:#F3F8FB; --card:#FFFFFF; --line:#E4EEF4; --line-2:#CFE0EA;
+    --deep:#0B8FC4; --deep-2:#2FA9DA; --deep-wash:#E1F3FA;
+    --sage:#4F8A66; --sage-wash:#E5F3EA; --amber:#96690F; --amber-wash:#FDF2D0; --rose:#B3571F; --rose-wash:#FCE5D5;
+    --r:14px; --sh:0 1px 2px rgba(22,51,74,.05), 0 6px 18px rgba(11,143,196,.09);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:32px 16px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh);
+    max-width:520px;width:100%;padding:28px 26px}
+  h1{font-size:20px;margin:0 0 4px}
+  .sub{font-size:13.5px;color:var(--ink);opacity:.7;margin:0 0 20px}
+  .section-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--deep);margin:20px 0 10px}
+  .section-label:first-child{margin-top:0}
+  .field{margin-bottom:16px}
+  .field label{display:block;font-size:13px;font-weight:600;margin-bottom:6px}
+  .field input, .field select{width:100%;padding:9px 12px;font-size:14px;border:1px solid var(--line-2);
+    border-radius:10px;background:#fff;color:var(--ink);font-family:inherit}
+  .field input:focus, .field select:focus{outline:2px solid var(--deep-2);outline-offset:1px}
+  button{width:100%;padding:11px;border:none;border-radius:999px;background:var(--deep);color:#fff;
+    font-size:14.5px;font-weight:600;cursor:pointer;font-family:inherit}
+  button:disabled{opacity:.6;cursor:default}
+  button:hover:not(:disabled){background:var(--deep-2)}
+  .msg{padding:14px 16px;border-radius:10px;font-size:13.5px;margin-bottom:16px}
+  .msg.err{background:var(--rose-wash);color:var(--rose)}
+  .msg.ok{background:var(--sage-wash);color:var(--sage)}
+  .msg.warn{background:var(--amber-wash);color:var(--amber)}
+  .msg.info{background:var(--deep-wash);color:var(--deep)}
+  .center{text-align:center;padding:24px 0}
+  .spin{display:inline-block;width:22px;height:22px;border:3px solid var(--line-2);border-top-color:var(--deep);
+    border-radius:50%;animation:sp .8s linear infinite}
+  @keyframes sp{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+  <div class="card" id="app">
+    <div class="center"><div class="spin"></div></div>
+  </div>
+
+<script>
+// Same reason index.html has this: Firebase Hosting (Spark plan) can't
+// proxy /api/** to the Render backend, so this page has to call the API's
+// full URL directly, not a relative path (a relative /api/... 404s on
+// Firebase and gets served index.html back \u2014 which is why this was
+// showing "Unexpected token '<'... is not valid JSON").
+const API_BASE = 'https://csms-api.onrender.com';
+const formId = new URLSearchParams(location.search).get('formId');
+const previewToken = new URLSearchParams(location.search).get('previewToken');
+const app = document.getElementById('app');
+
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+async function init(){
+  if(!formId){
+    app.innerHTML = `<div class="msg err">This link is missing its form ID \u2014 please use the exact link you were sent.</div>`;
+    return;
+  }
+  let data;
+  try{
+    const qs = previewToken ? ('?previewToken='+encodeURIComponent(previewToken)) : '';
+    const res = await fetch(API_BASE + '/api/public/intake-form/' + encodeURIComponent(formId) + qs);
+    if(res.status === 404){
+      app.innerHTML = `<div class="msg err">This form doesn't exist. Please check the link.</div>`;
+      return;
+    }
+    if(res.status === 409){
+      let msg = 'This form is not currently open.';
+      try{ const body = await res.json(); msg = body.message || msg; }catch(e){}
+      app.innerHTML = `<div class="msg warn">${esc(msg)}</div>`;
+      return;
+    }
+    if(!res.ok){
+      let detail = '';
+      try{ const body = await res.json(); detail = body.message || body.error || ''; }catch(e){}
+      throw new Error(detail || 'Could not load the form.');
+    }
+    data = await res.json();
+  }catch(err){
+    app.innerHTML = `<div class="msg err">Something went wrong loading this form. Please try again shortly.</div>
+      <p style="font-size:11px;color:#94a3b8;margin-top:10px">Technical detail (for whoever's fixing this): ${esc(err.message||'')}</p>`;
+    return;
+  }
+  renderForm(data);
+}
+
+function mandatoryFieldHTML(f, countries){
+  const id = 'm_' + f.name;
+  let input;
+  if(f.type === 'country'){
+    input = `<select id="${id}"><option value="">Choose\u2026</option>${countries.map(c=>`<option value="${c.Country_ID}">${esc(c.Country_Name)}</option>`).join('')}</select>`;
+  } else if(f.type === 'email'){
+    input = `<input id="${id}" type="email" autocomplete="email">`;
+  } else if(f.type === 'number'){
+    input = `<input id="${id}" type="tel" inputmode="numeric" autocomplete="tel">`;
+  } else {
+    input = `<input id="${id}" type="text" autocomplete="${f.name==='First_Name'?'given-name':f.name==='Last_Name'?'family-name':'off'}">`;
+  }
+  return `<div class="field"><label for="${id}">${esc(f.label)}${f.required?' *':''}</label>${input}</div>`;
+}
+
+function additionalFieldHTML(f){
+  const id = 'a_' + f.Question_Name.replace(/[^a-zA-Z0-9]/g,'_');
+  const label = `<label for="${id}">${esc(f.Question_Name)}</label>`;
+  if(f.Component_Type==='CHECKBOX') return `<div class="field"><label style="display:flex;align-items:center;gap:8px;font-weight:500"><input id="${id}" type="checkbox" style="width:auto"> ${esc(f.Question_Name)}</label></div>`;
+  if(f.Component_Type==='CONSENT') return `<div class="field"><label style="display:flex;align-items:center;gap:8px;font-weight:500"><input id="${id}" type="checkbox" style="width:auto" required> I agree \u2014 ${esc(f.Question_Name)}</label></div>`;
+  if(f.Component_Type==='INFORMATION') return `<div class="msg info">${esc(f.Question_Name)}</div>`;
+  if(f.Component_Type==='WARNING') return `<div class="msg warn">${esc(f.Question_Name)}</div>`;
+  if(f.Component_Type==='HIGHLIGHT') return `<div class="msg" style="background:var(--sage-wash);color:var(--sage)">${esc(f.Question_Name)}</div>`;
+  const type = f.Question_Type==='DATE' ? 'date' : f.Question_Type==='INTEGER' ? 'number' : 'text';
+  return `<div class="field">${label}<input id="${id}" type="${type}"></div>`;
+}
+
+function renderForm(data){
+  const countries = data.countries || [];
+  const mandatory = data.mandatoryFields || [];
+  const additional = data.additionalFields || [];
+  const previewBanner = data.isPreview
+    ? `<div class="msg warn"><b>Preview \u2014 ${esc(data.formStatus||'')}.</b> This is exactly what the live form looks like. Nothing you submit here is saved.</div>`
+    : '';
+  app.innerHTML = `
+    ${previewBanner}
+    <h1>Tell us a bit about you</h1>
+    <p class="sub">Everything here helps us stay in touch \u2014 it only takes a minute.</p>
+    <div id="formErr"></div>
+    <form id="intakeForm">
+      <div class="section-label">About you</div>
+      ${mandatory.map(f=>mandatoryFieldHTML(f, countries)).join('')}
+      ${additional.length ? `<div class="section-label">A few more questions</div>${additional.map(additionalFieldHTML).join('')}` : ''}
+    </form>
+    <button type="button" id="submitBtn" onclick="submitForm(${data.isPreview ? 'true' : 'false'})">Submit</button>
+  `;
+  window.__mandatoryDefs = mandatory;
+  window.__additionalDefs = additional;
+}
+
+async function submitForm(isPreview){
+  const btn = document.getElementById('submitBtn');
+  const errEl = document.getElementById('formErr');
+  errEl.innerHTML = '';
+
+  const mandatory = {};
+  let missing = [];
+  (window.__mandatoryDefs||[]).forEach(f=>{
+    const el = document.getElementById('m_'+f.name);
+    const val = el ? el.value.trim() : '';
+    if(f.required && !val) missing.push(f.label);
+    mandatory[f.name] = val || null;
+  });
+  if(missing.length){
+    errEl.innerHTML = `<div class="msg err">Please fill in: ${esc(missing.join(', '))}</div>`;
+    return;
+  }
+
+  // Preview mode never calls the real submit endpoint \u2014 the server
+  // wouldn't accept it anyway (it only ever accepts Published forms,
+  // preview token or not), so this is just an honest client-side stand-in.
+  if(isPreview){
+    app.innerHTML = `<div class="msg ok">This is what the confirmation looks like. Nothing was actually submitted \u2014 you're in Preview.</div>`;
+    return;
+  }
+
+  const additional = {};
+  (window.__additionalDefs||[]).forEach(f=>{
+    const id = 'a_' + f.Question_Name.replace(/[^a-zA-Z0-9]/g,'_');
+    const el = document.getElementById(id);
+    if(!el) return;
+    if(f.Component_Type==='CHECKBOX' || f.Component_Type==='CONSENT') additional[f.Question_Name] = el.checked ? 'Yes' : '';
+    else additional[f.Question_Name] = el.value;
+  });
+
+  btn.disabled = true; btn.textContent = 'Submitting\u2026';
+  try{
+    const res = await fetch(API_BASE + '/api/public/intake-form/' + encodeURIComponent(formId), {
+      method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({mandatory, additional})
+    });
+    if(!res.ok){
+      let detail = '';
+      try{ const body = await res.json(); detail = body.message || body.error || ''; }catch(e){}
+      throw new Error(detail || 'Submit failed');
+    }
+    app.innerHTML = `<div class="msg ok">Thank you \u2014 your response has been recorded.</div>`;
+  }catch(err){
+    errEl.innerHTML = `<div class="msg err">Could not submit \u2014 please check your connection and try again.</div>`;
+    btn.disabled = false; btn.textContent = 'Submit';
+  }
+}
+
+init();
+</script>
+</body>
+</html>
