@@ -3897,10 +3897,17 @@ function renderFormDefs(force){
   if(FORM_DETAIL_ID && FORM_DETAIL_FIELDS) renderFormDetail();
 }
 
+// Display label: <Platform_Name>_<Form_ID> (falls back to Form_<id> for
+// older forms created before Form_Type_ID linkage existed).
+function formLabel(f){
+  if(!f) return 'Form';
+  return (f.Platform_Name || 'Form') + '_' + f.Form_ID;
+}
+
 function formRowHTML(f){
   return `<div class="card pad" style="margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
     <div style="cursor:pointer" onclick="openFormDetail(${f.Form_ID})">
-      <div style="font-weight:600">Form #${f.Form_ID}</div>
+      <div style="font-weight:600">${esc(formLabel(f))}</div>
       <div class="sub2">Owner: ${esc(f.owner_name||'\u2014')} \u00b7 Last changed ${esc(f.Current_Status_Change_Date||'\u2014')}${f.Form_Published_URL?(' \u00b7 <a href="'+esc(f.Form_Published_URL)+'" target="_blank" rel="noopener">'+esc(f.Form_Published_URL)+'</a>'):''}</div>
     </div>
     <div style="display:flex;align-items:center;gap:8px">
@@ -3910,18 +3917,20 @@ function formRowHTML(f){
   </div>`;
 }
 
+// Preview is available at every stage now \u2014 including Archived, which
+// previously had no actions at all.
 function formActionsHTML(f){
   const s = f.Form_Status_Name;
-  const previewBtn = (s==='Draft'||s==='In Review') ? `<button class="mini" onclick="previewForm(${f.Form_ID}, this)" style="width:auto;padding:0 10px;height:26px;font-size:11.5px">Preview</button>` : '';
+  const previewBtn = `<button class="mini" onclick="previewForm(${f.Form_ID}, this)" style="width:auto;padding:0 10px;height:26px;font-size:11.5px">Preview</button>`;
   if(s==='Draft') return previewBtn + `<button class="btn sm" onclick="submitFormForReview(${f.Form_ID}, this)"><span class="spin"></span><span class="lbl">Submit for review</span></button>
     <button class="mini" onclick="archiveForm(${f.Form_ID}, this)" title="Archive" style="width:24px;height:24px;color:var(--rose)">&times;</button>`;
   if(s==='In Review') return previewBtn + `<button class="btn sm" onclick="publishForm(${f.Form_ID}, this)"><span class="spin"></span><span class="lbl">Publish</span></button>
     <button class="btn ghost sm" style="color:var(--rose);border-color:var(--rose)" onclick="rejectForm(${f.Form_ID}, this)"><span class="spin"></span><span class="lbl">Reject</span></button>`;
-  if(s==='Published') return `<button class="mini" onclick="pauseForm(${f.Form_ID}, this)" style="width:auto;padding:0 10px;height:26px;font-size:11.5px">Pause</button>
+  if(s==='Published') return previewBtn + `<button class="mini" onclick="pauseForm(${f.Form_ID}, this)" style="width:auto;padding:0 10px;height:26px;font-size:11.5px">Pause</button>
     <button class="mini" onclick="archiveForm(${f.Form_ID}, this)" title="Archive" style="width:24px;height:24px;color:var(--rose)">&times;</button>`;
-  if(s==='Paused') return `<button class="mini" onclick="resumeForm(${f.Form_ID}, this)" style="width:auto;padding:0 10px;height:26px;font-size:11.5px">Resume</button>
+  if(s==='Paused') return previewBtn + `<button class="mini" onclick="resumeForm(${f.Form_ID}, this)" style="width:auto;padding:0 10px;height:26px;font-size:11.5px">Resume</button>
     <button class="mini" onclick="archiveForm(${f.Form_ID}, this)" title="Archive" style="width:24px;height:24px;color:var(--rose)">&times;</button>`;
-  return '';
+  return previewBtn;
 }
 
 // Preview renders a visual mockup from Form_Additional_Fields — there's no
@@ -3938,9 +3947,10 @@ async function previewForm(id, btn){
   try{
     const fields = await apiFetch('/api/forms/'+id+'/fields');
     const modal = holder.querySelector('.omodal');
+    const f = (LIVE_FORMS||[]).find(x=>x.Form_ID===id);
     modal.innerHTML = `<button class="oclose" onclick="closeFormPreview()">&times;</button>
-      <h3 style="margin:0 0 4px">Preview \u2014 Form #${id}</h3>
-      <p class="sub2" style="margin-bottom:14px">A mockup of the questions, not a working form \u2014 there's no public submission page yet.</p>
+      <h3 style="margin:0 0 4px">Preview \u2014 ${esc(formLabel(f))}</h3>
+      <p class="sub2" style="margin-bottom:14px">A mockup of the questions, not a working form.</p>
       ${fields.length ? fields.map(formPreviewFieldHTML).join('') : '<p class="sub2">No additional fields defined yet.</p>'}`;
   }catch(err){
     const modal = holder.querySelector('.omodal');
@@ -3963,8 +3973,38 @@ function formPreviewFieldHTML(f){
 
 async function createForm(btn){
   await withLoading(btn, async ()=>{
-    try{ await apiFetch('/api/forms', {method:'POST'}); toast('Draft form created.'); LIVE_FORMS=null; loadForms(); }
-    catch(err){ toast('Could not create: '+(err.message||'')); }
+    try{
+      if(FORM_TYPE_PICKER_PLATFORMS===null){
+        FORM_TYPE_PICKER_PLATFORMS = (await apiFetch('/api/master/platforms')).filter(p=>p.Is_Form==='YES');
+      }
+      openFormTypePicker();
+    }catch(err){ toast('Could not load form types: '+(err.message||'')); }
+  });
+}
+let FORM_TYPE_PICKER_PLATFORMS = null;
+function openFormTypePicker(){
+  const holder = document.createElement('div');
+  holder.id = 'formTypePickerRoot';
+  document.body.appendChild(holder);
+  const platforms = FORM_TYPE_PICKER_PLATFORMS || [];
+  holder.innerHTML = `<div class="obackdrop" onclick="if(event.target===this) closeFormTypePicker()">
+    <div class="omodal">
+      <button class="oclose" onclick="closeFormTypePicker()">&times;</button>
+      <h3 style="margin:0 0 4px">What type of form is this?</h3>
+      <p class="sub2" style="margin-bottom:14px">Sets the new form's type \u2014 pick the platform it belongs to.</p>
+      ${platforms.length ? platforms.map(p=>`<button class="btn ghost sm" style="width:100%;text-align:left;display:block;margin-bottom:8px" onclick="confirmCreateForm(${p.Platform_ID}, this)"><span class="spin"></span><span class="lbl">${esc(p.Platform_Name)}</span></button>`).join('') : '<p class="sub2">No form-capable platforms configured yet \u2014 add one under Master Data first.</p>'}
+    </div>
+  </div>`;
+}
+function closeFormTypePicker(){ const el=document.getElementById('formTypePickerRoot'); if(el) el.remove(); }
+async function confirmCreateForm(platformId, btn){
+  await withLoading(btn, async ()=>{
+    try{
+      await apiFetch('/api/forms', {method:'POST', body: JSON.stringify({platformId})});
+      toast('Draft form created.');
+      closeFormTypePicker();
+      LIVE_FORMS=null; loadForms();
+    }catch(err){ toast('Could not create: '+(err.message||'')); }
   });
 }
 async function submitFormForReview(id, btn){
@@ -3979,9 +4019,12 @@ async function rejectForm(id, btn){
     catch(err){ toast('Could not reject: '+(err.message||'')); }
   });
 }
+// The form link is built by CSMS itself, not typed in by hand \u2014 it always
+// points at intake-form.html on this same site, so it only ever works if
+// intake-form.html is actually deployed alongside index.html.
 async function publishForm(id, btn){
-  const url = prompt('URL where this form actually lives (Google Form, etc.):');
-  if(!url) return;
+  const url = window.location.origin + '/intake-form.html?formId=' + id;
+  if(!confirm('Publish this form? It will go live at:\n'+url)) return;
   await withLoading(btn, async ()=>{
     try{ await apiFetch('/api/forms/'+id+'/publish', {method:'POST', body: JSON.stringify({publishedUrl:url})}); toast('Published.'); LIVE_FORMS=null; loadForms(); }
     catch(err){ toast('Could not publish: '+(err.message||'')); }
@@ -4023,6 +4066,15 @@ async function openFormDetail(id){
 }
 function closeFormDetail(){ FORM_DETAIL_ID=null; FORM_DETAIL_FIELDS=null; const el=document.getElementById('formDetailRoot'); if(el) el.innerHTML=''; }
 
+// Same fixed columns every intake submission collects, mirroring
+// MANDATORY_INTAKE_FIELDS in routes/public-forms.js \u2014 shown read-only
+// here since they're always present on every form, not something this
+// screen's "Additional fields" can add or remove.
+const FORM_DEFAULT_FIELDS = [
+  {label:'Salutation'}, {label:'First name'}, {label:'Last name'}, {label:'City'},
+  {label:'Country'}, {label:'WhatsApp number'}, {label:'Email'},
+];
+
 function renderFormDetail(){
   const root = document.getElementById('formDetailRoot');
   if(!root) return;
@@ -4031,8 +4083,12 @@ function renderFormDetail(){
   root.innerHTML = `<div class="obackdrop" onclick="if(event.target===this) closeFormDetail()">
     <div class="omodal">
       <button class="oclose" onclick="closeFormDetail()">&times;</button>
-      <h3 style="margin:0 0 4px">Form #${FORM_DETAIL_ID}</h3>
+      <h3 style="margin:0 0 4px">${esc(formLabel(f))}</h3>
       <p class="sub2" style="margin-bottom:14px">${f?statusBadge(f.Form_Status_Name):''}</p>
+      <p class="sub2" style="font-weight:600">Default fields \u2014 every form collects these</p>
+      <div class="kv" style="grid-template-columns:1fr;margin-bottom:14px">
+        ${FORM_DEFAULT_FIELDS.map(d=>`<div class="oteamrow" style="cursor:default"><span>${esc(d.label)}</span><span class="sub2">Read-only</span></div>`).join('')}
+      </div>
       <p class="sub2" style="font-weight:600">Additional fields (this form's own questions)</p>
       ${fields.length ? fields.map(ff=>`<div class="oteamrow">
           <span>${esc(ff.Question_Name)} <span class="sub2">(${esc(ff.Question_Type)}, ${esc(ff.Component_Type)})</span></span>
