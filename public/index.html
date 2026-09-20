@@ -3933,42 +3933,18 @@ function formActionsHTML(f){
   return previewBtn;
 }
 
-// Preview renders a visual mockup from Form_Additional_Fields — there's no
-// public submission page yet, so this is what staff get in the meantime:
-// a look at what the form's questions and components would look like,
-// not a working form (nothing here can actually be submitted).
+// Preview opens the REAL public page (intake-form.html) in a new tab, via
+// a short-lived staff-only token that lets that page bypass its normal
+// "must be Published" gate for this one form. This is what makes Preview
+// look exactly like the live form, for a form in any status \u2014 it IS the
+// live form, not a recreation of it.
 async function previewForm(id, btn){
-  const root = document.getElementById('formDetailRoot') || document.body;
-  const holder = document.createElement('div');
-  holder.id = 'formPreviewRoot';
-  document.body.appendChild(holder);
-  holder.innerHTML = `<div class="obackdrop" onclick="if(event.target===this) closeFormPreview()">
-    <div class="omodal"><button class="oclose" onclick="closeFormPreview()">&times;</button><p class="sub2">Loading\u2026</p></div></div>`;
-  try{
-    const fields = await apiFetch('/api/forms/'+id+'/fields');
-    const modal = holder.querySelector('.omodal');
-    const f = (LIVE_FORMS||[]).find(x=>x.Form_ID===id);
-    modal.innerHTML = `<button class="oclose" onclick="closeFormPreview()">&times;</button>
-      <h3 style="margin:0 0 4px">Preview \u2014 ${esc(formLabel(f))}</h3>
-      <p class="sub2" style="margin-bottom:14px">A mockup of the questions, not a working form.</p>
-      ${fields.length ? fields.map(formPreviewFieldHTML).join('') : '<p class="sub2">No additional fields defined yet.</p>'}`;
-  }catch(err){
-    const modal = holder.querySelector('.omodal');
-    if(modal) modal.innerHTML = `<button class="oclose" onclick="closeFormPreview()">&times;</button><p class="sub2">Could not load: ${esc(err.message||'')}</p>`;
-  }
-}
-function closeFormPreview(){ const el=document.getElementById('formPreviewRoot'); if(el) el.remove(); }
-function formPreviewFieldHTML(f){
-  const label = `<label class="sub2" style="font-weight:600;display:block;margin-bottom:4px">${esc(f.Question_Name)}</label>`;
-  const wrap = (inner) => `<div style="margin-bottom:14px">${label}${inner}</div>`;
-  const disabledStyle = 'width:100%;border-radius:999px;padding:7px 14px;font-size:13px;border:1px solid var(--line-2);box-sizing:border-box;background:var(--paper)';
-  if(f.Component_Type==='CHECKBOX') return wrap(`<label class="sub2" style="display:flex;align-items:center;gap:6px"><input type="checkbox" disabled> Yes</label>`);
-  if(f.Component_Type==='CONSENT') return wrap(`<label class="sub2" style="display:flex;align-items:center;gap:6px"><input type="checkbox" disabled> I agree</label>`);
-  if(f.Component_Type==='INFORMATION') return `<div class="hidden-note" style="margin-bottom:14px">${esc(f.Question_Name)}</div>`;
-  if(f.Component_Type==='WARNING') return `<div class="hidden-note" style="margin-bottom:14px;background:var(--amber-wash);border-color:#EBD9A6;color:var(--amber)">${esc(f.Question_Name)}</div>`;
-  if(f.Component_Type==='HIGHLIGHT') return `<div class="hidden-note" style="margin-bottom:14px;background:var(--deep-wash);border-color:var(--line-2);color:var(--deep)">${esc(f.Question_Name)}</div>`;
-  const type = f.Question_Type==='DATE' ? 'date' : f.Question_Type==='INTEGER' ? 'number' : 'text';
-  return wrap(`<input type="${type}" disabled style="${disabledStyle}">`);
+  await withLoading(btn, async ()=>{
+    try{
+      const res = await apiFetch('/api/forms/'+id+'/preview-token', {method:'POST'});
+      window.open('/intake-form.html?formId='+id+'&previewToken='+encodeURIComponent(res.token), '_blank');
+    }catch(err){ toast('Could not open preview: '+(err.message||'')); }
+  });
 }
 
 async function createForm(btn){
@@ -4078,7 +4054,7 @@ const FORM_DEFAULT_FIELDS = [
 function renderFormDetail(){
   const root = document.getElementById('formDetailRoot');
   if(!root) return;
-  const f = (LIVE_FORMS||[]).find(x=>x.Form_ID===FORM_DETAIL_ID);
+  const f = (LIVE_FORMS||[]).find(x=>x.Form_ID==FORM_DETAIL_ID);
   const fields = FORM_DETAIL_FIELDS || [];
   root.innerHTML = `<div class="obackdrop" onclick="if(event.target===this) closeFormDetail()">
     <div class="omodal">
@@ -4243,7 +4219,7 @@ function renderTickerMgmt(){
   if(!el) return;
   if(LIVE_TICKERS === null){ el.innerHTML = '<p class="sub2">Loading\u2026</p>'; loadTickers(); return; }
 
-  const editing = TICKER_EDIT_ID !== null ? LIVE_TICKERS.find(t=>t.Ticker_ID===TICKER_EDIT_ID) : null;
+  const editing = TICKER_EDIT_ID !== null ? LIVE_TICKERS.find(t=>t.Ticker_ID==TICKER_EDIT_ID) : null;
 
   el.innerHTML = `
     <div class="card pad" style="margin-bottom:16px;max-width:520px">
@@ -4380,7 +4356,7 @@ function renderNotifDropdown(){
 async function markNotifRead(id){
   try{
     await apiFetch('/api/notifications/'+id+'/read', {method:'POST'});
-    const n = LIVE_NOTIFS.find(x=>x.Notification_ID===id);
+    const n = LIVE_NOTIFS.find(x=>x.Notification_ID==id);
     if(n) n.Is_Read = true;
     renderNotifBadge(); renderNotifDropdown();
   }catch(err){ /* silent */ }
@@ -4485,7 +4461,7 @@ async function commitJourneyCategoryChange(seekerId, toName, method){
   }catch(err){ toast('Could not move: '+(err.message||'')); }
 }
 function moveCategory(id, dir){
-  const p = (LIVE_JOURNEY_SEEKERS||[]).find(x=>x.Seeker_ID===id);
+  const p = (LIVE_JOURNEY_SEEKERS||[]).find(x=>x.Seeker_ID==id);
   if(!p) return;
   const cur = laneIdx(p.Category_Name);
   if(cur<0) return;
@@ -4505,7 +4481,7 @@ function dropOnLane(ev, lane){
   ev.preventDefault();
   ev.currentTarget.classList.remove('drag-over');
   const id = Number(ev.dataTransfer.getData('text/plain'));
-  const p = (LIVE_JOURNEY_SEEKERS||[]).find(x=>x.Seeker_ID===id);
+  const p = (LIVE_JOURNEY_SEEKERS||[]).find(x=>x.Seeker_ID==id);
   if(!p) return;
   commitJourneyCategoryChange(id, lane, "dragged");
 }

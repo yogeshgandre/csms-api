@@ -14,6 +14,7 @@
 
 const express = require('express');
 const { pool, qi } = require('../db/pool');
+const previewTokens = require('../lib/formPreviewTokens');
 const router = express.Router();
 
 // Monday of the current week, as a plain YYYY-MM-DD string — used as the
@@ -208,7 +209,12 @@ router.get('/intake-form/:formId', async (req, res) => {
       [req.params.formId]
     );
     if (formQ.rowCount === 0) return res.status(404).json({ error: 'NOT_FOUND' });
-    if (formQ.rows[0].Form_Status_Name !== 'Published') {
+    const status = formQ.rows[0].Form_Status_Name;
+    // A valid preview token bypasses the Published-only gate \u2014 this is how
+    // staff "Preview" opens the real page for a Draft/In Review/Paused/
+    // Archived form. Never bypasses anything on the POST/submit side.
+    const isPreview = previewTokens.validate(req.query.previewToken, req.params.formId);
+    if (status !== 'Published' && !isPreview) {
       return res.status(409).json({ error: 'NOT_PUBLISHED', message: 'This form is not currently open.' });
     }
 
@@ -227,6 +233,8 @@ router.get('/intake-form/:formId', async (req, res) => {
       mandatoryFields: MANDATORY_INTAKE_FIELDS,
       additionalFields: fieldsQ.rows,
       countries: countriesQ.rows,
+      isPreview,
+      formStatus: status,
     });
   } catch (err) {
     console.error('[GET /public/intake-form/:formId] error', err);

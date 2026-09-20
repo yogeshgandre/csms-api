@@ -6,16 +6,18 @@
 // (Form_Seva_Dept_Access, same idea as Satsangs_Seva_Dept_Access) — not
 // enforced anywhere yet, same as that one.
 //
-// Deliberately NOT built here: a public, unauthenticated page that
-// actually collects submissions into the dynamic Form_ID_<N>_Details
-// table. This file is the staff-side definition/config tooling only —
-// Curious Intake (routes/intake.js) still reviews whatever submissions
-// already exist in FMS.Form_Submission_Key_Details, wherever they came
-// from today.
+// This file is the staff-side definition/config tooling. The public,
+// unauthenticated submission page (public/intake-form.html) is served by
+// routes/public-forms.js and only accepts a form that's Published, unless
+// a valid preview token (issued here, see /:id/preview-token) says
+// otherwise — that's how "Preview" opens the real live page for a form in
+// any other status. Curious Intake (routes/intake.js) reviews whatever
+// submissions land in FMS.Form_Submission_Key_Details.
 
 const express = require('express');
 const { pool, qi } = require('../db/pool');
 const { requireAuth } = require('../middleware/auth');
+const previewTokens = require('../lib/formPreviewTokens');
 const router = express.Router();
 
 const FAR_FUTURE = '9999-12-31';
@@ -129,6 +131,19 @@ router.post('/:id/reject', requireAuth, async (req, res) => {
 router.post('/:id/publish', requireAuth, async (req, res) => {
   const { publishedUrl } = req.body || {};
   if (!publishedUrl) return res.status(400).json({ error: 'publishedUrl is required to publish' });
+  try {
+    const consentQ = await pool.query(
+      `SELECT 1 FROM ${qi('FMS')}.${qi('Form_Additional_Fields')}
+       WHERE ${qi('Form_ID')} = $1 AND ${qi('Component_Type')} = 'CONSENT' AND ${qi('Ver_To_DT')} >= CURRENT_DATE LIMIT 1`,
+      [req.params.id]
+    );
+    if (!consentQ.rowCount) {
+      return res.status(400).json({ error: 'NO_CONSENT', message: 'Add at least one Consent field before publishing.' });
+    }
+  } catch (err) {
+    console.error('[POST /forms/:id/publish consent check] error', err);
+    return res.status(500).json({ error: 'INTERNAL', message: err.message });
+  }
   await setFormStatus(req, res, ['In Review'], 'Published', [`${qi('Form_Published_URL')} = $3`], [publishedUrl]);
 });
 router.post('/:id/pause', requireAuth, async (req, res) => {
@@ -145,6 +160,15 @@ router.post('/:id/archive', requireAuth, async (req, res) => {
    No PK or versioning was given in the schema — same situation
    M_Satsang_Defn was in; same fix (surrogate FAF_ID + Ver_From_DT/Ver_To_DT
    added via migration). */
+
+// Issues a short-lived token so "Preview" can open the real public page
+// (intake-form.html) for a form in ANY status, not just Published \u2014 see
+// lib/formPreviewTokens.js and the GET /intake-form/:formId check in
+// routes/public-forms.js that honours it.
+router.post('/:id/preview-token', requireAuth, async (req, res) => {
+  const token = previewTokens.issue(req.params.id);
+  res.json({ token, expiresInSeconds: 600 });
+});
 
 router.get('/:id/fields', requireAuth, async (req, res) => {
   try {

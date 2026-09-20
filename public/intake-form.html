@@ -47,6 +47,7 @@
 
 <script>
 const formId = new URLSearchParams(location.search).get('formId');
+const previewToken = new URLSearchParams(location.search).get('previewToken');
 const app = document.getElementById('app');
 
 function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
@@ -58,7 +59,8 @@ async function init(){
   }
   let data;
   try{
-    const res = await fetch('/api/public/intake-form/' + encodeURIComponent(formId));
+    const qs = previewToken ? ('?previewToken='+encodeURIComponent(previewToken)) : '';
+    const res = await fetch('/api/public/intake-form/' + encodeURIComponent(formId) + qs);
     if(res.status === 404){
       app.innerHTML = `<div class="msg err">This form doesn't exist. Please check the link.</div>`;
       return;
@@ -114,7 +116,11 @@ function renderForm(data){
   const countries = data.countries || [];
   const mandatory = data.mandatoryFields || [];
   const additional = data.additionalFields || [];
+  const previewBanner = data.isPreview
+    ? `<div class="msg warn"><b>Preview \u2014 ${esc(data.formStatus||'')}.</b> This is exactly what the live form looks like. Nothing you submit here is saved.</div>`
+    : '';
   app.innerHTML = `
+    ${previewBanner}
     <h1>Tell us a bit about you</h1>
     <p class="sub">Everything here helps us stay in touch \u2014 it only takes a minute.</p>
     <div id="formErr"></div>
@@ -123,13 +129,13 @@ function renderForm(data){
       ${mandatory.map(f=>mandatoryFieldHTML(f, countries)).join('')}
       ${additional.length ? `<div class="section-label">A few more questions</div>${additional.map(additionalFieldHTML).join('')}` : ''}
     </form>
-    <button type="button" id="submitBtn" onclick="submitForm()">Submit</button>
+    <button type="button" id="submitBtn" onclick="submitForm(${data.isPreview ? 'true' : 'false'})">Submit</button>
   `;
   window.__mandatoryDefs = mandatory;
   window.__additionalDefs = additional;
 }
 
-async function submitForm(){
+async function submitForm(isPreview){
   const btn = document.getElementById('submitBtn');
   const errEl = document.getElementById('formErr');
   errEl.innerHTML = '';
@@ -144,6 +150,14 @@ async function submitForm(){
   });
   if(missing.length){
     errEl.innerHTML = `<div class="msg err">Please fill in: ${esc(missing.join(', '))}</div>`;
+    return;
+  }
+
+  // Preview mode never calls the real submit endpoint \u2014 the server
+  // wouldn't accept it anyway (it only ever accepts Published forms,
+  // preview token or not), so this is just an honest client-side stand-in.
+  if(isPreview){
+    app.innerHTML = `<div class="msg ok">This is what the confirmation looks like. Nothing was actually submitted \u2014 you're in Preview.</div>`;
     return;
   }
 
