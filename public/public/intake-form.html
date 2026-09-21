@@ -95,7 +95,9 @@ function mandatoryFieldHTML(f, countries){
   const id = 'm_' + f.name;
   let input;
   if(f.type === 'country'){
-    input = `<select id="${id}"><option value="">Choose\u2026</option>${countries.map(c=>`<option value="${c.Country_ID}">${esc(c.Country_Name)}</option>`).join('')}</select>`;
+    input = `<input id="${id}" list="countryList" placeholder="Start typing\u2026" autocomplete="off" oninput="onCountryTyped()">
+      <datalist id="countryList">${countries.map(c=>`<option value="${esc(c.Country_Name)}">`).join('')}</datalist>
+      <input type="hidden" id="${id}_resolved">`;
   } else if(f.type === 'email'){
     input = `<input id="${id}" type="email" autocomplete="email">`;
   } else if(f.type === 'number'){
@@ -103,14 +105,33 @@ function mandatoryFieldHTML(f, countries){
   } else {
     input = `<input id="${id}" type="text" autocomplete="${f.name==='First_Name'?'given-name':f.name==='Last_Name'?'family-name':'off'}">`;
   }
-  return `<div class="field"><label for="${id}">${esc(f.label)}${f.required?' *':''}</label>${input}</div>`;
+  let extra = '';
+  if(f.type === 'country'){
+    extra = `<div class="field"><label>Country dialing code</label><input id="m_Country_ISD_display" type="text" readonly placeholder="Auto-fills once you pick a country" style="background:var(--paper);color:var(--ink);opacity:.75"></div>`;
+  }
+  return `<div class="field"><label for="${id}">${esc(f.label)}${f.required?' *':''}</label>${input}</div>${extra}`;
+}
+
+// Resolves the typed country name against the real list (case-insensitive
+// exact match \u2014 the datalist only offers suggestions, it doesn't force a
+// choice) and fills the read-only ISD code alongside it.
+function onCountryTyped(){
+  const typed = (document.getElementById('m_Country_ID').value||'').trim().toLowerCase();
+  const match = (window.__countries||[]).find(c=>(c.Country_Name||'').toLowerCase()===typed);
+  document.getElementById('m_Country_ID_resolved').value = match ? match.Country_ID : '';
+  const ispEl = document.getElementById('m_Country_ISD_display');
+  if(ispEl) ispEl.value = match && match.Country_ISD ? ('+'+match.Country_ISD) : '';
 }
 
 function additionalFieldHTML(f){
   const id = 'a_' + f.Question_Name.replace(/[^a-zA-Z0-9]/g,'_');
   const label = `<label for="${id}">${esc(f.Question_Name)}</label>`;
   if(f.Component_Type==='CHECKBOX') return `<div class="field"><label style="display:flex;align-items:center;gap:8px;font-weight:500"><input id="${id}" type="checkbox" style="width:auto"> ${esc(f.Question_Name)}</label></div>`;
-  if(f.Component_Type==='CONSENT') return `<div class="field"><label style="display:flex;align-items:center;gap:8px;font-weight:500"><input id="${id}" type="checkbox" style="width:auto" required> I agree \u2014 ${esc(f.Question_Name)}</label></div>`;
+  // Consent gets its own visually distinct treatment (amber box) so it
+  // reads as "this one matters", not just another checkbox.
+  if(f.Component_Type==='CONSENT') return `<div class="field" style="background:var(--amber-wash);border:1px solid #EBD9A6;border-radius:10px;padding:12px 14px;margin-bottom:16px">
+      <label style="display:flex;align-items:center;gap:8px;font-weight:600;color:var(--amber)"><input id="${id}" type="checkbox" style="width:auto" required> I agree \u2014 ${esc(f.Question_Name)}</label>
+    </div>`;
   if(f.Component_Type==='INFORMATION') return `<div class="msg info">${esc(f.Question_Name)}</div>`;
   if(f.Component_Type==='WARNING') return `<div class="msg warn">${esc(f.Question_Name)}</div>`;
   if(f.Component_Type==='HIGHLIGHT') return `<div class="msg" style="background:var(--sage-wash);color:var(--sage)">${esc(f.Question_Name)}</div>`;
@@ -120,6 +141,7 @@ function additionalFieldHTML(f){
 
 function renderForm(data){
   const countries = data.countries || [];
+  window.__countries = countries;
   const mandatory = data.mandatoryFields || [];
   const additional = data.additionalFields || [];
   const previewBanner = data.isPreview
@@ -127,13 +149,11 @@ function renderForm(data){
     : '';
   app.innerHTML = `
     ${previewBanner}
-    <h1>Tell us a bit about you</h1>
-    <p class="sub">Everything here helps us stay in touch \u2014 it only takes a minute.</p>
+    <p class="sub" style="font-size:14.5px;color:var(--ink);opacity:1;margin-bottom:20px">${esc(data.formDesc || 'Tell us a bit about you \u2014 it only takes a minute.')}</p>
     <div id="formErr"></div>
     <form id="intakeForm">
-      <div class="section-label">About you</div>
       ${mandatory.map(f=>mandatoryFieldHTML(f, countries)).join('')}
-      ${additional.length ? `<div class="section-label">A few more questions</div>${additional.map(additionalFieldHTML).join('')}` : ''}
+      ${additional.length ? additional.map(additionalFieldHTML).join('') : ''}
     </form>
     <button type="button" id="submitBtn" onclick="submitForm(${data.isPreview ? 'true' : 'false'})">Submit</button>
   `;
@@ -149,9 +169,15 @@ async function submitForm(isPreview){
   const mandatory = {};
   let missing = [];
   (window.__mandatoryDefs||[]).forEach(f=>{
-    const el = document.getElementById('m_'+f.name);
-    const val = el ? el.value.trim() : '';
-    if(f.required && !val) missing.push(f.label);
+    let val;
+    if(f.type==='country'){
+      val = (document.getElementById('m_Country_ID_resolved').value||'').trim();
+      if(f.required && !val) missing.push(f.label+' (pick one from the list)');
+    } else {
+      const el = document.getElementById('m_'+f.name);
+      val = el ? el.value.trim() : '';
+      if(f.required && !val) missing.push(f.label);
+    }
     mandatory[f.name] = val || null;
   });
   if(missing.length){

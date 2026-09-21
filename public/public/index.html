@@ -20,7 +20,7 @@
   /* secondary — a professional green, echoing the logo's green */
   --sage:#4F8A66; --sage-wash:#E5F3EA;
   /* yellow */
-  --amber:#96690F; --amber-wash:#FDF2D0;
+  --amber:#C2670F; --amber-wash:#FDEEDB;
   /* orange */
   --rose:#B3571F; --rose-wash:#FCE5D5;
   /* violet — new, added only for the org banner's "Grow Together" chip;
@@ -429,14 +429,13 @@ nav .pip.r{background:var(--rose);color:#fff}
 
 <header>
   <div style="display:flex;align-items:center;gap:14px;position:relative;margin-left:auto">
-    <button id="notifBell" class="mini" onclick="toggleNotifDropdown()" title="Notifications" style="position:relative;width:36px;height:36px;font-size:16px">
+    <button id="notifBell" class="mini" onclick="tab('alerts')" title="My Seva Activities" style="position:relative;width:36px;height:36px;font-size:16px">
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"></path>
         <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
       </svg>
       <span id="notifBadge" class="pip r" style="position:absolute;top:-4px;right:-4px;display:none;min-width:16px;height:16px;line-height:16px;font-size:10px;padding:0 3px">0</span>
     </button>
-    <div id="notifDropdown" style="display:none;position:absolute;right:0;top:44px;width:320px;max-height:400px;overflow-y:auto;background:var(--card);border:1px solid var(--line-2);border-radius:12px;box-shadow:var(--sh);z-index:80;padding:8px"></div>
     <div class="roleblock">
       <label for="role">Signed in as</label>
       <select id="role" onchange="setRole(this.value)"></select>
@@ -449,7 +448,6 @@ nav .pip.r{background:var(--rose);color:#fff}
   <button data-p="overview" onclick="tab('overview')">Overview<span class="pip r" id="pip6">0</span></button>
   <button class="on" data-p="seekers" onclick="tab('seekers')">Seekers</button>
   <button data-p="alerts" onclick="tab('alerts')">My Seva Activities<span class="pip" id="pip">0</span></button>
-  <button data-p="inbox" onclick="tab('inbox')">Inbox<span class="pip" id="pip4">0</span></button>
   <button data-p="journey" onclick="tab('journey')">Curious and Seeker Spiritual Journey</button>
   <button data-p="calendar" onclick="tab('calendar'); renderCalendar()">Calendar</button>
   <button data-p="reports" onclick="tab('reports')">Reports<span class="pip r" id="pip5">0</span></button>
@@ -509,12 +507,6 @@ nav .pip.r{background:var(--rose);color:#fff}
     <div id="seekersLive" style="display:none"></div>
   </section>
 
-  <section class="pane" id="p-inbox">
-    <h2 class="sec">Inbox</h2>
-    <p class="sub">Replies from seekers arrive here and land on their timeline automatically. Anyone in the region can pick one up.</p>
-    <div id="inbox"></div>
-  </section>
-
   <section class="pane" id="p-org">
     <h2 class="sec">Organisation and team management</h2>
     <p class="sub">Structure lives in Seva Departments — the org chart, adding departments and roles.
@@ -533,14 +525,12 @@ nav .pip.r{background:var(--rose);color:#fff}
       Each event still needs a conductor's approval before it's confirmed.</p>
     <div class="filters" style="border-bottom:1px solid var(--line-2);padding-bottom:0;margin-bottom:16px">
       <button class="chip on" data-sub="defs" onclick="satsangSubtab('defs')">Satsang Definitions</button>
-      <button class="chip" data-sub="events" onclick="satsangSubtab('events')">Satsang Events</button>
-      <button class="chip" data-sub="attendees" onclick="satsangSubtab('attendees')">Attendee Addition</button>
+      <button class="chip" data-sub="events" onclick="satsangSubtab('events')">Satsang Event Management</button>
       <button class="chip" data-sub="transfers" onclick="satsangSubtab('transfers')">Transfers</button>
       <button class="chip" data-sub="access" onclick="satsangSubtab('access')">Access Configuration</button>
     </div>
     <div id="satsangDefs"></div>
     <div id="satsangEvents" style="display:none"></div>
-    <div id="satsangAttendeesTab" style="display:none"></div>
     <div id="satsangTransfers" style="display:none"></div>
     <div id="satsangAccess" style="display:none"></div>
   </section>
@@ -723,7 +713,7 @@ const CONTACT_SLA_DAYS = 60; /* flat window — there is no longer a per-stage S
 const ROLES = {
   abroad:{name:"Abroad RS — global admin", regions:null, mask:[],
     can:"Full access to all regions and all fields.",
-    tabs:["overview","seekers","alerts","inbox","journey","calendar","reports","sevahub","profiles","dash","org","satsangmgmt","formmgmt","tickermgmt","about"],
+    tabs:["overview","seekers","alerts","journey","calendar","reports","sevahub","profiles","dash","org","satsangmgmt","formmgmt","tickermgmt","about"],
     landing:"overview"},
   tech:{name:"Technical Admin", regions:null, mask:[],
     can:"System health and infrastructure. Not scoped to any region.",
@@ -731,11 +721,11 @@ const ROLES = {
     landing:"ops"},
   rs_de:{name:"Regional RS — Germany", regions:["Germany"], mask:[],
     can:"Germany only. All fields within that region.",
-    tabs:["overview","seekers","alerts","inbox","journey","calendar","reports","sevahub","profiles","dash","org","satsangmgmt","formmgmt","tickermgmt","about"],
+    tabs:["overview","seekers","alerts","journey","calendar","reports","sevahub","profiles","dash","org","satsangmgmt","formmgmt","tickermgmt","about"],
     landing:"overview"},
   rs_fr:{name:"Regional RS — France", regions:["France"], mask:[],
     can:"France only. All fields within that region.",
-    tabs:["overview","seekers","alerts","inbox","journey","calendar","reports","sevahub","profiles","dash","org","satsangmgmt","formmgmt","tickermgmt","about"],
+    tabs:["overview","seekers","alerts","journey","calendar","reports","sevahub","profiles","dash","org","satsangmgmt","formmgmt","tickermgmt","about"],
     landing:"overview"},
   seva:{name:"Seva RS — service allocation", regions:null, mask:["whatsapp","email","dob"],
     can:"All regions, but personal contact details and date of birth are hidden.",
@@ -1267,7 +1257,7 @@ function render(){
        They are not merely hidden on screen — the database refuses to return them for this role.</div>` : '');
 
   renderAlerts(); renderDash(); renderOps(); renderAbout();
-  renderInbox(); if(LIVE_DEPTS!==null){ renderSevaDepartments(); renderTeamManagement(); } renderJourney(); renderCalendar(); renderProfiles(); renderReports(); renderSevahub();
+  if(LIVE_DEPTS!==null){ renderSevaDepartments(); renderTeamManagement(); } renderJourney(); renderCalendar(); renderProfiles(); renderReports(); renderSevahub();
   if(OPEN) drawer(OPEN);
 }
 
@@ -1888,10 +1878,52 @@ function renderAlerts(){
     return p && (!R().regions || R().regions.includes(p.region)); });
   const openT = myT.filter(t=>!t.done);
   const pendingIntakeCount = LIVE_INTAKE===null ? 0 : LIVE_INTAKE.length;
-  setPip('pip', od.length+fl.length+openT.length+pendingIntakeCount);
+
+  // Messages (was the standalone "Inbox" tab) and Notifications (was the
+  // standalone header bell dropdown) are folded in here \u2014 all three used
+  // to point at essentially the same idea, "things that need me", so this
+  // is now the one place for that instead of three.
+  const seekerIds = new Set(v.map(p=>p.id));
+  const msgs = INBOX.filter(m=>seekerIds.has(m.pid));
+  const unreadMsgs = msgs.filter(m=>m.unread).length;
+  if(LIVE_NOTIFS === null){ loadNotifications().then(renderAlerts); }
+  const notifs = LIVE_NOTIFS || [];
+  const unreadNotifs = notifs.filter(n=>!n.Is_Read).length;
+
+  const total = od.length+fl.length+openT.length+pendingIntakeCount+unreadMsgs+unreadNotifs;
+  setPip('pip', total);
+  const badge = document.getElementById('notifBadge');
+  if(badge){ badge.style.display = total ? '' : 'none'; badge.textContent = total; }
 
   document.getElementById('alerts').innerHTML=`
-    <h2 class="sec" style="margin-top:4px">Tasks (${openT.length} open)</h2>
+    ${notifs.length?`<h2 class="sec" style="margin-top:4px">Notifications (${unreadNotifs} unread)</h2>
+      ${notifs.map(n=>`<div class="sub-card" onclick="markNotifRead(${n.Notification_ID})" style="cursor:pointer;padding:11px 16px;${n.Is_Read?'opacity:.55':'border-left:3px solid var(--deep)'}">
+        <div style="font-size:13.5px">${esc(n.Message)}</div>
+        <div class="sub2" style="margin-top:2px">${new Date(n.Created_DT).toLocaleString()}</div>
+      </div>`).join('')}` : ''}
+
+    <h2 class="sec" style="margin-top:${notifs.length?'26px':'4px'}">Messages${msgs.length?` (${unreadMsgs} unread)`:''}</h2>
+    <p class="sub">Replies from seekers land on their timeline automatically. Anyone in the region can pick one up.</p>
+    ${msgs.length ? msgs.map(m=>{
+      const s=SEEKERS.find(x=>x.id===m.pid);
+      return `<div class="sub-card" style="${m.unread?'border-left:3px solid var(--deep)':''}">
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          ${CH[m.ch]||''}
+          <span class="nm serif" style="font-size:15px">${esc(s.name)}</span>
+          <span class="tag t-semi">${esc(s.region)}</span>
+          <span class="sub2" style="margin-left:auto">${esc(m.at)}</span>
+        </div>
+        <div class="sub2" style="margin-top:4px">${mv(m.ch==='email'?'email':'whatsapp', esc(m.from))}</div>
+        <p style="margin:9px 0 0;font-size:13.5px">${esc(m.txt)}</p>
+        ${m.replied?`<div class="sub2" style="margin-top:7px;color:var(--sage)">Answered by ${esc(m.replied)} — logged on the timeline</div>`
+        :`<div class="btnrow">
+            <button class="btn" onclick="replyMsg('${m.id}')">Reply</button>
+            <button class="btn ghost" onclick="open_(${s.id})">Open seeker</button>
+          </div>`}
+      </div>`;
+    }).join('') : '<div class="card pad" style="color:var(--ink-3)">Nothing waiting in your region.</div>'}
+
+    <h2 class="sec" style="margin-top:26px">Tasks (${openT.length} open)</h2>
     <p class="sub">An alert says something is wrong. A task records who agreed to do something about it.</p>
     ${myT.length? myT.slice().sort((a,b)=>a.done-b.done||a.due-b.due).map(t=>{
       const p=SEEKERS.find(x=>x.id===t.pid);
@@ -2893,12 +2925,10 @@ function statusBadge(s){
 function satsangSubtab(s){
   document.getElementById('satsangDefs').style.display = s==='defs' ? '' : 'none';
   document.getElementById('satsangEvents').style.display = s==='events' ? '' : 'none';
-  document.getElementById('satsangAttendeesTab').style.display = s==='attendees' ? '' : 'none';
   document.getElementById('satsangTransfers').style.display = s==='transfers' ? '' : 'none';
   document.getElementById('satsangAccess').style.display = s==='access' ? '' : 'none';
   document.querySelectorAll('#p-satsangmgmt .chip').forEach(c=>c.classList.toggle('on', c.dataset.sub===s));
   if(s==='events') renderSatsangEvents(true);
-  else if(s==='attendees') renderSatsangAttendees(true);
   else if(s==='transfers') renderSatsangTransfers(true);
   else if(s==='access') renderSatsangAccess(true);
   else renderSatsangDefs(true);
@@ -3146,111 +3176,10 @@ async function removeSatsangConductor(defId, csmsId, btn){
     }catch(err){ toast('Could not remove: '+(err.message||'')); }
   });
 }
-function seekerAutocomplete(inputEl){
-  clearTimeout(AC_DEBOUNCE['attSearch']);
-  const dd = document.getElementById('attSearch_ac');
-  const q = inputEl.value.trim();
-  document.getElementById('attSeekerId').value = ''; // any previous selection is invalid once they keep typing
-  if(q.length < 2){ dd.style.display='none'; dd.innerHTML=''; return; }
-  AC_DEBOUNCE['attSearch'] = setTimeout(async ()=>{
-    try{
-      const seekers = await apiFetch('/api/seekers?q='+encodeURIComponent(q));
-      if(!seekers.length){ dd.innerHTML = '<div class="ac-item sub2">No matching seekers.</div>'; dd.style.display=''; return; }
-      dd.innerHTML = seekers.map(s=>{
-        const name = [s.First_Name,s.Last_Name].filter(Boolean).join(' ') || ('Seeker #'+s.Seeker_ID);
-        return `<div class="ac-item" onmousedown="selectSeeker(${s.Seeker_ID}, '${name.replace(/'/g,"\\'")}')">
-          <div>${esc(name)}</div><div class="sub2">${esc(s.Email||'')}</div>
-        </div>`;
-      }).join('');
-      dd.style.display = '';
-    }catch(err){ dd.style.display='none'; }
-  }, 250);
-}
-function selectSeeker(seekerId, name){
-  document.getElementById('attSearch').value = name;
-  document.getElementById('attSeekerId').value = seekerId;
-  document.getElementById('attSearch_ac').style.display = 'none';
-}
-/* ---- Attendee Addition \u2014 standalone tab (was nested in the definition modal) ---- */
-let SATSANG_ATTENDEES_DEF_ID = null;
-let LIVE_SATSANG_ATTENDEES_LIST = null;
-
-function renderSatsangAttendees(force){
-  const el = document.getElementById('satsangAttendeesTab');
-  if(!el) return;
-  if(!SATSANG_ATTENDEES_DEF_ID && LIVE_SATSANG_DEFS.length) SATSANG_ATTENDEES_DEF_ID = LIVE_SATSANG_DEFS[0].Satsang_ID;
-  if(!LIVE_SATSANG_DEFS.length){ el.innerHTML = '<p class="sub2">No satsang definitions yet.</p>'; return; }
-
-  el.innerHTML = `
-    <select id="attDefPicker" style="border-radius:999px;padding:6px 14px;font-size:13px;border:1px solid var(--line-2);margin-bottom:14px"
-      onchange="SATSANG_ATTENDEES_DEF_ID=Number(this.value); loadSatsangAttendeesList()">
-      ${LIVE_SATSANG_DEFS.map(d=>`<option value="${d.Satsang_ID}" ${d.Satsang_ID==SATSANG_ATTENDEES_DEF_ID?'selected':''}>${esc(d.Satsang_Name)}</option>`).join('')}
-    </select>
-    <div id="satsangAttendeesBody"><p class="sub2">Loading\u2026</p></div>`;
-  loadSatsangAttendeesList();
-}
-
-async function loadSatsangAttendeesList(){
-  if(!SATSANG_ATTENDEES_DEF_ID) return;
-  const body = document.getElementById('satsangAttendeesBody');
-  if(body) body.innerHTML = '<p class="sub2">Loading\u2026</p>';
-  try{
-    LIVE_SATSANG_ATTENDEES_LIST = await apiFetch('/api/satsangs/defs/'+SATSANG_ATTENDEES_DEF_ID+'/attendees');
-    renderSatsangAttendeesBody();
-  }catch(err){
-    if(body) body.innerHTML = `<p class="sub2">Could not load: ${esc(err.message||'')}</p>`;
-  }
-}
-
-function renderSatsangAttendeesBody(){
-  const body = document.getElementById('satsangAttendeesBody');
-  if(!body) return;
-  const attendees = LIVE_SATSANG_ATTENDEES_LIST || [];
-  body.innerHTML = `
-    <div class="card pad">
-      ${attendees.length ? attendees.map(a=>`<div class="oteamrow">
-          <span>${esc([a.First_Name,a.Last_Name].filter(Boolean).join(' ')||('Seeker #'+a.Seeker_ID))}${a.Remarks?(' <span class="sub2">\u2014 '+esc(a.Remarks)+'</span>'):''}</span>
-          <button class="mini" onclick="removeSatsangAttendee(${a.Seeker_ID}, this)" style="width:22px;height:22px;color:var(--rose)">&times;</button>
-        </div>`).join('') : '<p class="sub2">None yet.</p>'}
-    </div>
-    <details style="margin-top:10px" open>
-      <summary style="cursor:pointer;font-size:12px;color:var(--deep)">+ Add attending seeker</summary>
-      <div class="card pad" style="margin-top:8px;display:flex;flex-direction:column;gap:6px;max-width:420px">
-        <div style="position:relative">
-          <input id="attSearch" placeholder="Search by name or email" autocomplete="off" oninput="seekerAutocomplete(this)" style="width:100%;border-radius:999px;padding:7px 14px;font-size:13px;border:1px solid var(--line-2);box-sizing:border-box">
-          <div id="attSearch_ac" class="ac-dropdown" style="display:none"></div>
-        </div>
-        <input id="attSeekerId" type="hidden">
-        <input id="attRemarks" placeholder="Remarks (optional)" style="border-radius:999px;padding:7px 14px;font-size:13px;border:1px solid var(--line-2)">
-        <button class="btn sm" onclick="addSatsangAttendee(this)"><span class="spin"></span><span class="lbl">Add</span></button>
-        <div class="err" id="attErr"></div>
-      </div>
-      <p class="sub2" style="margin-top:4px">Must already be a real seeker record \u2014 search by name or email and pick from the list.</p>
-    </details>`;
-}
-
-async function addSatsangAttendee(btn){
-  const errEl = document.getElementById('attErr'); errEl.classList.remove('on');
-  await withLoading(btn, async ()=>{
-    try{
-      const seekerId = document.getElementById('attSeekerId').value;
-      if(!seekerId){ errEl.textContent='Search and pick a seeker from the list first.'; errEl.classList.add('on'); return; }
-      await apiFetch('/api/satsangs/defs/'+SATSANG_ATTENDEES_DEF_ID+'/attendees', {method:'POST', body: JSON.stringify({seekerId:Number(seekerId), remarks: document.getElementById('attRemarks').value.trim()})});
-      toast('Attendee added.');
-      loadSatsangAttendeesList();
-    }catch(err){ errEl.textContent = err.message||'Could not add.'; errEl.classList.add('on'); }
-  });
-}
-async function removeSatsangAttendee(seekerId, btn){
-  if(!confirm('Remove this attending seeker?')) return;
-  await withLoading(btn, async ()=>{
-    try{
-      await apiFetch('/api/satsangs/defs/'+SATSANG_ATTENDEES_DEF_ID+'/attendees/'+seekerId, {method:'DELETE'});
-      toast('Removed.');
-      loadSatsangAttendeesList();
-    }catch(err){ toast('Could not remove: '+(err.message||'')); }
-  });
-}
+/* ---- Attendee Addition sub-tab removed \u2014 its add/remove now lives
+   inline under Satsang Event Management (toggleEventAttendees etc.,
+   below), reusing the same /api/satsangs/defs/:id/attendees endpoint, so
+   there's one place to manage a satsang's roster instead of two. ---- */
 
 /* ---- Satsang Events ---- */
 function renderSatsangEvents(force){
@@ -4047,10 +3976,12 @@ function closeFormTypePicker(){ const el=document.getElementById('formTypePicker
 async function confirmCreateForm(platformId, btn){
   await withLoading(btn, async ()=>{
     try{
-      await apiFetch('/api/forms', {method:'POST', body: JSON.stringify({platformId})});
+      const res = await apiFetch('/api/forms', {method:'POST', body: JSON.stringify({platformId})});
       toast('Draft form created.');
       closeFormTypePicker();
-      LIVE_FORMS=null; loadForms();
+      LIVE_FORMS=null;
+      await loadForms();
+      if(res && res.formId) openFormDetail(res.formId); // land straight in it, no extra click to find it in the list
     }catch(err){ toast('Could not create: '+(err.message||'')); }
   });
 }
@@ -4132,6 +4063,11 @@ function renderFormDetail(){
       <button class="oclose" onclick="closeFormDetail()">&times;</button>
       <h3 style="margin:0 0 4px">${esc(formLabel(f))}</h3>
       <p class="sub2" style="margin-bottom:14px">${f?statusBadge(f.Form_Status_Name):''}</p>
+
+      <p class="sub2" style="font-weight:600">Form heading \u2014 shown to whoever opens the public form</p>
+      <textarea id="ffDesc" rows="2" placeholder="What is this form for? e.g. \u201cTell us a bit about you \u2014 it only takes a minute.\u201d" style="width:100%;border-radius:12px;padding:8px 14px;font-size:13px;border:1px solid var(--line-2);box-sizing:border-box;font-family:inherit;resize:vertical;margin-bottom:6px">${esc((f&&f.Form_Desc)||'')}</textarea>
+      <button class="mini" onclick="saveFormDesc(this)" style="width:auto;padding:0 12px;height:26px;font-size:11.5px;margin-bottom:14px">Save heading</button>
+
       <p class="sub2" style="font-weight:600">Default fields \u2014 every form collects these</p>
       <div class="kv" style="grid-template-columns:1fr;margin-bottom:14px">
         ${FORM_DEFAULT_FIELDS.map(d=>`<div class="oteamrow" style="cursor:default"><span>${esc(d.label)}</span><span class="sub2">Read-only</span></div>`).join('')}
@@ -4141,24 +4077,31 @@ function renderFormDetail(){
           <span>${esc(ff.Question_Name)} <span class="sub2">(${esc(ff.Question_Type)}, ${esc(ff.Component_Type)})</span></span>
           <button class="mini" onclick="deleteFormField(${ff.FAF_ID}, this)" style="width:22px;height:22px;color:var(--rose)">&times;</button>
         </div>`).join('') : '<p class="sub2">None yet.</p>'}
-      <details style="margin-top:6px">
-        <summary style="cursor:pointer;font-size:12px;color:var(--deep)">+ Add question</summary>
-        <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;align-items:center">
-          <input id="ffName" placeholder="Question" style="border-radius:999px;padding:5px 12px;font-size:12.5px;border:1px solid var(--line-2);flex:1;min-width:120px">
-          <select id="ffQType" style="border-radius:999px;padding:5px 12px;font-size:12.5px;border:1px solid var(--line-2)">
-            <option value="STRING">String</option><option value="INTEGER">Integer</option><option value="BOOLEAN">Boolean</option><option value="DATE">Date</option>
-          </select>
-          <select id="ffCType" style="border-radius:999px;padding:5px 12px;font-size:12.5px;border:1px solid var(--line-2)">
-            <option value="INPUT">Input</option><option value="CHECKBOX">Checkbox</option><option value="CONSENT">Consent</option>
-            <option value="INFORMATION">Information</option><option value="WARNING">Warning</option><option value="HIGHLIGHT">Highlight</option>
-          </select>
-          <button class="btn sm" onclick="addFormField(this)"><span class="spin"></span><span class="lbl">Add</span></button>
-        </div>
-      </details>
+      <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;align-items:center">
+        <input id="ffName" placeholder="Question" style="border-radius:999px;padding:5px 12px;font-size:12.5px;border:1px solid var(--line-2);flex:1;min-width:120px">
+        <select id="ffQType" style="border-radius:999px;padding:5px 12px;font-size:12.5px;border:1px solid var(--line-2)">
+          <option value="STRING">String</option><option value="INTEGER">Integer</option><option value="BOOLEAN">Boolean</option><option value="DATE">Date</option>
+        </select>
+        <select id="ffCType" style="border-radius:999px;padding:5px 12px;font-size:12.5px;border:1px solid var(--line-2)">
+          <option value="INPUT">Input</option><option value="CHECKBOX">Checkbox</option><option value="CONSENT">Consent</option>
+          <option value="INFORMATION">Information</option><option value="WARNING">Warning</option><option value="HIGHLIGHT">Highlight</option>
+        </select>
+        <button class="btn sm" onclick="addFormField(this)"><span class="spin"></span><span class="lbl">Add</span></button>
+      </div>
     </div>
   </div>`;
 }
 
+async function saveFormDesc(btn){
+  await withLoading(btn, async ()=>{
+    try{
+      const desc = document.getElementById('ffDesc').value.trim();
+      await apiFetch('/api/forms/'+FORM_DETAIL_ID+'/desc', {method:'PUT', body: JSON.stringify({desc})});
+      toast('Heading saved.');
+      LIVE_FORMS = null; await loadForms();
+    }catch(err){ toast('Could not save: '+(err.message||'')); }
+  });
+}
 async function addFormField(btn){
   await withLoading(btn, async ()=>{
     try{
@@ -4395,75 +4338,25 @@ async function loadActiveTickers(){
   }catch(err){ /* banner just stays hidden if this fails */ }
 }
 
-/* ---- Notifications ---- */
+/* ---- Notifications \u2014 folded into My Seva Activities (renderAlerts),
+   not a separate dropdown anymore ---- */
 let LIVE_NOTIFS = null;
 async function loadNotifications(){
-  try{ LIVE_NOTIFS = await apiFetch('/api/notifications'); renderNotifBadge(); }
-  catch(err){ /* silent — bell just stays at zero */ }
-}
-function renderNotifBadge(){
-  const badge = document.getElementById('notifBadge');
-  if(!badge || !LIVE_NOTIFS) return;
-  const unread = LIVE_NOTIFS.filter(n=>!n.Is_Read).length;
-  badge.style.display = unread ? '' : 'none';
-  badge.textContent = unread;
-}
-function toggleNotifDropdown(){
-  const dd = document.getElementById('notifDropdown');
-  const opening = dd.style.display==='none';
-  dd.style.display = opening ? '' : 'none';
-  if(opening) renderNotifDropdown();
-}
-function renderNotifDropdown(){
-  const dd = document.getElementById('notifDropdown');
-  if(!dd) return;
-  if(LIVE_NOTIFS === null){ dd.innerHTML = '<p class="sub2">Loading\u2026</p>'; loadNotifications().then(renderNotifDropdown); return; }
-  dd.innerHTML = LIVE_NOTIFS.length ? LIVE_NOTIFS.map(n=>`
-    <div onclick="markNotifRead(${n.Notification_ID})" style="padding:8px 6px;border-bottom:1px solid var(--line);cursor:pointer;${n.Is_Read?'opacity:.55':''}">
-      <div style="font-size:13px">${esc(n.Message)}</div>
-      <div class="sub2">${new Date(n.Created_DT).toLocaleString()}</div>
-    </div>`).join('') : '<p class="sub2">No notifications.</p>';
+  try{ LIVE_NOTIFS = await apiFetch('/api/notifications'); }
+  catch(err){ /* silent \u2014 badge just stays at zero */ }
 }
 async function markNotifRead(id){
   try{
     await apiFetch('/api/notifications/'+id+'/read', {method:'POST'});
     const n = LIVE_NOTIFS.find(x=>x.Notification_ID==id);
     if(n) n.Is_Read = true;
-    renderNotifBadge(); renderNotifDropdown();
+    renderAlerts();
   }catch(err){ /* silent */ }
 }
 
-/* ============ unified inbox ============ */
+/* ============ unified inbox \u2014 now the "Messages" section inside
+   renderAlerts() (My Seva Activities), not its own tab ============ */
 const CH = {email:'<span class="tag t-core">Email</span>', sms:'<span class="tag t-active">SMS</span>'};
-function renderInbox(){
-  const seekerIds = new Set(visible().map(p=>p.id));
-  const vis = INBOX.filter(m=>seekerIds.has(m.pid));
-  setPip('pip4', vis.filter(m=>m.unread).length);
-  document.getElementById('inbox').innerHTML = `
-    ${vis.length ? vis.map(m=>{
-      const s=SEEKERS.find(x=>x.id===m.pid);
-      return `<div class="sub-card" style="${m.unread?'border-left:3px solid var(--deep)':''}">
-        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-          ${CH[m.ch]||''}
-          <span class="nm serif" style="font-size:15px">${esc(s.name)}</span>
-          <span class="tag t-semi">${esc(s.region)}</span>
-          <span class="sub2" style="margin-left:auto">${esc(m.at)}</span>
-        </div>
-        <div class="sub2" style="margin-top:4px">${mv(m.ch==='email'?'email':'whatsapp', esc(m.from))}</div>
-        <p style="margin:9px 0 0;font-size:13.5px">${esc(m.txt)}</p>
-        ${m.replied?`<div class="sub2" style="margin-top:7px;color:var(--sage)">Answered by ${esc(m.replied)} — logged on the timeline</div>`
-        :`<div class="btnrow">
-            <button class="btn" onclick="replyMsg('${m.id}')">Reply</button>
-            <button class="btn ghost" onclick="open_(${s.id})">Open seeker</button>
-          </div>`}
-      </div>`;
-    }).join('') : `<div class="card pad" style="color:var(--ink-3)">Nothing waiting in your region.</div>`}
-    <div class="note"><b>Every reply becomes an interaction automatically.</b> Nobody retypes what was said
-      into the timeline afterwards, which is where the record usually falls out of date.</div>
-    <div class="hidden-note"><b>Only email and SMS appear here.</b> WhatsApp, Instagram and Telegram would each
-      route seeker conversations through a company outside the EU, which cuts against hosting in Germany.
-      The pattern works with any channel — the channel list is a legal question, not a technical one.</div>`;
-}
 function replyMsg(id){
   const m=INBOX.find(x=>x.id===id); const s=SEEKERS.find(x=>x.id===m.pid);
   m.unread=false; m.replied=R().name;
@@ -5179,7 +5072,7 @@ function renderOverview(){
   const notifyCards = [
     {n:od, l:"Contact overdue", go:"alerts", show:R().tabs.includes("alerts")},
     {n:fl.length, l:"Sensitivity flags", go:"alerts", show:R().tabs.includes("alerts")},
-    {n:unreadInbox, l:"Unread inbox", go:"inbox", show:R().tabs.includes("inbox")},
+    {n:unreadInbox, l:"Messages", go:"alerts", show:R().tabs.includes("alerts")},
     {n:overdueReports, l:"Reports overdue", go:"reports", show:R().tabs.includes("reports")},
     {n:pendingIntake, l:"Intake awaiting review", go:"alerts", show:R().tabs.includes("alerts")}
   ].filter(c=>c.show);
