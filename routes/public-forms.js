@@ -202,7 +202,7 @@ const MANDATORY_INTAKE_FIELDS = [
 router.get('/intake-form/:formId', async (req, res) => {
   try {
     const formQ = await pool.query(
-      `SELECT fc.${qi('Form_ID')}, fs.${qi('Form_Status_Name')}
+      `SELECT fc.${qi('Form_ID')}, fs.${qi('Form_Status_Name')}, fc.${qi('Form_Desc')}
        FROM ${qi('FMS')}.${qi('Form_Creation_Process')} fc
        LEFT JOIN ${qi('FMS')}.${qi('Form_Status')} fs ON fs.${qi('Form_Status_ID')} = fc.${qi('Current_Status')}
        WHERE fc.${qi('Form_ID')} = $1`,
@@ -226,7 +226,7 @@ router.get('/intake-form/:formId', async (req, res) => {
       [req.params.formId]
     );
     const countriesQ = await pool.query(
-      `SELECT ${qi('Country_ID')}, ${qi('Country_Name')} FROM ${qi('Master')}.${qi('M_Country')} ORDER BY ${qi('Country_Name')}`
+      `SELECT ${qi('Country_ID')}, ${qi('Country_Name')}, ${qi('Country_ISD')} FROM ${qi('Master')}.${qi('M_Country')} ORDER BY ${qi('Country_Name')}`
     );
 
     res.json({
@@ -235,6 +235,7 @@ router.get('/intake-form/:formId', async (req, res) => {
       countries: countriesQ.rows,
       isPreview,
       formStatus: status,
+      formDesc: formQ.rows[0].Form_Desc,
     });
   } catch (err) {
     console.error('[GET /public/intake-form/:formId] error', err);

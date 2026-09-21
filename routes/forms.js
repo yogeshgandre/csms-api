@@ -32,7 +32,7 @@ router.get('/', requireAuth, async (req, res) => {
   try {
     const r = await pool.query(
       `SELECT fc.${qi('Form_ID')}, fc.${qi('Current_Status')}, fs.${qi('Form_Status_Name')}, fc.${qi('Current_Owner_CSMS_ID')},
-              fc.${qi('Form_Published_URL')}, fc.${qi('Current_Status_Change_Date')}, fc.${qi('Form_Type_ID')},
+              fc.${qi('Form_Published_URL')}, fc.${qi('Current_Status_Change_Date')}, fc.${qi('Form_Type_ID')}, fc.${qi('Form_Desc')},
               mp.${qi('Platform_Name')},
               up.${qi('Seeker_Name')} AS owner_name
        FROM ${qi('FMS')}.${qi('Form_Creation_Process')} fc
@@ -168,6 +168,21 @@ router.post('/:id/archive', requireAuth, async (req, res) => {
 router.post('/:id/preview-token', requireAuth, async (req, res) => {
   const token = previewTokens.issue(req.params.id);
   res.json({ token, expiresInSeconds: 600 });
+});
+
+// Form_Desc is a heading/purpose statement set once by the admin, shown to
+// everyone who opens the public form \u2014 not stored per submission.
+router.put('/:id/desc', requireAuth, async (req, res) => {
+  try {
+    await pool.query(
+      `UPDATE ${qi('FMS')}.${qi('Form_Creation_Process')} SET ${qi('Form_Desc')} = $1 WHERE ${qi('Form_ID')} = $2`,
+      [(req.body || {}).desc || null, req.params.id]
+    );
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('[PUT /forms/:id/desc] error', err);
+    res.status(500).json({ error: 'INTERNAL', message: err.message });
+  }
 });
 
 router.get('/:id/fields', requireAuth, async (req, res) => {
