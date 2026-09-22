@@ -5,17 +5,40 @@
 // repeatedly if the satsang has Daily/Weekly fields. No email sending yet
 // (on hold) — links are generated and shared by staff manually for now.
 //
-// Redesigned around Satsang_Event_Field_Values as a single shared table
-// (was one dynamically-created table per satsang) and per-field
-// Review_Frequency on M_Satsang_Defn ('One-time'|'Daily'|'Weekly'):
-// eligibility to submit a given field is worked out fresh on every visit
-// instead of the token being marked "used" after one submission — a
-// Daily/Weekly field needs the same link to work again later.
+// Per-satsang dynamic answers table (SCS.Satsang_ID_<N>_Answers, created
+// on first submission) — fields differ per satsang, so there's no single
+// shared table, same idea as FMS.Form_ID_<N>_Details.
 
 const express = require('express');
 const { pool, qi } = require('../db/pool');
 const previewTokens = require('../lib/formPreviewTokens');
 const router = express.Router();
+
+// Per-satsang dynamic answers table (fields differ per satsang, so no
+// single shared table) — same pattern as FMS.Form_ID_<N>_Details.
+function satsangAnswersTable(satsangId) {
+  return 'Satsang_ID_' + Number(satsangId) + '_Answers';
+}
+async function ensureSatsangAnswersTable(client, satsangId) {
+  await client.query(
+    `CREATE TABLE IF NOT EXISTS ${qi('SCS')}.${qi(satsangAnswersTable(satsangId))} (
+       "SEFV_ID" BIGINT NOT NULL,
+       "SE_ID" BIGINT NOT NULL,
+       "Seeker_ID" BIGINT NOT NULL,
+       "Field_Name" TEXT NOT NULL,
+       "Field_Value" TEXT,
+       "Review_Date" DATE NOT NULL,
+       "Submitted_DT" TIMESTAMPTZ NOT NULL DEFAULT now()
+     )`
+  );
+}
+async function satsangAnswersTableExists(satsangId) {
+  const r = await pool.query(
+    `SELECT 1 FROM information_schema.tables WHERE table_schema = 'SCS' AND table_name = $1`,
+    [satsangAnswersTable(satsangId)]
+  );
+  return r.rowCount > 0;
+}
 
 // Monday of the current week, as a plain YYYY-MM-DD string — used as the
 // period boundary for Weekly fields.
@@ -64,30 +87,34 @@ router.get('/satsang-form/:token', async (req, res) => {
     );
 
     const weekStart = currentWeekStart();
+    const hasAnswers = await satsangAnswersTableExists(ctx.Satsang_ID);
     const fields = [];
     for (const f of fieldsQ.rows) {
-      let existingQ;
-      if (f.Review_Frequency === 'Daily') {
-        existingQ = await pool.query(
-          `SELECT ${qi('Field_Value')} FROM ${qi('SCS')}.${qi('Satsang_Event_Field_Values')}
-           WHERE ${qi('SE_ID')} = $1 AND ${qi('Seeker_ID')} = $2 AND ${qi('Field_Name')} = $3 AND ${qi('Review_Date')} = CURRENT_DATE
-           ORDER BY ${qi('Submitted_DT')} DESC LIMIT 1`,
-          [ctx.SE_ID, ctx.Seeker_ID, f.Field_Name]
-        );
-      } else if (f.Review_Frequency === 'Weekly') {
-        existingQ = await pool.query(
-          `SELECT ${qi('Field_Value')} FROM ${qi('SCS')}.${qi('Satsang_Event_Field_Values')}
-           WHERE ${qi('SE_ID')} = $1 AND ${qi('Seeker_ID')} = $2 AND ${qi('Field_Name')} = $3 AND ${qi('Review_Date')} >= $4
-           ORDER BY ${qi('Submitted_DT')} DESC LIMIT 1`,
-          [ctx.SE_ID, ctx.Seeker_ID, f.Field_Name, weekStart]
-        );
-      } else {
-        existingQ = await pool.query(
-          `SELECT ${qi('Field_Value')} FROM ${qi('SCS')}.${qi('Satsang_Event_Field_Values')}
-           WHERE ${qi('SE_ID')} = $1 AND ${qi('Seeker_ID')} = $2 AND ${qi('Field_Name')} = $3
-           ORDER BY ${qi('Submitted_DT')} DESC LIMIT 1`,
-          [ctx.SE_ID, ctx.Seeker_ID, f.Field_Name]
-        );
+      let existingQ = { rowCount: 0, rows: [] };
+      if (hasAnswers) {
+        const tbl = `${qi('SCS')}.${qi(satsangAnswersTable(ctx.Satsang_ID))}`;
+        if (f.Review_Frequency === 'Daily') {
+          existingQ = await pool.query(
+            `SELECT ${qi('Field_Value')} FROM ${tbl}
+             WHERE ${qi('SE_ID')} = $1 AND ${qi('Seeker_ID')} = $2 AND ${qi('Field_Name')} = $3 AND ${qi('Review_Date')} = CURRENT_DATE
+             ORDER BY ${qi('Submitted_DT')} DESC LIMIT 1`,
+            [ctx.SE_ID, ctx.Seeker_ID, f.Field_Name]
+          );
+        } else if (f.Review_Frequency === 'Weekly') {
+          existingQ = await pool.query(
+            `SELECT ${qi('Field_Value')} FROM ${tbl}
+             WHERE ${qi('SE_ID')} = $1 AND ${qi('Seeker_ID')} = $2 AND ${qi('Field_Name')} = $3 AND ${qi('Review_Date')} >= $4
+             ORDER BY ${qi('Submitted_DT')} DESC LIMIT 1`,
+            [ctx.SE_ID, ctx.Seeker_ID, f.Field_Name, weekStart]
+          );
+        } else {
+          existingQ = await pool.query(
+            `SELECT ${qi('Field_Value')} FROM ${tbl}
+             WHERE ${qi('SE_ID')} = $1 AND ${qi('Seeker_ID')} = $2 AND ${qi('Field_Name')} = $3
+             ORDER BY ${qi('Submitted_DT')} DESC LIMIT 1`,
+            [ctx.SE_ID, ctx.Seeker_ID, f.Field_Name]
+          );
+        }
       }
       fields.push({
         ...f,
@@ -133,6 +160,9 @@ router.post('/satsang-form/:token', async (req, res) => {
     const weekStart = currentWeekStart();
     let accepted = 0;
 
+    await ensureSatsangAnswersTable(client, ctx.Satsang_ID);
+    const tbl = `${qi('SCS')}.${qi(satsangAnswersTable(ctx.Satsang_ID))}`;
+
     for (const [fieldName, fieldValue] of Object.entries(values)) {
       const freq = freqByField.get(fieldName);
       if (!freq) continue; // not a real field on this satsang — ignore rather than trust the client
@@ -140,30 +170,28 @@ router.post('/satsang-form/:token', async (req, res) => {
       let existingQ;
       if (freq === 'Daily') {
         existingQ = await client.query(
-          `SELECT 1 FROM ${qi('SCS')}.${qi('Satsang_Event_Field_Values')}
+          `SELECT 1 FROM ${tbl}
            WHERE ${qi('SE_ID')} = $1 AND ${qi('Seeker_ID')} = $2 AND ${qi('Field_Name')} = $3 AND ${qi('Review_Date')} = CURRENT_DATE`,
           [ctx.SE_ID, ctx.Seeker_ID, fieldName]
         );
       } else if (freq === 'Weekly') {
         existingQ = await client.query(
-          `SELECT 1 FROM ${qi('SCS')}.${qi('Satsang_Event_Field_Values')}
+          `SELECT 1 FROM ${tbl}
            WHERE ${qi('SE_ID')} = $1 AND ${qi('Seeker_ID')} = $2 AND ${qi('Field_Name')} = $3 AND ${qi('Review_Date')} >= $4`,
           [ctx.SE_ID, ctx.Seeker_ID, fieldName, weekStart]
         );
       } else {
         existingQ = await client.query(
-          `SELECT 1 FROM ${qi('SCS')}.${qi('Satsang_Event_Field_Values')}
+          `SELECT 1 FROM ${tbl}
            WHERE ${qi('SE_ID')} = $1 AND ${qi('Seeker_ID')} = $2 AND ${qi('Field_Name')} = $3`,
           [ctx.SE_ID, ctx.Seeker_ID, fieldName]
         );
       }
       if (existingQ.rowCount > 0) continue; // already given for this period — skip, don't overwrite
 
-      const maxQ = await client.query(
-        `SELECT COALESCE(MAX(${qi('SEFV_ID')}), 0) + 1 AS next_id FROM ${qi('SCS')}.${qi('Satsang_Event_Field_Values')}`
-      );
+      const maxQ = await client.query(`SELECT COALESCE(MAX(${qi('SEFV_ID')}), 0) + 1 AS next_id FROM ${tbl}`);
       await client.query(
-        `INSERT INTO ${qi('SCS')}.${qi('Satsang_Event_Field_Values')}
+        `INSERT INTO ${tbl}
           (${qi('SEFV_ID')}, ${qi('SE_ID')}, ${qi('Seeker_ID')}, ${qi('Field_Name')}, ${qi('Field_Value')}, ${qi('Review_Date')}, ${qi('Submitted_DT')})
          VALUES ($1,$2,$3,$4,$5,CURRENT_DATE,now())`,
         [maxQ.rows[0].next_id, ctx.SE_ID, ctx.Seeker_ID, fieldName, fieldValue == null ? null : String(fieldValue)]

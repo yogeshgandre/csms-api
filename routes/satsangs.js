@@ -475,18 +475,25 @@ router.get('/defs/:id/events', requireAuth, async (req, res) => {
   try {
     const r = await pool.query(
       `SELECT se.${qi('SE_ID')}, se.${qi('Event_ST_DT_TIME')}, se.${qi('Event_Time_City')}, se.${qi('Event_Duration')},
-              se.${qi('SC1_CSMS_ID')}, se.${qi('SC2_CSMS_ID')},
-              sc1.${qi('Seeker_Name')} AS sc1_name, sc2.${qi('Seeker_Name')} AS sc2_name,
               est.${qi('Current_Status')}, est.${qi('Event_Link')}, est.${qi('Current_Status_Change_Date')}
        FROM ${qi('SCS')}.${qi('Satsang_Event_Defn')} se
        LEFT JOIN ${qi('SCS')}.${qi('Satsang_Event_Status')} est ON est.${qi('SE_ID')} = se.${qi('SE_ID')}
-       LEFT JOIN ${qi('RMS')}.${qi('User_Profile')} sc1 ON sc1.${qi('CSMS_ID')} = se.${qi('SC1_CSMS_ID')}
-       LEFT JOIN ${qi('RMS')}.${qi('User_Profile')} sc2 ON sc2.${qi('CSMS_ID')} = se.${qi('SC2_CSMS_ID')}
        WHERE se.${qi('Satsang_ID')} = $1
        ORDER BY se.${qi('Event_ST_DT_TIME')} DESC`,
       [req.params.id]
     );
-    res.json(r.rows);
+    // Conductors are no longer per-event columns — they live on
+    // SCS.Satsang_Conductor, scoped to the whole satsang (Satsang_ID),
+    // not per event. Attach the current conductor roster to every row.
+    const condQ = await pool.query(
+      `SELECT sc.${qi('SC_CSMS_ID')}, up.${qi('Seeker_Name')}, up.${qi('Seeker_Email')}
+       FROM ${qi('SCS')}.${qi('Satsang_Conductor')} sc
+       LEFT JOIN ${qi('RMS')}.${qi('User_Profile')} up ON up.${qi('CSMS_ID')} = sc.${qi('SC_CSMS_ID')}
+       WHERE sc.${qi('Satsang_ID')} = $1 AND sc.${qi('Ver_To_DT')} >= CURRENT_DATE`,
+      [req.params.id]
+    );
+    const rows = r.rows.map(row => ({ ...row, conductors: condQ.rows }));
+    res.json(rows);
   } catch (err) {
     console.error('[GET /satsangs/defs/:id/events] error', err);
     res.status(500).json({ error: 'INTERNAL' });
@@ -494,7 +501,7 @@ router.get('/defs/:id/events', requireAuth, async (req, res) => {
 });
 
 router.post('/defs/:id/events', requireAuth, async (req, res) => {
-  const { eventStart, city, duration, sc1Email, sc1Name, sc2Email, sc2Name, reminderDays } = req.body || {};
+  const { eventStart, city, duration, reminderDays } = req.body || {};
   if (!eventStart || !city || !duration) {
     return res.status(400).json({ error: 'eventStart, city and duration are required' });
   }
@@ -512,12 +519,8 @@ router.post('/defs/:id/events', requireAuth, async (req, res) => {
       return res.status(409).json({ error: 'DEF_NOT_APPROVED', message: 'This satsang definition must be Approved before events can be created.' });
     }
 
-    // Conductors can be anyone (open, not restricted to a roster) — same
-    // email-based auto-provisioning as conductors/attendees/assign-role.
-    let sc1Id = null, sc2Id = null;
-    if (sc1Email) sc1Id = (await findOrCreateProfile(client, sc1Email, sc1Name)).csmsId;
-    if (sc2Email) sc2Id = (await findOrCreateProfile(client, sc2Email, sc2Name)).csmsId;
-
+    // Conductors are managed separately via /defs/:id/conductors
+    // (SCS.Satsang_Conductor) — no longer set per event.
     const maxQ = await client.query(
       `SELECT COALESCE(MAX(${qi('SE_ID')}), 0) + 1 AS next_id FROM ${qi('SCS')}.${qi('Satsang_Event_Defn')}`
     );
@@ -525,9 +528,9 @@ router.post('/defs/:id/events', requireAuth, async (req, res) => {
     await client.query(
       `INSERT INTO ${qi('SCS')}.${qi('Satsang_Event_Defn')}
         (${qi('SE_ID')}, ${qi('Satsang_ID')}, ${qi('Event_ST_DT_TIME')}, ${qi('Event_Time_City')}, ${qi('Event_Duration')},
-         ${qi('SC1_CSMS_ID')}, ${qi('SC2_CSMS_ID')}, ${qi('Reminder_Adv_Notification_Email')})
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
-      [seId, req.params.id, eventStart, city, duration, sc1Id, sc2Id, reminderDays || null]
+         ${qi('Reminder_Adv_Notification_Email')})
+       VALUES ($1,$2,$3,$4,$5,$6)`,
+      [seId, req.params.id, eventStart, city, duration, reminderDays || null]
     );
     await client.query(
       `INSERT INTO ${qi('SCS')}.${qi('Satsang_Event_Status')} (${qi('SE_ID')}, ${qi('Current_Status')}, ${qi('Current_Status_Change_Date')})
@@ -931,7 +934,7 @@ router.get('/events/:seId/comments', requireAuth, async (req, res) => {
     const r = await pool.query(
       `SELECT c.${qi('Comment_ID')}, c.${qi('Seeker_ID')}, c.${qi('SC_CSMS_ID')}, c.${qi('Comments')}, c.${qi('Comments_Date')},
               sk.${qi('First_Name')}, sk.${qi('Last_Name')}, up.${qi('Seeker_Name')} AS conductor_name
-       FROM ${qi('SCS')}.${qi('Satsang_Comments')} c
+       FROM ${qi('SCS')}.${qi('Satsang_Seeker_Comments')} c
        LEFT JOIN ${qi('MSR')}.${qi('Seeker')} sk ON sk.${qi('Seeker_ID')} = c.${qi('Seeker_ID')}
        LEFT JOIN ${qi('RMS')}.${qi('User_Profile')} up ON up.${qi('CSMS_ID')} = c.${qi('SC_CSMS_ID')}
        WHERE c.${qi('SE_ID')} = $1
@@ -952,11 +955,11 @@ router.post('/events/:seId/comments', requireAuth, async (req, res) => {
   }
   try {
     const maxQ = await pool.query(
-      `SELECT COALESCE(MAX(${qi('Comment_ID')}), 0) + 1 AS next_id FROM ${qi('SCS')}.${qi('Satsang_Comments')}`
+      `SELECT COALESCE(MAX(${qi('Comment_ID')}), 0) + 1 AS next_id FROM ${qi('SCS')}.${qi('Satsang_Seeker_Comments')}`
     );
     const id = maxQ.rows[0].next_id;
     await pool.query(
-      `INSERT INTO ${qi('SCS')}.${qi('Satsang_Comments')}
+      `INSERT INTO ${qi('SCS')}.${qi('Satsang_Seeker_Comments')}
         (${qi('Comment_ID')}, ${qi('SE_ID')}, ${qi('SC_CSMS_ID')}, ${qi('Seeker_ID')}, ${qi('Comments')}, ${qi('Comments_Date')})
        VALUES ($1,$2,$3,$4,$5,CURRENT_DATE)`,
       [id, req.params.seId, scCsmsId, seekerId, comments]
@@ -985,11 +988,11 @@ router.post('/events/:seId/comments/bulk', requireAuth, async (req, res) => {
       const comments = (entry.comments || '').trim();
       if (!entry.seekerId || !comments) continue;
       const maxQ = await client.query(
-        `SELECT COALESCE(MAX(${qi('Comment_ID')}), 0) + 1 AS next_id FROM ${qi('SCS')}.${qi('Satsang_Comments')}`
+        `SELECT COALESCE(MAX(${qi('Comment_ID')}), 0) + 1 AS next_id FROM ${qi('SCS')}.${qi('Satsang_Seeker_Comments')}`
       );
       const id = maxQ.rows[0].next_id;
       await client.query(
-        `INSERT INTO ${qi('SCS')}.${qi('Satsang_Comments')}
+        `INSERT INTO ${qi('SCS')}.${qi('Satsang_Seeker_Comments')}
           (${qi('Comment_ID')}, ${qi('SE_ID')}, ${qi('SC_CSMS_ID')}, ${qi('Seeker_ID')}, ${qi('Comments')}, ${qi('Comments_Date')})
          VALUES ($1,$2,$3,$4,$5,CURRENT_DATE)`,
         [id, req.params.seId, scCsmsId, entry.seekerId, comments]
@@ -1010,7 +1013,7 @@ router.post('/events/:seId/comments/bulk', requireAuth, async (req, res) => {
 
 router.delete('/comments/:commentId', requireAuth, async (req, res) => {
   try {
-    await pool.query(`DELETE FROM ${qi('SCS')}.${qi('Satsang_Comments')} WHERE ${qi('Comment_ID')} = $1`, [req.params.commentId]);
+    await pool.query(`DELETE FROM ${qi('SCS')}.${qi('Satsang_Seeker_Comments')} WHERE ${qi('Comment_ID')} = $1`, [req.params.commentId]);
     res.json({ ok: true });
   } catch (err) {
     console.error('[DELETE /satsangs/comments/:commentId] error', err);
@@ -1031,7 +1034,7 @@ router.get('/events/:seId/conductor-report', requireAuth, async (req, res) => {
   try {
     const r = await pool.query(
       `SELECT cr.${qi('CSC_ID')}, cr.${qi('CS_CSMS_ID')}, cr.${qi('Satsang_Report')}, up.${qi('Seeker_Name')} AS conductor_name
-       FROM ${qi('SCS')}.${qi('Conductor_Satsang_Comments')} cr
+       FROM ${qi('SCS')}.${qi('Satsang_Comments')} cr
        LEFT JOIN ${qi('RMS')}.${qi('User_Profile')} up ON up.${qi('CSMS_ID')} = cr.${qi('CS_CSMS_ID')}
        WHERE cr.${qi('SE_ID')} = $1`,
       [req.params.seId]
@@ -1050,23 +1053,23 @@ router.put('/events/:seId/conductor-report', requireAuth, async (req, res) => {
   if (!csCsmsId) return res.status(400).json({ error: 'csCsmsId is required' });
   try {
     const existing = await pool.query(
-      `SELECT ${qi('CSC_ID')} FROM ${qi('SCS')}.${qi('Conductor_Satsang_Comments')}
+      `SELECT ${qi('CSC_ID')} FROM ${qi('SCS')}.${qi('Satsang_Comments')}
        WHERE ${qi('SE_ID')} = $1 AND ${qi('CS_CSMS_ID')} = $2`,
       [req.params.seId, csCsmsId]
     );
     if (existing.rowCount) {
       await pool.query(
-        `UPDATE ${qi('SCS')}.${qi('Conductor_Satsang_Comments')} SET ${qi('Satsang_Report')} = $1 WHERE ${qi('CSC_ID')} = $2`,
+        `UPDATE ${qi('SCS')}.${qi('Satsang_Comments')} SET ${qi('Satsang_Report')} = $1 WHERE ${qi('CSC_ID')} = $2`,
         [report || null, existing.rows[0].CSC_ID]
       );
       return res.json({ ok: true, cscId: existing.rows[0].CSC_ID });
     }
     const maxQ = await pool.query(
-      `SELECT COALESCE(MAX(${qi('CSC_ID')}), 0) + 1 AS next_id FROM ${qi('SCS')}.${qi('Conductor_Satsang_Comments')}`
+      `SELECT COALESCE(MAX(${qi('CSC_ID')}), 0) + 1 AS next_id FROM ${qi('SCS')}.${qi('Satsang_Comments')}`
     );
     const id = maxQ.rows[0].next_id;
     await pool.query(
-      `INSERT INTO ${qi('SCS')}.${qi('Conductor_Satsang_Comments')}
+      `INSERT INTO ${qi('SCS')}.${qi('Satsang_Comments')}
         (${qi('CSC_ID')}, ${qi('CS_CSMS_ID')}, ${qi('SE_ID')}, ${qi('Satsang_Report')})
        VALUES ($1,$2,$3,$4)`,
       [id, csCsmsId, req.params.seId, report || null]
