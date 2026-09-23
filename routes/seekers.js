@@ -137,7 +137,7 @@ router.get('/:id/masterlist', requireAuth, async (req, res) => {
     const r = await pool.query(
       `SELECT * FROM ${qi('MSR')}.${qi('Seeker_Other_MasterList_Info')}
        WHERE ${qi('Seeker_ID')} = $1 AND ${qi('Ver_To_DT')} >= CURRENT_DATE
-       ORDER BY ${qi('Created_DT_TIME')} DESC LIMIT 1`,
+       ORDER BY ${qi('Creation_DT')} DESC LIMIT 1`,
       [req.params.id]
     );
     res.json(r.rowCount ? r.rows[0] : null);
@@ -169,7 +169,7 @@ router.put('/:id/masterlist', requireAuth, async (req, res) => {
       `INSERT INTO ${qi('MSR')}.${qi('Seeker_Other_MasterList_Info')}
         (${qi('Seeker_ID')}, ${qi('Pranshakti')}, ${qi('Sub_Region')}, ${qi('Sadhana_ST_DT')}, ${qi('Weekly_Seva_Hrs')},
          ${qi('Per_Info')}, ${qi('Opp_Home')}, ${qi('Visited_Ashram')}, ${qi('Attended_MAV_Workshop')}, ${qi('Sensitive_List')},
-         ${qi('Ver_From_DT')}, ${qi('Ver_To_DT')}, ${qi('Created_By_CSMS_ID')}, ${qi('Created_DT_TIME')})
+         ${qi('Ver_From_DT')}, ${qi('Ver_To_DT')}, ${qi('Created_ID')}, ${qi('Creation_DT')})
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,CURRENT_DATE,'9999-12-31',$11,now())`,
       [req.params.id, pranshakti || null, subRegion || null, sadhanaStartDt || null, weeklySevaHrs || null,
        perInfo || null, oppHome || null, visitedAshram || null, attendedMavWorkshop || null, sensitiveList || null,
@@ -259,7 +259,7 @@ router.get('/:id/comments', requireAuth, async (req, res) => {
     const r = await pool.query(
       `SELECT c.${qi('Comment_ID')}, c.${qi('SE_ID')}, c.${qi('Comments')}, c.${qi('Comments_Date')},
               up.${qi('Seeker_Name')} AS conductor_name, ms.${qi('Satsang_Name')}, se.${qi('Event_ST_DT_TIME')}
-       FROM ${qi('SCS')}.${qi('Satsang_Comments')} c
+       FROM ${qi('SCS')}.${qi('Satsang_Seeker_Comments')} c
        LEFT JOIN ${qi('RMS')}.${qi('User_Profile')} up ON up.${qi('CSMS_ID')} = c.${qi('SC_CSMS_ID')}
        LEFT JOIN ${qi('SCS')}.${qi('Satsang_Event_Defn')} se ON se.${qi('SE_ID')} = c.${qi('SE_ID')}
        LEFT JOIN ${qi('SCS')}.${qi('M_Satsang')} ms ON ms.${qi('Satsang_ID')} = se.${qi('Satsang_ID')}

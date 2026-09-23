@@ -151,7 +151,7 @@ router.post('/tickers', requireAuth, async (req, res) => {
     await pool.query(
       `INSERT INTO ${qi('Master')}.${qi('M_Ticker')}
         (${qi('Ticker_ID')}, ${qi('Ticker_Text')}, ${qi('Ticker_Type')}, ${qi('Priority')}, ${qi('Start_DT')}, ${qi('End_DT')},
-         ${qi('Is_Active')}, ${qi('Display_Order')}, ${qi('Created_By')}, ${qi('Created_DT')})
+         ${qi('Is_Active')}, ${qi('Display_Order')}, ${qi('Created_ID')}, ${qi('Creation_DT')})
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,now())`,
       [id, tickerText, tickerType, priority || null, startDt || null, endDt || null, isActive !== false, displayOrder || null, req.user.csmsId]
     );
@@ -171,10 +171,9 @@ router.put('/tickers/:id', requireAuth, async (req, res) => {
     await pool.query(
       `UPDATE ${qi('Master')}.${qi('M_Ticker')}
        SET ${qi('Ticker_Text')} = $2, ${qi('Ticker_Type')} = $3, ${qi('Priority')} = $4, ${qi('Start_DT')} = $5,
-           ${qi('End_DT')} = $6, ${qi('Is_Active')} = $7, ${qi('Display_Order')} = $8,
-           ${qi('Last_Updated_By')} = $9, ${qi('Last_Updated_DT')} = now()
+           ${qi('End_DT')} = $6, ${qi('Is_Active')} = $7, ${qi('Display_Order')} = $8
        WHERE ${qi('Ticker_ID')} = $1`,
-      [req.params.id, tickerText, tickerType, priority || null, startDt || null, endDt || null, isActive !== false, displayOrder || null, req.user.csmsId]
+      [req.params.id, tickerText, tickerType, priority || null, startDt || null, endDt || null, isActive !== false, displayOrder || null]
     );
     res.json({ ok: true });
   } catch (err) {
