@@ -195,7 +195,7 @@ router.post('/defs/:id/submit', requireAuth, async (req, res) => {
     if (roleIds.length) {
       const reviewersQ = await client.query(
         `SELECT DISTINCT ${qi('CSMS_ID')} FROM ${qi('RMS')}.${qi('User_Seva_Dept_Role')}
-         WHERE ${qi('Dept_Role_ID')} = ANY($1::bigint[])
+         WHERE ${qi('Seva_Dept_Role_ID')} = ANY($1::bigint[])
            AND (${qi('Ver_To_DT')} IS NULL OR ${qi('Ver_To_DT')} >= CURRENT_DATE)`,
         [roleIds]
       );

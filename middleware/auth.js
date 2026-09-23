@@ -18,10 +18,10 @@ async function requireAuth(req, res, next) {
   try {
     const scopeQ = await pool.query(
       `SELECT usdr.${qi('Seva_Dept_ID')}, sd.${qi('Seva_Dept_Name')}, sd.${qi('Parent_Seva_Dept_ID')},
-              sdr.${qi('Dept_Role_Name')}
+              sdr.${qi('Role_Name')}
        FROM ${qi('RMS')}.${qi('User_Seva_Dept_Role')} usdr
        JOIN ${qi('RMS')}.${qi('Seva_Dept')} sd ON sd.${qi('Seva_Dept_ID')} = usdr.${qi('Seva_Dept_ID')}
-       JOIN ${qi('RMS')}.${qi('Seva_Dept_Role')} sdr ON sdr.${qi('Dept_Role_ID')} = usdr.${qi('Dept_Role_ID')}
+       JOIN ${qi('RMS')}.${qi('Seva_Dept_Role')} sdr ON sdr.${qi('Seva_Dept_Role_ID')} = usdr.${qi('Seva_Dept_Role_ID')}
        WHERE usdr.${qi('CSMS_ID')} = $1
          AND (usdr.${qi('Ver_To_DT')} IS NULL OR usdr.${qi('Ver_To_DT')} >= CURRENT_DATE)`,
       [csmsId]

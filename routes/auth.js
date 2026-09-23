@@ -63,14 +63,14 @@ router.post('/session', async (req, res) => {
 
     // Resolve dept/role scope.
     const scopeQ = await client.query(
-      `SELECT usdr.${qi('Seva_Dept_ID')}, usdr.${qi('Dept_Role_ID')},
+      `SELECT usdr.${qi('Seva_Dept_ID')}, usdr.${qi('Seva_Dept_Role_ID')},
               sd.${qi('Seva_Dept_Name')}, sd.${qi('Parent_Seva_Dept_ID')},
-              sdr.${qi('Dept_Role_Name')}
+              sdr.${qi('Role_Name')}
        FROM ${qi(SCHEMA_RMS)}.${qi('User_Seva_Dept_Role')} usdr
        JOIN ${qi(SCHEMA_RMS)}.${qi('Seva_Dept')} sd ON sd.${qi('Seva_Dept_ID')} = usdr.${qi('Seva_Dept_ID')}
-       JOIN ${qi(SCHEMA_RMS)}.${qi('Seva_Dept_Role')} sdr ON sdr.${qi('Dept_Role_ID')} = usdr.${qi('Dept_Role_ID')}
+       JOIN ${qi(SCHEMA_RMS)}.${qi('Seva_Dept_Role')} sdr ON sdr.${qi('Seva_Dept_Role_ID')} = usdr.${qi('Seva_Dept_Role_ID')}
        WHERE usdr.${qi('CSMS_ID')} = $1
-         AND (usdr.${qi('Ver_To_DT')} IS NULL OR usdr.${qi('Ver_To_DT')} >= CURRENT_DATE)
+         AND usdr.${qi('Ver_To_DT')} >= CURRENT_DATE
        ORDER BY sd.${qi('Seva_Dept_Name')}`,
       [user.CSMS_ID]
     );

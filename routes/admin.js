@@ -49,7 +49,7 @@ router.post('/depts', requireAuth, async (req, res) => {
 router.get('/depts/:id/roles', requireAuth, async (req, res) => {
   try {
     const result = await pool.query(
-      `SELECT r.${qi('Dept_Role_ID')}, r.${qi('Dept_Role_Name')}, r.${qi('Dept_Role_Desc')},
+      `SELECT r.${qi('Seva_Dept_Role_ID')}, r.${qi('Role_Name')}, r.${qi('Role_Desc')},
               h.${qi('HRCHY_ID')},
               COALESCE(
                 json_agg(json_build_object(
@@ -61,17 +61,17 @@ router.get('/depts/:id/roles', requireAuth, async (req, res) => {
               ) AS holders
        FROM ${qi('RMS')}.${qi('Seva_Dept_Role')} r
        LEFT JOIN ${qi('RMS')}.${qi('Seva_Dept_Role_HRCHY')} h
-         ON h.${qi('Dept_Role_ID')} = r.${qi('Dept_Role_ID')}
+         ON h.${qi('Seva_Dept_Role_ID')} = r.${qi('Seva_Dept_Role_ID')}
          AND h.${qi('Seva_Dept_ID')} = r.${qi('Seva_Dept_ID')}
          AND h.${qi('Ver_To_DT')} >= CURRENT_DATE
        LEFT JOIN ${qi('RMS')}.${qi('User_Seva_Dept_Role')} usdr
-         ON usdr.${qi('Dept_Role_ID')} = r.${qi('Dept_Role_ID')}
+         ON usdr.${qi('Seva_Dept_Role_ID')} = r.${qi('Seva_Dept_Role_ID')}
          AND usdr.${qi('Seva_Dept_ID')} = r.${qi('Seva_Dept_ID')}
          AND (usdr.${qi('Ver_To_DT')} IS NULL OR usdr.${qi('Ver_To_DT')} >= CURRENT_DATE)
        LEFT JOIN ${qi('RMS')}.${qi('User_Profile')} up ON up.${qi('CSMS_ID')} = usdr.${qi('CSMS_ID')}
        WHERE r.${qi('Seva_Dept_ID')} = $1 AND r.${qi('Ver_To_DT')} >= CURRENT_DATE
-       GROUP BY r.${qi('Dept_Role_ID')}, r.${qi('Dept_Role_Name')}, r.${qi('Dept_Role_Desc')}, h.${qi('HRCHY_ID')}
-       ORDER BY h.${qi('HRCHY_ID')} NULLS LAST, r.${qi('Dept_Role_Name')}`,
+       GROUP BY r.${qi('Seva_Dept_Role_ID')}, r.${qi('Role_Name')}, r.${qi('Role_Desc')}, h.${qi('HRCHY_ID')}
+       ORDER BY h.${qi('HRCHY_ID')} NULLS LAST, r.${qi('Role_Name')}`,
       [req.params.id]
     );
     res.json(result.rows);
@@ -102,21 +102,21 @@ router.post('/roles', requireAuth, async (req, res) => {
       await client.query('BEGIN');
 
       const maxQ = await client.query(
-        `SELECT COALESCE(MAX(${qi('Dept_Role_ID')}), 0) + 1 AS next_id
+        `SELECT COALESCE(MAX(${qi('Seva_Dept_Role_ID')}), 0) + 1 AS next_id
          FROM ${qi('RMS')}.${qi('Seva_Dept_Role')}`
       );
       const nextId = maxQ.rows[0].next_id;
 
       const result = await client.query(
         `INSERT INTO ${qi('RMS')}.${qi('Seva_Dept_Role')}
-          (${qi('Dept_Role_ID')}, ${qi('Seva_Dept_ID')}, ${qi('Dept_Role_Name')}, ${qi('Dept_Role_Desc')}, ${qi('Ver_From_DT')}, ${qi('Ver_To_DT')})
+          (${qi('Seva_Dept_Role_ID')}, ${qi('Seva_Dept_ID')}, ${qi('Role_Name')}, ${qi('Role_Desc')}, ${qi('Ver_From_DT')}, ${qi('Ver_To_DT')})
          VALUES ($1, $2, $3, $4, CURRENT_DATE, $5)
-         RETURNING ${qi('Dept_Role_ID')}`,
+         RETURNING ${qi('Seva_Dept_Role_ID')}`,
         [nextId, sevaDeptId, name, desc || '', FAR_FUTURE]
       );
 
       await client.query('COMMIT');
-      return res.status(201).json({ deptRoleId: result.rows[0].Dept_Role_ID });
+      return res.status(201).json({ deptRoleId: result.rows[0].Seva_Dept_Role_ID });
     } catch (err) {
       if (client) await client.query('ROLLBACK');
       if (err.code === '23505' && attempt < MAX_ATTEMPTS) {
@@ -148,14 +148,14 @@ router.post('/hierarchy', requireAuth, async (req, res) => {
     await client.query(
       `UPDATE ${qi('RMS')}.${qi('Seva_Dept_Role_HRCHY')}
        SET ${qi('Ver_To_DT')} = CURRENT_DATE - INTERVAL '1 day'
-       WHERE ${qi('Seva_Dept_ID')} = $1 AND ${qi('Dept_Role_ID')} = $2
+       WHERE ${qi('Seva_Dept_ID')} = $1 AND ${qi('Seva_Dept_Role_ID')} = $2
          AND ${qi('Ver_To_DT')} >= CURRENT_DATE`,
       [sevaDeptId, deptRoleId]
     );
 
     await client.query(
       `INSERT INTO ${qi('RMS')}.${qi('Seva_Dept_Role_HRCHY')}
-        (${qi('Seva_Dept_ID')}, ${qi('Dept_Role_ID')}, ${qi('HRCHY_ID')}, ${qi('Ver_From_DT')}, ${qi('Ver_To_DT')})
+        (${qi('Seva_Dept_ID')}, ${qi('Seva_Dept_Role_ID')}, ${qi('HRCHY_ID')}, ${qi('Ver_From_DT')}, ${qi('Ver_To_DT')})
        VALUES ($1, $2, $3, CURRENT_DATE, $4)`,
       [sevaDeptId, deptRoleId, hrchyId, FAR_FUTURE]
     );
@@ -244,7 +244,7 @@ router.post('/assign-role', requireAuth, async (req, res) => {
 
       await client.query(
         `INSERT INTO ${qi('RMS')}.${qi('User_Seva_Dept_Role')}
-          (${qi('USDR_ID')}, ${qi('CSMS_ID')}, ${qi('Seva_Dept_ID')}, ${qi('Dept_Role_ID')}, ${qi('Ver_From_DT')}, ${qi('Ver_To_DT')})
+          (${qi('USDR_ID')}, ${qi('CSMS_ID')}, ${qi('Seva_Dept_ID')}, ${qi('Seva_Dept_Role_ID')}, ${qi('Ver_From_DT')}, ${qi('Ver_To_DT')})
          VALUES ($1, $2, $3, $4, CURRENT_DATE, $5)`,
         [usdrId, csmsId, sevaDeptId, deptRoleId, FAR_FUTURE]
       );
@@ -313,17 +313,17 @@ router.delete('/roles/:id', requireAuth, async (req, res) => {
 
     await client.query(
       `UPDATE ${qi('RMS')}.${qi('User_Seva_Dept_Role')} SET ${qi('Ver_To_DT')} = CURRENT_DATE - INTERVAL '1 day'
-       WHERE ${qi('Dept_Role_ID')} = $1 AND (${qi('Ver_To_DT')} IS NULL OR ${qi('Ver_To_DT')} >= CURRENT_DATE)`,
+       WHERE ${qi('Seva_Dept_Role_ID')} = $1 AND (${qi('Ver_To_DT')} IS NULL OR ${qi('Ver_To_DT')} >= CURRENT_DATE)`,
       [id]
     );
     await client.query(
       `UPDATE ${qi('RMS')}.${qi('Seva_Dept_Role_HRCHY')} SET ${qi('Ver_To_DT')} = CURRENT_DATE - INTERVAL '1 day'
-       WHERE ${qi('Dept_Role_ID')} = $1 AND ${qi('Ver_To_DT')} >= CURRENT_DATE`,
+       WHERE ${qi('Seva_Dept_Role_ID')} = $1 AND ${qi('Ver_To_DT')} >= CURRENT_DATE`,
       [id]
     );
     await client.query(
       `UPDATE ${qi('RMS')}.${qi('Seva_Dept_Role')} SET ${qi('Ver_To_DT')} = CURRENT_DATE - INTERVAL '1 day'
-       WHERE ${qi('Dept_Role_ID')} = $1`,
+       WHERE ${qi('Seva_Dept_Role_ID')} = $1`,
       [id]
     );
 

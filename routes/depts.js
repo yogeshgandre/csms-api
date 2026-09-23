@@ -24,11 +24,11 @@ router.get('/', requireAuth, async (req, res) => {
 router.get('/:id/roles', requireAuth, async (req, res) => {
   try {
     const roles = await pool.query(
-      `SELECT r.${qi('Dept_Role_ID')}, r.${qi('Dept_Role_Name')}, r.${qi('Dept_Role_Desc')},
+      `SELECT r.${qi('Seva_Dept_Role_ID')}, r.${qi('Role_Name')}, r.${qi('Role_Desc')},
               up.${qi('CSMS_ID')}, up.${qi('Seeker_Name')}
        FROM ${qi('RMS')}.${qi('Seva_Dept_Role')} r
        LEFT JOIN ${qi('RMS')}.${qi('User_Seva_Dept_Role')} usdr
-         ON usdr.${qi('Dept_Role_ID')} = r.${qi('Dept_Role_ID')} AND usdr.${qi('Ver_To_DT')} >= CURRENT_DATE
+         ON usdr.${qi('Seva_Dept_Role_ID')} = r.${qi('Seva_Dept_Role_ID')} AND usdr.${qi('Ver_To_DT')} >= CURRENT_DATE
        LEFT JOIN ${qi('RMS')}.${qi('User_Profile')} up ON up.${qi('CSMS_ID')} = usdr.${qi('CSMS_ID')}
        WHERE r.${qi('Seva_Dept_ID')} = $1 AND r.${qi('Ver_To_DT')} >= CURRENT_DATE`,
       [req.params.id]
