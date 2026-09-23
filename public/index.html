@@ -26,6 +26,7 @@
   /* violet — new, added only for the org banner's "Grow Together" chip;
      keeps the same tint/wash pairing convention as the other accents */
   --violet:#6B5B95; --violet-wash:#EDEAF7;
+  --pink:#A9457B; --pink-wash:#F8E9F1;
   /* shape — varied, not uniform */
   --r:14px; --r-sm:9px; --r-tag:7px;
   --ease:cubic-bezier(.2,.7,.3,1);
@@ -384,8 +385,11 @@ nav .pip.r{background:var(--rose);color:#fff}
 .sp-card.sp-skeleton{transition:none}
 .pulse{animation:spPulse 1.1s ease-in-out infinite}
 @keyframes spPulse{0%,100%{opacity:.55}50%{opacity:1}}
-.sp-card h3{margin:0 0 10px;font-size:15px;display:flex;align-items:center;gap:8px}
-.sp-card .dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.sp-card h3{margin:0 0 12px;font-size:15px;display:flex;align-items:center;gap:10px;justify-content:space-between}
+.sp-card h3 .htitle{display:flex;align-items:center;gap:10px}
+.sp-card .icobadge{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.sp-card .icobadge svg{width:18px;height:18px}
+.sp-count-badge{background:var(--paper);color:var(--ink-2);font-size:11px;font-weight:700;padding:2px 9px;border-radius:999px;flex-shrink:0}
 .kv2{display:grid;grid-template-columns:1fr 1fr;gap:8px 24px;font-size:13.5px;margin-top:4px}
 .kv2>div:nth-child(odd){color:var(--ink-3);font-size:12.5px}
 .sp-timeline{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
@@ -1667,9 +1671,31 @@ async function loadCategoriesForSp(){
 function seekerInitials(s){
   return [(s.First_Name||'')[0], (s.Last_Name||'')[0]].filter(Boolean).join('').toUpperCase() || '?';
 }
-function spCard(colorVar, icon, title, innerHtml, extraClass){
+const SP_ICONS = {
+  mail: '<path d="M4 5h16a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z"/><path d="m3 6 9 7 9-7"/>',
+  filetext: '<path d="M14 3v5a1 1 0 0 0 1 1h5"/><path d="M6 3h8l5 5v12a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M9 13h6M9 17h6"/>',
+  chart: '<path d="M4 20V10M10 20V4M16 20v-7M22 20v-4"/><path d="M2 20h20"/>',
+  users: '<circle cx="9" cy="8" r="3"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><circle cx="17" cy="9" r="2.5"/><path d="M15.5 14c2.7.2 4.5 2.4 4.5 6"/>',
+  heart: '<path d="M12 20s-7-4.3-9.5-8.5C.7 8.2 2.3 5 5.5 5c1.9 0 3.3 1 4.5 2.5C11.2 6 12.6 5 14.5 5 17.7 5 19.3 8.2 21.5 11.5 19 15.7 12 20 12 20z"/>',
+  plug: '<path d="M9 3v4M15 3v4"/><path d="M6 7h12l-1 5a5 5 0 0 1-10 0z"/><path d="M12 17v4"/>',
+  flag: '<path d="M5 3v18"/><path d="M5 4h11l-2 4 2 4H5"/>',
+  notebook: '<path d="M5 3h13a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M9 3v18M4 8h1M4 13h1M4 18h1"/>',
+  history: '<path d="M4 8a8 8 0 1 1 1.7 9.9"/><path d="M4 4v5h5"/><path d="M12 8v5l3 2"/>',
+  message: '<path d="M4 5h16a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H9l-5 4V6a1 1 0 0 1 1-1z"/>',
+};
+function spIconSvg(name){
+  const p = SP_ICONS[name] || SP_ICONS.filetext;
+  return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p}</svg>`;
+}
+function spCard(colorToken, icon, title, innerHtml, extraClass, countBadge){
   return `<div class="sp-card${extraClass?(' '+extraClass):''}">
-    <h3><span class="dot" style="background:${colorVar}"></span>${esc(title)}</h3>
+    <h3>
+      <span class="htitle">
+        <span class="icobadge" style="background:var(--${colorToken}-wash);color:var(--${colorToken})">${spIconSvg(icon)}</span>
+        ${esc(title)}
+      </span>
+      ${countBadge!=null ? `<span class="sp-count-badge">${esc(String(countBadge))}</span>` : ''}
+    </h3>
     ${innerHtml}
   </div>`;
 }
@@ -1683,9 +1709,10 @@ function spDetailField(key, label, value){
         </div>
       </div>`;
   }
+  const isEmpty = value==null || value==='';
   return `<div>${esc(label)}</div><div style="display:flex;align-items:center;gap:8px">
-      <span>${value==null||value===''?'\u2014':esc(String(value))}</span>
-      <button class="mini" onclick="spStartEdit('${key}')" style="width:auto;padding:0 8px;height:20px;font-size:10px;background:var(--paper);color:var(--ink-2)">Edit</button>
+      <span>${isEmpty?'Not provided':esc(String(value))}</span>
+      <button class="mini" onclick="spStartEdit('${key}')" style="width:auto;padding:0 8px;height:20px;font-size:10px;background:var(--paper);color:var(--ink-2)">${isEmpty?'+ Add':'Edit'}</button>
     </div>`;
 }
 async function saveSpDetailField(key, btn){
@@ -1798,7 +1825,7 @@ function spBuildHeader(s){
 }
 function spBuildContact(s){
   const ml = s.masterlist || {};
-  return spCard('var(--deep)', '', 'Contact', `<div class="kv2">
+  return spCard('deep', 'mail', 'Contact', `<div class="kv2">
       <div>Email</div><div>${esc(s.Email||'\u2014')}</div>
       <div>WhatsApp</div><div>${esc((s.Country_ISD?('+'+s.Country_ISD+' '):'')+(s.WhatsApp_Number||'')||'\u2014')}</div>
       <div>City</div><div>${esc(s.City||'\u2014')}</div>
@@ -1809,7 +1836,7 @@ function spBuildContact(s){
     <p class="sub2" style="margin-top:8px">Email, WhatsApp, city and country are set elsewhere and can't be edited here.</p>`, 'sp-c-contact');
 }
 function spBuildMoreContact(s){
-  return spCard('var(--ink-3)', '', 'More contact details', `<div class="kv2">
+  return spCard('violet', 'filetext', 'More contact details', `<div class="kv2">
       ${spDetailField('State','State', s.State)}
       ${spDetailField('Address_Line1','Address line 1', s.Address_Line1)}
       ${spDetailField('Address_Line2','Address line 2', s.Address_Line2)}
@@ -1822,7 +1849,7 @@ function spBuildMoreContact(s){
 function spBuildSkills(s){
   const skills = s.skills || [];
   if(LIVE_MASTER_SKILLS===null) loadMasterSkills();
-  return spCard('var(--sage)', '', 'Skills', `
+  return spCard('sage', 'chart', 'Skills', `
     ${skills.length ? skills.map(sk=>`<div class="oteamrow">
         <span>${esc(sk.Skill_Name||('Skill #'+sk.Skill_ID))} <span class="sub2">(${esc(sk.Skill_Proficiency)})</span></span>
         <button class="mini" onclick="removeSeekerSkill(${sk.Skill_ID}, this)" style="width:22px;height:22px;color:var(--rose)">&times;</button>
@@ -1838,13 +1865,14 @@ function spBuildSkills(s){
         <option value="High">High</option><option value="Medium">Medium</option><option value="Low">Low</option>
       </select>
       <button class="mini" onclick="addSeekerSkill(this)" style="width:auto;padding:0 12px;height:28px">Add</button>
-    </div>`, 'sp-c-skills');
+    </div>`, 'sp-c-skills', skills.length);
 }
 function spBuildSatsangs(s){
   if(LIVE_SATSANG_DEFS===null) loadSatsangDefsForSp();
   const satsangLinks = s.satsangLinks || {upay:[],vyashti:[],bhav:[]};
+  const linkedTotal = ['bhav','upay','vyashti'].reduce((n,k)=>n+((satsangLinks[k])||[]).length, 0);
   const satsangGroups = [['bhav','Bhav satsang'],['upay','Upay satsang'],['vyashti','Vyashti satsang']];
-  return spCard('var(--deep-2)', '', 'Satsangs', `<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">${satsangGroups.map(([type,label])=>{
+  return spCard('pink', 'users', 'Satsangs', `<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">${satsangGroups.map(([type,label])=>{
     const rows = satsangLinks[type] || [];
     const linkedIds = new Set(rows.map(r=>String(r.Satsang_ID)));
     const pickable = (LIVE_SATSANG_DEFS||[]).filter(d=>(d.ST_Name||'').toLowerCase()===type && !linkedIds.has(String(d.Satsang_ID)));
@@ -1859,11 +1887,11 @@ function spBuildSatsangs(s){
         </select>
         <button class="mini" onclick="addSpSatsangLink('${type}', this)" style="width:auto;padding:0 8px;height:26px;font-size:11px">Add</button>
       </div></div>`;
-  }).join('')}</div>`, 'sp-c-satsangs');
+  }).join('')}</div>`, 'sp-c-satsangs', linkedTotal);
 }
 function spBuildBackground(s){
   const ml = s.masterlist || {};
-  return spCard('var(--sage)', '', 'Personal and Vyashti Background', `<div class="kv2">
+  return spCard('sage', 'heart', 'Personal and Vyashti Background', `<div class="kv2">
       ${spField('sadhanaStartDt','When did sadhana started ?', ml.Sadhana_ST_DT, 'date')}
       ${spField('visitedAshram','Visited the ashram ?', ml.Visited_Ashram)}
       ${spField('pranshakti','Performing Pranshakti Spiritual Healing ?', ml.Pranshakti)}
@@ -1879,7 +1907,7 @@ function spBuildBackground(s){
 }
 function spBuildPlatform(s){
   const engagements = s.platformEngagements || [];
-  return spCard('var(--amber)', '', 'Platform Engagements', engagements.length
+  return spCard('amber', 'plug', 'Platform Engagements', engagements.length
     ? `<p class="sub2" style="margin-bottom:10px">Most recent first.</p><div class="sp-timeline">${engagements.map((p,i)=>`
         <div class="sp-timeline-item${i===0?' recent':''}">
           <div class="when">${p.Engagement_DT?esc(new Date(p.Engagement_DT).toLocaleDateString()):''}${p.Platform_Name?(' \u00b7 '+esc(p.Platform_Name)):''}</div>
@@ -1890,7 +1918,7 @@ function spBuildPlatform(s){
 }
 function spBuildMilestones(s){
   const milestones = s.milestones || [];
-  return spCard('var(--deep-2)', '', 'Journey milestones', `
+  return spCard('deep', 'flag', 'Journey milestones', `
     <p class="sub2" style="margin-bottom:8px">The path this seeker has actually walked, separate from category.</p>
     ${milestones.length ? milestones.map(m=>`<div class="oteamrow" style="cursor:default;display:block">
         <div class="sub2">${esc(new Date(m.Milestone_DT).toLocaleDateString())} \u00b7 ${esc(m.Milestone_Kind)}</div>
@@ -1906,7 +1934,7 @@ function spBuildMilestones(s){
 }
 function spBuildInternalNotes(s){
   const internalNotes = s.internalNotes || [];
-  return spCard('var(--amber)', '', 'Internal notes', `
+  return spCard('amber', 'notebook', 'Internal notes', `
     <p class="sub2" style="margin-bottom:8px">Private to your team &mdash; not visible to the seeker.</p>
     ${internalNotes.length ? internalNotes.slice(0,5).map(n=>`<div style="margin-bottom:8px">
         <div style="font-size:13px">${esc(n.Note_Text)}</div>
@@ -1916,13 +1944,13 @@ function spBuildInternalNotes(s){
     <div class="btnrow" style="margin-top:8px"><button class="btn ghost" onclick="saveSeekerInternalNote(this)">Save note</button></div>`, 'amber-accent sp-c-notes');
 }
 function spBuildCatHistory(s){
-  return spCard('var(--sage)', '', 'Category history', (s.categories||[]).length
+  return spCard('sage', 'history', 'Category history', (s.categories||[]).length
     ? `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">${s.categories.map(c=>`<div class="sp-cathist-row"><span>${categoryTag(c.Category_Name)}</span><span class="sub2">${esc(c.Ver_From_DT||'')} \u2192 ${c.Ver_To_DT && new Date(c.Ver_To_DT) < new Date('9999-01-01') ? esc(c.Ver_To_DT) : 'present'}</span></div>`).join('')}</div>`
     : '<p class="sub2">No category history recorded.</p>', 'full sp-c-cathist');
 }
 function spBuildConductorNotes(s){
   const notes = s.notes || [];
-  return spCard('var(--rose)', '', 'Conductor notes on this seeker', notes.length
+  return spCard('rose', 'message', 'Conductor notes on this seeker', notes.length
     ? `<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px">${notes.slice(0,6).map(n=>`<div>
         <div class="sub2" style="font-size:13px;color:var(--ink)">${esc(n.Comments||'')}</div>
         <div class="sub2" style="font-size:11px;margin-top:3px">${esc(n.Satsang_Name||'')}${n.conductor_name?(' \u00b7 '+esc(n.conductor_name)):''}${n.Comments_Date?(' \u00b7 '+esc(new Date(n.Comments_Date).toLocaleDateString())):''}</div>
