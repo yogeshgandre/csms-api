@@ -377,8 +377,20 @@ nav .pip.r{background:var(--rose);color:#fff}
 .sp-stat .val{font-size:20px;font-weight:600}
 .sp-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 .sp-card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px}
+.sp-card.full{grid-column:1 / -1}
+.sp-card.amber-accent{border-left:3px solid var(--amber)}
 .sp-card h3{margin:0 0 10px;font-size:15px;display:flex;align-items:center;gap:8px}
 .sp-card .dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.kv2{display:grid;grid-template-columns:1fr 1fr;gap:8px 24px;font-size:13.5px;margin-top:4px}
+.kv2>div:nth-child(odd){color:var(--ink-3);font-size:12.5px}
+.sp-timeline{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.sp-timeline-item{border-left:2px solid var(--line-2);padding-left:12px}
+.sp-timeline-item.recent{border-left-color:var(--amber)}
+.sp-timeline-item .when{font-size:10.5px;color:var(--ink-3)}
+.sp-timeline-item .what{font-size:12.5px;font-weight:600;margin-top:2px}
+.sp-timeline-item .who{font-size:10.5px;color:var(--ink-3);margin-top:2px}
+.sp-cathist-row{display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background:var(--paper);border-radius:var(--r-sm)}
+@media (max-width:760px){.sp-grid{grid-template-columns:1fr}.sp-timeline{grid-template-columns:1fr}.kv2{grid-template-columns:132px 1fr}}
 @media (max-width:760px){.sp-grid{grid-template-columns:1fr}.sp-stats{grid-template-columns:1fr}}
 .ochip.lvl2{font-size:12px;padding:6px 12px;background:var(--card);color:var(--ink-2);
   border-radius:var(--r-sm);cursor:pointer}
@@ -1368,18 +1380,22 @@ async function openSeekerPage(id){
   const el = document.getElementById('seekerPage');
   el.innerHTML = '<p class="sub2">Loading\u2026</p>';
   try{
-    const [seeker, notes, skills, masterlist, satsangLinks] = await Promise.all([
+    const [seeker, notes, skills, masterlist, satsangLinks, milestones, internalNotes] = await Promise.all([
       apiFetch('/api/seekers/'+id),
       apiFetch('/api/seekers/'+id+'/comments').catch(()=>[]),
       apiFetch('/api/seekers/'+id+'/skills').catch(()=>[]),
       apiFetch('/api/seekers/'+id+'/masterlist').catch(()=>null),
       apiFetch('/api/seekers/'+id+'/satsang-links').catch(()=>({upay:[],vyashti:[],bhav:[]})),
+      apiFetch('/api/seekers/'+id+'/milestones').catch(()=>[]),
+      apiFetch('/api/seekers/'+id+'/internal-notes').catch(()=>[]),
     ]);
     LIVE_SEEKER_DETAIL = seeker;
     LIVE_SEEKER_DETAIL.notes = notes;
     LIVE_SEEKER_DETAIL.skills = skills;
     LIVE_SEEKER_DETAIL.masterlist = masterlist;
     LIVE_SEEKER_DETAIL.satsangLinks = satsangLinks;
+    LIVE_SEEKER_DETAIL.milestones = milestones;
+    LIVE_SEEKER_DETAIL.internalNotes = internalNotes;
     SP_EDIT_FIELD = null;
     renderSeekerPage();
   }catch(err){
@@ -1470,8 +1486,8 @@ let SP_EDIT_FIELD = null;
 function spStartEdit(key){ SP_EDIT_FIELD = key; renderSeekerPage(); }
 function spCancelEdit(){ SP_EDIT_FIELD = null; renderSeekerPage(); }
 
-const SP_ML_FIELDS = ['pranshakti','subRegion','sadhanaStartDt','weeklySevaHrs','perInfo','oppHome','visitedAshram','attendedMavWorkshop','sensitiveList'];
-const SP_ML_COLUMN = { pranshakti:'Pranshakti', subRegion:'Sub_Region', sadhanaStartDt:'Sadhana_ST_DT', weeklySevaHrs:'Weekly_Seva_Hrs', perInfo:'Per_Info', oppHome:'Opp_Home', visitedAshram:'Visited_Ashram', attendedMavWorkshop:'Attended_MAV_Workshop', sensitiveList:'Sensitive_List' };
+const SP_ML_FIELDS = ['pranshakti','subRegion','sadhanaStartDt','weeklySevaHrs','perInfo','oppHome','visitedAshram','attendedMavWorkshop','sensitiveList','availability'];
+const SP_ML_COLUMN = { pranshakti:'Pranshakti', subRegion:'Sub_Region', sadhanaStartDt:'Sadhana_ST_DT', weeklySevaHrs:'Weekly_Seva_Hrs', perInfo:'Per_Info', oppHome:'Opp_Home', visitedAshram:'Visited_Ashram', attendedMavWorkshop:'Attended_MAV_Workshop', sensitiveList:'Sensitive_List', availability:'Availability' };
 
 async function saveSpMasterlistField(key, btn){
   const ml = (LIVE_SEEKER_DETAIL && LIVE_SEEKER_DETAIL.masterlist) || {};
@@ -1595,11 +1611,73 @@ async function loadCategoriesForSp(){
 function seekerInitials(s){
   return [(s.First_Name||'')[0], (s.Last_Name||'')[0]].filter(Boolean).join('').toUpperCase() || '?';
 }
-function spCard(colorVar, icon, title, innerHtml){
-  return `<div class="sp-card">
+function spCard(colorVar, icon, title, innerHtml, extraClass){
+  return `<div class="sp-card${extraClass?(' '+extraClass):''}">
     <h3><span class="dot" style="background:${colorVar}"></span>${esc(title)}</h3>
     ${innerHtml}
   </div>`;
+}
+function spDetailField(key, label, value){
+  if(SP_EDIT_FIELD === key){
+    return `<div>${esc(label)}</div><div>
+        <input id="spInput_${key}" type="text" value="${esc(value==null?'':String(value))}" style="width:100%;border-radius:999px;padding:5px 10px;font-size:12.5px;border:1px solid var(--line-2);box-sizing:border-box">
+        <div style="display:flex;gap:6px;margin-top:5px">
+          <button class="mini" onclick="saveSpDetailField('${key}', this)" style="width:auto;padding:0 10px;height:24px;font-size:11px">Save</button>
+          <button class="mini" onclick="spCancelEdit()" style="width:auto;padding:0 10px;height:24px;font-size:11px;background:var(--paper);color:var(--ink-2)">Cancel</button>
+        </div>
+      </div>`;
+  }
+  return `<div>${esc(label)}</div><div style="display:flex;align-items:center;gap:8px">
+      <span>${value==null||value===''?'\u2014':esc(String(value))}</span>
+      <button class="mini" onclick="spStartEdit('${key}')" style="width:auto;padding:0 8px;height:20px;font-size:10px;background:var(--paper);color:var(--ink-2)">Edit</button>
+    </div>`;
+}
+async function saveSpDetailField(key, btn){
+  const el = document.getElementById('spInput_'+key);
+  const value = el ? el.value : '';
+  await withLoading(btn, async ()=>{
+    try{
+      await apiFetch('/api/seekers/'+LIVE_SEEKER_DETAIL_ID+'/details', {method:'PUT', body: JSON.stringify({field:key, value})});
+      toast('Saved.');
+      SP_EDIT_FIELD = null;
+      LIVE_SEEKER_DETAIL = await apiFetch('/api/seekers/'+LIVE_SEEKER_DETAIL_ID);
+      LIVE_SEEKER_DETAIL.notes = await apiFetch('/api/seekers/'+LIVE_SEEKER_DETAIL_ID+'/comments').catch(()=>[]);
+      LIVE_SEEKER_DETAIL.skills = await apiFetch('/api/seekers/'+LIVE_SEEKER_DETAIL_ID+'/skills').catch(()=>[]);
+      LIVE_SEEKER_DETAIL.masterlist = await apiFetch('/api/seekers/'+LIVE_SEEKER_DETAIL_ID+'/masterlist').catch(()=>null);
+      LIVE_SEEKER_DETAIL.satsangLinks = await apiFetch('/api/seekers/'+LIVE_SEEKER_DETAIL_ID+'/satsang-links').catch(()=>({upay:[],vyashti:[],bhav:[]}));
+      LIVE_SEEKER_DETAIL.milestones = await apiFetch('/api/seekers/'+LIVE_SEEKER_DETAIL_ID+'/milestones').catch(()=>[]);
+      LIVE_SEEKER_DETAIL.internalNotes = await apiFetch('/api/seekers/'+LIVE_SEEKER_DETAIL_ID+'/internal-notes').catch(()=>[]);
+      renderSeekerPage();
+    }catch(err){ toast('Could not save: '+(err.message||'')); }
+  });
+}
+async function addSeekerMilestone(btn){
+  const kind = document.getElementById('msKind').value;
+  const label = document.getElementById('msLabel').value.trim();
+  if(!label) return;
+  await withLoading(btn, async ()=>{
+    try{
+      await apiFetch('/api/seekers/'+LIVE_SEEKER_DETAIL_ID+'/milestones', {method:'POST', body: JSON.stringify({kind, label})});
+      document.getElementById('msLabel').value = '';
+      toast('Added.');
+      LIVE_SEEKER_DETAIL.milestones = await apiFetch('/api/seekers/'+LIVE_SEEKER_DETAIL_ID+'/milestones');
+      renderSeekerPage();
+    }catch(err){ toast('Could not add: '+(err.message||'')); }
+  });
+}
+async function saveSeekerInternalNote(btn){
+  const ta = document.getElementById('internalNoteInput');
+  const noteText = ta.value.trim();
+  if(!noteText) return;
+  await withLoading(btn, async ()=>{
+    try{
+      await apiFetch('/api/seekers/'+LIVE_SEEKER_DETAIL_ID+'/internal-notes', {method:'POST', body: JSON.stringify({noteText})});
+      ta.value = '';
+      toast('Saved.');
+      LIVE_SEEKER_DETAIL.internalNotes = await apiFetch('/api/seekers/'+LIVE_SEEKER_DETAIL_ID+'/internal-notes');
+      renderSeekerPage();
+    }catch(err){ toast('Could not save: '+(err.message||'')); }
+  });
 }
 function renderSeekerPage(){
   const el = document.getElementById('seekerPage');
@@ -1609,33 +1687,36 @@ function renderSeekerPage(){
   const name = [s.Sal,s.First_Name,s.Last_Name].filter(Boolean).join(' ');
   const activeCat = (s.categories||[])[0];
   const satsangCount = ['bhav','upay','vyashti'].reduce((n,k)=>n+((s.satsangs&&s.satsangs[k])||[]).length, 0);
+  const skills = s.skills || [];
+  const milestones = s.milestones || [];
+  const internalNotes = s.internalNotes || [];
 
-  const contactCard = spCard('var(--deep)', '', 'Contact', `<div class="kv">
+  const contactCard = spCard('var(--deep)', '', 'Contact', `<div class="kv2">
       <div>Email</div><div>${esc(s.Email||'\u2014')}</div>
       <div>WhatsApp</div><div>${esc((s.Country_ISD?('+'+s.Country_ISD+' '):'')+(s.WhatsApp_Number||'')||'\u2014')}</div>
       <div>City</div><div>${esc(s.City||'\u2014')}</div>
+      <div>Country</div><div>${esc(s.Country_Name||s.Country_ID||'\u2014')}</div>
       ${spField('subRegion','Sub-region', ml.Sub_Region)}
+      ${spDetailField('Birth_Year','Birth year', s.Birth_Year)}
     </div>
     <p class="sub2" style="margin-top:8px">Email, WhatsApp, city and country are set elsewhere and can't be edited here.</p>`);
 
-  const sevaCard = spCard('var(--sage)', '', 'Personal and Vyashti Background', `<div class="kv">
-      ${spField('sadhanaStartDt','Sadhana start', ml.Sadhana_ST_DT, 'date')}
-      ${spField('pranshakti','Pranshakti', ml.Pranshakti)}
-      ${spField('weeklySevaHrs','Weekly seva hours', ml.Weekly_Seva_Hrs, 'number')}
-      ${spField('visitedAshram','Visited Ashram', ml.Visited_Ashram)}
-      ${spField('attendedMavWorkshop','Attended MAV workshop', ml.Attended_MAV_Workshop)}
-      ${spField('sensitiveList','Sensitive list', ml.Sensitive_List)}
-    </div>
-    ${spFieldBlock('oppHome','Opposition at home', ml.Opp_Home)}
-    ${spFieldBlock('perInfo','Personal info', ml.Per_Info)}`);
+  const moreContactCard = spCard('var(--ink-3)', '', 'More contact details', `<div class="kv2">
+      ${spDetailField('State','State', s.State)}
+      ${spDetailField('Address_Line1','Address line 1', s.Address_Line1)}
+      ${spDetailField('Address_Line2','Address line 2', s.Address_Line2)}
+      ${spDetailField('Postal_Code','Postal code', s.Postal_Code)}
+      ${spDetailField('Viber_Number','Viber number', s.Viber_Number)}
+      ${spDetailField('Skype_ID','Skype ID', s.Skype_ID)}
+      ${spDetailField('Ref_Seeker_ID','Referred by (Seeker ID)', s.Ref_Seeker_ID)}
+    </div>`);
 
-  const skills = s.skills || [];
   if(LIVE_MASTER_SKILLS===null) loadMasterSkills();
-  const skillsCard = spCard('var(--ink-3)', '', 'Skills', `
+  const skillsCard = spCard('var(--sage)', '', 'Skills', `
     ${skills.length ? skills.map(sk=>`<div class="oteamrow">
         <span>${esc(sk.Skill_Name||('Skill #'+sk.Skill_ID))} <span class="sub2">(${esc(sk.Skill_Proficiency)})</span></span>
         <button class="mini" onclick="removeSeekerSkill(${sk.Skill_ID}, this)" style="width:22px;height:22px;color:var(--rose)">&times;</button>
-      </div>`).join('') : '<p class="sub2">No skills recorded yet.</p>'}
+      </div>`).join('') : '<p class="sub2">No skills added yet.</p>'}
     <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;align-items:center;position:relative">
       <div style="position:relative;flex:1;min-width:120px">
         <input id="skAdd_search" placeholder="${LIVE_MASTER_SKILLS===null?'Loading\u2026':'Type a skill\u2026'}" autocomplete="off"
@@ -1652,69 +1733,113 @@ function renderSeekerPage(){
   if(LIVE_SATSANG_DEFS===null) loadSatsangDefsForSp();
   const satsangLinks = s.satsangLinks || {upay:[],vyashti:[],bhav:[]};
   const satsangGroups = [['bhav','Bhav satsang'],['upay','Upay satsang'],['vyashti','Vyashti satsang']];
-  const satsangsCard = spCard('var(--deep-2)', '', 'Satsangs', satsangGroups.map(([type,label])=>{
+  const satsangsCard = spCard('var(--deep-2)', '', 'Satsangs', `<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">${satsangGroups.map(([type,label])=>{
     const rows = satsangLinks[type] || [];
     const linkedIds = new Set(rows.map(r=>String(r.Satsang_ID)));
     const pickable = (LIVE_SATSANG_DEFS||[]).filter(d=>(d.ST_Name||'').toLowerCase()===type && !linkedIds.has(String(d.Satsang_ID)));
-    return `<p class="sub2" style="font-weight:600;margin-top:8px">${esc(label)}</p>
+    return `<div><p class="sub2" style="font-weight:600">${esc(label)}</p>
       ${rows.length ? rows.map(r=>`<div class="oteamrow"><span>${esc(r.Satsang_Name||('Satsang #'+r.Satsang_ID))}</span>
           <button class="mini" onclick="removeSpSatsangLink('${type}', ${r.Satsang_ID}, this)" style="width:22px;height:22px;color:var(--rose)">&times;</button>
-        </div>`).join('') : '<p class="sub2">None linked.</p>'}
+        </div>`).join('') : '<p class="sub2">Not linked yet.</p>'}
       <div style="display:flex;gap:6px;margin-top:4px">
-        <select id="spSatsangAdd_${type}" style="flex:1;border-radius:999px;padding:5px 12px;font-size:12px;border:1px solid var(--line-2)">
-          <option value="">${LIVE_SATSANG_DEFS===null?'Loading\u2026':(pickable.length?'Add\u2026':'None left to add')}</option>
+        <select id="spSatsangAdd_${type}" style="flex:1;border-radius:999px;padding:5px 8px;font-size:11.5px;border:1px solid var(--line-2)">
+          <option value="">${LIVE_SATSANG_DEFS===null?'Loading\u2026':(pickable.length?'Add\u2026':'None left')}</option>
           ${pickable.map(d=>`<option value="${d.Satsang_ID}">${esc(d.Satsang_Name)}</option>`).join('')}
         </select>
-        <button class="mini" onclick="addSpSatsangLink('${type}', this)" style="width:auto;padding:0 10px;height:26px;font-size:11px">Add</button>
-      </div>`;
-  }).join(''));
+        <button class="mini" onclick="addSpSatsangLink('${type}', this)" style="width:auto;padding:0 8px;height:26px;font-size:11px">Add</button>
+      </div></div>`;
+  }).join('')}</div>`);
+
+  const backgroundCard = spCard('var(--sage)', '', 'Personal and Vyashti Background', `<div class="kv2">
+      ${spField('sadhanaStartDt','When did sadhana started ?', ml.Sadhana_ST_DT, 'date')}
+      ${spField('visitedAshram','Visited the ashram ?', ml.Visited_Ashram)}
+      ${spField('pranshakti','Performing Pranshakti Spiritual Healing ?', ml.Pranshakti)}
+      ${spField('attendedMavWorkshop','Attended MAV Workshop ?', ml.Attended_MAV_Workshop)}
+      ${spField('weeklySevaHrs','Weekly seva hours', ml.Weekly_Seva_Hrs, 'number')}
+      ${spField('availability','Available for seva', ml.Availability)}
+      ${spField('sensitiveList','Sensitivity Flag', ml.Sensitive_List)}
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 24px;margin-top:6px">
+      <div>${spFieldBlock('oppHome','Any opposition faced at home for doing sadhana ?', ml.Opp_Home)}</div>
+      <div>${spFieldBlock('perInfo','Any other details ?', ml.Per_Info)}</div>
+    </div>`, 'full');
 
   const engagements = s.platformEngagements || [];
-  const platformCard = spCard('var(--amber)', '', 'Platform engagement', engagements.length
-    ? engagements.map(p=>`<div class="oteamrow" style="cursor:default"><span>${esc(p.Platform_Name||'')}</span><span class="sub2">${esc(p.Engagement_DT||'')}</span></div>`).join('')
-    : '<p class="sub2">No platform engagement recorded.</p>');
+  const platformCard = spCard('var(--amber)', '', 'Platform Engagements', engagements.length
+    ? `<p class="sub2" style="margin-bottom:10px">Most recent first.</p><div class="sp-timeline">${engagements.map((p,i)=>`
+        <div class="sp-timeline-item${i===0?' recent':''}">
+          <div class="when">${p.Engagement_DT?esc(new Date(p.Engagement_DT).toLocaleDateString()):''}${p.Platform_Name?(' \u00b7 '+esc(p.Platform_Name)):''}</div>
+          <div class="what">${esc(p.Conversation_Notes||'Engaged via '+(p.Platform_Name||'platform'))}</div>
+          <div class="who">Logged by ${esc(p.LoggedByName||'System')}</div>
+        </div>`).join('')}</div>`
+    : '<p class="sub2">Hasn\u2019t come through a tracked platform yet.</p>', 'full');
 
-  const notes = s.notes || [];
-  const notesCard = spCard('var(--rose)', '', 'Recent notes', notes.length
-    ? notes.slice(0,5).map(n=>`<div style="margin-bottom:8px">
-        <div class="sub2">${esc(n.Comments||'')}</div>
-        <div class="sub2" style="font-size:11px;margin-top:3px">${esc(n.Satsang_Name||'')}${n.conductor_name?(' \u00b7 by '+esc(n.conductor_name)):''}${n.Comments_Date?(' \u00b7 '+esc(new Date(n.Comments_Date).toLocaleDateString())):''}</div>
-      </div>`).join('') : '<p class="sub2">No attendee notes recorded yet.</p>');
+  const milestonesCard = spCard('var(--deep-2)', '', 'Journey milestones', `
+    <p class="sub2" style="margin-bottom:8px">The path this seeker has actually walked, separate from category.</p>
+    ${milestones.length ? milestones.map(m=>`<div class="oteamrow" style="cursor:default;display:block">
+        <div class="sub2">${esc(new Date(m.Milestone_DT).toLocaleDateString())} \u00b7 ${esc(m.Milestone_Kind)}</div>
+        <div style="font-size:13px">${esc(m.Milestone_Label)}</div>
+      </div>`).join('') : '<p class="sub2">No milestones recorded yet.</p>'}
+    <div style="display:flex;gap:6px;margin-top:10px">
+      <select id="msKind" style="border-radius:999px;padding:5px 8px;font-size:11.5px;border:1px solid var(--line-2)">
+        <option>Event</option><option>Seva</option><option>Satsang</option>
+      </select>
+      <input id="msLabel" placeholder="What happened" style="flex:1;border-radius:999px;padding:5px 12px;font-size:11.5px;border:1px solid var(--line-2)">
+      <button class="mini" onclick="addSeekerMilestone(this)" style="width:auto;padding:0 12px;height:26px;font-size:11px">Add</button>
+    </div>`);
+
+  const internalNotesCard = spCard('var(--amber)', '', 'Internal notes', `
+    <p class="sub2" style="margin-bottom:8px">Private to your team &mdash; not visible to the seeker.</p>
+    ${internalNotes.length ? internalNotes.slice(0,5).map(n=>`<div style="margin-bottom:8px">
+        <div style="font-size:13px">${esc(n.Note_Text)}</div>
+        <div class="sub2" style="font-size:11px;margin-top:2px">${esc(n.AuthorName||'')}${n.Creation_DT?(' \u00b7 '+esc(new Date(n.Creation_DT).toLocaleDateString())):''}</div>
+      </div>`).join('') : '<p class="sub2">No internal notes yet.</p>'}
+    <textarea id="internalNoteInput" rows="2" placeholder="Visible only to your team." style="width:100%;border-radius:10px;padding:6px 10px;font-size:12.5px;border:1px solid var(--line-2);box-sizing:border-box;font-family:inherit;resize:vertical;margin-top:8px"></textarea>
+    <div class="btnrow" style="margin-top:8px"><button class="btn ghost" onclick="saveSeekerInternalNote(this)">Save note</button></div>`, 'amber-accent');
 
   const catHistoryCard = spCard('var(--sage)', '', 'Category history', (s.categories||[]).length
-    ? s.categories.map(c=>`<div class="oteamrow" style="cursor:default"><span>${categoryTag(c.Category_Name)}</span><span class="sub2">${esc(c.Ver_From_DT||'')} \u2192 ${c.Ver_To_DT ? esc(c.Ver_To_DT) : 'current'}</span></div>`).join('')
-    : '<p class="sub2">No category history recorded.</p>');
+    ? `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">${s.categories.map(c=>`<div class="sp-cathist-row"><span>${categoryTag(c.Category_Name)}</span><span class="sub2">${esc(c.Ver_From_DT||'')} \u2192 ${c.Ver_To_DT && new Date(c.Ver_To_DT) < new Date('9999-01-01') ? esc(c.Ver_To_DT) : 'present'}</span></div>`).join('')}</div>`
+    : '<p class="sub2">No category history recorded.</p>', 'full');
+
+  const notes = s.notes || [];
+  const conductorNotesCard = spCard('var(--rose)', '', 'Conductor notes on this seeker', notes.length
+    ? `<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px">${notes.slice(0,6).map(n=>`<div>
+        <div class="sub2" style="font-size:13px;color:var(--ink)">${esc(n.Comments||'')}</div>
+        <div class="sub2" style="font-size:11px;margin-top:3px">${esc(n.Satsang_Name||'')}${n.conductor_name?(' \u00b7 '+esc(n.conductor_name)):''}${n.Comments_Date?(' \u00b7 '+esc(new Date(n.Comments_Date).toLocaleDateString())):''}</div>
+      </div>`).join('')}</div>`
+    : '<p class="sub2">No conductor notes recorded yet.</p>', 'full');
 
   el.innerHTML = `
     <button class="btn ghost sm" onclick="closeSeekerPage()" style="margin-bottom:16px">\u2190 Back</button>
-    <div class="sp-header">
-      <div class="sp-avatar">${esc(seekerInitials(s))}</div>
-      <div style="flex:1">
-        <h2 class="sec" style="margin:0">${esc(name)}</h2>
-        <p class="sub2">${esc(s.City||'')}${activeCat?(' \u00b7 '+esc(activeCat.Category_Name)):''}</p>
+    <div class="sp-header" style="justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:16px">
+      <div style="display:flex;align-items:center;gap:16px">
+        <div class="sp-avatar">${esc(seekerInitials(s))}</div>
+        <div>
+          <h2 class="sec" style="margin:0">${esc(name)}</h2>
+          <p class="sub2" style="display:flex;align-items:center;gap:8px;margin-top:4px">
+            ${SP_EDIT_FIELD==='category' ? (()=>{
+              if(LIVE_SEEKER_CATEGORIES_FOR_SP===null) loadCategoriesForSp();
+              const cats = LIVE_SEEKER_CATEGORIES_FOR_SP || [];
+              return `<select id="spInput_category" style="border-radius:999px;padding:4px 10px;font-size:12px;border:1px solid var(--line-2)">
+                  ${cats.map(c=>`<option value="${c.Category_ID}" ${activeCat&&activeCat.Category_Name===c.Category_Name?'selected':''}>${esc(c.Category_Name)}</option>`).join('')}
+                </select>
+                <button class="mini" onclick="saveSpCategory(this)" style="width:auto;padding:0 10px;height:22px;font-size:11px">Save</button>
+                <button class="mini" onclick="spCancelEdit()" style="width:auto;padding:0 10px;height:22px;font-size:11px;background:var(--paper);color:var(--ink-2)">Cancel</button>`;
+            })() : `${categoryTag(activeCat?activeCat.Category_Name:'\u2014')}
+                <button class="mini" onclick="spStartEdit('category')" style="width:auto;padding:0 8px;height:18px;font-size:10px;background:var(--paper);color:var(--ink-2)">Edit</button>
+                ${esc(s.City||'')}`}
+          </p>
+        </div>
+      </div>
+      <div class="metrics" style="margin:0;grid-template-columns:repeat(4,84px)">
+        <div class="metric"><div class="n" style="font-size:18px">${ml.Weekly_Seva_Hrs!=null?esc(ml.Weekly_Seva_Hrs):0}</div><div class="l">Seva hrs/wk</div></div>
+        <div class="metric"><div class="n" style="font-size:18px">${satsangCount}</div><div class="l">Satsangs</div></div>
+        <div class="metric"><div class="n" style="font-size:18px">${skills.length}</div><div class="l">Skills</div></div>
+        <div class="metric"><div class="n" style="font-size:18px">${(s.categories||[]).length}</div><div class="l">Cat. changes</div></div>
       </div>
     </div>
-    <div class="sp-stats">
-      <div class="sp-stat">
-        <div class="lbl2">Category</div>
-        ${SP_EDIT_FIELD==='category' ? (()=>{
-          if(LIVE_SEEKER_CATEGORIES_FOR_SP===null) loadCategoriesForSp();
-          const cats = LIVE_SEEKER_CATEGORIES_FOR_SP || [];
-          return `<select id="spInput_category" style="width:100%;border-radius:999px;padding:5px 10px;font-size:12.5px;border:1px solid var(--line-2);margin-top:4px">
-              ${cats.map(c=>`<option value="${c.Category_ID}" ${activeCat&&activeCat.Category_Name===c.Category_Name?'selected':''}>${esc(c.Category_Name)}</option>`).join('')}
-            </select>
-            <div style="display:flex;gap:6px;margin-top:5px">
-              <button class="mini" onclick="saveSpCategory(this)" style="width:auto;padding:0 10px;height:24px;font-size:11px">Save</button>
-              <button class="mini" onclick="spCancelEdit()" style="width:auto;padding:0 10px;height:24px;font-size:11px;background:var(--paper);color:var(--ink-2)">Cancel</button>
-            </div>`;
-        })() : `<div class="val" style="display:flex;align-items:center;gap:8px">${esc(activeCat?activeCat.Category_Name:'\u2014')}
-            <button class="mini" onclick="spStartEdit('category')" style="width:auto;padding:0 8px;height:20px;font-size:10px;background:var(--paper);color:var(--ink-2)">Edit</button></div>`}
-      </div>
-      <div class="sp-stat"><div class="lbl2">Weekly seva hours</div><div class="val">${ml.Weekly_Seva_Hrs!=null?esc(ml.Weekly_Seva_Hrs):'\u2014'}</div></div>
-      <div class="sp-stat"><div class="lbl2">Satsangs attended</div><div class="val">${satsangCount}</div></div>
-    </div>
-    <div class="sp-grid">
-      ${contactCard}${sevaCard}${skillsCard}${satsangsCard}${platformCard}${notesCard}${catHistoryCard}
+    <div class="sp-grid" style="margin-top:20px">
+      ${contactCard}${moreContactCard}${skillsCard}${satsangsCard}${backgroundCard}${platformCard}${milestonesCard}${internalNotesCard}${catHistoryCard}${conductorNotesCard}
     </div>`;
 }
 

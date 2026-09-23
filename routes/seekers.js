@@ -73,9 +73,10 @@ router.get('/:id', requireAuth, async (req, res) => {
         [seekerId]
       ),
       pool.query(
-        `SELECT pe.*, p.${qi('Platform_Name')}
+        `SELECT pe.*, p.${qi('Platform_Name')}, up.${qi('Seeker_Name')} AS "LoggedByName"
          FROM ${qi('MSR')}.${qi('Seeker_Platform_Engagement')} pe
          JOIN ${qi('Master')}.${qi('M_Platform')} p ON p.${qi('Platform_ID')} = pe.${qi('Platform_ID')}
+         LEFT JOIN ${qi('RMS')}.${qi('User_Profile')} up ON up.${qi('CSMS_ID')} = pe.${qi('Contacting_Seeker_ID')}
          WHERE pe.${qi('Seeker_ID')} = $1 ORDER BY pe.${qi('Engagement_DT')} DESC`,
         [seekerId]
       ),
@@ -131,6 +132,91 @@ router.put('/:id/category', requireAuth, async (req, res) => {
   }
 });
 
+// PUT /api/seekers/:id/details — edits the base MSR.Seeker fields that
+// are safe to correct after entry (address, alternate contacts, referral).
+// Email, WhatsApp, City and Country are intentionally excluded — those
+// come from the seeker's original entry and aren't edited here.
+const EDITABLE_DETAIL_FIELDS = ['State', 'Address_Line1', 'Address_Line2', 'Postal_Code', 'Viber_Number', 'Skype_ID', 'Ref_Seeker_ID', 'Birth_Year'];
+router.put('/:id/details', requireAuth, async (req, res) => {
+  const { field, value } = req.body || {};
+  if (!EDITABLE_DETAIL_FIELDS.includes(field)) return res.status(400).json({ error: 'INVALID_FIELD' });
+  try {
+    await pool.query(
+      `UPDATE ${qi('MSR')}.${qi('Seeker')} SET ${qi(field)} = $2 WHERE ${qi('Seeker_ID')} = $1`,
+      [req.params.id, value === '' ? null : value]
+    );
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('[PUT /seekers/:id/details] error', err);
+    res.status(500).json({ error: 'INTERNAL', message: err.message });
+  }
+});
+
+// GET/POST /api/seekers/:id/milestones — MSR.Seeker_Milestone
+router.get('/:id/milestones', requireAuth, async (req, res) => {
+  try {
+    const r = await pool.query(
+      `SELECT * FROM ${qi('MSR')}.${qi('Seeker_Milestone')} WHERE ${qi('Seeker_ID')} = $1 ORDER BY ${qi('Milestone_DT')} DESC`,
+      [req.params.id]
+    );
+    res.json(r.rows);
+  } catch (err) {
+    console.error('[GET /seekers/:id/milestones] error', err);
+    res.status(500).json({ error: 'INTERNAL' });
+  }
+});
+router.post('/:id/milestones', requireAuth, async (req, res) => {
+  const { kind, label } = req.body || {};
+  if (!kind || !label) return res.status(400).json({ error: 'kind and label are required' });
+  try {
+    const maxQ = await pool.query(`SELECT COALESCE(MAX(${qi('Milestone_ID')}), 0) + 1 AS next_id FROM ${qi('MSR')}.${qi('Seeker_Milestone')}`);
+    await pool.query(
+      `INSERT INTO ${qi('MSR')}.${qi('Seeker_Milestone')} (${qi('Milestone_ID')}, ${qi('Seeker_ID')}, ${qi('Milestone_Kind')}, ${qi('Milestone_Label')}, ${qi('Milestone_DT')}, ${qi('Created_ID')})
+       VALUES ($1,$2,$3,$4,CURRENT_DATE,$5)`,
+      [maxQ.rows[0].next_id, req.params.id, kind, label, req.user.csmsId]
+    );
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('[POST /seekers/:id/milestones] error', err);
+    res.status(500).json({ error: 'INTERNAL', message: err.message });
+  }
+});
+
+// GET/POST /api/seekers/:id/internal-notes — MSR.Seeker_Internal_Notes.
+// Private to staff, deliberately separate from Platform Engagements
+// (which is the seeker-facing interaction record).
+router.get('/:id/internal-notes', requireAuth, async (req, res) => {
+  try {
+    const r = await pool.query(
+      `SELECT n.*, up.${qi('Seeker_Name')} AS "AuthorName"
+       FROM ${qi('MSR')}.${qi('Seeker_Internal_Notes')} n
+       LEFT JOIN ${qi('RMS')}.${qi('User_Profile')} up ON up.${qi('CSMS_ID')} = n.${qi('Created_ID')}
+       WHERE n.${qi('Seeker_ID')} = $1 ORDER BY n.${qi('Creation_DT')} DESC`,
+      [req.params.id]
+    );
+    res.json(r.rows);
+  } catch (err) {
+    console.error('[GET /seekers/:id/internal-notes] error', err);
+    res.status(500).json({ error: 'INTERNAL' });
+  }
+});
+router.post('/:id/internal-notes', requireAuth, async (req, res) => {
+  const { noteText } = req.body || {};
+  if (!noteText || !noteText.trim()) return res.status(400).json({ error: 'noteText is required' });
+  try {
+    const maxQ = await pool.query(`SELECT COALESCE(MAX(${qi('Note_ID')}), 0) + 1 AS next_id FROM ${qi('MSR')}.${qi('Seeker_Internal_Notes')}`);
+    await pool.query(
+      `INSERT INTO ${qi('MSR')}.${qi('Seeker_Internal_Notes')} (${qi('Note_ID')}, ${qi('Seeker_ID')}, ${qi('Note_Text')}, ${qi('Created_ID')})
+       VALUES ($1,$2,$3,$4)`,
+      [maxQ.rows[0].next_id, req.params.id, noteText.trim(), req.user.csmsId]
+    );
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('[POST /seekers/:id/internal-notes] error', err);
+    res.status(500).json({ error: 'INTERNAL', message: err.message });
+  }
+});
+
 // GET /api/seekers/:id/masterlist — current active Seeker_Other_MasterList_Info row (or null)
 router.get('/:id/masterlist', requireAuth, async (req, res) => {
   try {
@@ -154,7 +240,7 @@ router.get('/:id/masterlist', requireAuth, async (req, res) => {
 router.put('/:id/masterlist', requireAuth, async (req, res) => {
   const {
     pranshakti, subRegion, sadhanaStartDt, weeklySevaHrs, perInfo,
-    oppHome, visitedAshram, attendedMavWorkshop, sensitiveList,
+    oppHome, visitedAshram, attendedMavWorkshop, sensitiveList, availability,
   } = req.body || {};
   let client;
   try {
@@ -168,11 +254,11 @@ router.put('/:id/masterlist', requireAuth, async (req, res) => {
     await client.query(
       `INSERT INTO ${qi('MSR')}.${qi('Seeker_Other_MasterList_Info')}
         (${qi('Seeker_ID')}, ${qi('Pranshakti')}, ${qi('Sub_Region')}, ${qi('Sadhana_ST_DT')}, ${qi('Weekly_Seva_Hrs')},
-         ${qi('Per_Info')}, ${qi('Opp_Home')}, ${qi('Visited_Ashram')}, ${qi('Attended_MAV_Workshop')}, ${qi('Sensitive_List')},
+         ${qi('Per_Info')}, ${qi('Opp_Home')}, ${qi('Visited_Ashram')}, ${qi('Attended_MAV_Workshop')}, ${qi('Sensitive_List')}, ${qi('Availability')},
          ${qi('Ver_From_DT')}, ${qi('Ver_To_DT')}, ${qi('Created_ID')}, ${qi('Creation_DT')})
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,CURRENT_DATE,'9999-12-31',$11,now())`,
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,CURRENT_DATE,'9999-12-31',$12,now())`,
       [req.params.id, pranshakti || null, subRegion || null, sadhanaStartDt || null, weeklySevaHrs || null,
-       perInfo || null, oppHome || null, visitedAshram || null, attendedMavWorkshop || null, sensitiveList || null,
+       perInfo || null, oppHome || null, visitedAshram || null, attendedMavWorkshop || null, sensitiveList || null, availability || null,
        req.user.csmsId]
     );
     await client.query('COMMIT');
