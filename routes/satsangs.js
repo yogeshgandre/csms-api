@@ -73,8 +73,8 @@ async function notify(client, csmsId, message, linkKind, linkId) {
 router.get('/types', requireAuth, async (req, res) => {
   try {
     const r = await pool.query(
-      `SELECT ${qi('Satsang_Type_ID')}, ${qi('ST_Name')}, ${qi('SS_Desc')}
-       FROM ${qi('SCS')}.${qi('M_Satsang_type')} WHERE ${qi('Active_Flag')} = true ORDER BY ${qi('ST_Name')}`
+      `SELECT ${qi('Satsang_Type_ID')}, ${qi('ST_Name')}, ${qi('ST_Desc')}
+       FROM ${qi('SCS')}.${qi('M_Satsang_type')} WHERE ${qi('Ver_To_DT')} >= CURRENT_DATE ORDER BY ${qi('ST_Name')}`
     );
     res.json(r.rows);
   } catch (err) {
