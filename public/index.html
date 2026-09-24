@@ -604,7 +604,7 @@ nav .pip.r{background:var(--sage-wash);color:var(--sage)}
   <button class="on" data-p="overview" data-icon="home" data-color="sage" onclick="tab('overview')"><span class="nb-label">Overview</span><span class="pip r" id="pip6">0</span></button>
   <button data-p="search" data-icon="idcard" data-color="deep" onclick="tab('search'); renderLiveSeekers()"><span class="nb-label">Search Seekers</span></button>
   <button data-p="alerts" data-icon="heart" data-color="rose" onclick="tab('alerts')"><span class="nb-label">My Seva Activities</span><span class="pip" id="pip">0</span></button>
-  <button data-p="journey" data-icon="sprout" data-color="sage" onclick="tab('journey')"><span class="nb-label">Curious and Seeker Spiritual Journey</span></button>
+  <button data-p="journey" data-icon="sprout" data-color="sage" onclick="tab('journey'); renderLiveSeekers('journeySearch'); renderJourney()"><span class="nb-label">Spiritual Journey</span></button>
   <button data-p="calendar" data-icon="calendar" data-color="deep" onclick="tab('calendar'); renderCalendar()"><span class="nb-label">Calendar</span></button>
   <button data-p="reports" data-icon="chart" data-color="violet" onclick="tab('reports')"><span class="nb-label">Reports</span><span class="pip r" id="pip5">0</span></button>
   <button data-p="sevahub" data-icon="gear" data-color="amber" onclick="tab('sevahub')"><span class="nb-label">Seva Management</span></button>
@@ -683,14 +683,10 @@ nav .pip.r{background:var(--sage-wash);color:var(--sage)}
   </section>
 
   <section class="pane" id="p-journey">
-    <h2 class="sec">Curious and Seeker Spiritual Journey</h2>
+    <h2 class="sec">Spiritual Journey</h2>
     <p class="sub">Where every seeker sits, and what brought them in. Not a sales pipeline — there is no close, and moving backwards is ordinary.</p>
-    <div class="filters" style="border-bottom:1px solid var(--line-2);padding-bottom:0;margin-bottom:16px">
-      <button class="chip on" data-jsub="board" onclick="journeySubtab('board')">Board</button>
-      <button class="chip" data-jsub="masterlist" onclick="journeySubtab('masterlist')">MasterList Management</button>
-    </div>
+    <div id="journeySearch" style="margin-bottom:16px"></div>
     <div id="journey"></div>
-    <div id="journeyMasterlist" style="display:none"></div>
   </section>
 
   <section class="pane" id="p-calendar">
@@ -1389,34 +1385,41 @@ function seekersSubtab(s){
   if(s==='live') renderLiveSeekers();
 }
 
-async function loadLiveSeekers(){
-  const q = (document.getElementById('liveSeekerQ')||{}).value || '';
+async function loadLiveSeekers(containerId){
+  containerId = containerId || 'seekerSearch';
+  const q = (document.getElementById(containerId+'_q')||{}).value || '';
   try{
     const params = new URLSearchParams();
     if(q) params.set('q', q);
     LIVE_SEEKERS = await apiFetch('/api/seekers'+(params.toString()?('?'+params.toString()):''));
-    renderLiveSeekersBody();
+    renderLiveSeekersBody(containerId);
   }catch(err){
-    const el = document.getElementById('seekersLiveBody');
+    const el = document.getElementById(containerId+'_body');
     if(el) el.innerHTML = `<div class="hidden-note" style="background:var(--rose-wash);border-color:#EBCBCE;color:var(--rose)"><b>Could not load seekers.</b> ${esc(err.message||'')}</div>`;
   }
 }
 
-function renderLiveSeekers(){
-  const el = document.getElementById('seekerSearch');
+// Shared "search seekers" component — parametrized by containerId so it
+// can render into more than one pane at once (the standalone Search
+// Seekers tab, and the copy embedded in the Journey tab) without their
+// input/result element ids colliding in the DOM.
+function renderLiveSeekers(containerId){
+  containerId = containerId || 'seekerSearch';
+  const el = document.getElementById(containerId);
   if(!el) return;
+  const qId = containerId+'_q', bodyId = containerId+'_body';
   el.innerHTML = `
     <div class="card pad" style="margin-bottom:14px;display:flex;gap:9px;align-items:center">
-      <input type="search" id="liveSeekerQ" style="flex:1;font-size:16px;padding:10px 13px" placeholder="Search name, email or WhatsApp" onkeydown="if(event.key==='Enter') loadLiveSeekers()">
-      <button class="btn ghost sm" onclick="document.getElementById('liveSeekerQ').value='';loadLiveSeekers()">Clear</button>
+      <input type="search" id="${qId}" style="flex:1;font-size:16px;padding:10px 13px" placeholder="Search name, email or WhatsApp" onkeydown="if(event.key==='Enter') loadLiveSeekers('${containerId}')">
+      <button class="btn ghost sm" onclick="document.getElementById('${qId}').value='';loadLiveSeekers('${containerId}')">Clear</button>
     </div>
-    <div id="seekersLiveBody"><p class="sub2">Loading\u2026</p></div>
-    <div id="seekerDetailRoot"></div>`;
-  loadLiveSeekers();
+    <div id="${bodyId}"><p class="sub2">Loading\u2026</p></div>`;
+  loadLiveSeekers(containerId);
 }
 
-function renderLiveSeekersBody(){
-  const body = document.getElementById('seekersLiveBody');
+function renderLiveSeekersBody(containerId){
+  containerId = containerId || 'seekerSearch';
+  const body = document.getElementById(containerId+'_body');
   if(!body) return;
   const list = LIVE_SEEKERS || [];
   body.innerHTML = `<div class="card" style="overflow:hidden"><table>
@@ -4946,9 +4949,11 @@ function renderJourney(){
 function journeySubtab(s){
   document.getElementById('journey').style.display = s==='board' ? '' : 'none';
   document.getElementById('journeyMasterlist').style.display = s==='masterlist' ? '' : 'none';
+  document.getElementById('journeySearch').style.display = s==='search' ? '' : 'none';
   document.querySelectorAll('#p-journey .chip').forEach(c=>c.classList.toggle('on', c.dataset.jsub===s));
   if(s==='board') renderJourney();
-  else renderMasterlistMgmt();
+  else if(s==='masterlist') renderMasterlistMgmt();
+  else renderLiveSeekers('journeySearch');
 }
 
 let LIVE_ML_SEEKERS = null;
