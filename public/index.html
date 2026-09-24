@@ -108,7 +108,7 @@ p.sub{margin:0 0 16px;color:var(--ink-3);font-size:12.5px;max-width:62ch}
 }
 .chip{background:var(--card);border:1px solid var(--line-2);border-radius:999px;
   padding:6px 14px;font-size:12.5px;color:var(--ink-2);box-shadow:none}
-.chip:hover{border-color:var(--ink-3);color:var(--ink)}
+.chip:hover{border-color:var(--ink-3);color:var(--ink);background:var(--paper)}
 .chip.on{background:var(--deep);border-color:var(--deep);color:#fff;font-weight:600}
 .count{margin-left:auto;font-size:12.5px;color:var(--ink-3);font-variant-numeric:tabular-nums}
 
@@ -156,7 +156,7 @@ tbody tr:last-child td{border-bottom:none}
   float:right;background:none;border:1px solid var(--line-2);border-radius:var(--r-sm);
   width:28px;height:28px;line-height:1;color:var(--ink-2);font-size:16px;
 }
-.dclose:hover{border-color:var(--ink-3);color:var(--ink)}
+.dclose:hover{border-color:var(--ink-3);color:var(--ink);background:var(--paper)}
 .dbody{padding:18px 22px 40px}
 .kv{display:grid;grid-template-columns:132px 1fr;gap:7px 14px;font-size:13.5px;margin-top:4px}
 .kv dt{color:var(--ink-3);font-size:12.5px}
@@ -273,20 +273,33 @@ tbody tr:last-child td{border-bottom:none}
 }
 .org-banner img.banner-img{display:block;width:100%;height:auto;max-height:230px;object-fit:cover;object-position:center}
 header{grid-area:header}
+.nav-logo{display:flex;justify-content:center;padding:6px 4px 14px}
+.nav-logo img{max-width:100%;height:auto;display:block}
 nav{
-  grid-area:nav;flex-direction:column;align-items:stretch;gap:2px;
+  grid-area:nav;flex-direction:column;align-items:stretch;gap:3px;
   border-bottom:none;border-right:1px solid var(--line);
-  padding:16px 12px;overflow-y:auto;overflow-x:hidden;
+  padding:16px 10px;overflow-y:auto;overflow-x:hidden;
 }
-nav button{border-bottom:none;border-left:2px solid transparent;margin-bottom:0;text-align:left;
-  border-radius:0 8px 8px 0;padding:10px 12px;white-space:normal;line-height:1.3}
-nav button.on{box-shadow:none;border-left-color:var(--deep)}
+nav button{border-bottom:none;border-left:3px solid transparent;margin-bottom:0;text-align:left;
+  border-radius:10px;padding:9px 10px;white-space:normal;line-height:1.3;
+  display:flex;align-items:center;gap:10px}
+nav button.on{box-shadow:none;border-left-color:var(--sage);background:var(--sage-wash);color:var(--ink);font-weight:600}
+nav button:hover{background:var(--paper)}
+nav button.on:hover{background:var(--sage-wash)}
+.nb-icobadge{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.nb-icobadge svg{width:16px;height:16px}
+.nb-label{flex:1;font-size:13.5px}
+.nb-chevron{width:13px;height:13px;color:var(--ink-3);flex-shrink:0}
+nav button.nb-divider{margin-top:8px;padding-top:16px;border-top:1px solid var(--line)}
 main{grid-area:main;max-width:none;margin:0}
 @media(max-width:880px){
   .shell{grid-template-columns:1fr;grid-template-areas:"orgbanner" "header" "nav" "main"}
   nav{flex-direction:row;border-right:none;border-bottom:1px solid var(--line);padding:8px 22px 0;overflow-x:auto}
+  .nav-logo{display:none}
   nav button{border-left:none;border-bottom:2px solid transparent;border-radius:0;white-space:nowrap}
-  nav button.on{border-left:none;box-shadow:inset 0 -2px 0 var(--deep)}
+  nav button.on{border-left:none;border-bottom-color:var(--sage);box-shadow:none}
+  nav button.nb-divider{margin-top:0;padding-top:9px;border-top:none;border-left:1px solid var(--line)}
+  .nb-label{flex:none}
 }
 @media(max-width:700px){
   .metrics{grid-template-columns:repeat(2,1fr)}
@@ -319,7 +332,7 @@ nav .pip.r{background:var(--rose);color:#fff}
 /* ---------- kanban / journey board ---------- */
 .mini{background:var(--card);border:1px solid var(--line-2);border-radius:999px;
   width:24px;height:24px;line-height:1;font-size:14px;color:var(--ink-2);cursor:pointer}
-.mini:hover{border-color:#8397A6;color:var(--ink)}
+.mini:hover{border-color:#8397A6;color:var(--ink);background:var(--paper)}
 .mini:disabled{opacity:.35;cursor:not-allowed}
 .kboard{display:grid;grid-template-columns:repeat(5,minmax(200px,1fr));gap:12px;overflow-x:auto;padding-bottom:6px}
 .klane{background:transparent}
@@ -336,7 +349,7 @@ nav .pip.r{background:var(--rose);color:#fff}
 .kcard.dragging{opacity:.4}
 .kcard.od{border-left:3px solid var(--amber)}
 .kcard-name{font-size:14px;cursor:pointer}
-.kcard-name:hover{color:var(--deep)}
+.kcard-name:hover{color:var(--deep);background:var(--deep-wash);border-radius:var(--r-sm)}
 .kcard-actions{display:flex;align-items:center;gap:8px;margin-top:auto;padding-top:8px}
 .kcard-drag{margin-left:auto;font-size:10.5px;color:var(--ink-3);cursor:grab}/* ---------- organisation chart + modal ---------- */
 .deptcard{border-radius:16px;padding:20px 18px;display:flex;flex-direction:column;min-width:0}
@@ -412,11 +425,11 @@ nav .pip.r{background:var(--rose);color:#fff}
   border:1px solid var(--line-2);padding:20px;box-shadow:var(--sh)}
 .oclose{float:right;background:none;border:1px solid var(--line-2);border-radius:999px;
   width:28px;height:28px;line-height:1;color:var(--ink-2);font-size:16px;cursor:pointer}
-.oclose:hover{border-color:var(--ink-3);color:var(--ink)}
+.oclose:hover{border-color:var(--ink-3);color:var(--ink);background:var(--paper)}
 .oteamrow{display:flex;align-items:center;justify-content:space-between;padding:9px 2px;
   border-bottom:1px solid var(--line);font-size:13.5px;cursor:pointer}
 .oteamrow:last-of-type{border-bottom:none}
-.oteamrow:hover{color:var(--deep)}
+.oteamrow:hover{color:var(--deep);background:var(--paper);border-radius:var(--r-sm)}
 .ac-dropdown{position:absolute;top:100%;left:0;right:0;z-index:50;background:var(--card);
   border:1px solid var(--line-2);border-radius:12px;box-shadow:var(--sh);margin-top:4px;
   max-height:200px;overflow-y:auto}
@@ -505,21 +518,22 @@ nav .pip.r{background:var(--rose);color:#fff}
 </header>
 
 <nav>
-  <button data-p="overview" onclick="tab('overview')">Overview<span class="pip r" id="pip6">0</span></button>
-  <button class="on" data-p="seekers" onclick="tab('seekers')">Seekers</button>
-  <button data-p="alerts" onclick="tab('alerts')">My Seva Activities<span class="pip" id="pip">0</span></button>
-  <button data-p="journey" onclick="tab('journey')">Curious and Seeker Spiritual Journey</button>
-  <button data-p="calendar" onclick="tab('calendar'); renderCalendar()">Calendar</button>
-  <button data-p="reports" onclick="tab('reports')">Reports<span class="pip r" id="pip5">0</span></button>
-  <button data-p="sevahub" onclick="tab('sevahub')">Seva Management</button>
-  <button data-p="profiles" onclick="tab('profiles')">Profiles</button>
-  <button data-p="dash" onclick="tab('dash')">Dashboard</button>
-  <button data-p="org" onclick="tab('org')">Organisation and Team Management</button>
-  <button data-p="satsangmgmt" onclick="tab('satsangmgmt'); satsangSubtab('defs')">Satsang Management</button>
-  <button data-p="formmgmt" onclick="tab('formmgmt'); formSubtab('defs')">Form Management System</button>
-  <button data-p="tickermgmt" onclick="tab('tickermgmt'); renderTickerMgmt()">Ticker Management</button>
-  <button data-p="ops" onclick="tab('ops')">Operations<span class="pip" id="pip3">0</span></button>
-  <button data-p="about" onclick="tab('about')">What this shows</button>
+  <div class="nav-logo"><img src="assets/csms-logo-sidebar.png" alt="CSMS — Connect · Serve · Grow" width="150" height="75"></div>
+  <button data-p="overview" data-icon="home" data-color="sage" onclick="tab('overview')"><span class="nb-label">Overview</span><span class="pip r" id="pip6">0</span></button>
+  <button class="on" data-p="seekers" data-icon="users" data-color="deep" onclick="tab('seekers')"><span class="nb-label">Seekers</span></button>
+  <button data-p="alerts" data-icon="heart" data-color="rose" onclick="tab('alerts')"><span class="nb-label">My Seva Activities</span><span class="pip" id="pip">0</span></button>
+  <button data-p="journey" data-icon="sprout" data-color="sage" onclick="tab('journey')"><span class="nb-label">Curious and Seeker Spiritual Journey</span></button>
+  <button data-p="calendar" data-icon="calendar" data-color="deep" onclick="tab('calendar'); renderCalendar()"><span class="nb-label">Calendar</span></button>
+  <button data-p="reports" data-icon="chart" data-color="violet" onclick="tab('reports')"><span class="nb-label">Reports</span><span class="pip r" id="pip5">0</span></button>
+  <button data-p="sevahub" data-icon="gear" data-color="amber" onclick="tab('sevahub')"><span class="nb-label">Seva Management</span></button>
+  <button data-p="profiles" data-icon="idcard" data-color="rose" onclick="tab('profiles')"><span class="nb-label">Profiles</span></button>
+  <button data-p="dash" data-icon="grid" data-color="sage" onclick="tab('dash')"><span class="nb-label">Dashboard</span></button>
+  <button data-p="org" data-icon="users" data-color="deep" onclick="tab('org')"><span class="nb-label">Organisation and Team Management</span></button>
+  <button data-p="satsangmgmt" data-icon="lotus" data-color="amber" onclick="tab('satsangmgmt'); satsangSubtab('defs')"><span class="nb-label">Satsang Management</span></button>
+  <button data-p="formmgmt" data-icon="file" data-color="violet" onclick="tab('formmgmt'); formSubtab('defs')"><span class="nb-label">Form Management System</span></button>
+  <button data-p="tickermgmt" data-icon="ticket" data-color="rose" onclick="tab('tickermgmt'); renderTickerMgmt()"><span class="nb-label">Ticker Management</span></button>
+  <button data-p="ops" data-icon="clipboard" data-color="deep" onclick="tab('ops')"><span class="nb-label">Operations</span><span class="pip" id="pip3">0</span></button>
+  <button data-p="about" data-icon="help" data-color="deep" class="nb-divider" onclick="tab('about')"><span class="nb-label">What this shows</span></button>
 </nav>
 
 <main>
@@ -1684,11 +1698,52 @@ const SP_ICONS = {
   notebook: '<path d="M5 3h13a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M9 3v18M4 8h1M4 13h1M4 18h1"/>',
   history: '<path d="M4 8a8 8 0 1 1 1.7 9.9"/><path d="M4 4v5h5"/><path d="M12 8v5l3 2"/>',
   message: '<path d="M4 5h16a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H9l-5 4V6a1 1 0 0 1 1-1z"/>',
+  help: '<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.8.4-1 .8-1 1.7"/><path d="M12 17h.01"/>',
+  home: '<path d="M4 11l8-7 8 7"/><path d="M6 10v9a1 1 0 0 0 1 1h4v-6h2v6h4a1 1 0 0 0 1-1v-9"/>',
+  sprout: '<path d="M7 20h10"/><path d="M12 20v-8"/><path d="M12 12C7 12 5 8 5 5c4 0 7 2 7 7z"/><path d="M12 9c1-3 4-4 7-4-1 3-3 5-7 5z"/>',
+  calendar: '<rect x="4" y="5" width="16" height="16" rx="2"/><path d="M4 10h16M8 3v4M16 3v4"/><path d="M8 14h.01M12 14h.01M16 14h.01"/>',
+  gear: '<circle cx="12" cy="12" r="3"/><path d="M19.4 13a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6V19a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.6-1H4a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3H10a1.7 1.7 0 0 0 1-1.6V4a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V10a1.7 1.7 0 0 0 1.6 1H20a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.6 1z"/>',
+  idcard: '<rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M6 16c0-1.7 1.3-3 3-3s3 1.3 3 3"/><path d="M14 10h4M14 14h4"/>',
+  grid: '<rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/>',
+  lotus: '<path d="M12 21c0-5-3-7.5-7-8 2.5 5 4 6.5 7 8z"/><path d="M12 21c0-5 3-7.5 7-8-2.5 5-4 6.5-7 8z"/><path d="M12 21c0-7 0-11 0-14-1.5 3.5-1 10 0 14z"/>',
+  ticket: '<path d="M4 8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2a1.5 1.5 0 0 0 0 3v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-2a1.5 1.5 0 0 0 0-3z"/><path d="M11 7v10" stroke-dasharray="2 2"/>',
+  clipboard: '<rect x="6" y="5" width="12" height="16" rx="2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h6"/>',
 };
 function spIconSvg(name){
   const p = SP_ICONS[name] || SP_ICONS.filetext;
   return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p}</svg>`;
 }
+// Build the icon badge + chevron for every sidebar nav button, from its
+// data-icon/data-color attributes \u2014 markup stays plain HTML in the
+// document, this just decorates it once at load.
+(function initNavIcons(){
+  document.querySelectorAll('nav button[data-icon]').forEach(btn=>{
+    const icon = btn.dataset.icon;
+    const color = btn.dataset.color || 'deep';
+    const label = btn.querySelector('.nb-label');
+    const pip = btn.querySelector('.pip');
+    btn.innerHTML = '';
+    const badge = document.createElement('span');
+    badge.className = 'nb-icobadge';
+    badge.style.color = `var(--${color})`;
+    badge.style.background = `var(--${color}-wash)`;
+    badge.innerHTML = spIconSvg(icon);
+    btn.appendChild(badge);
+    if(label) btn.appendChild(label);
+    if(pip) btn.appendChild(pip);
+    const chev = document.createElement('svg');
+    chev.setAttribute('class', 'nb-chevron');
+    chev.setAttribute('viewBox', '0 0 24 24');
+    chev.setAttribute('fill', 'none');
+    chev.setAttribute('stroke', 'currentColor');
+    chev.setAttribute('stroke-width', '2');
+    chev.setAttribute('stroke-linecap', 'round');
+    chev.setAttribute('stroke-linejoin', 'round');
+    chev.setAttribute('aria-hidden', 'true');
+    chev.innerHTML = '<path d="m9 6 6 6-6 6"/>';
+    btn.appendChild(chev);
+  });
+})();
 function spCard(colorToken, icon, title, innerHtml, extraClass, countBadge){
   return `<div class="sp-card${extraClass?(' '+extraClass):''}">
     <h3>
