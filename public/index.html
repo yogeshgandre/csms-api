@@ -730,7 +730,7 @@ nav .pip.r{background:var(--sage-wash);color:var(--sage)}
 <!-- Firebase Auth (Google Sign-In, restricted to ssrf.org — enforced server-side, see routes/auth.js) -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
-  import { getAuth, GoogleAuthProvider, signInWithRedirect, getRedirectResult } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
+  import { getAuth, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
 
   // TODO: fill in from Firebase Console -> Project Settings -> General -> Your apps -> Web app.
   // This config is meant to be public/embedded in client code — it is not a secret.
@@ -750,18 +750,10 @@ nav .pip.r{background:var(--sage-wash);color:var(--sage)}
   // The real check happens server-side in routes/auth.js on the verified ID token.
   provider.setCustomParameters({ hd: "ssrf.org" });
 
-  // Redirect flow instead of a popup window: clicking "Continue with Google"
-  // navigates the whole tab to Google's account chooser and back, rather
-  // than opening a second window.
-  window.__csmsGoogleSignInStart = function(){
-    return signInWithRedirect(auth, provider);
+  window.__csmsGoogleSignIn = async function(){
+    const result = await signInWithPopup(auth, provider);
+    return result.user.getIdToken();
   };
-
-  // On the page load that follows the redirect back from Google, this
-  // resolves with the signed-in user (or null on a normal, non-redirect
-  // load). window.__csmsAuthReady lets the rest of the app wait on it.
-  window.__csmsAuthReady = getRedirectResult(auth)
-    .then(result => result ? result.user.getIdToken() : null);
 </script>
 
 <script>
@@ -807,40 +799,24 @@ async function completeLogin(idToken){
   initRole();
 }
 
-function attemptGoogleLogin(){
+async function attemptGoogleLogin(){
   const errEl = document.getElementById('login-err');
   const btnEl = document.getElementById('google-signin-btn');
   errEl.classList.remove('on'); errEl.textContent = '';
   btnEl.disabled = true;
-  // Redirects the whole page to Google — nothing to await here, the
-  // result is picked up by checkRedirectLogin() on the page load that
-  // follows the redirect back.
-  window.__csmsGoogleSignInStart().catch(err=>{
-    errEl.textContent = err.message || 'Could not sign in.';
-    errEl.classList.add('on');
-    btnEl.disabled = false;
-  });
-}
 
-// Runs once on load, before the person has clicked anything: resolves the
-// pending redirect result (if this load IS the return trip from Google),
-// and finishes signing in automatically. On an ordinary load it resolves
-// to null and the login screen just sits there as usual.
-async function checkRedirectLogin(){
-  const btnEl = document.getElementById('google-signin-btn');
-  const errEl = document.getElementById('login-err');
   try{
-    const idToken = await window.__csmsAuthReady;
-    if(!idToken) return;
-    if(btnEl) btnEl.disabled = true;
+    const idToken = await window.__csmsGoogleSignIn();
     await completeLogin(idToken);
   }catch(err){
-    if(errEl){ errEl.textContent = err.message || 'Could not sign in.'; errEl.classList.add('on'); }
+    // Firebase popup errors (user closed the window, blocked popup, etc.)
+    // land here alongside real backend rejections — both get shown as-is.
+    errEl.textContent = err.message || 'Could not sign in.';
+    errEl.classList.add('on');
   }finally{
-    if(btnEl) btnEl.disabled = false;
+    btnEl.disabled = false;
   }
 }
-document.addEventListener('DOMContentLoaded', checkRedirectLogin);
 const CONTACT_SLA_DAYS = 60; /* flat window — there is no longer a per-stage SLA, since Stage does not exist in the schema (only Seeker_Category) */
 
 const ROLES = {
