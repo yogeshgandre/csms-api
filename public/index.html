@@ -1115,8 +1115,13 @@ function counts(s){
   });
   return c;
 }
+// Colour is derived from the category's position in the real list
+// (Master.M_Seeker_Category), not hardcoded names — those don't exist in
+// the schema and shouldn't be assumed.
+const CATEGORY_TAG_CLASSES = ['t-new','t-active','t-core','t-warn','t-bad'];
 function categoryTag(cat){
-  const k = cat==="Partner"?"t-core":cat==="Well-wisher"?"t-active":"t-new";
+  const idx = (LIVE_SEEKER_CATEGORIES||[]).findIndex(c=>c.Category_Name===cat);
+  const k = CATEGORY_TAG_CLASSES[idx >= 0 ? idx % CATEGORY_TAG_CLASSES.length : 0];
   return `<span class="tag ${k}">${esc(cat)}</span>`;
 }
 const esc = s => String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -4827,14 +4832,24 @@ function toggleTask(id){ const t=TASKS.find(x=>x.id===id); t.done=!t.done; rende
    milestones, donations/attribution) have no real-schema equivalent yet, so
    only Journey itself has been switched over here; wiring the rest is a
    separate call once that's decided, not done silently as part of this. */
-let LANES = ["Curious","Well-wisher","Partner"]; // fallback until Master.M_Seeker_Category loads
+let LANES = []; // populated only from Master.M_Seeker_Category — empty means "not loaded yet", never fabricated
 let LIVE_SEEKER_CATEGORIES = null;
 let LIVE_JOURNEY_SEEKERS = null;
+let JOURNEY_CATEGORIES_ERROR = null;
 async function loadSeekerCategories(){
   try{
     const cats = await apiFetch('/api/master/categories');
-    if(cats && cats.length){ LANES = cats.map(c=>c.Category_Name); LIVE_SEEKER_CATEGORIES = cats; renderJourney(); }
-  }catch(err){ /* keep the fallback lanes — the illustrative board still works either way */ }
+    LANES = (cats||[]).map(c=>c.Category_Name);
+    LIVE_SEEKER_CATEGORIES = cats||[];
+    JOURNEY_CATEGORIES_ERROR = null;
+    renderJourney();
+  }catch(err){
+    // Surfaced in the board itself (see renderJourney) instead of being
+    // silently swallowed \u2014 showing made-up category names when the real
+    // ones fail to load would be worse than showing an error.
+    JOURNEY_CATEGORIES_ERROR = err.message || 'Could not load categories.';
+    renderJourney();
+  }
 }
 async function loadJourneySeekers(){
   try{
@@ -4884,6 +4899,11 @@ function renderJourney(){
   const el = document.getElementById('journey');
   if(!el) return;
   if(LIVE_JOURNEY_SEEKERS === null){ el.innerHTML = genericSkeleton(5); loadJourneySeekers(); return; }
+  if(JOURNEY_CATEGORIES_ERROR){
+    el.innerHTML = `<div class="hidden-note" style="background:var(--rose-wash);border-color:#EBCBCE;color:var(--rose)"><b>Could not load categories.</b> ${esc(JOURNEY_CATEGORIES_ERROR)} <button class="mini" onclick="loadSeekerCategories()" style="width:auto;padding:0 10px;height:24px;margin-left:6px">Retry</button></div>`;
+    return;
+  }
+  if(LIVE_SEEKER_CATEGORIES === null){ el.innerHTML = genericSkeleton(5); loadSeekerCategories(); return; }
   const v = LIVE_JOURNEY_SEEKERS;
 
   const lanes = LANES.map(L=>{
