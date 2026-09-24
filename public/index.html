@@ -604,7 +604,7 @@ nav .pip.r{background:var(--sage-wash);color:var(--sage)}
   <button class="on" data-p="overview" data-icon="home" data-color="sage" onclick="tab('overview')"><span class="nb-label">Overview</span><span class="pip r" id="pip6">0</span></button>
   <button data-p="search" data-icon="idcard" data-color="deep" onclick="tab('search'); renderLiveSeekers()"><span class="nb-label">Search Seekers</span></button>
   <button data-p="alerts" data-icon="heart" data-color="rose" onclick="tab('alerts')"><span class="nb-label">My Seva Activities</span><span class="pip" id="pip">0</span></button>
-  <button data-p="journey" data-icon="sprout" data-color="sage" onclick="tab('journey'); renderLiveSeekers('journeySearch'); renderJourney()"><span class="nb-label">Spiritual Journey</span></button>
+  <button data-p="journey" data-icon="sprout" data-color="sage" onclick="tab('journey'); renderLiveSeekers('journeySearch', false); renderJourney()"><span class="nb-label">Spiritual Journey</span></button>
   <button data-p="calendar" data-icon="calendar" data-color="deep" onclick="tab('calendar'); renderCalendar()"><span class="nb-label">Calendar</span></button>
   <button data-p="reports" data-icon="chart" data-color="violet" onclick="tab('reports')"><span class="nb-label">Reports</span><span class="pip r" id="pip5">0</span></button>
   <button data-p="sevahub" data-icon="gear" data-color="amber" onclick="tab('sevahub')"><span class="nb-label">Seva Management</span></button>
@@ -1403,18 +1403,19 @@ async function loadLiveSeekers(containerId){
 // can render into more than one pane at once (the standalone Search
 // Seekers tab, and the copy embedded in the Journey tab) without their
 // input/result element ids colliding in the DOM.
-function renderLiveSeekers(containerId){
+function renderLiveSeekers(containerId, autoLoad){
   containerId = containerId || 'seekerSearch';
+  if(autoLoad === undefined) autoLoad = true;
   const el = document.getElementById(containerId);
   if(!el) return;
   const qId = containerId+'_q', bodyId = containerId+'_body';
   el.innerHTML = `
     <div class="card pad" style="margin-bottom:14px;display:flex;gap:9px;align-items:center">
-      <input type="search" id="${qId}" style="flex:1;font-size:16px;padding:10px 13px" placeholder="Search name, email or WhatsApp" onkeydown="if(event.key==='Enter') loadLiveSeekers('${containerId}')">
-      <button class="btn ghost sm" onclick="document.getElementById('${qId}').value='';loadLiveSeekers('${containerId}')">Clear</button>
+      <input type="search" id="${qId}" style="flex:1;font-size:16px;padding:10px 13px" placeholder="Search name, email or WhatsApp" oninput="if(!this.value) document.getElementById('${bodyId}').innerHTML=''" onkeydown="if(event.key==='Enter') loadLiveSeekers('${containerId}')">
+      <button class="btn ghost sm" onclick="document.getElementById('${qId}').value='';document.getElementById('${bodyId}').innerHTML=''">Clear</button>
     </div>
-    <div id="${bodyId}"><p class="sub2">Loading\u2026</p></div>`;
-  loadLiveSeekers(containerId);
+    <div id="${bodyId}">${autoLoad ? '<p class="sub2">Loading\u2026</p>' : ''}</div>`;
+  if(autoLoad) loadLiveSeekers(containerId);
 }
 
 function renderLiveSeekersBody(containerId){
