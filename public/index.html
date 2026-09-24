@@ -91,6 +91,7 @@ main{padding:22px;max-width:1320px;margin:0 auto}
 
 /* ---------- generic ---------- */
 .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r)}
+.card:hover{border-color:var(--deep-2);box-shadow:0 4px 16px rgba(11,143,196,.14)}
 .pad{padding:16px 18px}
 h2.sec{font-family:var(--font-head);font-size:19px;font-weight:600;margin:0 0 4px;letter-spacing:-.015em}
 p.sub{margin:0 0 16px;color:var(--ink-3);font-size:12.5px;max-width:62ch}
@@ -130,6 +131,8 @@ tbody tr:last-child td{border-bottom:none}
 .t-core{background:var(--deep-wash);color:var(--deep);border-color:#C4DBE1}
 .t-active{background:var(--sage-wash);color:var(--sage);border-color:#CBDFD1}
 .t-semi{background:#F1EFEA;color:var(--ink-2);border-color:var(--line-2)}
+.skill-chip{display:inline-block;font-size:11.5px;font-weight:600;padding:4px 11px;border-radius:999px;
+  background:var(--deep-wash);color:var(--deep);border:1px solid #B9E0F0;margin:0 4px 4px 0}
 .t-new{background:#EFEEF6;color:#4A4680;border-color:#D6D3E6}
 .t-warn{background:var(--amber-wash);color:var(--amber);border-color:#EBD9B4}
 .t-bad{background:var(--rose-wash);color:var(--rose);border-color:#EBCBCE}
@@ -312,8 +315,8 @@ h2.sec{letter-spacing:-.01em}
 .brand .t{letter-spacing:-.015em}
 .brand .s{color:var(--deep-2);opacity:.85}
 .pip{box-shadow:0 1px 2px rgba(22,51,74,.15)}
-nav .pip{background:var(--amber);color:#4A3405}
-nav .pip.r{background:var(--rose);color:#fff}
+nav .pip{background:var(--sage-wash);color:var(--sage)}
+nav .pip.r{background:var(--sage-wash);color:var(--sage)}
 .t-warn,.t-old{background:var(--amber-wash);color:var(--amber);border-color:#F0DFAE}
 .t-bad,.t-chg,.t-a9{background:var(--rose-wash);color:var(--rose);border-color:#F3CFB6}
 .t-core,.t-sub{background:var(--deep-wash);color:var(--deep);border-color:#C6E0F0}
@@ -345,7 +348,7 @@ nav .pip.r{background:var(--rose);color:#fff}
   border-radius:var(--r-sm);padding:14px;text-align:center}
 .kcard{background:var(--card);border:1px solid var(--line);border-radius:var(--r-sm);
   padding:11px 12px;cursor:grab;box-shadow:var(--sh-sm);display:flex;flex-direction:column}
-.kcard:hover{box-shadow:var(--sh)}
+.kcard:hover{box-shadow:var(--sh);border-color:var(--deep-2)}
 .kcard.dragging{opacity:.4}
 .kcard.od{border-left:3px solid var(--amber)}
 .kcard-name{font-size:14px;cursor:pointer}
@@ -391,6 +394,7 @@ nav .pip.r{background:var(--rose);color:#fff}
 .sp-stat .val{font-size:20px;font-weight:600}
 .sp-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 .sp-card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px}
+.sp-card:hover{border-color:var(--deep-2);box-shadow:0 4px 16px rgba(11,143,196,.14)}
 .sp-card.full{grid-column:1 / -1}
 .sp-card.amber-accent{border-left:3px solid var(--amber)}
 .sp-card{transition:opacity .28s ease-out, transform .28s ease-out}
@@ -4958,11 +4962,12 @@ async function toggleMlRowDetail(seekerId, btn){
   btn.textContent = 'Loading\u2026';
   ML_ROW_DETAIL[seekerId] = 'loading';
   try{
-    const [info, links] = await Promise.all([
+    const [info, links, skills] = await Promise.all([
       apiFetch('/api/seekers/'+seekerId+'/masterlist'),
       apiFetch('/api/seekers/'+seekerId+'/satsang-links'),
+      apiFetch('/api/seekers/'+seekerId+'/skills').catch(()=>[]),
     ]);
-    ML_ROW_DETAIL[seekerId] = {info, links};
+    ML_ROW_DETAIL[seekerId] = {info, links, skills};
     slot.innerHTML = mlRowDetailHTML(seekerId, ML_ROW_DETAIL[seekerId]);
     btn.textContent = 'Hide details';
   }catch(err){
@@ -4991,6 +4996,8 @@ function mlRowDetailHTML(seekerId, detail){
       <div style="grid-column:1/-1"><label class="sub2">Sensitive list</label>
         <input id="mlSensitiveList_${seekerId}" value="${esc(info.Sensitive_List||'')}" style="width:100%;border-radius:999px;padding:6px 12px;font-size:12.5px;border:1px solid var(--line-2);box-sizing:border-box;margin-top:3px"></div>
     </div>
+    ${detail.skills && detail.skills.length ? `<div><label class="sub2">Skills</label>
+      <div style="margin-top:4px">${detail.skills.map(sk=>`<span class="skill-chip">${esc(sk.Skill_Name||'')}</span>`).join('')}</div></div>` : ''}
     <div><label class="sub2">Personal info</label>
       <textarea id="mlPerInfo_${seekerId}" rows="2" style="width:100%;border-radius:12px;padding:7px 12px;font-size:12.5px;border:1px solid var(--line-2);box-sizing:border-box;margin-top:3px;font-family:inherit;resize:vertical">${esc(info.Per_Info||'')}</textarea></div>
     <div><label class="sub2">Opposition at home</label>

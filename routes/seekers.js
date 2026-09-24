@@ -121,6 +121,19 @@ router.put('/:id/category', requireAuth, async (req, res) => {
        VALUES ($1, $2, CURRENT_DATE, '9999-12-31')`,
       [req.params.id, categoryId]
     );
+    // Mirror the category change into the Journey milestone table so it
+    // shows up on the seeker's timeline, not just as the current category.
+    const catQ = await client.query(
+      `SELECT ${qi('Category_Name')} FROM ${qi('Master')}.${qi('M_Seeker_Category')} WHERE ${qi('Category_ID')} = $1`,
+      [categoryId]
+    );
+    const catName = catQ.rows[0] ? catQ.rows[0].Category_Name : null;
+    const maxQ = await client.query(`SELECT COALESCE(MAX(${qi('Milestone_ID')}), 0) + 1 AS next_id FROM ${qi('MSR')}.${qi('Seeker_Milestone')}`);
+    await client.query(
+      `INSERT INTO ${qi('MSR')}.${qi('Seeker_Milestone')} (${qi('Milestone_ID')}, ${qi('Seeker_ID')}, ${qi('Milestone_Kind')}, ${qi('Milestone_Label')}, ${qi('Milestone_DT')}, ${qi('Created_ID')})
+       VALUES ($1,$2,$3,$4,CURRENT_DATE,$5)`,
+      [maxQ.rows[0].next_id, req.params.id, 'Category', `Moved to ${catName || 'category #' + categoryId}`, req.user.csmsId]
+    );
     await client.query('COMMIT');
     res.json({ ok: true });
   } catch (err) {
