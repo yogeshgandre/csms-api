@@ -840,7 +840,7 @@ async function checkRedirectLogin(){
     if(btnEl) btnEl.disabled = false;
   }
 }
-checkRedirectLogin();
+document.addEventListener('DOMContentLoaded', checkRedirectLogin);
 const CONTACT_SLA_DAYS = 60; /* flat window — there is no longer a per-stage SLA, since Stage does not exist in the schema (only Seeker_Category) */
 
 const ROLES = {
