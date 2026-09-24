@@ -149,6 +149,7 @@ function renderForm(data){
     : '';
   app.innerHTML = `
     ${previewBanner}
+    ${data.formTitle ? `<h1 style="margin:0 0 6px;font-size:24px;font-weight:700;color:var(--ink)">${esc(data.formTitle)}</h1>` : ''}
     <p class="sub" style="font-size:14.5px;color:var(--ink);opacity:1;margin-bottom:20px">${esc(data.formDesc || 'Tell us a bit about you \u2014 it only takes a minute.')}</p>
     <div id="formErr"></div>
     <form id="intakeForm">

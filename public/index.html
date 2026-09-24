@@ -347,14 +347,26 @@ nav .pip.r{background:var(--sage-wash);color:var(--sage)}
 .klane-empty{color:var(--ink-3);font-size:14.5px;background:var(--card);border:1px solid var(--line);
   border-radius:var(--r-sm);padding:14px;text-align:center}
 .kcard{background:var(--card);border:1px solid var(--line);border-radius:var(--r-sm);
-  padding:11px 12px;cursor:grab;box-shadow:var(--sh-sm);display:flex;flex-direction:column}
+  padding:11px 12px;cursor:pointer;box-shadow:var(--sh-sm);display:flex;flex-direction:column}
 .kcard:hover{box-shadow:var(--sh);border-color:var(--deep-2);background:var(--deep-wash)}
 .kcard.dragging{opacity:.4}
 .kcard.od{border-left:3px solid var(--amber)}
-.kcard-name{font-size:16px;cursor:pointer}
-.kcard-name:hover{color:var(--deep);background:var(--deep-wash);border-radius:var(--r-sm)}
 .kcard-actions{display:flex;align-items:center;gap:8px;margin-top:auto;padding-top:8px}
-.kcard-drag{margin-left:auto;font-size:12.5px;color:var(--ink-3);cursor:grab}/* ---------- organisation chart + modal ---------- */
+.kcard-drag{margin-left:auto;font-size:12.5px;color:var(--ink-3);cursor:grab}
+.kcard-top{display:flex;align-items:flex-start;gap:10px;cursor:pointer}
+.kcard-avatar{flex:none;width:34px;height:34px;border-radius:50%;background:var(--deep-wash);color:var(--deep);
+  display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700}
+.kcard-badge{margin-left:auto;flex:none;font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;
+  background:var(--rose-wash);color:var(--rose)}
+.kcard-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:10px 0;cursor:pointer}
+.kcard-stat{background:var(--paper);border-radius:9px;padding:8px 4px;text-align:center}
+.kcard-stat .n{font-size:17px;font-weight:700;color:var(--deep);line-height:1.15}
+.kcard-stat .l{font-size:10px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.03em;margin-top:1px}
+.kcard-chips{display:flex;flex-wrap:wrap;gap:5px;cursor:pointer}
+.kcard-chip{font-size:11px;font-weight:600;padding:3px 9px;border-radius:999px;
+  background:var(--deep-wash);color:var(--deep);border:1px solid #B9E0F0}
+.kcard-avail{font-size:12.5px;color:var(--ink-3);margin-top:8px;cursor:pointer}
+/* ---------- organisation chart + modal ---------- */
 .deptcard{border-radius:16px;padding:20px 18px;display:flex;flex-direction:column;min-width:0}
 .deptcard .dc-icon{width:52px;height:52px;border-radius:50%;background:var(--card);display:flex;align-items:center;
   justify-content:center;margin:0 auto 12px;box-shadow:0 1px 2px rgba(22,51,74,.08)}
@@ -4477,9 +4489,13 @@ function renderFormDetail(){
       <h3 style="margin:0 0 4px">${esc(formLabel(f))}</h3>
       <p class="sub2" style="margin-bottom:14px">${f?statusBadge(f.Form_Status_Name):''}</p>
 
-      <p class="sub2" style="font-weight:600">Form heading \u2014 shown to whoever opens the public form</p>
+      <p class="sub2" style="font-weight:600">Form title \u2014 shown as the heading on the public form</p>
+      <input id="ffTitle" placeholder="e.g. \u201cCurious Intake\u201d" style="width:100%;border-radius:10px;padding:8px 14px;font-size:15px;border:1px solid var(--line-2);box-sizing:border-box;font-family:inherit;margin-bottom:6px" value="${esc((f&&f.Form_Title)||'')}">
+      <button class="mini" onclick="saveFormTitle(this)" style="width:auto;padding:0 12px;height:26px;font-size:13.5px;margin-bottom:14px">Save title</button>
+
+      <p class="sub2" style="font-weight:600">Form description \u2014 shown underneath the title</p>
       <textarea id="ffDesc" rows="2" placeholder="What is this form for? e.g. \u201cTell us a bit about you \u2014 it only takes a minute.\u201d" style="width:100%;border-radius:12px;padding:8px 14px;font-size:15px;border:1px solid var(--line-2);box-sizing:border-box;font-family:inherit;resize:vertical;margin-bottom:6px">${esc((f&&f.Form_Desc)||'')}</textarea>
-      <button class="mini" onclick="saveFormDesc(this)" style="width:auto;padding:0 12px;height:26px;font-size:13.5px;margin-bottom:14px">Save heading</button>
+      <button class="mini" onclick="saveFormDesc(this)" style="width:auto;padding:0 12px;height:26px;font-size:13.5px;margin-bottom:14px">Save description</button>
 
       <p class="sub2" style="font-weight:600">Default fields \u2014 every form collects these</p>
       <div class="kv" style="grid-template-columns:1fr;margin-bottom:14px">
@@ -4505,6 +4521,16 @@ function renderFormDetail(){
   </div>`;
 }
 
+async function saveFormTitle(btn){
+  await withLoading(btn, async ()=>{
+    try{
+      const title = document.getElementById('ffTitle').value.trim();
+      await apiFetch('/api/forms/'+FORM_DETAIL_ID+'/title', {method:'PUT', body: JSON.stringify({title})});
+      toast('Title saved.');
+      LIVE_FORMS = null; await loadForms();
+    }catch(err){ toast('Could not save: '+(err.message||'')); }
+  });
+}
 async function saveFormDesc(btn){
   await withLoading(btn, async ()=>{
     try{
@@ -4889,14 +4915,27 @@ function renderJourney(){
         ${ppl.length ? ppl.map(p=>{
           const i = laneIdx(p.Category_Name);
           const name = [p.Sal,p.First_Name,p.Last_Name].filter(Boolean).join(' ') || ('Seeker #'+p.Seeker_ID);
-          return `<div class="kcard" ${readonly?'':`draggable="true" ondragstart="dragCard(event,${p.Seeker_ID})" ondragend="dragEndCard(event)"`}>
-            <div class="nm serif kcard-name" onclick="openSeekerPage(${p.Seeker_ID})">${esc(name)}</div>
-            <div class="sub2">${esc([p.City,p.Country_Name].filter(Boolean).join(', ')||'\u2014')}</div>
-            <div class="sub2" style="font-size:13.5px">${esc(p.Email||'')}</div>
+          const skills = p.skill_names || [];
+          return `<div class="kcard" onclick="openSeekerPage(${p.Seeker_ID})" ${readonly?'':`draggable="true" ondragstart="dragCard(event,${p.Seeker_ID})" ondragend="dragEndCard(event)"`}>
+            <div class="kcard-top">
+              <div class="kcard-avatar">${esc(seekerInitials(p))}</div>
+              <div style="min-width:0;flex:1">
+                <div class="nm serif" style="font-size:16px">${esc(name)}</div>
+                <div class="sub2">${esc([p.City,p.Country_Name].filter(Boolean).join(', ')||'\u2014')}</div>
+              </div>
+              ${p.Sensitive_List ? '<span class="kcard-badge">Sensitive</span>' : ''}
+            </div>
+            <div class="kcard-stats">
+              <div class="kcard-stat"><div class="n">${p.Weekly_Seva_Hrs!=null?esc(p.Weekly_Seva_Hrs):'\u2014'}</div><div class="l">Seva hrs</div></div>
+              <div class="kcard-stat"><div class="n">${skills.length}</div><div class="l">Skills</div></div>
+              <div class="kcard-stat"><div class="n">${p.milestone_count||0}</div><div class="l">Milestones</div></div>
+            </div>
+            ${skills.length ? `<div class="kcard-chips">${skills.map(sk=>`<span class="kcard-chip">${esc(sk)}</span>`).join('')}</div>` : ''}
+            ${p.Availability ? `<div class="kcard-avail">Availability: ${esc(p.Availability)}</div>` : ''}
             ${readonly ? '' : `<div class="kcard-actions">
-              <button class="mini" onclick="moveCategory(${p.Seeker_ID},-1)" ${i<=0?'disabled':''} title="Move back">‹</button>
-              <span class="kcard-drag" title="Drag to another category">⠿ drag</span>
-              <button class="mini" onclick="moveCategory(${p.Seeker_ID},1)" ${i<0||i===LANES.length-1?'disabled':''} title="Move forward">›</button>
+              <button class="mini" onclick="event.stopPropagation();moveCategory(${p.Seeker_ID},-1)" ${i<=0?'disabled':''} title="Move back">‹</button>
+              <span class="kcard-drag" title="Drag to another category" onclick="event.stopPropagation()">⠿ drag</span>
+              <button class="mini" onclick="event.stopPropagation();moveCategory(${p.Seeker_ID},1)" ${i<0||i===LANES.length-1?'disabled':''} title="Move forward">›</button>
             </div>`}
           </div>`;
         }).join('') : '<div class="klane-empty">Nobody here.</div>'}

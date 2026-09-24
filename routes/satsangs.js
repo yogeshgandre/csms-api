@@ -89,11 +89,11 @@ router.get('/defs', requireAuth, async (req, res) => {
       `SELECT ms.${qi('Satsang_ID')}, ms.${qi('Satsang_Short_Name')}, ms.${qi('Satsang_Name')},
               ms.${qi('Satsang_Type_ID')}, mt.${qi('ST_Name')},
               ms.${qi('Satsang_Start_Date')}, ms.${qi('Satsang_Frequency')},
-              ms.${qi('Satsang_Status')}, ms.${qi('Created_By_CSMS_ID')},
+              ms.${qi('Satsang_Status')}, ms.${qi('Created_ID')},
               up.${qi('Seeker_Name')} AS created_by_name
        FROM ${qi('SCS')}.${qi('M_Satsang')} ms
        LEFT JOIN ${qi('SCS')}.${qi('M_Satsang_type')} mt ON mt.${qi('Satsang_Type_ID')} = ms.${qi('Satsang_Type_ID')}
-       LEFT JOIN ${qi('RMS')}.${qi('User_Profile')} up ON up.${qi('CSMS_ID')} = ms.${qi('Created_By_CSMS_ID')}
+       LEFT JOIN ${qi('RMS')}.${qi('User_Profile')} up ON up.${qi('CSMS_ID')} = ms.${qi('Created_ID')}
        WHERE ms.${qi('Ver_To_DT')} >= CURRENT_DATE
        ORDER BY ms.${qi('Satsang_Name')}`
     );
@@ -121,7 +121,7 @@ router.post('/defs', requireAuth, async (req, res) => {
     await pool.query(
       `INSERT INTO ${qi('SCS')}.${qi('M_Satsang')}
         (${qi('Satsang_ID')}, ${qi('Satsang_Type_ID')}, ${qi('Satsang_Short_Name')}, ${qi('Satsang_Name')},
-         ${qi('Created_By_CSMS_ID')}, ${qi('Satsang_Start_Date')}, ${qi('Satsang_Frequency')},
+         ${qi('Created_ID')}, ${qi('Satsang_Start_Date')}, ${qi('Satsang_Frequency')},
          ${qi('Satsang_Status')}, ${qi('Ver_From_DT')}, ${qi('Ver_To_DT')})
        VALUES ($1,$2,$3,$4,$5,$6,$7,'Draft',CURRENT_DATE,$8)`,
       [id, typeId, shortName, name, req.user.csmsId, startDate, frequency || null, FAR_FUTURE]
@@ -181,9 +181,9 @@ router.post('/defs/:id/submit', requireAuth, async (req, res) => {
     }
     await client.query(
       `UPDATE ${qi('SCS')}.${qi('M_Satsang')}
-       SET ${qi('Satsang_Status')}='In Review', ${qi('Status_Changed_By_CSMS_ID')}=$1, ${qi('Status_Changed_DT')}=now()
-       WHERE ${qi('Satsang_ID')} = $2`,
-      [req.user.csmsId, req.params.id]
+       SET ${qi('Satsang_Status')}='In Review'
+       WHERE ${qi('Satsang_ID')} = $1`,
+      [req.params.id]
     );
 
     const reviewerRoleIdsQ = await client.query(
@@ -229,7 +229,7 @@ async function setDefStatus(req, res, newStatus, messageFor) {
     client = await pool.connect();
     await client.query('BEGIN');
     const cur = await client.query(
-      `SELECT ${qi('Satsang_Status')}, ${qi('Satsang_Name')}, ${qi('Created_By_CSMS_ID')}
+      `SELECT ${qi('Satsang_Status')}, ${qi('Satsang_Name')}, ${qi('Created_ID')}
        FROM ${qi('SCS')}.${qi('M_Satsang')} WHERE ${qi('Satsang_ID')} = $1 FOR UPDATE`,
       [req.params.id]
     );
@@ -240,12 +240,12 @@ async function setDefStatus(req, res, newStatus, messageFor) {
     }
     await client.query(
       `UPDATE ${qi('SCS')}.${qi('M_Satsang')}
-       SET ${qi('Satsang_Status')}=$1, ${qi('Status_Changed_By_CSMS_ID')}=$2, ${qi('Status_Changed_DT')}=now()
-       WHERE ${qi('Satsang_ID')} = $3`,
-      [newStatus, req.user.csmsId, req.params.id]
+       SET ${qi('Satsang_Status')}=$1
+       WHERE ${qi('Satsang_ID')} = $2`,
+      [newStatus, req.params.id]
     );
-    if (cur.rows[0].Created_By_CSMS_ID) {
-      await notify(client, cur.rows[0].Created_By_CSMS_ID, messageFor(cur.rows[0].Satsang_Name), 'satsang_def', req.params.id);
+    if (cur.rows[0].Created_ID) {
+      await notify(client, cur.rows[0].Created_ID, messageFor(cur.rows[0].Satsang_Name), 'satsang_def', req.params.id);
     }
     await client.query('COMMIT');
     res.json({ ok: true });

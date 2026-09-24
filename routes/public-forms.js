@@ -230,7 +230,7 @@ const MANDATORY_INTAKE_FIELDS = [
 router.get('/intake-form/:formId', async (req, res) => {
   try {
     const formQ = await pool.query(
-      `SELECT fc.${qi('Form_ID')}, fs.${qi('Form_Status_Name')}, fc.${qi('Form_Desc')}
+      `SELECT fc.${qi('Form_ID')}, fs.${qi('Form_Status_Name')}, fc.${qi('Form_Title')}, fc.${qi('Form_Desc')}
        FROM ${qi('FMS')}.${qi('Form_Creation_Process')} fc
        LEFT JOIN ${qi('FMS')}.${qi('Form_Status')} fs ON fs.${qi('Form_Status_ID')} = fc.${qi('Current_Status')}
        WHERE fc.${qi('Form_ID')} = $1`,
@@ -263,6 +263,7 @@ router.get('/intake-form/:formId', async (req, res) => {
       countries: countriesQ.rows,
       isPreview,
       formStatus: status,
+      formTitle: formQ.rows[0].Form_Title,
       formDesc: formQ.rows[0].Form_Desc,
     });
   } catch (err) {
