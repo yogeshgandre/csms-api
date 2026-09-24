@@ -43,7 +43,7 @@ html{scroll-behavior:smooth}
 body{
   color:var(--ink);
   font-family:var(--font-body);
-  font-size:15.5px; line-height:1.6;
+  font-size:17.5px; line-height:1.6;
   background:var(--paper);
   -webkit-font-smoothing:antialiased;
   text-wrap:pretty;
@@ -59,21 +59,21 @@ header{
   padding:14px 22px; display:flex; align-items:center; gap:22px; flex-wrap:wrap;
 }
 .brand{display:flex;flex-direction:column;gap:1px;margin-right:auto}
-.brand .t{font-family:var(--font-head);font-size:18px;font-weight:600;letter-spacing:-.015em}
-.brand .s{font-size:11px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.1em;font-weight:500}
+.brand .t{font-family:var(--font-head);font-size:20px;font-weight:600;letter-spacing:-.015em}
+.brand .s{font-size:13px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.1em;font-weight:500}
 .roleblock{display:flex;align-items:center;gap:10px}
-.roleblock label{font-size:11.5px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.08em}
-select{font:inherit;font-size:13px;padding:8px 12px;border:1px solid var(--line-2);
+.roleblock label{font-size:13.5px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.08em}
+select{font:inherit;font-size:15px;padding:8px 12px;border:1px solid var(--line-2);
   border-radius:var(--r-sm);background:#FCFDFE;color:var(--ink);min-width:230px;cursor:pointer}
 select:hover{border-color:var(--ink-3)}
-.scope{font-size:12px;font-weight:600;color:var(--deep);background:var(--deep-wash);
+.scope{font-size:14px;font-weight:600;color:var(--deep);background:var(--deep-wash);
   border:1px solid #C6E0F0;padding:6px 12px;border-radius:var(--r-tag);white-space:nowrap}
 
 /* ---------- tabs ---------- */
 nav{background:rgba(255,255,255,.86);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);
   padding:8px 22px 0;display:flex;gap:4px;overflow-x:auto}
 nav button{
-  background:none;border:none;padding:11px 15px;font-size:13.5px;color:var(--ink-2);
+  background:none;border:none;padding:11px 15px;font-size:15.5px;color:var(--ink-2);
   border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap;font-weight:500;
 }
 nav button:hover{color:var(--ink);background:rgba(227,240,249,.6)}
@@ -81,7 +81,7 @@ nav button.on{color:var(--deep);font-weight:600;background:var(--deep-wash);
   box-shadow:inset 0 -2px 0 var(--deep)}
 nav .pip{
   display:inline-block;margin-left:6px;background:var(--rose);color:#fff;
-  font-size:10.5px;font-weight:600;padding:1px 6px;border-radius:9px;vertical-align:1px;
+  font-size:12.5px;font-weight:600;padding:1px 6px;border-radius:9px;vertical-align:1px;
 }
 
 main{padding:22px;max-width:1320px;margin:0 auto}
@@ -93,59 +93,59 @@ main{padding:22px;max-width:1320px;margin:0 auto}
 .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r)}
 .card:hover{border-color:var(--deep-2);background:var(--deep-wash);box-shadow:0 4px 16px rgba(11,143,196,.14)}
 .pad{padding:16px 18px}
-h2.sec{font-family:var(--font-head);font-size:19px;font-weight:600;margin:0 0 4px;letter-spacing:-.015em}
-p.sub{margin:0 0 16px;color:var(--ink-3);font-size:12.5px;max-width:62ch}
+h2.sec{font-family:var(--font-head);font-size:21px;font-weight:600;margin:0 0 4px;letter-spacing:-.015em}
+p.sub{margin:0 0 16px;color:var(--ink-3);font-size:14.5px;max-width:62ch}
 .note{
   background:var(--deep-wash);border-left:3px solid var(--deep);border-radius:0 var(--r-sm) var(--r-sm) 0;
-  padding:10px 14px;font-size:12.5px;color:#20454F;margin:14px 0;
+  padding:10px 14px;font-size:14.5px;color:#20454F;margin:14px 0;
 }
 .note b{color:var(--deep)}
 
 /* ---------- filters ---------- */
 .filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
 .filters input[type=search]{
-  font:inherit;font-size:13px;padding:7px 11px;border:1px solid var(--line-2);
+  font:inherit;font-size:15px;padding:7px 11px;border:1px solid var(--line-2);
   border-radius:var(--r-sm);min-width:210px;background:var(--card);
 }
 .chip{background:var(--card);border:1px solid var(--line-2);border-radius:999px;
-  padding:6px 14px;font-size:12.5px;color:var(--ink-2);box-shadow:none}
+  padding:6px 14px;font-size:14.5px;color:var(--ink-2);box-shadow:none}
 .chip:hover{border-color:var(--ink-3);color:var(--ink);background:var(--paper)}
 .chip.on{background:var(--deep);border-color:var(--deep);color:#fff;font-weight:600}
-.count{margin-left:auto;font-size:12.5px;color:var(--ink-3);font-variant-numeric:tabular-nums}
+.count{margin-left:auto;font-size:14.5px;color:var(--ink-3);font-variant-numeric:tabular-nums}
 
 /* ---------- table ---------- */
 table{width:100%;border-collapse:collapse;background:var(--card)}
 th{
-  text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.07em;
+  text-align:left;font-size:13px;text-transform:uppercase;letter-spacing:.07em;
   color:var(--deep);font-weight:700;padding:11px 14px;border-bottom:1px solid var(--line-2);
   background:var(--deep-wash);position:sticky;top:0;
 }
-td{padding:11px 14px;border-bottom:1px solid #EEF4F9;font-size:13.5px;vertical-align:middle;font-variant-numeric:tabular-nums}
+td{padding:11px 14px;border-bottom:1px solid #EEF4F9;font-size:15.5px;vertical-align:middle;font-variant-numeric:tabular-nums}
 tbody tr{cursor:pointer}
 tbody tr:hover{background:#F6FAFD}
 tbody tr:last-child td{border-bottom:none}
-.nm{font-size:15px;font-weight:500;font-family:var(--font-head)}
-.sub2{font-size:11.5px;color:var(--ink-3);margin-top:1px;font-variant-numeric:normal}
+.nm{font-size:17px;font-weight:500;font-family:var(--font-head)}
+.sub2{font-size:13.5px;color:var(--ink-3);margin-top:1px;font-variant-numeric:normal}
 
-.tag{display:inline-block;font-size:11.5px;font-weight:600;padding:3px 9px;border-radius:var(--r-tag);white-space:nowrap;border:1px solid transparent}
+.tag{display:inline-block;font-size:13.5px;font-weight:600;padding:3px 9px;border-radius:var(--r-tag);white-space:nowrap;border:1px solid transparent}
 .t-core{background:var(--deep-wash);color:var(--deep);border-color:#C4DBE1}
 .t-active{background:var(--sage-wash);color:var(--sage);border-color:#CBDFD1}
 .t-semi{background:#F1EFEA;color:var(--ink-2);border-color:var(--line-2)}
-.skill-chip{display:inline-block;font-size:11.5px;font-weight:600;padding:4px 11px;border-radius:999px;
+.skill-chip{display:inline-block;font-size:13.5px;font-weight:600;padding:4px 11px;border-radius:999px;
   background:var(--deep-wash);color:var(--deep);border:1px solid #B9E0F0;margin:0 4px 4px 0}
 .t-new{background:#EFEEF6;color:#4A4680;border-color:#D6D3E6}
 .t-warn{background:var(--amber-wash);color:var(--amber);border-color:#EBD9B4}
 .t-bad{background:var(--rose-wash);color:var(--rose);border-color:#EBCBCE}
 
 .masked{color:var(--ink-3);background:#EFF5FA;border:1px dashed var(--line-2);
-  padding:1px 8px;border-radius:4px;font-size:12px;letter-spacing:.12em;
+  padding:1px 8px;border-radius:4px;font-size:14px;letter-spacing:.12em;
 }
 .a9{
-  display:inline-block;font-size:10px;text-transform:uppercase;letter-spacing:.07em;
+  display:inline-block;font-size:12px;text-transform:uppercase;letter-spacing:.07em;
   background:var(--rose-wash);color:var(--rose);border:1px solid #EBCBCE;
   padding:1px 6px;border-radius:4px;margin-left:6px;vertical-align:1px;
 }
-.hidden-note{margin-top:12px;font-size:12.5px;color:var(--amber);background:var(--amber-wash);
+.hidden-note{margin-top:12px;font-size:14.5px;color:var(--amber);background:var(--amber-wash);
   border:1px solid #F0DFAE;border-radius:var(--r-sm);padding:10px 14px}
 
 /* ---------- drawer ---------- */
@@ -157,19 +157,19 @@ tbody tr:last-child td{border-bottom:none}
 .dhead{background:var(--card);border-bottom:1px solid var(--line);padding:18px 22px}
 .dclose{
   float:right;background:none;border:1px solid var(--line-2);border-radius:var(--r-sm);
-  width:28px;height:28px;line-height:1;color:var(--ink-2);font-size:16px;
+  width:28px;height:28px;line-height:1;color:var(--ink-2);font-size:18px;
 }
 .dclose:hover{border-color:var(--ink-3);color:var(--ink);background:var(--paper)}
 .dbody{padding:18px 22px 40px}
-.kv{display:grid;grid-template-columns:132px 1fr;gap:7px 14px;font-size:13.5px;margin-top:4px}
-.kv dt{color:var(--ink-3);font-size:12.5px}
+.kv{display:grid;grid-template-columns:132px 1fr;gap:7px 14px;font-size:15.5px;margin-top:4px}
+.kv dt{color:var(--ink-3);font-size:14.5px}
 .kv dd{margin:0;font-variant-numeric:tabular-nums}
 .metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin:14px 0}
 .metric{background:linear-gradient(180deg,#FFF,#F7FBFE);border:1px solid var(--line);
   border-radius:var(--r-sm);padding:13px 12px;text-align:center;box-shadow:var(--sh-sm)}
-.metric .n{font-family:var(--font-head);font-size:23px;font-weight:600;color:var(--deep);line-height:1.1;font-variant-numeric:tabular-nums}
-.metric .l{font-size:10.5px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.06em;margin-top:3px}
-.metric .src{font-size:10px;color:var(--sage);margin-top:3px}
+.metric .n{font-family:var(--font-head);font-size:25px;font-weight:600;color:var(--deep);line-height:1.1;font-variant-numeric:tabular-nums}
+.metric .l{font-size:12.5px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.06em;margin-top:3px}
+.metric .src{font-size:12px;color:var(--sage);margin-top:3px}
 
 .tl{list-style:none;margin:10px 0 0;padding:0 0 0 20px;border-left:2px solid var(--line)}
 .tl li{position:relative;padding:0 0 16px 14px}
@@ -178,17 +178,17 @@ tbody tr:last-child td{border-bottom:none}
   background:var(--card);border:2px solid var(--deep-2);
 }
 .tl li.flag::before{background:var(--rose);border-color:var(--rose)}
-.tl .when{font-size:11.5px;color:var(--ink-3);font-variant-numeric:tabular-nums}
-.tl .what{font-size:13.5px;margin-top:1px}
-.tl .who{font-size:11.5px;color:var(--ink-3);margin-top:2px}
+.tl .when{font-size:13.5px;color:var(--ink-3);font-variant-numeric:tabular-nums}
+.tl .what{font-size:15.5px;margin-top:1px}
+.tl .who{font-size:13.5px;color:var(--ink-3);margin-top:2px}
 .tl .flagtxt{
   margin-top:6px;background:var(--rose-wash);border:1px solid #EBCBCE;color:var(--rose);
-  border-radius:var(--r-sm);padding:6px 10px;font-size:12.5px;
+  border-radius:var(--r-sm);padding:6px 10px;font-size:14.5px;
 }
 
 .btn{
   background:var(--deep);color:#fff;border:1px solid var(--deep);
-  border-radius:999px;padding:7px 16px;font-size:13px;font-weight:500;
+  border-radius:999px;padding:7px 16px;font-size:15px;font-weight:500;
   transition:background .15s var(--ease), box-shadow .15s var(--ease), transform .1s var(--ease);
 }
 .btn:hover{background:var(--deep-2);box-shadow:0 2px 8px rgba(11,143,196,.22)}
@@ -198,7 +198,7 @@ tbody tr:last-child td{border-bottom:none}
 .btn.warn{background:var(--rose);border-color:var(--rose)}
 .btn.warn:hover{background:#9C4A1B}
 .btn:disabled{opacity:.45;cursor:not-allowed;transform:none;box-shadow:none}
-.btn.sm{padding:5px 12px;font-size:12.5px}
+.btn.sm{padding:5px 12px;font-size:14.5px}
 .btn .spin{width:13px;height:13px;border-radius:50%;border:2px solid rgba(255,255,255,.4);
   border-top-color:#fff;animation:btnspin .7s linear infinite;display:none;vertical-align:-2px;margin-right:6px}
 .btn.loading .spin{display:inline-block}
@@ -208,18 +208,18 @@ tbody tr:last-child td{border-bottom:none}
 
 /* ---------- forms ---------- */
 .field{margin-bottom:12px}
-.field label{display:block;font-size:12px;color:var(--ink-2);margin-bottom:4px}
+.field label{display:block;font-size:14px;color:var(--ink-2);margin-bottom:4px}
 .field select,.field textarea,.field input{
-  width:100%;font:inherit;font-size:13.5px;padding:8px 10px;
+  width:100%;font:inherit;font-size:15.5px;padding:8px 10px;
   border:1px solid var(--line-2);border-radius:var(--r-sm);background:var(--card);color:var(--ink);
 }
 .field select:focus,.field textarea:focus,.field input:focus{border-color:var(--deep-2)}
 .field textarea{resize:vertical;min-height:66px}
-.cc{font-size:11.5px;color:var(--ink-3);text-align:right;margin-top:3px;font-variant-numeric:tabular-nums}
+.cc{font-size:13.5px;color:var(--ink-3);text-align:right;margin-top:3px;font-variant-numeric:tabular-nums}
 .cc.over{color:var(--rose)}
-.err{color:var(--rose);font-size:12.5px;margin-top:6px;display:none}
+.err{color:var(--rose);font-size:14.5px;margin-top:6px;display:none}
 .err.on{display:block}
-.check{display:flex;align-items:flex-start;gap:8px;font-size:13px;color:var(--ink-2)}
+.check{display:flex;align-items:flex-start;gap:8px;font-size:15px;color:var(--ink-2)}
 .check input{width:auto;margin-top:2px}
 
 /* ---------- intake ---------- */
@@ -242,18 +242,18 @@ tbody tr:last-child td{border-bottom:none}
   transition:box-shadow .2s var(--ease), transform .2s var(--ease)}
 .kpi[onclick]:hover{box-shadow:0 2px 4px rgba(22,51,74,.06), 0 10px 24px rgba(11,143,196,.14), inset 0 1px 0 rgba(255,255,255,.6);
   transform:translateY(-1px)}
-.kpi .n{font-family:var(--font-head);font-size:30px;font-weight:600;color:var(--deep);line-height:1.05;letter-spacing:-.015em;font-variant-numeric:tabular-nums}
-.kpi .l{font-size:12px;color:var(--ink-2);margin-top:3px;font-weight:500}
-.kpi .d{font-size:11px;color:var(--ink-3);margin-top:5px}
-.bar{display:grid;grid-template-columns:118px 1fr 40px;gap:10px;align-items:center;margin-bottom:8px;font-size:13px}
+.kpi .n{font-family:var(--font-head);font-size:32px;font-weight:600;color:var(--deep);line-height:1.05;letter-spacing:-.015em;font-variant-numeric:tabular-nums}
+.kpi .l{font-size:14px;color:var(--ink-2);margin-top:3px;font-weight:500}
+.kpi .d{font-size:13px;color:var(--ink-3);margin-top:5px}
+.bar{display:grid;grid-template-columns:118px 1fr 40px;gap:10px;align-items:center;margin-bottom:8px;font-size:15px}
 .track{display:block;background:#E9F1F7;border-radius:20px;height:16px;overflow:hidden}
 .fill{display:block;background:linear-gradient(90deg,var(--deep),var(--deep-2));height:100%;border-radius:20px;min-width:3px}
 .fill.s2{background:linear-gradient(90deg,#C98A2E,#E0A94A)}
-.num{text-align:right;color:var(--ink-2);font-size:13px;font-variant-numeric:tabular-nums}
+.num{text-align:right;color:var(--ink-2);font-size:15px;font-variant-numeric:tabular-nums}
 
 .toast{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);
   background:#213743;color:#fff;padding:11px 20px;border-radius:20px;
-  font-size:13px;z-index:60;box-shadow:0 6px 22px rgba(22,51,74,.22)}
+  font-size:15px;z-index:60;box-shadow:0 6px 22px rgba(22,51,74,.22)}
 .shell{
   position:relative;min-height:100vh;overflow:hidden;
   display:grid;grid-template-columns:220px 1fr;grid-template-rows:auto auto 1fr;
@@ -263,7 +263,7 @@ tbody tr:last-child td{border-bottom:none}
 .ticker-track{display:inline-flex;animation:ticker-scroll 40s linear infinite}
 .ticker-track:hover{animation-play-state:paused}
 @keyframes ticker-scroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
-.ticker-item{display:inline-flex;align-items:center;gap:7px;padding:0 32px;font-size:13px;color:#fff;font-weight:500}
+.ticker-item{display:inline-flex;align-items:center;gap:7px;padding:0 32px;font-size:15px;color:#fff;font-weight:500}
 .ticker-item .ticker-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
 .ticker-item.type-Alert .ticker-dot{background:#FF6B6B}
 .ticker-item.type-Warning .ticker-dot{background:#FFC94D}
@@ -291,7 +291,7 @@ nav button:hover{background:var(--paper)}
 nav button.on:hover{background:var(--sage-wash)}
 .nb-icobadge{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .nb-icobadge svg{width:16px;height:16px}
-.nb-label{flex:1;font-size:13.5px}
+.nb-label{flex:1;font-size:15.5px}
 .nb-chevron{width:13px;height:13px;color:var(--ink-3);flex-shrink:0}
 nav button.nb-divider{margin-top:8px;padding-top:16px;border-top:1px solid var(--line)}
 main{grid-area:main;max-width:none;margin:0}
@@ -334,64 +334,64 @@ nav .pip.r{background:var(--sage-wash);color:var(--sage)}
 ::-webkit-scrollbar-track{background:transparent}
 /* ---------- kanban / journey board ---------- */
 .mini{background:var(--card);border:1px solid var(--line-2);border-radius:999px;
-  width:24px;height:24px;line-height:1;font-size:14px;color:var(--ink-2);cursor:pointer}
+  width:24px;height:24px;line-height:1;font-size:16px;color:var(--ink-2);cursor:pointer}
 .mini:hover{border-color:#8397A6;color:var(--ink);background:var(--paper)}
 .mini:disabled{opacity:.35;cursor:not-allowed}
 .kboard{display:grid;grid-template-columns:repeat(5,minmax(200px,1fr));gap:12px;overflow-x:auto;padding-bottom:6px}
 .klane{background:transparent}
 .klane-head{padding:11px 13px;margin-bottom:9px;background:var(--deep-wash);border:1px solid #C6E0F0;border-radius:var(--r-sm)}
-.klane-title{font-family:var(--font-head);font-weight:600;font-size:13.5px;color:var(--deep)}
-.klane-sub{font-size:11.5px;color:var(--ink-3);margin-top:2px;font-variant-numeric:tabular-nums}
+.klane-title{font-family:var(--font-head);font-weight:600;font-size:15.5px;color:var(--deep)}
+.klane-sub{font-size:13.5px;color:var(--ink-3);margin-top:2px;font-variant-numeric:tabular-nums}
 .klane-body{display:flex;flex-direction:column;gap:8px;min-height:60px;border-radius:var(--r-sm);transition:background-color .12s}
 .klane.drag-over .klane-body{background:rgba(11,143,196,.08)}
-.klane-empty{color:var(--ink-3);font-size:12.5px;background:var(--card);border:1px solid var(--line);
+.klane-empty{color:var(--ink-3);font-size:14.5px;background:var(--card);border:1px solid var(--line);
   border-radius:var(--r-sm);padding:14px;text-align:center}
 .kcard{background:var(--card);border:1px solid var(--line);border-radius:var(--r-sm);
   padding:11px 12px;cursor:grab;box-shadow:var(--sh-sm);display:flex;flex-direction:column}
 .kcard:hover{box-shadow:var(--sh);border-color:var(--deep-2);background:var(--deep-wash)}
 .kcard.dragging{opacity:.4}
 .kcard.od{border-left:3px solid var(--amber)}
-.kcard-name{font-size:14px;cursor:pointer}
+.kcard-name{font-size:16px;cursor:pointer}
 .kcard-name:hover{color:var(--deep);background:var(--deep-wash);border-radius:var(--r-sm)}
 .kcard-actions{display:flex;align-items:center;gap:8px;margin-top:auto;padding-top:8px}
-.kcard-drag{margin-left:auto;font-size:10.5px;color:var(--ink-3);cursor:grab}/* ---------- organisation chart + modal ---------- */
+.kcard-drag{margin-left:auto;font-size:12.5px;color:var(--ink-3);cursor:grab}/* ---------- organisation chart + modal ---------- */
 .deptcard{border-radius:16px;padding:20px 18px;display:flex;flex-direction:column;min-width:0}
 .deptcard .dc-icon{width:52px;height:52px;border-radius:50%;background:var(--card);display:flex;align-items:center;
   justify-content:center;margin:0 auto 12px;box-shadow:0 1px 2px rgba(22,51,74,.08)}
-.deptcard .dc-name{font-family:var(--font-head);font-size:18px;font-weight:600;text-align:center;letter-spacing:-.01em}
-.deptcard .dc-tag{display:block;text-align:center;margin:6px auto 0;font-size:10.5px;font-weight:700;letter-spacing:.06em;
+.deptcard .dc-name{font-family:var(--font-head);font-size:20px;font-weight:600;text-align:center;letter-spacing:-.01em}
+.deptcard .dc-tag{display:block;text-align:center;margin:6px auto 0;font-size:12.5px;font-weight:700;letter-spacing:.06em;
   padding:2px 10px;border-radius:999px;width:fit-content}
-.deptcard .dc-count{text-align:center;font-size:12px;color:var(--ink-3);margin:8px 0 12px}
+.deptcard .dc-count{text-align:center;font-size:14px;color:var(--ink-3);margin:8px 0 12px}
 .dc-row{background:var(--card);border-radius:11px;padding:9px 12px;display:flex;align-items:center;gap:9px;
   cursor:pointer;margin-bottom:7px;transition:transform .1s var(--ease)}
 .dc-row:hover{transform:translateX(2px)}
 .dc-row .dc-row-icon{width:24px;height:24px;border-radius:50%;background:var(--paper);flex-shrink:0;
   display:flex;align-items:center;justify-content:center}
-.dc-row .dc-row-name{font-size:13px;font-weight:500;color:var(--ink);flex-grow:1}
+.dc-row .dc-row-name{font-size:15px;font-weight:500;color:var(--ink);flex-grow:1}
 .dc-empty{text-align:center;padding:24px 0;color:var(--ink-3)}
 .dc-empty svg{opacity:.5;margin-bottom:8px}
-.dc-empty p{font-size:12.5px;margin:0}
+.dc-empty p{font-size:14.5px;margin:0}
 .ostem{width:1px;background:var(--line-2);height:20px}
 .orow{display:flex;gap:22px;flex-wrap:wrap;justify-content:center;position:relative;padding-top:20px}
 .obranch{display:flex;flex-direction:column;align-items:center;position:relative}
 .obranch::before{content:"";position:absolute;top:-20px;left:50%;width:1px;height:20px;background:var(--line-2)}
-.ochip{border-radius:999px;padding:9px 18px;font-size:13.5px;font-weight:500;cursor:pointer;
+.ochip{border-radius:999px;padding:9px 18px;font-size:15.5px;font-weight:500;cursor:pointer;
   border:1px solid var(--line-2);text-align:center;user-select:none;transition:background .15s var(--ease)}
 .ochip.root{background:var(--deep);color:#fff;border-color:var(--deep);cursor:default}
 .ochip.lvl1{background:var(--deep-wash);color:var(--deep)}
 .ochip.lvl1:hover{background:var(--deep);color:#fff}
-.osub2{font-size:11px;color:var(--ink-3);margin-top:4px}
+.osub2{font-size:13px;color:var(--ink-3);margin-top:4px}
 .olvl2panel{background:var(--deep-wash);border-radius:12px;padding:12px 14px;margin-top:10px;
   display:flex;flex-direction:column;gap:6px;min-width:180px;position:relative}
 .olvl2panel::before{content:"";position:absolute;top:-10px;left:50%;width:1px;height:10px;background:var(--line-2)}
-.olvl2count{font-size:11px;color:var(--deep);font-weight:600;margin-bottom:2px}
+.olvl2count{font-size:13px;color:var(--deep);font-weight:600;margin-bottom:2px}
 .sp-header{display:flex;align-items:center;gap:16px;padding-bottom:20px;border-bottom:1px solid var(--line-2);margin-bottom:22px}
 .sp-avatar{width:56px;height:56px;border-radius:50%;background:var(--deep-wash);color:var(--deep);
-  display:flex;align-items:center;justify-content:center;font-weight:600;font-size:18px;flex-shrink:0}
+  display:flex;align-items:center;justify-content:center;font-weight:600;font-size:20px;flex-shrink:0}
 .sp-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
 .sp-stat{background:var(--paper);border-radius:var(--r-sm);padding:14px 16px}
-.sp-stat .lbl2{font-size:12px;color:var(--ink-3);margin-bottom:3px}
-.sp-stat .val{font-size:20px;font-weight:600}
+.sp-stat .lbl2{font-size:14px;color:var(--ink-3);margin-bottom:3px}
+.sp-stat .val{font-size:22px;font-weight:600}
 .sp-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 .sp-card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px}
 .sp-card:hover{border-color:var(--deep-2);background:var(--deep-wash);box-shadow:0 4px 16px rgba(11,143,196,.14)}
@@ -404,23 +404,23 @@ nav .pip.r{background:var(--sage-wash);color:var(--sage)}
 @keyframes spPulse{0%,100%{opacity:.55}50%{opacity:1}}
 .gen-skel-row{background:var(--card);border:1px solid var(--line);border-radius:var(--r-sm);padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:12px}
 .gen-skel-row .pulse{border-radius:4px;background:var(--paper)}
-.sp-card h3{margin:0 0 12px;font-size:15px;display:flex;align-items:center;gap:10px;justify-content:space-between}
+.sp-card h3{margin:0 0 12px;font-size:17px;display:flex;align-items:center;gap:10px;justify-content:space-between}
 .sp-card h3 .htitle{display:flex;align-items:center;gap:10px}
 .sp-card .icobadge{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .sp-card .icobadge svg{width:18px;height:18px}
-.sp-count-badge{background:var(--paper);color:var(--ink-2);font-size:11px;font-weight:700;padding:2px 9px;border-radius:999px;flex-shrink:0}
-.kv2{display:grid;grid-template-columns:1fr 1fr;gap:8px 24px;font-size:13.5px;margin-top:4px}
-.kv2>div:nth-child(odd){color:var(--ink-3);font-size:12.5px}
+.sp-count-badge{background:var(--paper);color:var(--ink-2);font-size:13px;font-weight:700;padding:2px 9px;border-radius:999px;flex-shrink:0}
+.kv2{display:grid;grid-template-columns:1fr 1fr;gap:8px 24px;font-size:15.5px;margin-top:4px}
+.kv2>div:nth-child(odd){color:var(--ink-3);font-size:14.5px}
 .sp-timeline{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
 .sp-timeline-item{border-left:2px solid var(--line-2);padding-left:12px}
 .sp-timeline-item.recent{border-left-color:var(--amber)}
-.sp-timeline-item .when{font-size:10.5px;color:var(--ink-3)}
-.sp-timeline-item .what{font-size:12.5px;font-weight:600;margin-top:2px}
-.sp-timeline-item .who{font-size:10.5px;color:var(--ink-3);margin-top:2px}
+.sp-timeline-item .when{font-size:12.5px;color:var(--ink-3)}
+.sp-timeline-item .what{font-size:14.5px;font-weight:600;margin-top:2px}
+.sp-timeline-item .who{font-size:12.5px;color:var(--ink-3);margin-top:2px}
 .sp-cathist-row{display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background:var(--paper);border-radius:var(--r-sm)}
 @media (max-width:760px){.sp-grid{grid-template-columns:1fr}.sp-timeline{grid-template-columns:1fr}.kv2{grid-template-columns:132px 1fr}}
 @media (max-width:760px){.sp-grid{grid-template-columns:1fr}.sp-stats{grid-template-columns:1fr}}
-.ochip.lvl2{font-size:12px;padding:6px 12px;background:var(--card);color:var(--ink-2);
+.ochip.lvl2{font-size:14px;padding:6px 12px;background:var(--card);color:var(--ink-2);
   border-radius:var(--r-sm);cursor:pointer}
 .ochip.lvl2:hover{background:var(--deep);color:#fff}
 .obackdrop{position:absolute;inset:0;background:rgba(22,51,74,.32);display:flex;align-items:center;
@@ -428,18 +428,18 @@ nav .pip.r{background:var(--sage-wash);color:var(--sage)}
 .omodal{width:min(380px,90vw);max-height:70vh;overflow-y:auto;background:var(--card);border-radius:16px;
   border:1px solid var(--line-2);padding:20px;box-shadow:var(--sh)}
 .oclose{float:right;background:none;border:1px solid var(--line-2);border-radius:999px;
-  width:28px;height:28px;line-height:1;color:var(--ink-2);font-size:16px;cursor:pointer}
+  width:28px;height:28px;line-height:1;color:var(--ink-2);font-size:18px;cursor:pointer}
 .oclose:hover{border-color:var(--ink-3);color:var(--ink);background:var(--paper)}
 .oteamrow{display:flex;align-items:center;justify-content:space-between;padding:9px 2px;
-  border-bottom:1px solid var(--line);font-size:13.5px;cursor:pointer}
+  border-bottom:1px solid var(--line);font-size:15.5px;cursor:pointer}
 .oteamrow:last-of-type{border-bottom:none}
 .oteamrow:hover{color:var(--deep);background:var(--paper);border-radius:var(--r-sm)}
 .ac-dropdown{position:absolute;top:100%;left:0;right:0;z-index:50;background:var(--card);
   border:1px solid var(--line-2);border-radius:12px;box-shadow:var(--sh);margin-top:4px;
   max-height:200px;overflow-y:auto}
-.ac-item{padding:8px 14px;font-size:13px;cursor:pointer}
+.ac-item{padding:8px 14px;font-size:15px;cursor:pointer}
 .ac-item:hover{background:var(--deep-wash)}
-.ac-item .sub2{font-size:11.5px}
+.ac-item .sub2{font-size:13.5px}
 
 .login2-gate{position:relative;min-height:100vh;display:flex;align-items:center;justify-content:center;
   overflow:hidden;
@@ -468,42 +468,42 @@ nav .pip.r{background:var(--sage-wash);color:var(--sage)}
 .login2-logo{width:170px;height:auto;object-fit:contain;object-position:left center;
   margin-bottom:34px;position:relative;z-index:2}
 .login2-welcome{position:relative;z-index:2;max-width:410px}
-.login2-welcome h1{margin:0 0 14px;color:#173f68;font-size:35px;line-height:1.18;
+.login2-welcome h1{margin:0 0 14px;color:#173f68;font-size:37px;line-height:1.18;
   letter-spacing:-.8px;font-weight:680;font-family:var(--font-head)}
-.login2-welcome p{margin:0;color:#688097;font-size:15px;line-height:1.75}
+.login2-welcome p{margin:0;color:#688097;font-size:17px;line-height:1.75}
 .login2-values{display:flex;gap:10px;margin-top:30px;position:relative;z-index:2}
 .login2-value{padding:9px 15px;border-radius:999px;background:rgba(255,255,255,.72);
-  border:1px solid rgba(98,145,176,.13);color:#55748f;font-size:12px;font-weight:650}
+  border:1px solid rgba(98,145,176,.13);color:#55748f;font-size:14px;font-weight:650}
 .login2-panel{background:rgba(255,255,255,.92);padding:58px 62px;display:flex;align-items:center}
 .login2-content{width:100%;max-width:365px;margin:auto}
-.login2-eyebrow{margin-bottom:10px;color:#6190b8;font-size:11px;font-weight:750;
+.login2-eyebrow{margin-bottom:10px;color:#6190b8;font-size:13px;font-weight:750;
   letter-spacing:1.8px;text-transform:uppercase}
-.login2-content h2{margin:0 0 8px;color:#173f68;font-size:31px;line-height:1.2;
+.login2-content h2{margin:0 0 8px;color:#173f68;font-size:33px;line-height:1.2;
   letter-spacing:-.6px;font-family:var(--font-head)}
-.login2-sub{margin:0 0 31px;color:#7b8da1;font-size:14px;line-height:1.6}
+.login2-sub{margin:0 0 31px;color:#7b8da1;font-size:16px;line-height:1.6}
 .login2-access-note{display:flex;align-items:flex-start;gap:11px;padding:13px 14px;margin-bottom:20px;
-  border-radius:12px;background:#f5f9fc;border:1px solid #e5edf4;color:#708398;font-size:12px;line-height:1.55}
+  border-radius:12px;background:#f5f9fc;border:1px solid #e5edf4;color:#708398;font-size:14px;line-height:1.55}
 .login2-info{width:18px;height:18px;border-radius:50%;flex:none;display:flex;align-items:center;
-  justify-content:center;background:#dcecf9;color:#4c83b5;font-size:11px;font-weight:800}
+  justify-content:center;background:#dcecf9;color:#4c83b5;font-size:13px;font-weight:800}
 .login2-google{width:100%;height:52px;border:1px solid #d9e3ec;border-radius:13px;background:#fff;
   color:#344e68;display:flex;align-items:center;justify-content:center;gap:12px;cursor:pointer;
-  font-size:14px;font-weight:700;box-shadow:0 5px 14px rgba(54,89,120,.08);transition:.2s ease}
+  font-size:16px;font-weight:700;box-shadow:0 5px 14px rgba(54,89,120,.08);transition:.2s ease}
 .login2-google:hover{transform:translateY(-1px);border-color:#c8d8e6;box-shadow:0 9px 20px rgba(54,89,120,.12);background:#f7fbfe}
 .login2-google:active{transform:translateY(0)}
 .login2-google:disabled{opacity:.6;cursor:not-allowed;transform:none}
 .login2-gicon{width:19px;height:19px}
-.login2-divider{display:flex;align-items:center;gap:12px;margin:25px 0 18px;color:#a0adba;font-size:10px}
+.login2-divider{display:flex;align-items:center;gap:12px;margin:25px 0 18px;color:#a0adba;font-size:12px}
 .login2-divider::before,.login2-divider::after{content:"";flex:1;height:1px;background:#e0eaf2}
-.login2-restriction{text-align:center;color:#8a98a7;font-size:11px;line-height:1.5}
+.login2-restriction{text-align:center;color:#8a98a7;font-size:13px;line-height:1.5}
 .login2-restriction strong{color:#657b90;font-weight:650}
-.login2-footer{margin-top:32px;text-align:center;color:#a0acb8;font-size:10px}
+.login2-footer{margin-top:32px;text-align:center;color:#a0acb8;font-size:12px}
 @media(max-width:760px){
   .login2-gate{padding:20px 0;overflow:auto}
   .login2-shell{grid-template-columns:1fr;width:min(460px,calc(100% - 28px));min-height:auto}
   .login2-brand-panel{padding:40px 34px 34px}
   .login2-panel{padding:40px 34px}
   .login2-logo{margin-bottom:26px}
-  .login2-welcome h1{font-size:29px}
+  .login2-welcome h1{font-size:31px}
 }
 @media(max-width:420px){
   .login2-brand-panel,.login2-panel{padding:32px 25px}
@@ -572,12 +572,12 @@ nav .pip.r{background:var(--sage-wash);color:var(--sage)}
 
 <header>
   <div style="display:flex;align-items:center;gap:14px;position:relative;margin-left:auto">
-    <button id="notifBell" class="mini" onclick="tab('alerts')" title="My Seva Activities" style="position:relative;width:36px;height:36px;font-size:16px">
+    <button id="notifBell" class="mini" onclick="tab('alerts')" title="My Seva Activities" style="position:relative;width:36px;height:36px;font-size:18px">
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"></path>
         <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
       </svg>
-      <span id="notifBadge" class="pip r" style="position:absolute;top:-4px;right:-4px;display:none;min-width:16px;height:16px;line-height:16px;font-size:10px;padding:0 3px">0</span>
+      <span id="notifBadge" class="pip r" style="position:absolute;top:-4px;right:-4px;display:none;min-width:16px;height:16px;line-height:16px;font-size:12px;padding:0 3px">0</span>
     </button>
     <div class="roleblock">
       <label for="role">Signed in as</label>
@@ -589,66 +589,32 @@ nav .pip.r{background:var(--sage-wash);color:var(--sage)}
 
 <nav>
   <div class="nav-logo"><img src="assets/csms-logo-sidebar.png" alt="CSMS — Connect · Serve · Grow" width="150" height="75"></div>
-  <button data-p="overview" data-icon="home" data-color="sage" onclick="tab('overview')"><span class="nb-label">Overview</span><span class="pip r" id="pip6">0</span></button>
-  <button class="on" data-p="seekers" data-icon="users" data-color="deep" onclick="tab('seekers')"><span class="nb-label">Seekers</span></button>
+  <button class="on" data-p="overview" data-icon="home" data-color="sage" onclick="tab('overview')"><span class="nb-label">Overview</span><span class="pip r" id="pip6">0</span></button>
+  <button data-p="search" data-icon="idcard" data-color="deep" onclick="tab('search'); renderLiveSeekers()"><span class="nb-label">Search Seekers</span></button>
   <button data-p="alerts" data-icon="heart" data-color="rose" onclick="tab('alerts')"><span class="nb-label">My Seva Activities</span><span class="pip" id="pip">0</span></button>
   <button data-p="journey" data-icon="sprout" data-color="sage" onclick="tab('journey')"><span class="nb-label">Curious and Seeker Spiritual Journey</span></button>
   <button data-p="calendar" data-icon="calendar" data-color="deep" onclick="tab('calendar'); renderCalendar()"><span class="nb-label">Calendar</span></button>
   <button data-p="reports" data-icon="chart" data-color="violet" onclick="tab('reports')"><span class="nb-label">Reports</span><span class="pip r" id="pip5">0</span></button>
   <button data-p="sevahub" data-icon="gear" data-color="amber" onclick="tab('sevahub')"><span class="nb-label">Seva Management</span></button>
-  <button data-p="profiles" data-icon="idcard" data-color="rose" onclick="tab('profiles')"><span class="nb-label">Profiles</span></button>
   <button data-p="dash" data-icon="grid" data-color="sage" onclick="tab('dash')"><span class="nb-label">Dashboard</span></button>
   <button data-p="org" data-icon="users" data-color="deep" onclick="tab('org')"><span class="nb-label">Organisation and Team Management</span></button>
   <button data-p="satsangmgmt" data-icon="lotus" data-color="amber" onclick="tab('satsangmgmt'); satsangSubtab('defs')"><span class="nb-label">Satsang Management</span></button>
   <button data-p="formmgmt" data-icon="file" data-color="violet" onclick="tab('formmgmt'); formSubtab('defs')"><span class="nb-label">Form Management System</span></button>
   <button data-p="tickermgmt" data-icon="ticket" data-color="rose" onclick="tab('tickermgmt'); renderTickerMgmt()"><span class="nb-label">Ticker Management</span></button>
-  <button data-p="ops" data-icon="clipboard" data-color="deep" onclick="tab('ops')"><span class="nb-label">Operations</span><span class="pip" id="pip3">0</span></button>
-  <button data-p="about" data-icon="help" data-color="deep" class="nb-divider" onclick="tab('about')"><span class="nb-label">What this shows</span></button>
+  <button data-p="ops" data-icon="clipboard" data-color="deep" class="nb-divider" onclick="tab('ops')"><span class="nb-label">Operations</span><span class="pip" id="pip3">0</span></button>
 </nav>
 
 <main>
-  <section class="pane" id="p-overview">
+  <section class="pane on" id="p-overview">
     <h2 class="sec">Overview</h2>
     <p class="sub">The pulse of what you're responsible for — one screen instead of six tabs. Scoped to your access, same as everywhere else.</p>
     <div id="overview"></div>
   </section>
 
-  <section class="pane on" id="p-seekers">
-    <h2 class="sec">Seekers</h2>
-    <p class="sub">Search &amp; Records is the rich illustrative demo (natural-language search, skills, interaction
-      timeline) — none of that has a backing table yet. Live Seekers reads actual MSR data from Postgres, with a
-      simpler, narrower set of fields to match what's really there.</p>
-    <div class="filters" style="border-bottom:1px solid var(--line-2);padding-bottom:0;margin-bottom:16px">
-      <button class="chip on" data-sub="mock" onclick="seekersSubtab('mock')">Search &amp; Records</button>
-      <button class="chip" data-sub="live" onclick="seekersSubtab('live')">Live Seekers (Postgres)</button>
-    </div>
-
-    <div id="seekersMock">
-    <div class="card pad" style="margin-bottom:14px">
-      <div style="display:flex;gap:9px;align-items:center">
-        <input type="search" id="q" style="flex:1;font-size:14px;padding:10px 13px"
-          placeholder="Try: curious in India, active with translation skills, overdue in Germany"
-          oninput="render()" onkeydown="if(event.key==='Enter') queryEnter()">
-        <button class="btn ghost sm" onclick="document.getElementById('q').value='';render()">Clear</button>
-      </div>
-      <div class="pill-row" style="margin-top:9px">
-        <span class="sub2" style="margin-right:2px">Try:</span>
-      </div>
-      <div id="qexamples" class="pill-row" style="margin-top:2px"></div>
-      <div id="qchips" style="margin-top:10px"></div>
-    </div>
-
-    <div class="filters">
-      <button class="chip on" data-f="all" onclick="filt('all')">All</button>
-      <span id="catchips" class="pill-row" style="display:contents"></span>
-      <button class="chip" data-f="overdue" onclick="filt('overdue')">Contact overdue</button>
-      <span class="count" id="cnt"></span>
-    </div>
-    <div class="card" style="overflow:hidden"><table id="tbl"></table></div>
-    <div id="hidnote"></div>
-    </div>
-
-    <div id="seekersLive" style="display:none"></div>
+  <section class="pane" id="p-search">
+    <h2 class="sec">Search Seekers</h2>
+    <p class="sub">Find any seeker on record and open their full profile.</p>
+    <div id="seekerSearch"></div>
   </section>
 
   <section class="pane" id="p-org">
@@ -733,12 +699,6 @@ nav .pip.r{background:var(--sage-wash);color:var(--sage)}
     <div id="sevahub"></div>
   </section>
 
-  <section class="pane" id="p-profiles">
-    <h2 class="sec">Profiles</h2>
-    <p class="sub">Seekers who serve, shown the way Bitrix24 shows an employee — department, skills, standing. Not an HR record: nobody is paid, nobody is assigned work by right.</p>
-    <div id="profiles"></div>
-  </section>
-
   <section class="pane" id="p-dash">
     <h2 class="sec">Dashboard</h2>
     <p class="sub">Everything below respects your regional access. Change role in the header and the numbers change with it.</p>
@@ -752,17 +712,6 @@ nav .pip.r{background:var(--sage-wash);color:var(--sage)}
   </section>
 
   <section class="pane" id="p-seekerpage"><div id="seekerPage"></div></section>
-
-  <section class="pane" id="p-about">
-    <h2 class="sec">What this prototype demonstrates</h2>
-    <p class="sub">A map from what you can click to the requirements it stands for.</p>
-    <div class="card" style="overflow:hidden"><table id="about"></table></div>
-    <div class="note" style="margin-top:16px">
-      <b>Current state.</b> Seekers, Organisation &amp; Team Management, and Satsang Management read and write real Postgres
-      data through the API, behind real Google Sign-In restricted to ssrf.org. Journey, Inbox, Notes, Tasks, Calendar's
-      Retreat/Online entries, and Reports are still illustrative mock data with no backing table — see README for the
-      current split.</div>
-  </section>
 </main>
 </div>
 
@@ -857,27 +806,27 @@ const CONTACT_SLA_DAYS = 60; /* flat window — there is no longer a per-stage S
 const ROLES = {
   abroad:{name:"Abroad RS — global admin", regions:null, mask:[],
     can:"Full access to all regions and all fields.",
-    tabs:["overview","seekers","alerts","journey","calendar","reports","sevahub","profiles","dash","org","satsangmgmt","formmgmt","tickermgmt","about"],
+    tabs:["overview","search","alerts","journey","calendar","reports","sevahub","dash","org","satsangmgmt","formmgmt","tickermgmt"],
     landing:"overview"},
   tech:{name:"Technical Admin", regions:null, mask:[],
     can:"System health and infrastructure. Not scoped to any region.",
-    tabs:["overview","org","satsangmgmt","formmgmt","tickermgmt","ops","about"],
+    tabs:["overview","org","satsangmgmt","formmgmt","tickermgmt","ops"],
     landing:"ops"},
   rs_de:{name:"Regional RS — Germany", regions:["Germany"], mask:[],
     can:"Germany only. All fields within that region.",
-    tabs:["overview","seekers","alerts","journey","calendar","reports","sevahub","profiles","dash","org","satsangmgmt","formmgmt","tickermgmt","about"],
+    tabs:["overview","search","alerts","journey","calendar","reports","sevahub","dash","org","satsangmgmt","formmgmt","tickermgmt"],
     landing:"overview"},
   rs_fr:{name:"Regional RS — France", regions:["France"], mask:[],
     can:"France only. All fields within that region.",
-    tabs:["overview","seekers","alerts","journey","calendar","reports","sevahub","profiles","dash","org","satsangmgmt","formmgmt","tickermgmt","about"],
+    tabs:["overview","search","alerts","journey","calendar","reports","sevahub","dash","org","satsangmgmt","formmgmt","tickermgmt"],
     landing:"overview"},
   seva:{name:"Seva RS — service allocation", regions:null, mask:["whatsapp","email","dob"],
     can:"All regions, but personal contact details and date of birth are hidden.",
-    tabs:["sevahub","seekers","profiles","about"],
+    tabs:["sevahub","search"],
     landing:"sevahub"},
   satsang:{name:"Satsang conductor — Germany", regions:["Germany"], mask:["dob","remedy"],
     can:"Germany only. Attendance and notes; no remedy or date of birth.",
-    tabs:["calendar","reports","seekers","satsangmgmt","about"],
+    tabs:["calendar","reports","search","satsangmgmt"],
     landing:"calendar",
     conductorName:"Satsang conductor"}
 };
@@ -1339,7 +1288,7 @@ function rows(){
 function renderQueryUI(){
   const ex = document.getElementById('qexamples');
   if(ex && !ex.dataset.built){
-    ex.innerHTML = QUERY_EXAMPLES.map(t=>`<button class="chip" style="font-size:11.5px;padding:4px 11px"
+    ex.innerHTML = QUERY_EXAMPLES.map(t=>`<button class="chip" style="font-size:13.5px;padding:4px 11px"
       onclick="useExample('${t.replace(/'/g,"\\'")}')">${esc(t)}</button>`).join('');
     ex.dataset.built = "1";
   }
@@ -1438,11 +1387,11 @@ async function loadLiveSeekers(){
 }
 
 function renderLiveSeekers(){
-  const el = document.getElementById('seekersLive');
+  const el = document.getElementById('seekerSearch');
   if(!el) return;
   el.innerHTML = `
     <div class="card pad" style="margin-bottom:14px;display:flex;gap:9px;align-items:center">
-      <input type="search" id="liveSeekerQ" style="flex:1;font-size:14px;padding:10px 13px" placeholder="Search name, email or WhatsApp" onkeydown="if(event.key==='Enter') loadLiveSeekers()">
+      <input type="search" id="liveSeekerQ" style="flex:1;font-size:16px;padding:10px 13px" placeholder="Search name, email or WhatsApp" onkeydown="if(event.key==='Enter') loadLiveSeekers()">
       <button class="btn ghost sm" onclick="document.getElementById('liveSeekerQ').value='';loadLiveSeekers()">Clear</button>
     </div>
     <div id="seekersLiveBody"><p class="sub2">Loading\u2026</p></div>
@@ -1686,16 +1635,16 @@ function spField(key, label, value, kind){
   if(SP_EDIT_FIELD === key){
     const raw = value==null ? '' : (kind==='date' ? String(value).slice(0,10) : value);
     return `<div>${esc(label)}</div><div>
-        <input id="spInput_${key}" type="${kind==='number'?'number':kind==='date'?'date':'text'}" value="${esc(String(raw))}" style="width:100%;border-radius:999px;padding:5px 10px;font-size:12.5px;border:1px solid var(--line-2);box-sizing:border-box">
+        <input id="spInput_${key}" type="${kind==='number'?'number':kind==='date'?'date':'text'}" value="${esc(String(raw))}" style="width:100%;border-radius:999px;padding:5px 10px;font-size:14.5px;border:1px solid var(--line-2);box-sizing:border-box">
         <div style="display:flex;gap:6px;margin-top:5px">
-          <button class="mini" onclick="saveSpMasterlistField('${key}', this)" style="width:auto;padding:0 10px;height:24px;font-size:11px">Save</button>
-          <button class="mini" onclick="spCancelEdit()" style="width:auto;padding:0 10px;height:24px;font-size:11px;background:var(--paper);color:var(--ink-2)">Cancel</button>
+          <button class="mini" onclick="saveSpMasterlistField('${key}', this)" style="width:auto;padding:0 10px;height:24px;font-size:13px">Save</button>
+          <button class="mini" onclick="spCancelEdit()" style="width:auto;padding:0 10px;height:24px;font-size:13px;background:var(--paper);color:var(--ink-2)">Cancel</button>
         </div>
       </div>`;
   }
   return `<div>${esc(label)}</div><div style="display:flex;align-items:center;gap:8px">
       <span>${displayVal}</span>
-      <button class="mini" onclick="spStartEdit('${key}')" style="width:auto;padding:0 8px;height:20px;font-size:10px;background:var(--paper);color:var(--ink-2)">Edit</button>
+      <button class="mini" onclick="spStartEdit('${key}')" style="width:auto;padding:0 8px;height:20px;font-size:12px;background:var(--paper);color:var(--ink-2)">Edit</button>
     </div>`;
 }
 
@@ -1705,16 +1654,16 @@ function spFieldBlock(key, label, value){
   if(SP_EDIT_FIELD === key){
     return `<div style="margin-top:10px">
         <p class="sub2" style="font-weight:600;margin-bottom:4px">${esc(label)}</p>
-        <textarea id="spInput_${key}" rows="2" style="width:100%;border-radius:10px;padding:6px 10px;font-size:12.5px;border:1px solid var(--line-2);box-sizing:border-box;font-family:inherit;resize:vertical">${esc(value||'')}</textarea>
+        <textarea id="spInput_${key}" rows="2" style="width:100%;border-radius:10px;padding:6px 10px;font-size:14.5px;border:1px solid var(--line-2);box-sizing:border-box;font-family:inherit;resize:vertical">${esc(value||'')}</textarea>
         <div style="display:flex;gap:6px;margin-top:5px">
-          <button class="mini" onclick="saveSpMasterlistField('${key}', this)" style="width:auto;padding:0 10px;height:24px;font-size:11px">Save</button>
-          <button class="mini" onclick="spCancelEdit()" style="width:auto;padding:0 10px;height:24px;font-size:11px;background:var(--paper);color:var(--ink-2)">Cancel</button>
+          <button class="mini" onclick="saveSpMasterlistField('${key}', this)" style="width:auto;padding:0 10px;height:24px;font-size:13px">Save</button>
+          <button class="mini" onclick="spCancelEdit()" style="width:auto;padding:0 10px;height:24px;font-size:13px;background:var(--paper);color:var(--ink-2)">Cancel</button>
         </div>
       </div>`;
   }
   return `<div style="margin-top:10px;display:flex;align-items:baseline;gap:8px">
       <p class="sub2" style="font-weight:600;margin:0">${esc(label)}</p>
-      <button class="mini" onclick="spStartEdit('${key}')" style="width:auto;padding:0 8px;height:20px;font-size:10px;background:var(--paper);color:var(--ink-2)">Edit</button>
+      <button class="mini" onclick="spStartEdit('${key}')" style="width:auto;padding:0 8px;height:20px;font-size:12px;background:var(--paper);color:var(--ink-2)">Edit</button>
     </div>
     <p class="sub2">${esc(value||'\u2014')}</p>`;
 }
@@ -1829,17 +1778,17 @@ function spCard(colorToken, icon, title, innerHtml, extraClass, countBadge){
 function spDetailField(key, label, value){
   if(SP_EDIT_FIELD === key){
     return `<div>${esc(label)}</div><div>
-        <input id="spInput_${key}" type="text" value="${esc(value==null?'':String(value))}" style="width:100%;border-radius:999px;padding:5px 10px;font-size:12.5px;border:1px solid var(--line-2);box-sizing:border-box">
+        <input id="spInput_${key}" type="text" value="${esc(value==null?'':String(value))}" style="width:100%;border-radius:999px;padding:5px 10px;font-size:14.5px;border:1px solid var(--line-2);box-sizing:border-box">
         <div style="display:flex;gap:6px;margin-top:5px">
-          <button class="mini" onclick="saveSpDetailField('${key}', this)" style="width:auto;padding:0 10px;height:24px;font-size:11px">Save</button>
-          <button class="mini" onclick="spCancelEdit()" style="width:auto;padding:0 10px;height:24px;font-size:11px;background:var(--paper);color:var(--ink-2)">Cancel</button>
+          <button class="mini" onclick="saveSpDetailField('${key}', this)" style="width:auto;padding:0 10px;height:24px;font-size:13px">Save</button>
+          <button class="mini" onclick="spCancelEdit()" style="width:auto;padding:0 10px;height:24px;font-size:13px;background:var(--paper);color:var(--ink-2)">Cancel</button>
         </div>
       </div>`;
   }
   const isEmpty = value==null || value==='';
   return `<div>${esc(label)}</div><div style="display:flex;align-items:center;gap:8px">
       <span>${isEmpty?'Not provided':esc(String(value))}</span>
-      <button class="mini" onclick="spStartEdit('${key}')" style="width:auto;padding:0 8px;height:20px;font-size:10px;background:var(--paper);color:var(--ink-2)">${isEmpty?'+ Add':'Edit'}</button>
+      <button class="mini" onclick="spStartEdit('${key}')" style="width:auto;padding:0 8px;height:20px;font-size:12px;background:var(--paper);color:var(--ink-2)">${isEmpty?'+ Add':'Edit'}</button>
     </div>`;
 }
 async function saveSpDetailField(key, btn){
@@ -1948,22 +1897,22 @@ function spBuildHeader(s){
             ${SP_EDIT_FIELD==='category' ? (()=>{
               if(LIVE_SEEKER_CATEGORIES_FOR_SP===null) loadCategoriesForSp();
               const cats = LIVE_SEEKER_CATEGORIES_FOR_SP || [];
-              return `<select id="spInput_category" style="border-radius:999px;padding:4px 10px;font-size:12px;border:1px solid var(--line-2)">
+              return `<select id="spInput_category" style="border-radius:999px;padding:4px 10px;font-size:14px;border:1px solid var(--line-2)">
                   ${cats.map(c=>`<option value="${c.Category_ID}" ${activeCat&&activeCat.Category_Name===c.Category_Name?'selected':''}>${esc(c.Category_Name)}</option>`).join('')}
                 </select>
-                <button class="mini" onclick="saveSpCategory(this)" style="width:auto;padding:0 10px;height:22px;font-size:11px">Save</button>
-                <button class="mini" onclick="spCancelEdit()" style="width:auto;padding:0 10px;height:22px;font-size:11px;background:var(--paper);color:var(--ink-2)">Cancel</button>`;
+                <button class="mini" onclick="saveSpCategory(this)" style="width:auto;padding:0 10px;height:22px;font-size:13px">Save</button>
+                <button class="mini" onclick="spCancelEdit()" style="width:auto;padding:0 10px;height:22px;font-size:13px;background:var(--paper);color:var(--ink-2)">Cancel</button>`;
             })() : `${categoryTag(activeCat?activeCat.Category_Name:'\u2014')}
-                <button class="mini" onclick="spStartEdit('category')" style="width:auto;padding:0 8px;height:18px;font-size:10px;background:var(--paper);color:var(--ink-2)">Edit</button>
+                <button class="mini" onclick="spStartEdit('category')" style="width:auto;padding:0 8px;height:18px;font-size:12px;background:var(--paper);color:var(--ink-2)">Edit</button>
                 ${esc(s.City||'')}`}
           </p>
         </div>
       </div>
       <div class="metrics" id="spMetrics" style="margin:0;grid-template-columns:repeat(4,84px)">
-        <div class="metric"><div class="n" style="font-size:18px">${ml.Weekly_Seva_Hrs!=null?esc(ml.Weekly_Seva_Hrs):0}</div><div class="l">Seva hrs/wk</div></div>
-        <div class="metric"><div class="n" style="font-size:18px">${satsangCount}</div><div class="l">Satsangs</div></div>
-        <div class="metric"><div class="n" style="font-size:18px">${skills.length}</div><div class="l">Skills</div></div>
-        <div class="metric"><div class="n" style="font-size:18px">${(s.categories||[]).length}</div><div class="l">Cat. changes</div></div>
+        <div class="metric"><div class="n" style="font-size:20px">${ml.Weekly_Seva_Hrs!=null?esc(ml.Weekly_Seva_Hrs):0}</div><div class="l">Seva hrs/wk</div></div>
+        <div class="metric"><div class="n" style="font-size:20px">${satsangCount}</div><div class="l">Satsangs</div></div>
+        <div class="metric"><div class="n" style="font-size:20px">${skills.length}</div><div class="l">Skills</div></div>
+        <div class="metric"><div class="n" style="font-size:20px">${(s.categories||[]).length}</div><div class="l">Cat. changes</div></div>
       </div>
     </div>`;
 }
@@ -2001,11 +1950,11 @@ function spBuildSkills(s){
     <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;align-items:center;position:relative">
       <div style="position:relative;flex:1;min-width:120px">
         <input id="skAdd_search" placeholder="${LIVE_MASTER_SKILLS===null?'Loading\u2026':'Type a skill\u2026'}" autocomplete="off"
-          oninput="skillAutocomplete(this)" style="width:100%;border-radius:999px;padding:6px 14px;font-size:12.5px;border:1px solid var(--line-2);box-sizing:border-box">
+          oninput="skillAutocomplete(this)" style="width:100%;border-radius:999px;padding:6px 14px;font-size:14.5px;border:1px solid var(--line-2);box-sizing:border-box">
         <input id="skAdd_skillId" type="hidden">
         <div id="skAdd_ac" class="ac-dropdown" style="display:none"></div>
       </div>
-      <select id="skAdd_prof" style="border-radius:999px;padding:6px 10px;font-size:12.5px;border:1px solid var(--line-2)">
+      <select id="skAdd_prof" style="border-radius:999px;padding:6px 10px;font-size:14.5px;border:1px solid var(--line-2)">
         <option value="High">High</option><option value="Medium">Medium</option><option value="Low">Low</option>
       </select>
       <button class="mini" onclick="addSeekerSkill(this)" style="width:auto;padding:0 12px;height:28px">Add</button>
@@ -2025,11 +1974,11 @@ function spBuildSatsangs(s){
           <button class="mini" onclick="removeSpSatsangLink('${type}', ${r.Satsang_ID}, this)" style="width:22px;height:22px;color:var(--rose)">&times;</button>
         </div>`).join('') : '<p class="sub2">Not linked yet.</p>'}
       <div style="display:flex;gap:6px;margin-top:4px">
-        <select id="spSatsangAdd_${type}" style="flex:1;border-radius:999px;padding:5px 8px;font-size:11.5px;border:1px solid var(--line-2)">
+        <select id="spSatsangAdd_${type}" style="flex:1;border-radius:999px;padding:5px 8px;font-size:13.5px;border:1px solid var(--line-2)">
           <option value="">${LIVE_SATSANG_DEFS===null?'Loading\u2026':(pickable.length?'Add\u2026':'None left')}</option>
           ${pickable.map(d=>`<option value="${d.Satsang_ID}">${esc(d.Satsang_Name)}</option>`).join('')}
         </select>
-        <button class="mini" onclick="addSpSatsangLink('${type}', this)" style="width:auto;padding:0 8px;height:26px;font-size:11px">Add</button>
+        <button class="mini" onclick="addSpSatsangLink('${type}', this)" style="width:auto;padding:0 8px;height:26px;font-size:13px">Add</button>
       </div></div>`;
   }).join('')}</div>`, 'sp-c-satsangs', linkedTotal);
 }
@@ -2066,14 +2015,14 @@ function spBuildMilestones(s){
     <p class="sub2" style="margin-bottom:8px">The path this seeker has actually walked, separate from category.</p>
     ${milestones.length ? milestones.map(m=>`<div class="oteamrow" style="cursor:default;display:block">
         <div class="sub2">${esc(new Date(m.Milestone_DT).toLocaleDateString())} \u00b7 ${esc(m.Milestone_Kind)}</div>
-        <div style="font-size:13px">${esc(m.Milestone_Label)}</div>
+        <div style="font-size:15px">${esc(m.Milestone_Label)}</div>
       </div>`).join('') : '<p class="sub2">No milestones recorded yet.</p>'}
     <div style="display:flex;gap:6px;margin-top:10px">
-      <select id="msKind" style="border-radius:999px;padding:5px 8px;font-size:11.5px;border:1px solid var(--line-2)">
+      <select id="msKind" style="border-radius:999px;padding:5px 8px;font-size:13.5px;border:1px solid var(--line-2)">
         <option>Event</option><option>Seva</option><option>Satsang</option>
       </select>
-      <input id="msLabel" placeholder="What happened" style="flex:1;border-radius:999px;padding:5px 12px;font-size:11.5px;border:1px solid var(--line-2)">
-      <button class="mini" onclick="addSeekerMilestone(this)" style="width:auto;padding:0 12px;height:26px;font-size:11px">Add</button>
+      <input id="msLabel" placeholder="What happened" style="flex:1;border-radius:999px;padding:5px 12px;font-size:13.5px;border:1px solid var(--line-2)">
+      <button class="mini" onclick="addSeekerMilestone(this)" style="width:auto;padding:0 12px;height:26px;font-size:13px">Add</button>
     </div>`, 'sp-c-milestones');
 }
 function spBuildInternalNotes(s){
@@ -2081,10 +2030,10 @@ function spBuildInternalNotes(s){
   return spCard('amber', 'notebook', 'Internal notes', `
     <p class="sub2" style="margin-bottom:8px">Private to your team &mdash; not visible to the seeker.</p>
     ${internalNotes.length ? internalNotes.slice(0,5).map(n=>`<div style="margin-bottom:8px">
-        <div style="font-size:13px">${esc(n.Note_Text)}</div>
-        <div class="sub2" style="font-size:11px;margin-top:2px">${esc(n.AuthorName||'')}${n.Creation_DT?(' \u00b7 '+esc(new Date(n.Creation_DT).toLocaleDateString())):''}</div>
+        <div style="font-size:15px">${esc(n.Note_Text)}</div>
+        <div class="sub2" style="font-size:13px;margin-top:2px">${esc(n.AuthorName||'')}${n.Creation_DT?(' \u00b7 '+esc(new Date(n.Creation_DT).toLocaleDateString())):''}</div>
       </div>`).join('') : '<p class="sub2">No internal notes yet.</p>'}
-    <textarea id="internalNoteInput" rows="2" placeholder="Visible only to your team." style="width:100%;border-radius:10px;padding:6px 10px;font-size:12.5px;border:1px solid var(--line-2);box-sizing:border-box;font-family:inherit;resize:vertical;margin-top:8px"></textarea>
+    <textarea id="internalNoteInput" rows="2" placeholder="Visible only to your team." style="width:100%;border-radius:10px;padding:6px 10px;font-size:14.5px;border:1px solid var(--line-2);box-sizing:border-box;font-family:inherit;resize:vertical;margin-top:8px"></textarea>
     <div class="btnrow" style="margin-top:8px"><button class="btn ghost" onclick="saveSeekerInternalNote(this)">Save note</button></div>`, 'amber-accent sp-c-notes');
 }
 function spBuildCatHistory(s){
@@ -2096,8 +2045,8 @@ function spBuildConductorNotes(s){
   const notes = s.notes || [];
   return spCard('rose', 'message', 'Conductor notes on this seeker', notes.length
     ? `<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px">${notes.slice(0,6).map(n=>`<div>
-        <div class="sub2" style="font-size:13px;color:var(--ink)">${esc(n.Comments||'')}</div>
-        <div class="sub2" style="font-size:11px;margin-top:3px">${esc(n.Satsang_Name||'')}${n.conductor_name?(' \u00b7 '+esc(n.conductor_name)):''}${n.Comments_Date?(' \u00b7 '+esc(new Date(n.Comments_Date).toLocaleDateString())):''}</div>
+        <div class="sub2" style="font-size:15px;color:var(--ink)">${esc(n.Comments||'')}</div>
+        <div class="sub2" style="font-size:13px;margin-top:3px">${esc(n.Satsang_Name||'')}${n.conductor_name?(' \u00b7 '+esc(n.conductor_name)):''}${n.Comments_Date?(' \u00b7 '+esc(new Date(n.Comments_Date).toLocaleDateString())):''}</div>
       </div>`).join('')}</div>`
     : '<p class="sub2">No conductor notes recorded yet.</p>', 'full sp-c-conductor');
 }
@@ -2131,7 +2080,7 @@ function drawer(id){
   el.innerHTML=`<div class="drawer">
     <div class="dhead">
       <button class="dclose" onclick="close_()" aria-label="Close">×</button>
-      <div class="nm serif" style="font-size:22px">${esc(s.name)}</div>
+      <div class="nm serif" style="font-size:24px">${esc(s.name)}</div>
       <div class="sub2" style="margin-top:4px">${categoryTag(s.category)} &nbsp;·&nbsp; ${s.region}</div>
     </div>
     <div class="dbody">
@@ -2178,7 +2127,7 @@ function drawer(id){
 
       <div class="card pad" style="margin-top:12px">
         <h2 class="sec">Assessment</h2>
-        <p style="margin:6px 0 0;font-size:13.5px;color:var(--ink-2)">${esc(s.notes)}</p>
+        <p style="margin:6px 0 0;font-size:15.5px;color:var(--ink-2)">${esc(s.notes)}</p>
       </div>
 
       <div class="card pad" style="margin-top:12px">
@@ -2212,7 +2161,7 @@ function drawer(id){
           return ns.length? ns.slice().sort((a,b)=>b.at-a.at).map(n=>`
             <div style="padding:9px 0;border-bottom:1px solid #EEF4F9">
               <div class="sub2">${esc(n.by)} · ${fmt(n.at)}</div>
-              <div style="font-size:13.5px;margin-top:2px">${esc(n.txt)}</div>
+              <div style="font-size:15.5px;margin-top:2px">${esc(n.txt)}</div>
             </div>`).join('')
           : '<p class="sub" style="margin:0">No team notes yet.</p>';})()}
         <div class="field" style="margin-top:12px"><label for="ntx">Add a note for the team</label>
@@ -2334,7 +2283,7 @@ function renderAlerts(){
   document.getElementById('alerts').innerHTML=`
     ${notifs.length?`<h2 class="sec" style="margin-top:4px">Notifications (${unreadNotifs} unread)</h2>
       ${notifs.map(n=>`<div class="sub-card" onclick="markNotifRead(${n.Notification_ID})" style="cursor:pointer;padding:11px 16px;${n.Is_Read?'opacity:.55':'border-left:3px solid var(--deep)'}">
-        <div style="font-size:13.5px">${esc(n.Message)}</div>
+        <div style="font-size:15.5px">${esc(n.Message)}</div>
         <div class="sub2" style="margin-top:2px">${new Date(n.Created_DT).toLocaleString()}</div>
       </div>`).join('')}` : ''}
 
@@ -2345,12 +2294,12 @@ function renderAlerts(){
       return `<div class="sub-card" style="${m.unread?'border-left:3px solid var(--deep)':''}">
         <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
           ${CH[m.ch]||''}
-          <span class="nm serif" style="font-size:15px">${esc(s.name)}</span>
+          <span class="nm serif" style="font-size:17px">${esc(s.name)}</span>
           <span class="tag t-semi">${esc(s.region)}</span>
           <span class="sub2" style="margin-left:auto">${esc(m.at)}</span>
         </div>
         <div class="sub2" style="margin-top:4px">${mv(m.ch==='email'?'email':'whatsapp', esc(m.from))}</div>
-        <p style="margin:9px 0 0;font-size:13.5px">${esc(m.txt)}</p>
+        <p style="margin:9px 0 0;font-size:15.5px">${esc(m.txt)}</p>
         ${m.replied?`<div class="sub2" style="margin-top:7px;color:var(--sage)">Answered by ${esc(m.replied)} — logged on the timeline</div>`
         :`<div class="btnrow">
             <button class="btn" onclick="replyMsg('${m.id}')">Reply</button>
@@ -2368,11 +2317,11 @@ function renderAlerts(){
         <div style="display:flex;gap:11px;align-items:flex-start">
           <input type="checkbox" ${t.done?'checked':''} onchange="toggleTask('${t.id}')" style="margin-top:4px">
           <div style="flex:1">
-            <div style="font-size:14px;font-weight:500;${t.done?'text-decoration:line-through':''}">${esc(t.title)}</div>
+            <div style="font-size:16px;font-weight:500;${t.done?'text-decoration:line-through':''}">${esc(t.title)}</div>
             <div class="sub2" style="margin-top:3px">${esc(p.name)} · ${esc(p.region)} ·
               ${t.done?'done':(late?'<span style="color:var(--rose)">was due '+fmt(t.due)+'</span>':'due '+fmt(t.due))} ·
               ${esc(t.who)}</div>
-            <div class="sub2" style="margin-top:2px;font-size:11.5px">Raised from: ${esc(t.from)}</div>
+            <div class="sub2" style="margin-top:2px;font-size:13.5px">Raised from: ${esc(t.from)}</div>
           </div>
           <button class="btn sm ghost" onclick="open_(${p.id})">Open</button>
         </div></div>`;
@@ -2392,7 +2341,7 @@ function renderAlerts(){
     ${od.length?od.map(s=>`<div class="sub-card" style="border-left:3px solid var(--amber)">
         <div class="nm serif">${esc(s.name)}</div>
         <div class="sub2">${s.region} · ${categoryTag(s.category)}</div>
-        <p style="margin:9px 0 0;font-size:13.5px;color:var(--ink-2)">
+        <p style="margin:9px 0 0;font-size:15.5px;color:var(--ink-2)">
           <b>${since(s)} days</b> since last contact — ${since(s)-CONTACT_SLA_DAYS} days beyond the ${CONTACT_SLA_DAYS}-day window.
           Last touch: ${fmt(last(s))}.</p>
         <div class="btnrow"><button class="btn" onclick="open_(${s.id})">Open and log contact</button>
@@ -2458,18 +2407,18 @@ function renderIntakeSection(){
       </dl>
       <div style="display:flex;align-items:center;gap:8px;margin-top:9px">
         <label class="sub2" style="white-space:nowrap">${s.Country_Name?'Country':'Country (not set \u2014 pick one before promoting)'}</label>
-        <select id="intakeCountry_${s.Submission_ID}" style="flex:1;border-radius:999px;padding:5px 12px;font-size:12.5px;border:1px solid var(--line-2)">
+        <select id="intakeCountry_${s.Submission_ID}" style="flex:1;border-radius:999px;padding:5px 12px;font-size:14.5px;border:1px solid var(--line-2)">
           <option value="">${s.Country_Name?'\u2014 leave as '+esc(s.Country_Name)+' \u2014':'Choose\u2026'}</option>
           ${(LIVE_COUNTRIES||[]).map(c=>`<option value="${c.Country_ID}">${esc(c.Country_Name)}</option>`).join('')}
         </select>
-        <button class="mini" onclick="saveIntakeCountry(${s.Submission_ID}, this)" style="width:auto;padding:0 10px;height:26px;font-size:11px">Save</button>
+        <button class="mini" onclick="saveIntakeCountry(${s.Submission_ID}, this)" style="width:auto;padding:0 10px;height:26px;font-size:13px">Save</button>
       </div>
       ${answers.length ? `<div style="margin-top:9px">
         <p class="sub2" style="font-weight:600">Additional answers</p>
         ${answers.map(a=>`<div class="sub2">${esc(JSON.stringify(a))}</div>`).join('')}
       </div>` : ''}
       <div class="match ${candidates.length===0?'clean':''}">
-        <div style="font-size:13px">${ candidates.length===0
+        <div style="font-size:15px">${ candidates.length===0
           ? `<span class="score">No match found</span> — no existing seeker shares this WhatsApp number or email.`
           : candidates.map(c=>`<span class="score">Match</span> — <b>${esc([c.First_Name,c.Last_Name].filter(Boolean).join(' '))}</b>
               shares the same ${c.Email && c.Email.toLowerCase()===String(s.Email||'').toLowerCase() ? 'email' : ''}
@@ -2546,7 +2495,7 @@ function svgDonut(entries, size=148, stroke=20){
 }
 function donutLegend(entries){
   const total = entries.reduce((a,e)=>a+e.v,0) || 1;
-  return entries.map((e,i)=>`<div style="display:flex;align-items:center;gap:8px;padding:4px 0;font-size:12.5px">
+  return entries.map((e,i)=>`<div style="display:flex;align-items:center;gap:8px;padding:4px 0;font-size:14.5px">
     <span style="width:10px;height:10px;border-radius:3px;background:${e.c||CHART_COLORS[i%CHART_COLORS.length]};flex:0 0 auto"></span>
     <span style="flex:1;color:var(--ink-2)">${esc(e.k)}</span>
     <span style="font-weight:600">${e.v}</span>
@@ -2727,7 +2676,7 @@ function renderOps(){
       ${SERVICES.map(s=>`<div style="display:flex;gap:11px;align-items:flex-start;padding:9px 0;border-bottom:1px solid #F0EEE9">
         <span style="width:9px;height:9px;border-radius:50%;background:${dot(s.s)};margin-top:6px;flex:0 0 auto"></span>
         <div style="flex:1">
-          <div style="font-size:13.5px;font-weight:500">${esc(s.n)} <span class="sub2" style="font-weight:400">· ${esc(s.d)}</span></div>
+          <div style="font-size:15.5px;font-weight:500">${esc(s.n)} <span class="sub2" style="font-weight:400">· ${esc(s.d)}</span></div>
           <div class="sub2">${esc(s.m)}</div>
         </div>
         <span class="tag ${s.s==='ok'?'t-active':'t-warn'}">${s.s==='ok'?'Healthy':'Recovered'}</span>
@@ -2742,7 +2691,7 @@ function renderOps(){
           <span class="sub2" style="font-variant-numeric:tabular-nums">${r.t}</span>
           <span class="tag ${r.a==='auto'?'t-active':'t-warn'}">${r.a==='auto'?'Recovered automatically':'Escalated to a person'}</span>
         </div>
-        <div style="font-size:13.5px;margin-top:5px">${esc(r.w)}</div>
+        <div style="font-size:15.5px;margin-top:5px">${esc(r.w)}</div>
         <div class="sub2" style="margin-top:2px">${esc(r.r)}</div>
       </div>`).join('')}
       <div class="note" style="margin-bottom:0">
@@ -2757,7 +2706,7 @@ function renderOps(){
         <p class="sub">Assertions run against the database itself, not the application.</p>
         ${CHECKS.map(c=>`<div style="display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px solid #F0EEE9">
           <span style="width:8px;height:8px;border-radius:50%;background:${dot(c.s)};margin-top:6px;flex:0 0 auto"></span>
-          <div style="flex:1"><div style="font-size:13px">${esc(c.n)}</div><div class="sub2">${esc(c.d)}</div></div>
+          <div style="flex:1"><div style="font-size:15px">${esc(c.n)}</div><div class="sub2">${esc(c.d)}</div></div>
         </div>`).join('')}
         <div class="note" style="margin-bottom:0"><b>The second check is the important one.</b>
           If a deployment ever removed an audit trigger, this catches it that night rather than during an investigation two years later.</div>
@@ -2768,7 +2717,7 @@ function renderOps(){
         <p class="sub">Reviewed weekly by the named technical owner.</p>
         ${SECURITY.map(s=>`<div style="display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px solid #F0EEE9">
           <span style="width:8px;height:8px;border-radius:50%;background:${dot(s.s)};margin-top:6px;flex:0 0 auto"></span>
-          <div style="flex:1"><div style="font-size:13px">${esc(s.n)} — <b>${esc(s.v)}</b></div>
+          <div style="flex:1"><div style="font-size:15px">${esc(s.n)} — <b>${esc(s.v)}</b></div>
             <div class="sub2">${esc(s.d)}</div></div>
         </div>`).join('')}
         <div class="hidden-note" style="margin-bottom:0"><b>The overdue access review is the live risk here.</b>
@@ -2783,10 +2732,10 @@ function renderOps(){
       <table style="margin-top:8px">
         <thead><tr><th>Update</th><th>Type</th><th>Risk</th><th>How it is applied</th></tr></thead>
         <tbody>${UPGRADES.map(u=>`<tr style="cursor:default">
-          <td style="font-size:13px">${esc(u.n)}</td>
+          <td style="font-size:15px">${esc(u.n)}</td>
           <td><span class="tag ${u.k==='Patch'?'t-active':u.k==='Minor'?'t-semi':'t-warn'}">${esc(u.k)}</span></td>
-          <td style="font-size:13px;color:${u.r==='Low'?'var(--sage)':u.r==='Medium'?'var(--amber)':'var(--rose)'}">${esc(u.r)}</td>
-          <td style="font-size:13px;color:var(--ink-2)">${esc(u.p)}</td></tr>`).join('')}</tbody>
+          <td style="font-size:15px;color:${u.r==='Low'?'var(--sage)':u.r==='Medium'?'var(--amber)':'var(--rose)'}">${esc(u.r)}</td>
+          <td style="font-size:15px;color:var(--ink-2)">${esc(u.p)}</td></tr>`).join('')}</tbody>
       </table>
       <div class="note" style="margin-bottom:0">
         <b>Every automatic update is reversible.</b> It applies to staging first, runs the full test suite including the access-control tests,
@@ -2797,7 +2746,7 @@ function renderOps(){
     <div class="card pad" style="border-left:3px solid var(--rose)">
       <h2 class="sec">What this system will never repair by itself</h2>
       <p class="sub">Stated plainly, because a dashboard that implies otherwise is worse than none.</p>
-      <ul style="margin:6px 0 0;padding-left:19px;font-size:13.5px;color:var(--ink-2);line-height:1.75">
+      <ul style="margin:6px 0 0;padding-left:19px;font-size:15.5px;color:var(--ink-2);line-height:1.75">
         <li>Authorization logic that is wrong — if a region rule is written too permissively, it will run perfectly and leak quietly.</li>
         <li>Two seeker records wrongly merged. The merge is reversible only from a backup, and only if someone notices.</li>
         <li>A seeker's erasure request. That is a legal decision with judgement attached, never an automated one.</li>
@@ -3008,24 +2957,24 @@ function roleAndMemberFormsHTML(dept, roles, key, submitFn){
   const k = key;
   return `
     <details style="margin-top:10px">
-      <summary style="cursor:pointer;font-size:12px;color:var(--deep)">+ Add role</summary>
+      <summary style="cursor:pointer;font-size:14px;color:var(--deep)">+ Add role</summary>
       <div style="display:flex;flex-direction:column;gap:6px;margin-top:8px">
-        <input id="newRoleName_${k}" placeholder="Role name" style="border-radius:999px;padding:6px 14px;font-size:13px;border:1px solid var(--line-2)">
-        <input id="newRoleDesc_${k}" placeholder="Description (optional)" style="border-radius:999px;padding:6px 14px;font-size:13px;border:1px solid var(--line-2)">
+        <input id="newRoleName_${k}" placeholder="Role name" style="border-radius:999px;padding:6px 14px;font-size:15px;border:1px solid var(--line-2)">
+        <input id="newRoleDesc_${k}" placeholder="Description (optional)" style="border-radius:999px;padding:6px 14px;font-size:15px;border:1px solid var(--line-2)">
         <button class="btn sm" onclick="createRole(${dept.Seva_Dept_ID}, document.getElementById('newRoleName_${k}').value.trim(), document.getElementById('newRoleDesc_${k}').value.trim(), this)"><span class="spin"></span><span class="lbl">Add role</span></button>
       </div>
     </details>
     ${roles.length ? `<details style="margin-top:8px">
-      <summary style="cursor:pointer;font-size:12px;color:var(--deep)">+ Add member</summary>
+      <summary style="cursor:pointer;font-size:14px;color:var(--deep)">+ Add member</summary>
       <div style="margin-top:8px">
-        <input id="assignName_${k}" placeholder="Name (optional)" style="width:100%;border-radius:999px;padding:6px 14px;font-size:13px;border:1px solid var(--line-2);box-sizing:border-box;margin-bottom:6px">
-        <input id="assignEmail_${k}" type="email" placeholder="name@ssrf.org" style="width:100%;border-radius:999px;padding:6px 14px;font-size:13px;border:1px solid var(--line-2);box-sizing:border-box;margin-bottom:6px">
-        <select id="assignRole_${k}" onchange="document.getElementById('newRoleAssignRow_${k}').style.display=this.value==='__new__'?'flex':'none'" style="width:100%;border-radius:999px;padding:6px 14px;font-size:13px;border:1px solid var(--line-2);box-sizing:border-box;margin-bottom:6px">
+        <input id="assignName_${k}" placeholder="Name (optional)" style="width:100%;border-radius:999px;padding:6px 14px;font-size:15px;border:1px solid var(--line-2);box-sizing:border-box;margin-bottom:6px">
+        <input id="assignEmail_${k}" type="email" placeholder="name@ssrf.org" style="width:100%;border-radius:999px;padding:6px 14px;font-size:15px;border:1px solid var(--line-2);box-sizing:border-box;margin-bottom:6px">
+        <select id="assignRole_${k}" onchange="document.getElementById('newRoleAssignRow_${k}').style.display=this.value==='__new__'?'flex':'none'" style="width:100%;border-radius:999px;padding:6px 14px;font-size:15px;border:1px solid var(--line-2);box-sizing:border-box;margin-bottom:6px">
           ${roles.map(r=>`<option value="${r.Dept_Role_ID}">${esc(r.Dept_Role_Name)}</option>`).join('')}
           <option value="__new__">+ Add new role</option>
         </select>
         <div id="newRoleAssignRow_${k}" style="display:none;gap:6px;margin-bottom:6px">
-          <input id="newRoleInline_${k}" placeholder="New role name" style="flex:1;border-radius:999px;padding:6px 14px;font-size:13px;border:1px solid var(--line-2)">
+          <input id="newRoleInline_${k}" placeholder="New role name" style="flex:1;border-radius:999px;padding:6px 14px;font-size:15px;border:1px solid var(--line-2)">
         </div>
         <button class="btn sm" style="width:100%" onclick="${submitFn}(${dept.Seva_Dept_ID}, '${k}', this)"><span class="spin"></span><span class="lbl">Add member</span></button>
         <div class="err" id="assignErr_${k}" style="margin-top:6px"></div>
@@ -3136,9 +3085,9 @@ function renderModalContent(){
             <span>${esc(kp.name)}${kp.tag?` <span class="dc-tag" style="background:${tagColor(kp.tag)}22;color:${tagColor(kp.tag)};margin:0 0 0 4px">${esc(kp.tag)}</span>`:''}</span><span>&rsaquo;</span>
           </div>`; }).join('')}` : '<p class="sub2" style="margin-top:10px">No sub-departments yet.</p>'}
       <details style="margin-top:10px">
-        <summary style="cursor:pointer;font-size:12px;color:var(--deep)">+ Add sub-department</summary>
+        <summary style="cursor:pointer;font-size:14px;color:var(--deep)">+ Add sub-department</summary>
         <div style="display:flex;gap:6px;margin-top:8px">
-          <input id="mNewDeptName" placeholder="Department name" style="flex:1;border-radius:999px;padding:6px 14px;font-size:13px;border:1px solid var(--line-2)">
+          <input id="mNewDeptName" placeholder="Department name" style="flex:1;border-radius:999px;padding:6px 14px;font-size:15px;border:1px solid var(--line-2)">
           <button class="btn sm" onclick="createDept(document.getElementById('mNewDeptName').value.trim(), ${dept.Seva_Dept_ID}, this)"><span class="spin"></span><span class="lbl">Add</span></button>
         </div>
       </details>
@@ -3150,14 +3099,14 @@ function renderModalContent(){
             <span title="${esc(r.Dept_Role_Desc||'')}">${esc(r.Dept_Role_Name)}</span>
             <span style="display:flex;align-items:center;gap:6px">
               <span class="sub2">Rank</span>
-              <input type="number" value="${r.HRCHY_ID!=null?r.HRCHY_ID:''}" style="width:52px;border-radius:999px;padding:3px 10px;font-size:12px;border:1px solid var(--line-2)"
+              <input type="number" value="${r.HRCHY_ID!=null?r.HRCHY_ID:''}" style="width:52px;border-radius:999px;padding:3px 10px;font-size:14px;border:1px solid var(--line-2)"
                 onchange="saveHierarchy(${dept.Seva_Dept_ID},${r.Dept_Role_ID},this.value)">
               <button class="mini" onclick="deleteRole(${r.Dept_Role_ID}, this)" title="Delete role" style="width:22px;height:22px;color:var(--rose)">&times;</button>
             </span>
           </div>
           ${(r.holders||[]).map(h=>`<div class="sub2" style="display:flex;justify-content:space-between;padding-left:8px">
             <span style="color:var(--sage)">${esc(h.name)}</span>
-            <span class="mini" onclick="removeMember(${h.usdrId}, this)" title="Remove" style="width:18px;height:18px;font-size:10px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center">&times;</span>
+            <span class="mini" onclick="removeMember(${h.usdrId}, this)" title="Remove" style="width:18px;height:18px;font-size:12px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center">&times;</span>
           </div>`).join('')}
         </div>`).join('') : '<p class="sub2">No roles defined yet.</p>'}
       ${roleAndMemberFormsHTML(dept, roles, 'm', 'submitAssign')}
@@ -3195,18 +3144,18 @@ function renderTeamManagement(force){
     const isNew = row.usdrId==null;
     return `<tr data-usdr="${isNew?'':row.usdrId}" data-orig-dept="${row.deptId||''}" data-orig-role="${row.roleId||''}" data-new="${isNew?1:0}">
       <td style="padding:8px 6px">${isNew
-        ? `<input class="rowName" placeholder="Name" style="width:100%;border-radius:999px;padding:5px 12px;font-size:12.5px;border:1px solid var(--line-2);margin-bottom:4px;box-sizing:border-box">
-           <input class="rowEmail" type="email" placeholder="name@ssrf.org" style="width:100%;border-radius:999px;padding:5px 12px;font-size:12.5px;border:1px solid var(--line-2);box-sizing:border-box">`
+        ? `<input class="rowName" placeholder="Name" style="width:100%;border-radius:999px;padding:5px 12px;font-size:14.5px;border:1px solid var(--line-2);margin-bottom:4px;box-sizing:border-box">
+           <input class="rowEmail" type="email" placeholder="name@ssrf.org" style="width:100%;border-radius:999px;padding:5px 12px;font-size:14.5px;border:1px solid var(--line-2);box-sizing:border-box">`
         : `<div style="font-weight:500">${esc(row.name)}</div><div class="sub2">${esc(row.email||'')}</div>`}
       </td>
       <td style="padding:8px 6px">
-        <select class="rowDept" style="width:100%;border-radius:999px;padding:5px 10px;font-size:12.5px;border:1px solid var(--line-2)"
+        <select class="rowDept" style="width:100%;border-radius:999px;padding:5px 10px;font-size:14.5px;border:1px solid var(--line-2)"
           onchange="this.closest('tr').querySelector('.rowRole').innerHTML = teamRoleOptions(this.value)">
           ${deptOptions(row.deptId)}
         </select>
       </td>
       <td style="padding:8px 6px">
-        <select class="rowRole" style="width:100%;border-radius:999px;padding:5px 10px;font-size:12.5px;border:1px solid var(--line-2)">
+        <select class="rowRole" style="width:100%;border-radius:999px;padding:5px 10px;font-size:14.5px;border:1px solid var(--line-2)">
           ${roleOptionsFor(row.deptId, row.roleId)}
         </select>
       </td>
@@ -3218,26 +3167,26 @@ function renderTeamManagement(force){
 
   el.innerHTML = `
     <details style="margin-bottom:14px">
-      <summary style="cursor:pointer;font-size:12px;color:var(--deep)">+ Add Seva Dept</summary>
+      <summary style="cursor:pointer;font-size:14px;color:var(--deep)">+ Add Seva Dept</summary>
       <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
-        <select id="tmNewDeptParent" style="border-radius:999px;padding:6px 14px;font-size:13px;border:1px solid var(--line-2)">
+        <select id="tmNewDeptParent" style="border-radius:999px;padding:6px 14px;font-size:15px;border:1px solid var(--line-2)">
           <option value="">No parent (top level)</option>
           ${deptOptions(null)}
         </select>
-        <input id="tmNewDeptName" placeholder="Department name" style="border-radius:999px;padding:6px 14px;font-size:13px;border:1px solid var(--line-2);flex:1;min-width:140px">
+        <input id="tmNewDeptName" placeholder="Department name" style="border-radius:999px;padding:6px 14px;font-size:15px;border:1px solid var(--line-2);flex:1;min-width:140px">
         <button class="btn sm" onclick="createDept(document.getElementById('tmNewDeptName').value.trim(), document.getElementById('tmNewDeptParent').value||null, this)"><span class="spin"></span><span class="lbl">Add department</span></button>
       </div>
     </details>
     <details style="margin-bottom:14px">
-      <summary style="cursor:pointer;font-size:12px;color:var(--deep)">+ Add role to a department</summary>
+      <summary style="cursor:pointer;font-size:14px;color:var(--deep)">+ Add role to a department</summary>
       <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
-        <select id="tmNewRoleDept" style="border-radius:999px;padding:6px 14px;font-size:13px;border:1px solid var(--line-2)">${deptOptions(null)}</select>
-        <input id="tmNewRoleName" placeholder="Role name" style="border-radius:999px;padding:6px 14px;font-size:13px;border:1px solid var(--line-2);flex:1;min-width:140px">
+        <select id="tmNewRoleDept" style="border-radius:999px;padding:6px 14px;font-size:15px;border:1px solid var(--line-2)">${deptOptions(null)}</select>
+        <input id="tmNewRoleName" placeholder="Role name" style="border-radius:999px;padding:6px 14px;font-size:15px;border:1px solid var(--line-2);flex:1;min-width:140px">
         <button class="btn sm" onclick="createRole(Number(document.getElementById('tmNewRoleDept').value), document.getElementById('tmNewRoleName').value.trim(), '', this)"><span class="spin"></span><span class="lbl">Add role</span></button>
       </div>
     </details>
     <div style="overflow-x:auto">
-      <table style="width:100%;border-collapse:collapse;font-size:13px" id="teamTable">
+      <table style="width:100%;border-collapse:collapse;font-size:15px" id="teamTable">
         <thead><tr style="text-align:left;border-bottom:1px solid var(--line-2)">
           <th style="padding:6px">Member</th><th style="padding:6px">Department</th><th style="padding:6px">Role</th><th></th>
         </tr></thead>
@@ -3262,16 +3211,16 @@ function addTeamRow(){
   const tr = document.createElement('tr');
   tr.dataset.usdr = ''; tr.dataset.origDept=''; tr.dataset.origRole=''; tr.dataset.new = '1';
   tr.innerHTML = `<td style="padding:8px 6px">
-      <input class="rowName" placeholder="Name" style="width:100%;border-radius:999px;padding:5px 12px;font-size:12.5px;border:1px solid var(--line-2);margin-bottom:4px;box-sizing:border-box">
-      <input class="rowEmail" type="email" placeholder="name@ssrf.org" style="width:100%;border-radius:999px;padding:5px 12px;font-size:12.5px;border:1px solid var(--line-2);box-sizing:border-box">
+      <input class="rowName" placeholder="Name" style="width:100%;border-radius:999px;padding:5px 12px;font-size:14.5px;border:1px solid var(--line-2);margin-bottom:4px;box-sizing:border-box">
+      <input class="rowEmail" type="email" placeholder="name@ssrf.org" style="width:100%;border-radius:999px;padding:5px 12px;font-size:14.5px;border:1px solid var(--line-2);box-sizing:border-box">
     </td>
     <td style="padding:8px 6px">
-      <select class="rowDept" style="width:100%;border-radius:999px;padding:5px 10px;font-size:12.5px;border:1px solid var(--line-2)"
+      <select class="rowDept" style="width:100%;border-radius:999px;padding:5px 10px;font-size:14.5px;border:1px solid var(--line-2)"
         onchange="this.closest('tr').querySelector('.rowRole').innerHTML = teamRoleOptions(this.value)">
         ${LIVE_DEPTS.map(dd=>`<option value="${dd.Seva_Dept_ID}">${esc(dd.Seva_Dept_Name)}</option>`).join('')}
       </select>
     </td>
-    <td style="padding:8px 6px"><select class="rowRole" style="width:100%;border-radius:999px;padding:5px 10px;font-size:12.5px;border:1px solid var(--line-2)">${teamRoleOptions(firstDeptId)}</select></td>
+    <td style="padding:8px 6px"><select class="rowRole" style="width:100%;border-radius:999px;padding:5px 10px;font-size:14.5px;border:1px solid var(--line-2)">${teamRoleOptions(firstDeptId)}</select></td>
     <td style="padding:8px 6px;text-align:center"><button class="mini" onclick="markRowForRemoval(this)" title="Remove" style="width:24px;height:24px;color:var(--rose)">&times;</button></td>`;
   tbody.appendChild(tr);
 }
@@ -3355,7 +3304,7 @@ const SATSANG_STATUS_COLORS = {
 };
 function statusBadge(s){
   const c = SATSANG_STATUS_COLORS[s] || {bg:'#EEF1F4', fg:'var(--ink-2)'};
-  return `<span style="background:${c.bg};color:${c.fg};border-radius:999px;padding:2px 10px;font-size:11.5px;font-weight:500;white-space:nowrap">${esc(s||'\u2014')}</span>`;
+  return `<span style="background:${c.bg};color:${c.fg};border-radius:999px;padding:2px 10px;font-size:13.5px;font-weight:500;white-space:nowrap">${esc(s||'\u2014')}</span>`;
 }
 
 function satsangSubtab(s){
@@ -3389,15 +3338,15 @@ function renderSatsangDefs(force){
 
   el.innerHTML = `
     <details style="margin-bottom:14px">
-      <summary style="cursor:pointer;font-size:12px;color:var(--deep)">+ New Satsang Definition</summary>
+      <summary style="cursor:pointer;font-size:14px;color:var(--deep)">+ New Satsang Definition</summary>
       <div class="card pad" style="margin-top:8px;display:flex;flex-direction:column;gap:8px;max-width:480px">
-        <input id="sdShortName" placeholder="Short name" style="border-radius:999px;padding:7px 14px;font-size:13px;border:1px solid var(--line-2)">
-        <input id="sdName" placeholder="Full name" style="border-radius:999px;padding:7px 14px;font-size:13px;border:1px solid var(--line-2)">
-        <select id="sdType" style="border-radius:999px;padding:7px 14px;font-size:13px;border:1px solid var(--line-2)">
+        <input id="sdShortName" placeholder="Short name" style="border-radius:999px;padding:7px 14px;font-size:15px;border:1px solid var(--line-2)">
+        <input id="sdName" placeholder="Full name" style="border-radius:999px;padding:7px 14px;font-size:15px;border:1px solid var(--line-2)">
+        <select id="sdType" style="border-radius:999px;padding:7px 14px;font-size:15px;border:1px solid var(--line-2)">
           ${(LIVE_SATSANG_TYPES||[]).map(t=>`<option value="${t.Satsang_Type_ID}">${esc(t.ST_Name)}</option>`).join('')}
         </select>
-        <input id="sdStart" type="date" style="border-radius:999px;padding:7px 14px;font-size:13px;border:1px solid var(--line-2)">
-        <select id="sdFreq" style="border-radius:999px;padding:7px 14px;font-size:13px;border:1px solid var(--line-2)">
+        <input id="sdStart" type="date" style="border-radius:999px;padding:7px 14px;font-size:15px;border:1px solid var(--line-2)">
+        <select id="sdFreq" style="border-radius:999px;padding:7px 14px;font-size:15px;border:1px solid var(--line-2)">
           <option value="">No fixed frequency</option>
           <option>Daily</option><option>Weekly</option><option>Once every two weeks</option><option>Monthly</option>
         </select>
@@ -3523,16 +3472,16 @@ function renderSatsangDetail(){
           <button class="mini" onclick="deleteSatsangField(${f.MSD_ID}, this)" style="width:22px;height:22px;color:var(--rose)">&times;</button>
         </div>`).join('') : '<p class="sub2">None yet.</p>'}
       <details style="margin-top:6px">
-        <summary style="cursor:pointer;font-size:12px;color:var(--deep)">+ Add field</summary>
+        <summary style="cursor:pointer;font-size:14px;color:var(--deep)">+ Add field</summary>
         <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;align-items:center">
-          <input id="fldName" placeholder="Field name" style="border-radius:999px;padding:5px 12px;font-size:12.5px;border:1px solid var(--line-2);flex:1;min-width:100px">
-          <select id="fldType" style="border-radius:999px;padding:5px 12px;font-size:12.5px;border:1px solid var(--line-2)">
+          <input id="fldName" placeholder="Field name" style="border-radius:999px;padding:5px 12px;font-size:14.5px;border:1px solid var(--line-2);flex:1;min-width:100px">
+          <select id="fldType" style="border-radius:999px;padding:5px 12px;font-size:14.5px;border:1px solid var(--line-2)">
             <option value="text">Text</option><option value="number">Number</option><option value="date">Date</option><option value="boolean">Yes/No</option>
           </select>
-          <select id="fldFreq" style="border-radius:999px;padding:5px 12px;font-size:12.5px;border:1px solid var(--line-2)" title="How often an attendee is asked for this on the self-service form">
+          <select id="fldFreq" style="border-radius:999px;padding:5px 12px;font-size:14.5px;border:1px solid var(--line-2)" title="How often an attendee is asked for this on the self-service form">
             <option value="One-time">One-time</option><option value="Daily">Daily</option><option value="Weekly">Weekly</option>
           </select>
-          <input id="fldOrder" type="number" placeholder="Order" style="width:64px;border-radius:999px;padding:5px 10px;font-size:12.5px;border:1px solid var(--line-2)">
+          <input id="fldOrder" type="number" placeholder="Order" style="width:64px;border-radius:999px;padding:5px 10px;font-size:14.5px;border:1px solid var(--line-2)">
           <label class="sub2" style="display:flex;align-items:center;gap:4px"><input type="checkbox" id="fldQty">Qty</label>
           <label class="sub2" style="display:flex;align-items:center;gap:4px"><input type="checkbox" id="fldQlt">QLT</label>
           <button class="btn sm" onclick="addSatsangField(${d.Satsang_ID}, this)"><span class="spin"></span><span class="lbl">Add</span></button>
@@ -3546,13 +3495,13 @@ function renderSatsangDetail(){
           <button class="mini" onclick="removeSatsangConductor(${d.Satsang_ID}, ${c.SC_CSMS_ID}, this)" style="width:22px;height:22px;color:var(--rose)">&times;</button>
         </div>`).join('') : '<p class="sub2">None yet.</p>'}
       <details style="margin-top:6px">
-        <summary style="cursor:pointer;font-size:12px;color:var(--deep)">+ Add conductor</summary>
+        <summary style="cursor:pointer;font-size:14px;color:var(--deep)">+ Add conductor</summary>
         <div style="display:flex;gap:6px;margin-top:8px;position:relative">
           <div style="flex:1;position:relative">
-            <input id="condName" placeholder="Start typing a name\u2026" autocomplete="off" oninput="peopleAutocomplete(this,'cond')" style="width:100%;border-radius:999px;padding:5px 12px;font-size:12.5px;border:1px solid var(--line-2);box-sizing:border-box">
+            <input id="condName" placeholder="Start typing a name\u2026" autocomplete="off" oninput="peopleAutocomplete(this,'cond')" style="width:100%;border-radius:999px;padding:5px 12px;font-size:14.5px;border:1px solid var(--line-2);box-sizing:border-box">
             <div id="cond_ac" class="ac-dropdown" style="display:none"></div>
           </div>
-          <input id="condEmail" type="email" placeholder="name@ssrf.org" style="border-radius:999px;padding:5px 12px;font-size:12.5px;border:1px solid var(--line-2);flex:1">
+          <input id="condEmail" type="email" placeholder="name@ssrf.org" style="border-radius:999px;padding:5px 12px;font-size:14.5px;border:1px solid var(--line-2);flex:1">
           <button class="btn sm" onclick="addSatsangConductor(${d.Satsang_ID}, this)"><span class="spin"></span><span class="lbl">Add</span></button>
         </div>
         <p class="sub2" style="margin-top:4px">Pick an existing CSMS person, or type a new name and email \u2014 they don't need to have signed in yet.</p>
@@ -3629,13 +3578,13 @@ function renderSatsangEvents(force){
   el.innerHTML = `
     <div style="display:flex;gap:8px;align-items:center;margin-bottom:14px;flex-wrap:wrap">
       <label class="sub2">Satsang:</label>
-      <select id="seDefPicker" style="border-radius:999px;padding:6px 14px;font-size:13px;border:1px solid var(--line-2)" onchange="SATSANG_EVENTS_DEF_ID=Number(this.value); loadSatsangEvents(true)">
+      <select id="seDefPicker" style="border-radius:999px;padding:6px 14px;font-size:15px;border:1px solid var(--line-2)" onchange="SATSANG_EVENTS_DEF_ID=Number(this.value); loadSatsangEvents(true)">
         ${LIVE_SATSANG_DEFS.map(d=>`<option value="${d.Satsang_ID}" ${d.Satsang_ID==SATSANG_EVENTS_DEF_ID?'selected':''}>${esc(d.Satsang_Name)}</option>`).join('')}
       </select>
     </div>
     <div id="satsangEventsBody"><p class="sub2">Loading\u2026</p></div>
     <div style="margin-top:26px">
-      <h3 class="sec" style="font-size:15px;margin-bottom:4px">Attendee and satsang notes</h3>
+      <h3 class="sec" style="font-size:17px;margin-bottom:4px">Attendee and satsang notes</h3>
       <p class="sub2" style="margin-bottom:10px" id="satsangNotesHint">Click "Notes" on an event above to open it here \u2014 no need to leave this tab.</p>
       <div id="satsangCommentsBody"></div>
     </div>`;
@@ -3665,9 +3614,9 @@ function eventRowHTML(e){
       <div style="display:flex;align-items:center;gap:8px">
         ${statusBadge(e.Current_Status)}
         ${e.Current_Status==='Pending Conductor Approval' ? `<button class="btn sm" onclick="approveSatsangEvent(${e.SE_ID}, this)"><span class="spin"></span><span class="lbl">Approve</span></button>` : ''}
-        <button class="mini" onclick="toggleEventAttendees(${e.SE_ID}, this)" title="Add attendees to this satsang" style="width:auto;padding:0 10px;height:24px;font-size:11.5px">Attendees</button>
-        <button class="mini" onclick="openEventNotes(${e.SE_ID}, this)" title="Conductor's overall satsang report" style="width:auto;padding:0 10px;height:24px;font-size:11.5px">Notes</button>
-        ${e.Current_Status==='Scheduled' ? `<button class="mini" onclick="toggleFormLinks(${e.SE_ID}, this)" title="Self-service form links" style="width:auto;padding:0 10px;height:24px;font-size:11.5px">Links</button>` : ''}
+        <button class="mini" onclick="toggleEventAttendees(${e.SE_ID}, this)" title="Add attendees to this satsang" style="width:auto;padding:0 10px;height:24px;font-size:13.5px">Attendees</button>
+        <button class="mini" onclick="openEventNotes(${e.SE_ID}, this)" title="Conductor's overall satsang report" style="width:auto;padding:0 10px;height:24px;font-size:13.5px">Notes</button>
+        ${e.Current_Status==='Scheduled' ? `<button class="mini" onclick="toggleFormLinks(${e.SE_ID}, this)" title="Self-service form links" style="width:auto;padding:0 10px;height:24px;font-size:13.5px">Links</button>` : ''}
         ${e.Current_Status!=='Cancelled' ? `<button class="mini" onclick="cancelSatsangEvent(${e.SE_ID}, this)" title="Cancel" style="width:24px;height:24px;color:var(--rose)">&times;</button>` : ''}
       </div>
     </div>
@@ -3713,7 +3662,7 @@ function eventAttendeesPanelHTML(seId){
     : '';
   return `<div class="card pad" style="background:var(--paper)">
     <p class="sub2" style="font-weight:600;margin-bottom:6px">Satsang roster \u2014 shared across every event of this satsang</p>
-    <select id="evAttCond_${seId}" style="border-radius:999px;padding:6px 14px;font-size:12.5px;border:1px solid var(--line-2);margin-bottom:10px;width:100%;max-width:280px;box-sizing:border-box">
+    <select id="evAttCond_${seId}" style="border-radius:999px;padding:6px 14px;font-size:14.5px;border:1px solid var(--line-2);margin-bottom:10px;width:100%;max-width:280px;box-sizing:border-box">
       <option value="">${conductorOptions?'Noting as\u2026':'No conductor set on this event'}</option>
       ${conductorOptions}
     </select>
@@ -3724,19 +3673,19 @@ function eventAttendeesPanelHTML(seId){
         const name = esc([a.First_Name,a.Last_Name].filter(Boolean).join(' ')||('Seeker #'+a.Seeker_ID));
         return `<div style="border-top:1px solid var(--line-2);padding:8px 0">
           <div style="display:grid;grid-template-columns:150px 1fr auto auto;gap:8px;align-items:center">
-            <span style="font-weight:500;font-size:12.5px">${name}</span>
-            <input id="evNote_${seId}_${a.Seeker_ID}" placeholder="${latest?'Add another note\u2026':'Add a note\u2026'}" style="border-radius:999px;padding:5px 12px;font-size:12.5px;border:1px solid var(--line-2)">
-            <button class="mini" onclick="saveEventAttendeeNote(${seId}, ${a.Seeker_ID}, this)" style="width:auto;padding:0 10px;height:26px;font-size:11px">Save</button>
+            <span style="font-weight:500;font-size:14.5px">${name}</span>
+            <input id="evNote_${seId}_${a.Seeker_ID}" placeholder="${latest?'Add another note\u2026':'Add a note\u2026'}" style="border-radius:999px;padding:5px 12px;font-size:14.5px;border:1px solid var(--line-2)">
+            <button class="mini" onclick="saveEventAttendeeNote(${seId}, ${a.Seeker_ID}, this)" style="width:auto;padding:0 10px;height:26px;font-size:13px">Save</button>
             <button class="mini" onclick="removeEventRosterAttendee(${seId}, ${a.Seeker_ID}, this)" title="Remove from roster" style="width:22px;height:22px;color:var(--rose)">&times;</button>
           </div>
-          ${latest ? `<div class="sub2" style="margin-top:5px;padding-left:2px">${esc(latest.Comments)} <span style="font-size:10.5px">\u2014 ${esc(latest.conductor_name||'')}${latest.Comments_Date?(', '+esc(new Date(latest.Comments_Date).toLocaleDateString())):''}</span></div>` : ''}
-          ${rest.length ? `<button class="mini" onclick="toggleAttendeeHistory(${seId}, ${a.Seeker_ID}, this)" style="width:auto;padding:0 8px;height:20px;font-size:10.5px;background:var(--paper);color:var(--ink-2);margin-top:4px">Show ${rest.length} more</button>
+          ${latest ? `<div class="sub2" style="margin-top:5px;padding-left:2px">${esc(latest.Comments)} <span style="font-size:12.5px">\u2014 ${esc(latest.conductor_name||'')}${latest.Comments_Date?(', '+esc(new Date(latest.Comments_Date).toLocaleDateString())):''}</span></div>` : ''}
+          ${rest.length ? `<button class="mini" onclick="toggleAttendeeHistory(${seId}, ${a.Seeker_ID}, this)" style="width:auto;padding:0 8px;height:20px;font-size:12.5px;background:var(--paper);color:var(--ink-2);margin-top:4px">Show ${rest.length} more</button>
             <div id="evHist_${seId}_${a.Seeker_ID}" style="display:none;margin-top:4px;padding-left:2px"></div>` : ''}
         </div>`;
       }).join('') : '<p class="sub2">None yet.</p>'}
     <div style="display:flex;gap:6px;margin-top:10px;position:relative">
       <div style="flex:1;position:relative">
-        <input id="evAtt_${seId}_search" placeholder="Search by name or email" autocomplete="off" oninput="eventAttendeeAutocomplete(this, ${seId})" style="width:100%;border-radius:999px;padding:6px 14px;font-size:12.5px;border:1px solid var(--line-2);box-sizing:border-box">
+        <input id="evAtt_${seId}_search" placeholder="Search by name or email" autocomplete="off" oninput="eventAttendeeAutocomplete(this, ${seId})" style="width:100%;border-radius:999px;padding:6px 14px;font-size:14.5px;border:1px solid var(--line-2);box-sizing:border-box">
         <div id="evAtt_${seId}_ac" class="ac-dropdown" style="display:none"></div>
       </div>
       <input id="evAtt_${seId}_seekerId" type="hidden">
@@ -3767,7 +3716,7 @@ function toggleAttendeeHistory(seId, seekerId, btn){
   if(box.style.display !== 'none'){ box.style.display = 'none'; return; }
   const rest = (EVENT_COMMENTS_CACHE[seId]||[]).filter(c=>String(c.Seeker_ID)===String(seekerId)).slice(1);
   box.innerHTML = rest.map(c=>`<div class="sub2" style="padding:3px 0;display:flex;justify-content:space-between;gap:8px">
-      <span>${esc(c.Comments)} <span style="font-size:10.5px">\u2014 ${esc(c.conductor_name||'')}${c.Comments_Date?(', '+esc(new Date(c.Comments_Date).toLocaleDateString())):''}</span></span>
+      <span>${esc(c.Comments)} <span style="font-size:12.5px">\u2014 ${esc(c.conductor_name||'')}${c.Comments_Date?(', '+esc(new Date(c.Comments_Date).toLocaleDateString())):''}</span></span>
       <button class="mini" onclick="deleteEventAttendeeComment(${seId}, ${seekerId}, ${c.Comment_ID}, this)" style="width:18px;height:18px;color:var(--rose);flex-shrink:0">&times;</button>
     </div>`).join('');
   box.style.display = '';
@@ -3867,7 +3816,7 @@ async function toggleFormLinks(seId, btn){
           const url = base + encodeURIComponent(l.Token);
           return `<div class="oteamrow" style="cursor:default">
             <span>${esc(name)}${l.Submitted_DT ? ' <span class="sub2">\u2014 submitted</span>' : ''}</span>
-            <button class="mini" onclick="navigator.clipboard.writeText('${url.replace(/'/g,"\\'")}');toast('Link copied.')" style="width:auto;padding:0 10px;height:22px;font-size:11px">Copy link</button>
+            <button class="mini" onclick="navigator.clipboard.writeText('${url.replace(/'/g,"\\'")}');toast('Link copied.')" style="width:auto;padding:0 10px;height:22px;font-size:13px">Copy link</button>
           </div>`;
         }).join('');
     }catch(err){ el.innerHTML = '<p class="sub2">Could not load links.</p>'; }
@@ -3884,21 +3833,21 @@ function renderSatsangEventsBody(){
   body.innerHTML = `
     ${!isApproved ? `<div class="hidden-note" style="margin-bottom:12px">This satsang definition is <b>${esc(def?def.Satsang_Status:'')}</b> \u2014 it must be Approved before events can be created.</div>` : ''}
     ${isApproved ? `<details style="margin-bottom:14px">
-      <summary style="cursor:pointer;font-size:12px;color:var(--deep)">+ New event</summary>
+      <summary style="cursor:pointer;font-size:14px;color:var(--deep)">+ New event</summary>
       <div class="card pad" style="margin-top:8px;display:flex;flex-direction:column;gap:8px;max-width:420px">
-        <input id="evStart" type="datetime-local" style="border-radius:999px;padding:7px 14px;font-size:13px;border:1px solid var(--line-2)">
-        <input id="evCity" placeholder="City" style="border-radius:999px;padding:7px 14px;font-size:13px;border:1px solid var(--line-2)">
-        <input id="evDuration" placeholder="Duration (e.g. 1.5 hours)" style="border-radius:999px;padding:7px 14px;font-size:13px;border:1px solid var(--line-2)">
+        <input id="evStart" type="datetime-local" style="border-radius:999px;padding:7px 14px;font-size:15px;border:1px solid var(--line-2)">
+        <input id="evCity" placeholder="City" style="border-radius:999px;padding:7px 14px;font-size:15px;border:1px solid var(--line-2)">
+        <input id="evDuration" placeholder="Duration (e.g. 1.5 hours)" style="border-radius:999px;padding:7px 14px;font-size:15px;border:1px solid var(--line-2)">
         <div style="position:relative">
-          <input id="evSc1Name" placeholder="Conductor 1 name (optional)" autocomplete="off" oninput="peopleAutocomplete(this,'evSc1')" style="width:100%;border-radius:999px;padding:7px 14px;font-size:13px;border:1px solid var(--line-2);box-sizing:border-box">
+          <input id="evSc1Name" placeholder="Conductor 1 name (optional)" autocomplete="off" oninput="peopleAutocomplete(this,'evSc1')" style="width:100%;border-radius:999px;padding:7px 14px;font-size:15px;border:1px solid var(--line-2);box-sizing:border-box">
           <div id="evSc1_ac" class="ac-dropdown" style="display:none"></div>
         </div>
-        <input id="evSc1Email" type="email" placeholder="Conductor 1 email" style="border-radius:999px;padding:7px 14px;font-size:13px;border:1px solid var(--line-2)">
+        <input id="evSc1Email" type="email" placeholder="Conductor 1 email" style="border-radius:999px;padding:7px 14px;font-size:15px;border:1px solid var(--line-2)">
         <div style="position:relative">
-          <input id="evSc2Name" placeholder="Conductor 2 name (optional)" autocomplete="off" oninput="peopleAutocomplete(this,'evSc2')" style="width:100%;border-radius:999px;padding:7px 14px;font-size:13px;border:1px solid var(--line-2);box-sizing:border-box">
+          <input id="evSc2Name" placeholder="Conductor 2 name (optional)" autocomplete="off" oninput="peopleAutocomplete(this,'evSc2')" style="width:100%;border-radius:999px;padding:7px 14px;font-size:15px;border:1px solid var(--line-2);box-sizing:border-box">
           <div id="evSc2_ac" class="ac-dropdown" style="display:none"></div>
         </div>
-        <input id="evSc2Email" type="email" placeholder="Conductor 2 email (optional)" style="border-radius:999px;padding:7px 14px;font-size:13px;border:1px solid var(--line-2)">
+        <input id="evSc2Email" type="email" placeholder="Conductor 2 email (optional)" style="border-radius:999px;padding:7px 14px;font-size:15px;border:1px solid var(--line-2)">
         <button class="btn sm" onclick="createSatsangEvent(this)"><span class="spin"></span><span class="lbl">Create event</span></button>
         <div class="err" id="evErr"></div>
         <p class="sub2">Start typing a conductor's name to pick an existing CSMS person, or just type a new name and email \u2014 they don't need to have signed in yet. Conductor 1 approves the event before it's Scheduled.</p>
@@ -4004,7 +3953,7 @@ function renderSatsangCommentsBody(){
   body.innerHTML = `
     <div class="card pad">
       <p class="sub2" style="font-weight:600;margin-bottom:8px">Conductor's overall satsang report</p>
-      <select id="scConductor" onchange="renderConductorReportBox()" style="border-radius:999px;padding:7px 14px;font-size:13px;border:1px solid var(--line-2);margin-bottom:10px;width:100%;max-width:320px;box-sizing:border-box">
+      <select id="scConductor" onchange="renderConductorReportBox()" style="border-radius:999px;padding:7px 14px;font-size:15px;border:1px solid var(--line-2);margin-bottom:10px;width:100%;max-width:320px;box-sizing:border-box">
         <option value="">${conductorOptions?'Choose conductor\u2026':'No conductor set on this event'}</option>
         ${conductorOptions}
       </select>
@@ -4026,7 +3975,7 @@ function renderConductorReportBox(){
   const existing = (LIVE_CONDUCTOR_REPORTS||[]).find(r=>String(r.CS_CSMS_ID)===String(csCsmsId));
   box.innerHTML = `
     <p class="sub2" style="font-weight:600;margin-top:10px">Satsang report \u2014 this conductor's overall account of the event</p>
-    <textarea id="scReportText" rows="3" placeholder="How did the satsang go overall\u2026" style="width:100%;border-radius:12px;padding:8px 14px;font-size:13px;border:1px solid var(--line-2);box-sizing:border-box;font-family:inherit;resize:vertical">${esc((existing && existing.Satsang_Report) || '')}</textarea>
+    <textarea id="scReportText" rows="3" placeholder="How did the satsang go overall\u2026" style="width:100%;border-radius:12px;padding:8px 14px;font-size:15px;border:1px solid var(--line-2);box-sizing:border-box;font-family:inherit;resize:vertical">${esc((existing && existing.Satsang_Report) || '')}</textarea>
     <button class="btn sm" onclick="saveConductorReport(this)" style="margin-top:8px"><span class="spin"></span><span class="lbl">Save report</span></button>
     <div class="err" id="scReportErr"></div>`;
 }
@@ -4096,22 +4045,22 @@ function renderSatsangTransfersBody(){
 
   body.innerHTML = `
     <details style="margin-bottom:14px">
-      <summary style="cursor:pointer;font-size:12px;color:var(--deep)">+ New transfer</summary>
+      <summary style="cursor:pointer;font-size:14px;color:var(--deep)">+ New transfer</summary>
       <div class="card pad" style="margin-top:8px;display:flex;flex-direction:column;gap:8px;max-width:460px">
         <label class="sub2">From satsang</label>
-        <select id="trFrom" onchange="onTransferFromChange()" style="border-radius:999px;padding:7px 14px;font-size:13px;border:1px solid var(--line-2)">
+        <select id="trFrom" onchange="onTransferFromChange()" style="border-radius:999px;padding:7px 14px;font-size:15px;border:1px solid var(--line-2)">
           <option value="">Pick a satsang\u2026</option>
           ${LIVE_SATSANG_DEFS.map(d=>`<option value="${d.Satsang_ID}">${esc(d.Satsang_Name)}</option>`).join('')}
         </select>
         <label class="sub2">Attendee</label>
-        <select id="trAttendee" style="border-radius:999px;padding:7px 14px;font-size:13px;border:1px solid var(--line-2)">
+        <select id="trAttendee" style="border-radius:999px;padding:7px 14px;font-size:15px;border:1px solid var(--line-2)">
           <option value="">Pick a sending satsang first</option>
         </select>
         <label class="sub2">To satsang (same type only)</label>
-        <select id="trTo" style="border-radius:999px;padding:7px 14px;font-size:13px;border:1px solid var(--line-2)">
+        <select id="trTo" style="border-radius:999px;padding:7px 14px;font-size:15px;border:1px solid var(--line-2)">
           <option value="">Pick a sending satsang first</option>
         </select>
-        <input id="trRemarks" placeholder="Remarks (optional)" style="border-radius:999px;padding:7px 14px;font-size:13px;border:1px solid var(--line-2)">
+        <input id="trRemarks" placeholder="Remarks (optional)" style="border-radius:999px;padding:7px 14px;font-size:15px;border:1px solid var(--line-2)">
         <button class="btn sm" onclick="initiateTransfer(this)"><span class="spin"></span><span class="lbl">Request transfer</span></button>
         <div class="err" id="trErr"></div>
       </div>
@@ -4227,24 +4176,24 @@ function renderSatsangAccessBody(){
   body.innerHTML = `
     <div class="hidden-note" style="margin-bottom:12px">Not enforced yet — everyone currently has full access to every Satsang Management action regardless of what's configured here. This screen is for defining the rules ahead of enforcement.</div>
     <details style="margin-bottom:14px">
-      <summary style="cursor:pointer;font-size:12px;color:var(--deep)">+ Add access rule</summary>
+      <summary style="cursor:pointer;font-size:14px;color:var(--deep)">+ Add access rule</summary>
       <div class="card pad" style="margin-top:8px;display:flex;flex-direction:column;gap:8px;max-width:460px">
         <label class="sub2">Function</label>
-        <select id="acFunction" style="border-radius:999px;padding:7px 14px;font-size:13px;border:1px solid var(--line-2)">
+        <select id="acFunction" style="border-radius:999px;padding:7px 14px;font-size:15px;border:1px solid var(--line-2)">
           ${SATSANG_FUNCTIONS.map(f=>`<option>${esc(f)}</option>`).join('')}
         </select>
         <label class="sub2">Department</label>
-        <select id="acDept" style="border-radius:999px;padding:7px 14px;font-size:13px;border:1px solid var(--line-2)">
+        <select id="acDept" style="border-radius:999px;padding:7px 14px;font-size:15px;border:1px solid var(--line-2)">
           ${LIVE_DEPTS.map(d=>`<option value="${d.Seva_Dept_ID}">${esc(d.Seva_Dept_Name)}</option>`).join('')}
         </select>
         <label class="sub2">Create role ID</label>
-        <input id="acCreate" type="number" placeholder="Single Dept_Role_ID" style="border-radius:999px;padding:7px 14px;font-size:13px;border:1px solid var(--line-2)">
+        <input id="acCreate" type="number" placeholder="Single Dept_Role_ID" style="border-radius:999px;padding:7px 14px;font-size:15px;border:1px solid var(--line-2)">
         <label class="sub2">Review role IDs</label>
-        <input id="acReview" placeholder="Comma-separated, e.g. 3,7,12" style="border-radius:999px;padding:7px 14px;font-size:13px;border:1px solid var(--line-2)">
+        <input id="acReview" placeholder="Comma-separated, e.g. 3,7,12" style="border-radius:999px;padding:7px 14px;font-size:15px;border:1px solid var(--line-2)">
         <label class="sub2">Approve role IDs</label>
-        <input id="acApprove" placeholder="Comma-separated" style="border-radius:999px;padding:7px 14px;font-size:13px;border:1px solid var(--line-2)">
+        <input id="acApprove" placeholder="Comma-separated" style="border-radius:999px;padding:7px 14px;font-size:15px;border:1px solid var(--line-2)">
         <label class="sub2">Notify role IDs</label>
-        <input id="acNotify" placeholder="Comma-separated" style="border-radius:999px;padding:7px 14px;font-size:13px;border:1px solid var(--line-2)">
+        <input id="acNotify" placeholder="Comma-separated" style="border-radius:999px;padding:7px 14px;font-size:15px;border:1px solid var(--line-2)">
         <button class="btn sm" onclick="addAccessRule(this)"><span class="spin"></span><span class="lbl">Add rule</span></button>
         <div class="err" id="acErr"></div>
       </div>
@@ -4357,14 +4306,14 @@ function formRowHTML(f){
 // previously had no actions at all.
 function formActionsHTML(f){
   const s = f.Form_Status_Name;
-  const previewBtn = `<button class="mini" onclick="previewForm(${f.Form_ID}, this)" style="width:auto;padding:0 10px;height:26px;font-size:11.5px">Preview</button>`;
+  const previewBtn = `<button class="mini" onclick="previewForm(${f.Form_ID}, this)" style="width:auto;padding:0 10px;height:26px;font-size:13.5px">Preview</button>`;
   if(s==='Draft') return previewBtn + `<button class="btn sm" onclick="submitFormForReview(${f.Form_ID}, this)"><span class="spin"></span><span class="lbl">Submit for review</span></button>
     <button class="mini" onclick="archiveForm(${f.Form_ID}, this)" title="Archive" style="width:24px;height:24px;color:var(--rose)">&times;</button>`;
   if(s==='In Review') return previewBtn + `<button class="btn sm" onclick="publishForm(${f.Form_ID}, this)"><span class="spin"></span><span class="lbl">Publish</span></button>
     <button class="btn ghost sm" style="color:var(--rose);border-color:var(--rose)" onclick="rejectForm(${f.Form_ID}, this)"><span class="spin"></span><span class="lbl">Reject</span></button>`;
-  if(s==='Published') return previewBtn + `<button class="mini" onclick="pauseForm(${f.Form_ID}, this)" style="width:auto;padding:0 10px;height:26px;font-size:11.5px">Pause</button>
+  if(s==='Published') return previewBtn + `<button class="mini" onclick="pauseForm(${f.Form_ID}, this)" style="width:auto;padding:0 10px;height:26px;font-size:13.5px">Pause</button>
     <button class="mini" onclick="archiveForm(${f.Form_ID}, this)" title="Archive" style="width:24px;height:24px;color:var(--rose)">&times;</button>`;
-  if(s==='Paused') return previewBtn + `<button class="mini" onclick="resumeForm(${f.Form_ID}, this)" style="width:auto;padding:0 10px;height:26px;font-size:11.5px">Resume</button>
+  if(s==='Paused') return previewBtn + `<button class="mini" onclick="resumeForm(${f.Form_ID}, this)" style="width:auto;padding:0 10px;height:26px;font-size:13.5px">Resume</button>
     <button class="mini" onclick="archiveForm(${f.Form_ID}, this)" title="Archive" style="width:24px;height:24px;color:var(--rose)">&times;</button>`;
   return previewBtn;
 }
@@ -4501,8 +4450,8 @@ function renderFormDetail(){
       <p class="sub2" style="margin-bottom:14px">${f?statusBadge(f.Form_Status_Name):''}</p>
 
       <p class="sub2" style="font-weight:600">Form heading \u2014 shown to whoever opens the public form</p>
-      <textarea id="ffDesc" rows="2" placeholder="What is this form for? e.g. \u201cTell us a bit about you \u2014 it only takes a minute.\u201d" style="width:100%;border-radius:12px;padding:8px 14px;font-size:13px;border:1px solid var(--line-2);box-sizing:border-box;font-family:inherit;resize:vertical;margin-bottom:6px">${esc((f&&f.Form_Desc)||'')}</textarea>
-      <button class="mini" onclick="saveFormDesc(this)" style="width:auto;padding:0 12px;height:26px;font-size:11.5px;margin-bottom:14px">Save heading</button>
+      <textarea id="ffDesc" rows="2" placeholder="What is this form for? e.g. \u201cTell us a bit about you \u2014 it only takes a minute.\u201d" style="width:100%;border-radius:12px;padding:8px 14px;font-size:15px;border:1px solid var(--line-2);box-sizing:border-box;font-family:inherit;resize:vertical;margin-bottom:6px">${esc((f&&f.Form_Desc)||'')}</textarea>
+      <button class="mini" onclick="saveFormDesc(this)" style="width:auto;padding:0 12px;height:26px;font-size:13.5px;margin-bottom:14px">Save heading</button>
 
       <p class="sub2" style="font-weight:600">Default fields \u2014 every form collects these</p>
       <div class="kv" style="grid-template-columns:1fr;margin-bottom:14px">
@@ -4514,11 +4463,11 @@ function renderFormDetail(){
           <button class="mini" onclick="deleteFormField(${ff.FAF_ID}, this)" style="width:22px;height:22px;color:var(--rose)">&times;</button>
         </div>`).join('') : '<p class="sub2">None yet.</p>'}
       <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;align-items:center">
-        <input id="ffName" placeholder="Question" style="border-radius:999px;padding:5px 12px;font-size:12.5px;border:1px solid var(--line-2);flex:1;min-width:120px">
-        <select id="ffQType" style="border-radius:999px;padding:5px 12px;font-size:12.5px;border:1px solid var(--line-2)">
+        <input id="ffName" placeholder="Question" style="border-radius:999px;padding:5px 12px;font-size:14.5px;border:1px solid var(--line-2);flex:1;min-width:120px">
+        <select id="ffQType" style="border-radius:999px;padding:5px 12px;font-size:14.5px;border:1px solid var(--line-2)">
           <option value="STRING">String</option><option value="INTEGER">Integer</option><option value="BOOLEAN">Boolean</option><option value="DATE">Date</option>
         </select>
-        <select id="ffCType" style="border-radius:999px;padding:5px 12px;font-size:12.5px;border:1px solid var(--line-2)">
+        <select id="ffCType" style="border-radius:999px;padding:5px 12px;font-size:14.5px;border:1px solid var(--line-2)">
           <option value="INPUT">Input</option><option value="CHECKBOX">Checkbox</option><option value="CONSENT">Consent</option>
           <option value="INFORMATION">Information</option><option value="WARNING">Warning</option><option value="HIGHLIGHT">Highlight</option>
         </select>
@@ -4588,22 +4537,22 @@ function renderFormAccessBody(){
   body.innerHTML = `
     <div class="hidden-note" style="margin-bottom:12px">Not enforced yet — same as Satsang Management's Access Configuration. This screen defines the rules ahead of enforcement.</div>
     <details style="margin-bottom:14px">
-      <summary style="cursor:pointer;font-size:12px;color:var(--deep)">+ Add access rule</summary>
+      <summary style="cursor:pointer;font-size:14px;color:var(--deep)">+ Add access rule</summary>
       <div class="card pad" style="margin-top:8px;display:flex;flex-direction:column;gap:8px;max-width:460px">
         <label class="sub2">Form Type ID</label>
-        <input id="fac_FormTypeId" type="number" placeholder="Form_Type_ID" style="border-radius:999px;padding:7px 14px;font-size:13px;border:1px solid var(--line-2)">
+        <input id="fac_FormTypeId" type="number" placeholder="Form_Type_ID" style="border-radius:999px;padding:7px 14px;font-size:15px;border:1px solid var(--line-2)">
         <label class="sub2">Department</label>
-        <select id="fac_Dept" style="border-radius:999px;padding:7px 14px;font-size:13px;border:1px solid var(--line-2)">
+        <select id="fac_Dept" style="border-radius:999px;padding:7px 14px;font-size:15px;border:1px solid var(--line-2)">
           ${LIVE_DEPTS.map(d=>`<option value="${d.Seva_Dept_ID}">${esc(d.Seva_Dept_Name)}</option>`).join('')}
         </select>
         <label class="sub2">Create role ID</label>
-        <input id="fac_Create" type="number" placeholder="Single Dept_Role_ID" style="border-radius:999px;padding:7px 14px;font-size:13px;border:1px solid var(--line-2)">
+        <input id="fac_Create" type="number" placeholder="Single Dept_Role_ID" style="border-radius:999px;padding:7px 14px;font-size:15px;border:1px solid var(--line-2)">
         <label class="sub2">Review role IDs</label>
-        <input id="fac_Review" placeholder="Comma-separated" style="border-radius:999px;padding:7px 14px;font-size:13px;border:1px solid var(--line-2)">
+        <input id="fac_Review" placeholder="Comma-separated" style="border-radius:999px;padding:7px 14px;font-size:15px;border:1px solid var(--line-2)">
         <label class="sub2">Approve role IDs</label>
-        <input id="fac_Approve" placeholder="Comma-separated" style="border-radius:999px;padding:7px 14px;font-size:13px;border:1px solid var(--line-2)">
+        <input id="fac_Approve" placeholder="Comma-separated" style="border-radius:999px;padding:7px 14px;font-size:15px;border:1px solid var(--line-2)">
         <label class="sub2">Notify role IDs</label>
-        <input id="fac_Notify" placeholder="Comma-separated" style="border-radius:999px;padding:7px 14px;font-size:13px;border:1px solid var(--line-2)">
+        <input id="fac_Notify" placeholder="Comma-separated" style="border-radius:999px;padding:7px 14px;font-size:15px;border:1px solid var(--line-2)">
         <button class="btn sm" onclick="addFormAccessRule(this)"><span class="spin"></span><span class="lbl">Add rule</span></button>
         <div class="err" id="facErr"></div>
       </div>
@@ -4675,23 +4624,23 @@ function renderTickerMgmt(){
     <div class="card pad" style="margin-bottom:16px;max-width:520px">
       <p class="sub2" style="font-weight:600;margin-bottom:8px">${editing ? 'Edit ticker #'+editing.Ticker_ID : '+ New ticker'}</p>
       <div style="display:flex;flex-direction:column;gap:8px">
-        <textarea id="tkText" placeholder="Ticker text" rows="2" style="border-radius:12px;padding:9px 14px;font-size:13.5px;border:1px solid var(--line-2);font-family:inherit;resize:vertical">${editing?esc(editing.Ticker_Text):''}</textarea>
-        <select id="tkType" style="border-radius:999px;padding:7px 14px;font-size:13.5px;border:1px solid var(--line-2)">
+        <textarea id="tkText" placeholder="Ticker text" rows="2" style="border-radius:12px;padding:9px 14px;font-size:15.5px;border:1px solid var(--line-2);font-family:inherit;resize:vertical">${editing?esc(editing.Ticker_Text):''}</textarea>
+        <select id="tkType" style="border-radius:999px;padding:7px 14px;font-size:15.5px;border:1px solid var(--line-2)">
           <option value="Alert" ${editing&&editing.Ticker_Type==='Alert'?'selected':''}>Alert</option>
           <option value="Warning" ${editing&&editing.Ticker_Type==='Warning'?'selected':''}>Warning</option>
           <option value="Information" ${(!editing||editing.Ticker_Type==='Information')?'selected':''}>Information</option>
         </select>
         <div style="display:flex;gap:8px">
           <div style="flex:1"><label class="sub2">Priority (higher shows first)</label>
-            <input id="tkPriority" type="number" value="${editing&&editing.Priority!=null?editing.Priority:''}" style="width:100%;border-radius:999px;padding:6px 14px;font-size:13px;border:1px solid var(--line-2);box-sizing:border-box;margin-top:3px"></div>
+            <input id="tkPriority" type="number" value="${editing&&editing.Priority!=null?editing.Priority:''}" style="width:100%;border-radius:999px;padding:6px 14px;font-size:15px;border:1px solid var(--line-2);box-sizing:border-box;margin-top:3px"></div>
           <div style="flex:1"><label class="sub2">Display order</label>
-            <input id="tkOrder" type="number" value="${editing&&editing.Display_Order!=null?editing.Display_Order:''}" style="width:100%;border-radius:999px;padding:6px 14px;font-size:13px;border:1px solid var(--line-2);box-sizing:border-box;margin-top:3px"></div>
+            <input id="tkOrder" type="number" value="${editing&&editing.Display_Order!=null?editing.Display_Order:''}" style="width:100%;border-radius:999px;padding:6px 14px;font-size:15px;border:1px solid var(--line-2);box-sizing:border-box;margin-top:3px"></div>
         </div>
         <div style="display:flex;gap:8px">
           <div style="flex:1"><label class="sub2">Starts (optional)</label>
-            <input id="tkStart" type="datetime-local" value="${editing&&editing.Start_DT?toLocalDatetimeInput(editing.Start_DT):''}" style="width:100%;border-radius:999px;padding:6px 14px;font-size:13px;border:1px solid var(--line-2);box-sizing:border-box;margin-top:3px"></div>
+            <input id="tkStart" type="datetime-local" value="${editing&&editing.Start_DT?toLocalDatetimeInput(editing.Start_DT):''}" style="width:100%;border-radius:999px;padding:6px 14px;font-size:15px;border:1px solid var(--line-2);box-sizing:border-box;margin-top:3px"></div>
           <div style="flex:1"><label class="sub2">Ends (optional)</label>
-            <input id="tkEnd" type="datetime-local" value="${editing&&editing.End_DT?toLocalDatetimeInput(editing.End_DT):''}" style="width:100%;border-radius:999px;padding:6px 14px;font-size:13px;border:1px solid var(--line-2);box-sizing:border-box;margin-top:3px"></div>
+            <input id="tkEnd" type="datetime-local" value="${editing&&editing.End_DT?toLocalDatetimeInput(editing.End_DT):''}" style="width:100%;border-radius:999px;padding:6px 14px;font-size:15px;border:1px solid var(--line-2);box-sizing:border-box;margin-top:3px"></div>
         </div>
         <label class="sub2" style="display:flex;align-items:center;gap:6px"><input type="checkbox" id="tkActive" ${!editing||editing.Is_Active?'checked':''}> Active</label>
         <div style="display:flex;gap:8px">
@@ -4708,7 +4657,7 @@ function renderTickerMgmt(){
         </div>
         <div style="display:flex;align-items:center;gap:8px">
           ${tickerTypeBadge(t.Ticker_Type)}
-          <button class="mini" onclick="TICKER_EDIT_ID=${t.Ticker_ID}; renderTickerMgmt()" style="width:auto;padding:0 10px;height:26px;font-size:11.5px">Edit</button>
+          <button class="mini" onclick="TICKER_EDIT_ID=${t.Ticker_ID}; renderTickerMgmt()" style="width:auto;padding:0 10px;height:26px;font-size:13.5px">Edit</button>
           <button class="mini" onclick="deleteTicker(${t.Ticker_ID}, this)" title="Delete" style="width:24px;height:24px;color:var(--rose)">&times;</button>
         </div>
       </div>`).join('') : '<p class="sub2">No tickers yet.</p>'}`;
@@ -4915,7 +4864,7 @@ function renderJourney(){
           return `<div class="kcard" ${readonly?'':`draggable="true" ondragstart="dragCard(event,${p.Seeker_ID})" ondragend="dragEndCard(event)"`}>
             <div class="nm serif kcard-name" onclick="openSeekerPage(${p.Seeker_ID})">${esc(name)}</div>
             <div class="sub2">${esc([p.City,p.Country_Name].filter(Boolean).join(', ')||'\u2014')}</div>
-            <div class="sub2" style="font-size:11.5px">${esc(p.Email||'')}</div>
+            <div class="sub2" style="font-size:13.5px">${esc(p.Email||'')}</div>
             ${readonly ? '' : `<div class="kcard-actions">
               <button class="mini" onclick="moveCategory(${p.Seeker_ID},-1)" ${i<=0?'disabled':''} title="Move back">‹</button>
               <span class="kcard-drag" title="Drag to another category">⠿ drag</span>
@@ -4957,7 +4906,7 @@ function renderMasterlistMgmt(){
   if(LIVE_SEEKER_CATEGORIES===null) loadSeekerCategories();
   el.innerHTML = `
     <div class="card pad" style="margin-bottom:14px;display:flex;gap:9px;align-items:center">
-      <input type="search" id="mlListQ" style="flex:1;font-size:14px;padding:10px 13px" placeholder="Search name or email (leave blank for everyone)" onkeydown="if(event.key==='Enter') loadMlList()">
+      <input type="search" id="mlListQ" style="flex:1;font-size:16px;padding:10px 13px" placeholder="Search name or email (leave blank for everyone)" onkeydown="if(event.key==='Enter') loadMlList()">
       <button class="btn ghost sm" onclick="document.getElementById('mlListQ').value='';loadMlList()">Clear</button>
     </div>
     <div id="mlListBody"><p class="sub2">Loading\u2026</p></div>`;
@@ -4995,11 +4944,11 @@ function renderMlList(){
           <div class="sub2">${esc(s.Email||'')}</div>
         </div>
         <div style="display:flex;align-items:center;gap:8px">
-          <select id="mlCat_${s.Seeker_ID}" style="border-radius:999px;padding:6px 14px;font-size:13px;border:1px solid var(--line-2)">
+          <select id="mlCat_${s.Seeker_ID}" style="border-radius:999px;padding:6px 14px;font-size:15px;border:1px solid var(--line-2)">
             ${cats.map(c=>`<option value="${c.Category_ID}" ${c.Category_Name===s.Category_Name?'selected':''}>${esc(c.Category_Name)}</option>`).join('')}
           </select>
-          <button class="mini" onclick="saveMlRowCategory(${s.Seeker_ID}, this)" style="width:auto;padding:0 10px;height:26px;font-size:11.5px">Save category</button>
-          <button class="mini" onclick="toggleMlRowDetail(${s.Seeker_ID}, this)" style="width:auto;padding:0 10px;height:26px;font-size:11.5px">${detail?'Hide details':'Edit details'}</button>
+          <button class="mini" onclick="saveMlRowCategory(${s.Seeker_ID}, this)" style="width:auto;padding:0 10px;height:26px;font-size:13.5px">Save category</button>
+          <button class="mini" onclick="toggleMlRowDetail(${s.Seeker_ID}, this)" style="width:auto;padding:0 10px;height:26px;font-size:13.5px">${detail?'Hide details':'Edit details'}</button>
         </div>
       </div>
       <div id="mlDetail_${s.Seeker_ID}">${detail && detail!=='loading' ? mlRowDetailHTML(s.Seeker_ID, detail) : ''}</div>
@@ -5048,26 +4997,26 @@ function mlRowDetailHTML(seekerId, detail){
   return `<div style="border-top:1px solid var(--line-2);margin-top:12px;padding-top:12px;display:flex;flex-direction:column;gap:8px;max-width:460px">
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
       <div><label class="sub2">Pranshakti</label>
-        <input id="mlPranshakti_${seekerId}" value="${esc(info.Pranshakti||'')}" style="width:100%;border-radius:999px;padding:6px 12px;font-size:12.5px;border:1px solid var(--line-2);box-sizing:border-box;margin-top:3px"></div>
+        <input id="mlPranshakti_${seekerId}" value="${esc(info.Pranshakti||'')}" style="width:100%;border-radius:999px;padding:6px 12px;font-size:14.5px;border:1px solid var(--line-2);box-sizing:border-box;margin-top:3px"></div>
       <div><label class="sub2">Sub-region</label>
-        <input id="mlSubRegion_${seekerId}" value="${esc(info.Sub_Region||'')}" style="width:100%;border-radius:999px;padding:6px 12px;font-size:12.5px;border:1px solid var(--line-2);box-sizing:border-box;margin-top:3px"></div>
+        <input id="mlSubRegion_${seekerId}" value="${esc(info.Sub_Region||'')}" style="width:100%;border-radius:999px;padding:6px 12px;font-size:14.5px;border:1px solid var(--line-2);box-sizing:border-box;margin-top:3px"></div>
       <div><label class="sub2">Sadhana start date</label>
-        <input id="mlSadhanaDt_${seekerId}" type="date" value="${info.Sadhana_ST_DT?String(info.Sadhana_ST_DT).slice(0,10):''}" style="width:100%;border-radius:999px;padding:6px 12px;font-size:12.5px;border:1px solid var(--line-2);box-sizing:border-box;margin-top:3px"></div>
+        <input id="mlSadhanaDt_${seekerId}" type="date" value="${info.Sadhana_ST_DT?String(info.Sadhana_ST_DT).slice(0,10):''}" style="width:100%;border-radius:999px;padding:6px 12px;font-size:14.5px;border:1px solid var(--line-2);box-sizing:border-box;margin-top:3px"></div>
       <div><label class="sub2">Weekly seva hours</label>
-        <input id="mlWeeklySeva_${seekerId}" type="number" value="${info.Weekly_Seva_Hrs!=null?info.Weekly_Seva_Hrs:''}" style="width:100%;border-radius:999px;padding:6px 12px;font-size:12.5px;border:1px solid var(--line-2);box-sizing:border-box;margin-top:3px"></div>
+        <input id="mlWeeklySeva_${seekerId}" type="number" value="${info.Weekly_Seva_Hrs!=null?info.Weekly_Seva_Hrs:''}" style="width:100%;border-radius:999px;padding:6px 12px;font-size:14.5px;border:1px solid var(--line-2);box-sizing:border-box;margin-top:3px"></div>
       <div><label class="sub2">Visited Ashram</label>
-        <input id="mlVisitedAshram_${seekerId}" value="${esc(info.Visited_Ashram||'')}" style="width:100%;border-radius:999px;padding:6px 12px;font-size:12.5px;border:1px solid var(--line-2);box-sizing:border-box;margin-top:3px"></div>
+        <input id="mlVisitedAshram_${seekerId}" value="${esc(info.Visited_Ashram||'')}" style="width:100%;border-radius:999px;padding:6px 12px;font-size:14.5px;border:1px solid var(--line-2);box-sizing:border-box;margin-top:3px"></div>
       <div><label class="sub2">Attended MAV workshop</label>
-        <input id="mlMavWorkshop_${seekerId}" value="${esc(info.Attended_MAV_Workshop||'')}" style="width:100%;border-radius:999px;padding:6px 12px;font-size:12.5px;border:1px solid var(--line-2);box-sizing:border-box;margin-top:3px"></div>
+        <input id="mlMavWorkshop_${seekerId}" value="${esc(info.Attended_MAV_Workshop||'')}" style="width:100%;border-radius:999px;padding:6px 12px;font-size:14.5px;border:1px solid var(--line-2);box-sizing:border-box;margin-top:3px"></div>
       <div style="grid-column:1/-1"><label class="sub2">Sensitive list</label>
-        <input id="mlSensitiveList_${seekerId}" value="${esc(info.Sensitive_List||'')}" style="width:100%;border-radius:999px;padding:6px 12px;font-size:12.5px;border:1px solid var(--line-2);box-sizing:border-box;margin-top:3px"></div>
+        <input id="mlSensitiveList_${seekerId}" value="${esc(info.Sensitive_List||'')}" style="width:100%;border-radius:999px;padding:6px 12px;font-size:14.5px;border:1px solid var(--line-2);box-sizing:border-box;margin-top:3px"></div>
     </div>
     ${detail.skills && detail.skills.length ? `<div><label class="sub2">Skills</label>
       <div style="margin-top:4px">${detail.skills.map(sk=>`<span class="skill-chip">${esc(sk.Skill_Name||'')}</span>`).join('')}</div></div>` : ''}
     <div><label class="sub2">Personal info</label>
-      <textarea id="mlPerInfo_${seekerId}" rows="2" style="width:100%;border-radius:12px;padding:7px 12px;font-size:12.5px;border:1px solid var(--line-2);box-sizing:border-box;margin-top:3px;font-family:inherit;resize:vertical">${esc(info.Per_Info||'')}</textarea></div>
+      <textarea id="mlPerInfo_${seekerId}" rows="2" style="width:100%;border-radius:12px;padding:7px 12px;font-size:14.5px;border:1px solid var(--line-2);box-sizing:border-box;margin-top:3px;font-family:inherit;resize:vertical">${esc(info.Per_Info||'')}</textarea></div>
     <div><label class="sub2">Opposition at home</label>
-      <textarea id="mlOppHome_${seekerId}" rows="2" style="width:100%;border-radius:12px;padding:7px 12px;font-size:12.5px;border:1px solid var(--line-2);box-sizing:border-box;margin-top:3px;font-family:inherit;resize:vertical">${esc(info.Opp_Home||'')}</textarea></div>
+      <textarea id="mlOppHome_${seekerId}" rows="2" style="width:100%;border-radius:12px;padding:7px 12px;font-size:14.5px;border:1px solid var(--line-2);box-sizing:border-box;margin-top:3px;font-family:inherit;resize:vertical">${esc(info.Opp_Home||'')}</textarea></div>
     <button class="mini" onclick="saveMlRowInfo(${seekerId}, this)" style="width:auto;padding:0 12px;height:28px;align-self:flex-start">Save MasterList info</button>
     <div class="err" id="mlInfoErr_${seekerId}"></div>
 
@@ -5086,14 +5035,14 @@ function mlRowSatsangLinksHTML(seekerId, type, label, allLinks){
     <p class="sub2" style="font-weight:600">${esc(label)}</p>
     ${links.length ? links.map(l=>`<div class="sub2" style="display:flex;justify-content:space-between;padding:2px 0">
         <span>${esc(l.Satsang_Name||('Satsang #'+l.Satsang_ID))}</span>
-        <span class="mini" onclick="removeMlRowSatsangLink(${seekerId}, '${type}', ${l.Satsang_ID}, this)" style="width:16px;height:16px;font-size:10px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;color:var(--rose)">&times;</span>
+        <span class="mini" onclick="removeMlRowSatsangLink(${seekerId}, '${type}', ${l.Satsang_ID}, this)" style="width:16px;height:16px;font-size:12px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;color:var(--rose)">&times;</span>
       </div>`).join('') : '<p class="sub2">None linked.</p>'}
     <div style="display:flex;gap:6px;margin-top:4px">
-      <select id="mlAdd_${type}_${seekerId}" style="flex:1;border-radius:999px;padding:5px 12px;font-size:12px;border:1px solid var(--line-2)">
+      <select id="mlAdd_${type}_${seekerId}" style="flex:1;border-radius:999px;padding:5px 12px;font-size:14px;border:1px solid var(--line-2)">
         <option value="">${pickable.length?'Add\u2026':'None left to add'}</option>
         ${pickable.map(d=>`<option value="${d.Satsang_ID}">${esc(d.Satsang_Name)}</option>`).join('')}
       </select>
-      <button class="mini" onclick="addMlRowSatsangLink(${seekerId}, '${type}', this)" style="width:auto;padding:0 10px;height:26px;font-size:11px">Add</button>
+      <button class="mini" onclick="addMlRowSatsangLink(${seekerId}, '${type}', this)" style="width:auto;padding:0 10px;height:26px;font-size:13px">Add</button>
     </div>
   </div>`;
 }
@@ -5242,7 +5191,7 @@ function renderCalendar(){
   document.getElementById('calendar').innerHTML = `
     ${Object.entries(byDay).map(([day,items])=>`
       <div style="margin-bottom:16px">
-        <div style="font-weight:600;font-size:13px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">${esc(day)}</div>
+        <div style="font-weight:600;font-size:15px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">${esc(day)}</div>
         ${items.map(c=>`<div class="sub-card" style="padding:12px 15px;margin-bottom:8px;display:flex;gap:12px;align-items:center">
           <div style="min-width:70px;font-weight:600;color:var(--deep)">${esc(c.time)}</div>
           <div style="flex:1">
@@ -5275,19 +5224,19 @@ function renderProfiles(){
         return `<div class="card pad">
           <div style="display:flex;gap:12px;align-items:flex-start">
             <div style="width:44px;height:44px;border-radius:50%;background:var(--deep-wash);color:var(--deep);
-              display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;flex:0 0 auto">
+              display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px;flex:0 0 auto">
               ${esc(p.name.split(' ').map(x=>x[0]).slice(0,2).join(''))}
             </div>
             <div style="flex:1">
-              <div class="nm serif" style="font-size:16px;cursor:pointer" onclick="open_(${p.id})">${esc(p.name)}</div>
+              <div class="nm serif" style="font-size:18px;cursor:pointer" onclick="open_(${p.id})">${esc(p.name)}</div>
               <div class="sub2">${esc(dep?dep.name:p.region)} · ${esc(p.region)}</div>
             </div>
             ${categoryTag(p.category)}
           </div>
           <div class="metrics" style="grid-template-columns:repeat(3,1fr);margin-top:12px">
-            <div class="metric"><div class="n" style="font-size:18px">${p.sevaHrs}</div><div class="l">Seva hrs</div></div>
-            <div class="metric"><div class="n" style="font-size:18px">${p.skills.length}</div><div class="l">Skills</div></div>
-            <div class="metric"><div class="n" style="font-size:18px">${MILESTONES.filter(m=>m.pid===p.id).length}</div><div class="l">Milestones</div></div>
+            <div class="metric"><div class="n" style="font-size:20px">${p.sevaHrs}</div><div class="l">Seva hrs</div></div>
+            <div class="metric"><div class="n" style="font-size:20px">${p.skills.length}</div><div class="l">Skills</div></div>
+            <div class="metric"><div class="n" style="font-size:20px">${MILESTONES.filter(m=>m.pid===p.id).length}</div><div class="l">Milestones</div></div>
           </div>
           <div class="pill-row" style="margin-top:10px">${p.skills.map(k=>`<span class="tag t-semi">${esc(k)}</span>`).join('')}</div>
           <div class="sub2" style="margin-top:9px">Availability: ${esc(p.avail)}</div>
@@ -5328,7 +5277,7 @@ function renderReports(){
       const n = days(c.at), late = n > REPORT_SLA_DAYS;
       return `<div class="sub-card" style="${late?'border-left:3px solid var(--rose)':'border-left:3px solid var(--amber)'}">
         <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-          <span class="nm serif" style="font-size:15px">${esc(c.title)}</span>
+          <span class="nm serif" style="font-size:17px">${esc(c.title)}</span>
           <span class="tag t-semi">${esc(c.region)}</span>
           ${late?`<span class="tag t-warn">Overdue</span>`:''}
         </div>
@@ -5344,7 +5293,7 @@ function renderReports(){
       const present = r.entries.filter(e=>e.attended).length;
       return `<div class="sub-card" style="border-left:3px solid var(--sage)">
         <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-          <span class="nm serif" style="font-size:15px">${esc(cal.title)}</span>
+          <span class="nm serif" style="font-size:17px">${esc(cal.title)}</span>
           <span class="tag t-active">Filed</span>
         </div>
         <div class="sub2" style="margin-top:4px">Held ${fmt(cal.at)} · reported by ${esc(r.submittedBy)},
@@ -5397,7 +5346,7 @@ function renderReportingCompliance(){
       <h2 class="sec">Turnaround by conductor</h2>
       <p class="sub">Days after the satsang the report was filed, on average.</p>
       ${rows.length ? rows.map(([k,o])=>`<div class="bar">
-        <span style="color:var(--ink-2);font-size:12.5px">${esc(k)}</span>
+        <span style="color:var(--ink-2);font-size:14.5px">${esc(k)}</span>
         <span class="track"><span class="fill s2" style="width:${Math.round(o.n/mxc*100)}%"></span></span>
         <span class="num">${(o.totalTurn/o.n).toFixed(1)}d avg</span>
       </div>`).join('') : '<p class="sub" style="margin:0">No reports filed yet.</p>'}
@@ -5431,7 +5380,7 @@ function renderReportForm(){
           <div style="display:flex;gap:10px;align-items:flex-start">
             <input type="checkbox" id="att_${p.id}" style="margin-top:3px">
             <div style="flex:1">
-              <div style="font-weight:500;font-size:13.5px">${esc(p.name)} <span class="sub2">· ${esc(p.category)}</span></div>
+              <div style="font-weight:500;font-size:15.5px">${esc(p.name)} <span class="sub2">· ${esc(p.category)}</span></div>
               <div class="field" style="margin:8px 0 0"><input id="note_${p.id}" placeholder="Note for this attendee (optional)"></div>
               <label class="check" style="margin-top:7px"><input type="checkbox" id="rdy_${p.id}">
                 <span>Seems ready to move toward the next satsang level</span></label>
@@ -5533,10 +5482,9 @@ function renderOverview(){
         ${feed.length ? feed.map(f=>`<div style="padding:9px 0;border-bottom:1px solid #EEF4F9;display:flex;gap:10px;align-items:flex-start">
           <span class="tag ${ACT_TAG[f.kind]||'t-semi'}" style="flex:0 0 auto;margin-top:1px">${esc(f.kind)}</span>
           <div style="flex:1">
-            <div style="font-size:13px">${f.pname?`<b>${esc(f.pname)}</b> — `:''}${esc(f.text)}</div>
+            <div style="font-size:15px">${f.pname?`<b>${esc(f.pname)}</b> — `:''}${esc(f.text)}</div>
             <div class="sub2" style="margin-top:1px">${esc(f.who)} · ${fmt(f.at)}</div>
           </div>
-          ${f.pid?`<button class="mini" onclick="tab('seekers');open_(${f.pid})" title="Open">→</button>`:''}
         </div>`).join('') : '<p class="sub" style="margin:0">Nothing recorded yet in your scope.</p>'}
       </div>
 
@@ -5546,8 +5494,8 @@ function renderOverview(){
           <p class="sub">Full detail on the Operations tab.</p>
           ${SERVICES.map(s=>`<div style="display:flex;gap:9px;align-items:center;padding:5px 0">
             <span style="width:8px;height:8px;border-radius:50%;background:${s.s==='ok'?'var(--sage)':'var(--amber)'};flex:0 0 auto"></span>
-            <span style="font-size:12.5px;flex:1">${esc(s.n)}</span>
-            <span class="tag ${s.s==='ok'?'t-active':'t-warn'}" style="font-size:10.5px">${s.s==='ok'?'Healthy':'Recovered'}</span>
+            <span style="font-size:14.5px;flex:1">${esc(s.n)}</span>
+            <span class="tag ${s.s==='ok'?'t-active':'t-warn'}" style="font-size:12.5px">${s.s==='ok'?'Healthy':'Recovered'}</span>
           </div>`).join('')}
           ${healthBad?`<div class="warn" style="margin-bottom:0">${healthBad} item(s) need a look.
             <span class="lnk-btn" onclick="tab('ops')" style="cursor:pointer;color:var(--deep);font-weight:600"> Open Operations →</span></div>`
@@ -5556,7 +5504,7 @@ function renderOverview(){
         <div class="card pad">
           <h2 class="sec">Needs an administrator</h2>
           ${SECURITY.filter(s=>s.s!=='ok').map(s=>`<div class="warn" style="margin:0 0 8px">
-            <b>${esc(s.n)}</b> — ${esc(s.v)}<br><span style="font-size:11.5px">${esc(s.d)}</span></div>`).join('')
+            <b>${esc(s.n)}</b> — ${esc(s.v)}<br><span style="font-size:13.5px">${esc(s.d)}</span></div>`).join('')
             || '<p class="sub" style="margin:0">Nothing outstanding.</p>'}
           <div class="btnrow" style="margin-top:8px"><button class="btn sm ghost" onclick="tab('ops')">Full Operations view</button></div>
         </div>
@@ -5654,7 +5602,7 @@ function renderSevahub(){
         <h2 class="sec">Hours by skill</h2>
         <p class="sub">Approximate — hours are recorded per person, not split per skill they hold.</p>
         ${topSkillHrs.map(([k,n])=>`<div class="bar">
-          <span style="color:var(--ink-2);font-size:12.5px">${esc(k)}</span>
+          <span style="color:var(--ink-2);font-size:14.5px">${esc(k)}</span>
           <span class="track"><span class="fill s2" style="width:${Math.round(n/mxSk*100)}%"></span></span>
           <span class="num">${n}</span></div>`).join('') || '<p class="sub" style="margin:0">No skilled seva recorded yet.</p>'}
       </div>
@@ -5666,8 +5614,8 @@ function renderSevahub(){
           ${i<leaderboard.length-1?'border-bottom:1px solid #EEF4F9':''}">
         <span style="width:22px;height:22px;border-radius:50%;background:${i===0?'var(--amber-wash)':'#F0F4F8'};
           color:${i===0?'var(--amber)':'var(--ink-3)'};display:flex;align-items:center;justify-content:center;
-          font-size:11px;font-weight:700;flex:0 0 auto">${i+1}</span>
-        <span class="nm serif" style="font-size:14px;flex:1;cursor:pointer" onclick="open_(${p.id})">${esc(p.name)}</span>
+          font-size:13px;font-weight:700;flex:0 0 auto">${i+1}</span>
+        <span class="nm serif" style="font-size:16px;flex:1;cursor:pointer" onclick="open_(${p.id})">${esc(p.name)}</span>
         <span class="sub2">${esc(p.region)}</span>
         <span style="font-weight:700;color:var(--deep);min-width:60px;text-align:right">${p.sevaHrs} hrs</span>
       </div>`).join('') || '<p class="sub" style="margin:0">Nobody in view has recorded seva hours yet.</p>'}
@@ -5689,14 +5637,14 @@ function renderSevahub(){
                        .sort((a,b)=>b.sevaHrs-a.sevaHrs).slice(0,4);
         return `<div class="sub-card" style="margin-top:12px">
           <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-            <span class="nm serif" style="font-size:14.5px">${esc(o.title)}</span>
+            <span class="nm serif" style="font-size:16.5px">${esc(o.title)}</span>
             <span class="tag t-semi">${esc(o.region)}</span>
             ${o.skill?`<span class="tag t-core">${esc(o.skill)}</span>`:''}
             <span class="sub2" style="margin-left:auto">~${o.hrsEst} hrs</span>
           </div>
           ${cands.length ? `<div style="margin-top:9px">
             ${cands.map(p=>`<div style="display:flex;gap:10px;align-items:center;padding:5px 0">
-              <span style="font-size:13px;flex:1">${esc(p.name)} <span class="sub2">· ${p.sevaHrs} hrs so far</span></span>
+              <span style="font-size:15px;flex:1">${esc(p.name)} <span class="sub2">· ${p.sevaHrs} hrs so far</span></span>
               <button class="btn sm ghost" onclick="proposeRole(${p.id},'${o.id}')">Propose</button>
             </div>`).join('')}
           </div>` : `<div class="sub2" style="margin-top:8px">No matching candidate in this region yet.</div>`}
@@ -5716,7 +5664,7 @@ function renderSevahub(){
         ${allSkills().map(k=>`<button class="chip ${SEVA_SKILL===k?'on':''}" onclick="setSevaSkill('${k.replace(/'/g,"\\'")}')">${esc(k)}</button>`).join('')}
       </div>
       ${results.map(p=>`<div style="display:flex;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid #EEF4F9">
-        <span class="nm serif" style="font-size:14px;flex:1;cursor:pointer" onclick="open_(${p.id})">${esc(p.name)}</span>
+        <span class="nm serif" style="font-size:16px;flex:1;cursor:pointer" onclick="open_(${p.id})">${esc(p.name)}</span>
         <div class="pill-row">${p.skills.map(k=>`<span class="tag t-semi">${esc(k)}</span>`).join('')}</div>
         <span class="sub2" style="min-width:90px;text-align:right">${p.sevaHrs} hrs · ${esc(p.avail)}</span>
       </div>`).join('') || '<p class="sub" style="margin:0">Nothing matches.</p>'}
@@ -5728,7 +5676,7 @@ function renderSevahub(){
     <div class="card pad" style="margin-top:16px">
       <h2 class="sec">Skill search (live)</h2>
       <p class="sub">Real seekers and skills from Postgres — separate from the illustrative search above, which still runs on demo data.</p>
-      <select id="sevaLiveSkill" style="border-radius:999px;padding:7px 14px;font-size:13px;border:1px solid var(--line-2);margin-bottom:10px"
+      <select id="sevaLiveSkill" style="border-radius:999px;padding:7px 14px;font-size:15px;border:1px solid var(--line-2);margin-bottom:10px"
         onchange="loadSevaLiveSkillResults(this.value)">
         <option value="">${LIVE_MASTER_SKILLS===null?'Loading skills\u2026':'Choose a skill\u2026'}</option>
         ${(LIVE_MASTER_SKILLS||[]).map(sk=>`<option value="${sk.Skill_ID}" ${String(sk.Skill_ID)===String(SEVA_LIVE_SKILL_ID)?'selected':''}>${esc(sk.Skill_Name)}</option>`).join('')}
