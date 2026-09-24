@@ -204,7 +204,7 @@ router.put('/:id/desc', requireAuth, async (req, res) => {
 router.get('/:id/fields', requireAuth, async (req, res) => {
   try {
     const r = await pool.query(
-      `SELECT ${qi('FAF_ID')}, ${qi('Question_Name')}, ${qi('Question_Type')}, ${qi('Component_Type')}
+      `SELECT ${qi('FAF_ID')}, ${qi('Question_Name')}, ${qi('Question_Type')}, ${qi('Component_Type')}, ${qi('Question_Options')}
        FROM ${qi('FMS')}.${qi('Form_Additional_Fields')}
        WHERE ${qi('Form_ID')} = $1 AND ${qi('Ver_To_DT')} >= CURRENT_DATE
        ORDER BY ${qi('FAF_ID')}`,
@@ -221,7 +221,7 @@ const QUESTION_TYPES = ['STRING', 'INTEGER', 'BOOLEAN', 'DATE'];
 const COMPONENT_TYPES = ['INPUT', 'CHECKBOX', 'CONSENT', 'INFORMATION', 'WARNING', 'HIGHLIGHT'];
 
 router.post('/:id/fields', requireAuth, async (req, res) => {
-  const { questionName, questionType, componentType } = req.body || {};
+  const { questionName, questionType, componentType, questionOptions } = req.body || {};
   if (!questionName) return res.status(400).json({ error: 'questionName is required' });
   const qType = QUESTION_TYPES.includes(questionType) ? questionType : 'STRING';
   const cType = COMPONENT_TYPES.includes(componentType) ? componentType : 'INPUT';
@@ -230,9 +230,9 @@ router.post('/:id/fields', requireAuth, async (req, res) => {
     const id = maxQ.rows[0].next_id;
     await pool.query(
       `INSERT INTO ${qi('FMS')}.${qi('Form_Additional_Fields')}
-        (${qi('FAF_ID')}, ${qi('Form_ID')}, ${qi('Question_Name')}, ${qi('Question_Type')}, ${qi('Component_Type')}, ${qi('Ver_From_DT')}, ${qi('Ver_To_DT')})
-       VALUES ($1,$2,$3,$4,$5,CURRENT_DATE,$6)`,
-      [id, req.params.id, questionName, qType, cType, FAR_FUTURE]
+        (${qi('FAF_ID')}, ${qi('Form_ID')}, ${qi('Question_Name')}, ${qi('Question_Type')}, ${qi('Component_Type')}, ${qi('Question_Options')}, ${qi('Ver_From_DT')}, ${qi('Ver_To_DT')})
+       VALUES ($1,$2,$3,$4,$5,$6,CURRENT_DATE,$7)`,
+      [id, req.params.id, questionName, qType, cType, cType === 'CHECKBOX' ? (questionOptions || null) : null, FAR_FUTURE]
     );
     res.status(201).json({ ok: true, fafId: id });
   } catch (err) {

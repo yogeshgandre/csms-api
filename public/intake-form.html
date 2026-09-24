@@ -126,7 +126,17 @@ function onCountryTyped(){
 function additionalFieldHTML(f){
   const id = 'a_' + f.Question_Name.replace(/[^a-zA-Z0-9]/g,'_');
   const label = `<label for="${id}">${esc(f.Question_Name)}</label>`;
-  if(f.Component_Type==='CHECKBOX') return `<div class="field"><label style="display:flex;align-items:center;gap:8px;font-weight:500"><input id="${id}" type="checkbox" style="width:auto"> ${esc(f.Question_Name)}</label></div>`;
+  if(f.Component_Type==='CHECKBOX'){
+    const opts = (f.Question_Options||'').split(',').map(o=>o.trim()).filter(Boolean);
+    if(opts.length){
+      return `<div class="field"><label style="font-weight:500">${esc(f.Question_Name)}</label>
+        <div style="display:flex;flex-direction:column;gap:6px;margin-top:4px">
+          ${opts.map((o,i)=>`<label style="display:flex;align-items:center;gap:8px;font-weight:400">
+            <input id="${id}__${i}" type="checkbox" value="${esc(o)}" style="width:auto"> ${esc(o)}</label>`).join('')}
+        </div></div>`;
+    }
+    return `<div class="field"><label style="display:flex;align-items:center;gap:8px;font-weight:500"><input id="${id}" type="checkbox" style="width:auto"> ${esc(f.Question_Name)}</label></div>`;
+  }
   // Consent gets its own visually distinct treatment (amber box) so it
   // reads as "this one matters", not just another checkbox.
   if(f.Component_Type==='CONSENT') return `<div class="field" style="background:var(--amber-wash);border:1px solid #EBD9A6;border-radius:10px;padding:12px 14px;margin-bottom:16px">
@@ -197,6 +207,15 @@ async function submitForm(isPreview){
   const additional = {};
   (window.__additionalDefs||[]).forEach(f=>{
     const id = 'a_' + f.Question_Name.replace(/[^a-zA-Z0-9]/g,'_');
+    const opts = f.Component_Type==='CHECKBOX' ? (f.Question_Options||'').split(',').map(o=>o.trim()).filter(Boolean) : [];
+    if(f.Component_Type==='CHECKBOX' && opts.length){
+      const checked = opts.filter((o,i)=>{
+        const el = document.getElementById(id+'__'+i);
+        return el && el.checked;
+      });
+      additional[f.Question_Name] = checked.join(', ');
+      return;
+    }
     const el = document.getElementById(id);
     if(!el) return;
     if(f.Component_Type==='CHECKBOX' || f.Component_Type==='CONSENT') additional[f.Question_Name] = el.checked ? 'Yes' : '';

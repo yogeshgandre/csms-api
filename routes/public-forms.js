@@ -247,7 +247,7 @@ router.get('/intake-form/:formId', async (req, res) => {
     }
 
     const fieldsQ = await pool.query(
-      `SELECT ${qi('Question_Name')}, ${qi('Question_Type')}, ${qi('Component_Type')}
+      `SELECT ${qi('Question_Name')}, ${qi('Question_Type')}, ${qi('Component_Type')}, ${qi('Question_Options')}
        FROM ${qi('FMS')}.${qi('Form_Additional_Fields')}
        WHERE ${qi('Form_ID')} = $1 AND ${qi('Ver_To_DT')} >= CURRENT_DATE
        ORDER BY ${qi('FAF_ID')}`,

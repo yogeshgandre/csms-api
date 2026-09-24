@@ -4431,6 +4431,7 @@ async function archiveForm(id, btn){
 
 async function openFormDetail(id){
   FORM_DETAIL_ID = id;
+  FORM_PENDING_FIELDS = [];
   const root = document.getElementById('formDetailRoot');
   if(!root) return;
   root.innerHTML = `<div class="obackdrop" onclick="if(event.target===this) closeFormDetail()">
@@ -4466,12 +4467,11 @@ function renderFormDetail(){
       <p class="sub2" style="margin-bottom:14px">${f?statusBadge(f.Form_Status_Name):''}</p>
 
       <p class="sub2" style="font-weight:600">Form title \u2014 shown as the heading on the public form</p>
-      <input id="ffTitle" placeholder="e.g. \u201cCurious Intake\u201d" style="width:100%;border-radius:10px;padding:8px 14px;font-size:15px;border:1px solid var(--line-2);box-sizing:border-box;font-family:inherit;margin-bottom:6px" value="${esc((f&&f.Form_Title)||'')}">
-      <button class="mini" onclick="saveFormTitle(this)" style="width:auto;padding:0 12px;height:26px;font-size:13.5px;margin-bottom:14px">Save title</button>
+      <p class="sub2" style="font-weight:600">Form title \u2014 shown as the heading on the public form</p>
+      <input id="ffTitle" placeholder="e.g. \u201cCurious Intake\u201d" style="width:100%;border-radius:10px;padding:8px 14px;font-size:15px;border:1px solid var(--line-2);box-sizing:border-box;font-family:inherit;margin-bottom:14px" value="${esc((f&&f.Form_Title)||'')}">
 
       <p class="sub2" style="font-weight:600">Form description \u2014 shown underneath the title</p>
-      <textarea id="ffDesc" rows="2" placeholder="What is this form for? e.g. \u201cTell us a bit about you \u2014 it only takes a minute.\u201d" style="width:100%;border-radius:12px;padding:8px 14px;font-size:15px;border:1px solid var(--line-2);box-sizing:border-box;font-family:inherit;resize:vertical;margin-bottom:6px">${esc((f&&f.Form_Desc)||'')}</textarea>
-      <button class="mini" onclick="saveFormDesc(this)" style="width:auto;padding:0 12px;height:26px;font-size:13.5px;margin-bottom:14px">Save description</button>
+      <textarea id="ffDesc" rows="2" placeholder="What is this form for? e.g. \u201cTell us a bit about you \u2014 it only takes a minute.\u201d" style="width:100%;border-radius:12px;padding:8px 14px;font-size:15px;border:1px solid var(--line-2);box-sizing:border-box;font-family:inherit;resize:vertical;margin-bottom:14px">${esc((f&&f.Form_Desc)||'')}</textarea>
 
       <p class="sub2" style="font-weight:600">Default fields \u2014 every form collects these</p>
       <div class="kv" style="grid-template-columns:1fr;margin-bottom:14px">
@@ -4479,56 +4479,68 @@ function renderFormDetail(){
       </div>
       <p class="sub2" style="font-weight:600">Additional fields (this form's own questions)</p>
       ${fields.length ? fields.map(ff=>`<div class="oteamrow">
-          <span>${esc(ff.Question_Name)} <span class="sub2">(${esc(ff.Question_Type)}, ${esc(ff.Component_Type)})</span></span>
+          <span>${esc(ff.Question_Name)} <span class="sub2">(${esc(ff.Question_Type)}, ${esc(ff.Component_Type)}${ff.Component_Type==='CHECKBOX'&&ff.Question_Options?': '+esc(ff.Question_Options):''})</span></span>
           <button class="mini" onclick="deleteFormField(${ff.FAF_ID}, this)" style="width:22px;height:22px;color:var(--rose)">&times;</button>
         </div>`).join('') : '<p class="sub2">None yet.</p>'}
+
+      ${FORM_PENDING_FIELDS.length ? `<p class="sub2" style="font-weight:600;margin-top:10px">Not yet saved</p>
+      ${FORM_PENDING_FIELDS.map((pf,i)=>`<div class="oteamrow" style="background:var(--amber-wash)">
+          <span>${esc(pf.questionName)} <span class="sub2">(${esc(pf.questionType)}, ${esc(pf.componentType)}${pf.componentType==='CHECKBOX'&&pf.questionOptions?': '+esc(pf.questionOptions):''})</span></span>
+          <button class="mini" onclick="removePendingFormField(${i})" style="width:22px;height:22px;color:var(--rose)">&times;</button>
+        </div>`).join('')}` : ''}
+
       <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;align-items:center">
         <input id="ffName" placeholder="Question" style="border-radius:999px;padding:5px 12px;font-size:14.5px;border:1px solid var(--line-2);flex:1;min-width:120px">
         <select id="ffQType" style="border-radius:999px;padding:5px 12px;font-size:14.5px;border:1px solid var(--line-2)">
           <option value="STRING">String</option><option value="INTEGER">Integer</option><option value="BOOLEAN">Boolean</option><option value="DATE">Date</option>
         </select>
-        <select id="ffCType" style="border-radius:999px;padding:5px 12px;font-size:14.5px;border:1px solid var(--line-2)">
+        <select id="ffCType" onchange="document.getElementById('ffOptions').style.display = this.value==='CHECKBOX' ? '' : 'none'" style="border-radius:999px;padding:5px 12px;font-size:14.5px;border:1px solid var(--line-2)">
           <option value="INPUT">Input</option><option value="CHECKBOX">Checkbox</option><option value="CONSENT">Consent</option>
           <option value="INFORMATION">Information</option><option value="WARNING">Warning</option><option value="HIGHLIGHT">Highlight</option>
         </select>
-        <button class="btn sm" onclick="addFormField(this)"><span class="spin"></span><span class="lbl">Add</span></button>
+        <button class="btn ghost sm" onclick="addPendingFormField()">+ Add to list</button>
       </div>
+      <input id="ffOptions" placeholder="Checkbox options, comma-separated \u2014 e.g. Counselling, Translation, Event coordination" style="display:none;width:100%;border-radius:999px;padding:5px 14px;font-size:14.5px;border:1px solid var(--line-2);box-sizing:border-box;margin-top:6px">
+
+      <button class="btn" onclick="saveFormAll(this)" style="width:100%;margin-top:18px"><span class="spin"></span><span class="lbl">Save form</span></button>
     </div>
   </div>`;
 }
 
-async function saveFormTitle(btn){
+let FORM_PENDING_FIELDS = [];
+function addPendingFormField(){
+  const questionName = document.getElementById('ffName').value.trim();
+  if(!questionName) return;
+  const componentType = document.getElementById('ffCType').value;
+  const questionOptions = componentType==='CHECKBOX' ? document.getElementById('ffOptions').value.trim() : '';
+  FORM_PENDING_FIELDS.push({questionName, questionType: document.getElementById('ffQType').value, componentType, questionOptions});
+  document.getElementById('ffName').value = '';
+  document.getElementById('ffOptions').value = '';
+  renderFormDetail();
+}
+function removePendingFormField(i){
+  FORM_PENDING_FIELDS.splice(i,1);
+  renderFormDetail();
+}
+// One button saves everything composed so far: title, description, and
+// every question added to the "Not yet saved" list \u2014 instead of a
+// separate save click for each piece.
+async function saveFormAll(btn){
   await withLoading(btn, async ()=>{
     try{
       const title = document.getElementById('ffTitle').value.trim();
-      await apiFetch('/api/forms/'+FORM_DETAIL_ID+'/title', {method:'PUT', body: JSON.stringify({title})});
-      toast('Title saved.');
-      LIVE_FORMS = null; await loadForms();
-    }catch(err){ toast('Could not save: '+(err.message||'')); }
-  });
-}
-async function saveFormDesc(btn){
-  await withLoading(btn, async ()=>{
-    try{
       const desc = document.getElementById('ffDesc').value.trim();
+      await apiFetch('/api/forms/'+FORM_DETAIL_ID+'/title', {method:'PUT', body: JSON.stringify({title})});
       await apiFetch('/api/forms/'+FORM_DETAIL_ID+'/desc', {method:'PUT', body: JSON.stringify({desc})});
-      toast('Heading saved.');
+      for(const pf of FORM_PENDING_FIELDS){
+        await apiFetch('/api/forms/'+FORM_DETAIL_ID+'/fields', {method:'POST', body: JSON.stringify(pf)});
+      }
+      FORM_PENDING_FIELDS = [];
+      toast('Form saved.');
       LIVE_FORMS = null; await loadForms();
-    }catch(err){ toast('Could not save: '+(err.message||'')); }
-  });
-}
-async function addFormField(btn){
-  await withLoading(btn, async ()=>{
-    try{
-      const questionName = document.getElementById('ffName').value.trim();
-      if(!questionName) return;
-      await apiFetch('/api/forms/'+FORM_DETAIL_ID+'/fields', {method:'POST', body: JSON.stringify({
-        questionName, questionType: document.getElementById('ffQType').value, componentType: document.getElementById('ffCType').value
-      })});
-      toast('Question added.');
       FORM_DETAIL_FIELDS = await apiFetch('/api/forms/'+FORM_DETAIL_ID+'/fields');
       renderFormDetail();
-    }catch(err){ toast('Could not add: '+(err.message||'')); }
+    }catch(err){ toast('Could not save: '+(err.message||'')); }
   });
 }
 async function deleteFormField(fafId, btn){
