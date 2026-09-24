@@ -43,7 +43,7 @@ html{scroll-behavior:smooth}
 body{
   color:var(--ink);
   font-family:var(--font-body);
-  font-size:17.5px; line-height:1.6;
+  font-size:18.5px; line-height:1.6;
   background:var(--paper);
   -webkit-font-smoothing:antialiased;
   text-wrap:pretty;
@@ -59,7 +59,7 @@ header{
   padding:14px 22px; display:flex; align-items:center; gap:22px; flex-wrap:wrap;
 }
 .brand{display:flex;flex-direction:column;gap:1px;margin-right:auto}
-.brand .t{font-family:var(--font-head);font-size:20px;font-weight:600;letter-spacing:-.015em}
+.brand .t{font-family:var(--font-head);font-size:22px;font-weight:600;letter-spacing:-.015em}
 .brand .s{font-size:13px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.1em;font-weight:500}
 .roleblock{display:flex;align-items:center;gap:10px}
 .roleblock label{font-size:13.5px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.08em}
@@ -73,7 +73,7 @@ select:hover{border-color:var(--ink-3)}
 nav{background:rgba(255,255,255,.86);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);
   padding:8px 22px 0;display:flex;gap:4px;overflow-x:auto}
 nav button{
-  background:none;border:none;padding:11px 15px;font-size:15.5px;color:var(--ink-2);
+  background:none;border:none;padding:11px 15px;font-size:16.5px;color:var(--ink-2);
   border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap;font-weight:500;
 }
 nav button:hover{color:var(--ink);background:rgba(227,240,249,.6)}
@@ -93,8 +93,8 @@ main{padding:22px;max-width:1320px;margin:0 auto}
 .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r)}
 .card:hover{border-color:var(--deep-2);background:var(--deep-wash);box-shadow:0 4px 16px rgba(11,143,196,.14)}
 .pad{padding:16px 18px}
-h2.sec{font-family:var(--font-head);font-size:21px;font-weight:600;margin:0 0 4px;letter-spacing:-.015em}
-p.sub{margin:0 0 16px;color:var(--ink-3);font-size:14.5px;max-width:62ch}
+h2.sec{font-family:var(--font-head);font-size:23px;font-weight:600;margin:0 0 4px;letter-spacing:-.015em}
+p.sub{margin:0 0 16px;color:var(--ink-3);font-size:15.5px;max-width:62ch}
 .note{
   background:var(--deep-wash);border-left:3px solid var(--deep);border-radius:0 var(--r-sm) var(--r-sm) 0;
   padding:10px 14px;font-size:14.5px;color:#20454F;margin:14px 0;
@@ -120,14 +120,14 @@ th{
   color:var(--deep);font-weight:700;padding:11px 14px;border-bottom:1px solid var(--line-2);
   background:var(--deep-wash);position:sticky;top:0;
 }
-td{padding:11px 14px;border-bottom:1px solid #EEF4F9;font-size:15.5px;vertical-align:middle;font-variant-numeric:tabular-nums}
+td{padding:11px 14px;border-bottom:1px solid #EEF4F9;font-size:16.5px;vertical-align:middle;font-variant-numeric:tabular-nums}
 tbody tr{cursor:pointer}
 tbody tr:hover{background:#F6FAFD}
 tbody tr:last-child td{border-bottom:none}
 .nm{font-size:17px;font-weight:500;font-family:var(--font-head)}
-.sub2{font-size:13.5px;color:var(--ink-3);margin-top:1px;font-variant-numeric:normal}
+.sub2{font-size:14.5px;color:var(--ink-3);margin-top:1px;font-variant-numeric:normal}
 
-.tag{display:inline-block;font-size:13.5px;font-weight:600;padding:3px 9px;border-radius:var(--r-tag);white-space:nowrap;border:1px solid transparent}
+.tag{display:inline-block;font-size:14.5px;font-weight:600;padding:3px 9px;border-radius:var(--r-tag);white-space:nowrap;border:1px solid transparent}
 .t-core{background:var(--deep-wash);color:var(--deep);border-color:#C4DBE1}
 .t-active{background:var(--sage-wash);color:var(--sage);border-color:#CBDFD1}
 .t-semi{background:#F1EFEA;color:var(--ink-2);border-color:var(--line-2)}
@@ -242,9 +242,9 @@ tbody tr:last-child td{border-bottom:none}
   transition:box-shadow .2s var(--ease), transform .2s var(--ease)}
 .kpi[onclick]:hover{box-shadow:0 2px 4px rgba(22,51,74,.06), 0 10px 24px rgba(11,143,196,.14), inset 0 1px 0 rgba(255,255,255,.6);
   transform:translateY(-1px)}
-.kpi .n{font-family:var(--font-head);font-size:32px;font-weight:600;color:var(--deep);line-height:1.05;letter-spacing:-.015em;font-variant-numeric:tabular-nums}
-.kpi .l{font-size:14px;color:var(--ink-2);margin-top:3px;font-weight:500}
-.kpi .d{font-size:13px;color:var(--ink-3);margin-top:5px}
+.kpi .n{font-family:var(--font-head);font-size:37px;font-weight:600;color:var(--deep);line-height:1.05;letter-spacing:-.015em;font-variant-numeric:tabular-nums}
+.kpi .l{font-size:15.5px;color:var(--ink-2);margin-top:3px;font-weight:500}
+.kpi .d{font-size:14px;color:var(--ink-3);margin-top:5px}
 .bar{display:grid;grid-template-columns:118px 1fr 40px;gap:10px;align-items:center;margin-bottom:8px;font-size:15px}
 .track{display:block;background:#E9F1F7;border-radius:20px;height:16px;overflow:hidden}
 .fill{display:block;background:linear-gradient(90deg,var(--deep),var(--deep-2));height:100%;border-radius:20px;min-width:3px}
@@ -596,7 +596,6 @@ nav .pip.r{background:var(--sage-wash);color:var(--sage)}
   <button data-p="calendar" data-icon="calendar" data-color="deep" onclick="tab('calendar'); renderCalendar()"><span class="nb-label">Calendar</span></button>
   <button data-p="reports" data-icon="chart" data-color="violet" onclick="tab('reports')"><span class="nb-label">Reports</span><span class="pip r" id="pip5">0</span></button>
   <button data-p="sevahub" data-icon="gear" data-color="amber" onclick="tab('sevahub')"><span class="nb-label">Seva Management</span></button>
-  <button data-p="dash" data-icon="grid" data-color="sage" onclick="tab('dash')"><span class="nb-label">Dashboard</span></button>
   <button data-p="org" data-icon="users" data-color="deep" onclick="tab('org')"><span class="nb-label">Organisation and Team Management</span></button>
   <button data-p="satsangmgmt" data-icon="lotus" data-color="amber" onclick="tab('satsangmgmt'); satsangSubtab('defs')"><span class="nb-label">Satsang Management</span></button>
   <button data-p="formmgmt" data-icon="file" data-color="violet" onclick="tab('formmgmt'); formSubtab('defs')"><span class="nb-label">Form Management System</span></button>
@@ -697,12 +696,6 @@ nav .pip.r{background:var(--sage-wash);color:var(--sage)}
     <h2 class="sec">Seva Management</h2>
     <p class="sub">Matching seekers to service, by skill and by capacity — not just a list of who volunteered once.</p>
     <div id="sevahub"></div>
-  </section>
-
-  <section class="pane" id="p-dash">
-    <h2 class="sec">Dashboard</h2>
-    <p class="sub">Everything below respects your regional access. Change role in the header and the numbers change with it.</p>
-    <div id="dash"></div>
   </section>
 
   <section class="pane" id="p-ops">
@@ -806,7 +799,7 @@ const CONTACT_SLA_DAYS = 60; /* flat window — there is no longer a per-stage S
 const ROLES = {
   abroad:{name:"Abroad RS — global admin", regions:null, mask:[],
     can:"Full access to all regions and all fields.",
-    tabs:["overview","search","alerts","journey","calendar","reports","sevahub","dash","org","satsangmgmt","formmgmt","tickermgmt"],
+    tabs:["overview","search","alerts","journey","calendar","reports","sevahub","org","satsangmgmt","formmgmt","tickermgmt"],
     landing:"overview"},
   tech:{name:"Technical Admin", regions:null, mask:[],
     can:"System health and infrastructure. Not scoped to any region.",
@@ -814,11 +807,11 @@ const ROLES = {
     landing:"ops"},
   rs_de:{name:"Regional RS — Germany", regions:["Germany"], mask:[],
     can:"Germany only. All fields within that region.",
-    tabs:["overview","search","alerts","journey","calendar","reports","sevahub","dash","org","satsangmgmt","formmgmt","tickermgmt"],
+    tabs:["overview","search","alerts","journey","calendar","reports","sevahub","org","satsangmgmt","formmgmt","tickermgmt"],
     landing:"overview"},
   rs_fr:{name:"Regional RS — France", regions:["France"], mask:[],
     can:"France only. All fields within that region.",
-    tabs:["overview","search","alerts","journey","calendar","reports","sevahub","dash","org","satsangmgmt","formmgmt","tickermgmt"],
+    tabs:["overview","search","alerts","journey","calendar","reports","sevahub","org","satsangmgmt","formmgmt","tickermgmt"],
     landing:"overview"},
   seva:{name:"Seva RS — service allocation", regions:null, mask:["whatsapp","email","dob"],
     can:"All regions, but personal contact details and date of birth are hidden.",
@@ -826,8 +819,8 @@ const ROLES = {
     landing:"sevahub"},
   satsang:{name:"Satsang conductor — Germany", regions:["Germany"], mask:["dob","remedy"],
     can:"Germany only. Attendance and notes; no remedy or date of birth.",
-    tabs:["calendar","reports","search","satsangmgmt"],
-    landing:"calendar",
+    tabs:["overview","calendar","reports","search","satsangmgmt"],
+    landing:"overview",
     conductorName:"Satsang conductor"}
 };
 let ROLE="abroad", FILTER="all", OPEN=null;
@@ -1276,7 +1269,11 @@ function queryEnter(){
 }
 
 function rows(){
-  const raw = document.getElementById('q').value||'';
+  // #q belonged to the old mock Search & Records panel, since replaced by
+  // renderLiveSeekers()/#seekerSearch against the real API. This function's
+  // filtering is still used internally (Overview counts, etc.), so it stays —
+  // just guarded, since #q itself no longer exists in the markup.
+  const raw = (document.getElementById('q')||{}).value||'';
   const parsed = parseQuery(raw);
   return visible().filter(s=>{
     if(FILTER==='overdue'){ if(!overdue(s)) return false; }
@@ -1311,7 +1308,8 @@ function render(){
   renderOverview();
   renderQueryUI();
   const list=rows();
-  document.getElementById('cnt').textContent = `${list.length} of ${visible().length} shown`;
+  const cntEl = document.getElementById('cnt');
+  if(cntEl) cntEl.textContent = `${list.length} of ${visible().length} shown`;
 
   const catchipsEl = document.getElementById('catchips');
   if(catchipsEl && !catchipsEl.dataset.built){
@@ -1320,7 +1318,8 @@ function render(){
     catchipsEl.dataset.built = "1";
   }
 
-  document.getElementById('tbl').innerHTML = `
+  const tblEl = document.getElementById('tbl');
+  if(tblEl) tblEl.innerHTML = `
     <thead><tr>
       <th>Seeker</th><th>Category</th>
       <th class="hide-sm">WhatsApp</th><th>Last contact</th><th class="hide-sm">Seva hrs</th>
@@ -1346,11 +1345,12 @@ function render(){
        <b>Open question — cross-border access.</b> This role reaches records in every region.
        If the person holding it sits outside the EU, that is a transfer of special-category data out of Europe,
        and hosting in Germany does not resolve it. Tracked as ADR-0011.</div>` : '';
-  document.getElementById('hidnote').innerHTML = xborder + (h
+  const hidnoteEl = document.getElementById('hidnote');
+  if(hidnoteEl) hidnoteEl.innerHTML = xborder + (h
     ? `<div class="hidden-note"><b>${h} seeker records are outside your region</b> and are not shown.
        They are not merely hidden on screen — the database refuses to return them for this role.</div>` : '');
 
-  renderAlerts(); renderDash(); renderOps(); renderAbout();
+  renderAlerts(); renderOps(); renderAbout();
   if(LIVE_DEPTS!==null){ renderSevaDepartments(); renderTeamManagement(); } renderJourney(); renderCalendar(); renderProfiles(); renderReports(); renderSevahub();
   if(OPEN) drawer(OPEN);
 }
@@ -2528,76 +2528,6 @@ function weeklyActivity(weeks=8){
   return buckets;
 }
 function seekerFirstSeen(p){ return p.inter.length ? new Date(Math.min(...p.inter.map(i=>+i.dt))) : null; }
-
-function renderDash(){
-  const v=visible();
-  const od=v.filter(overdue).length;
-  const gaps=v.map(since);
-  const avg=gaps.length?Math.round(gaps.reduce((a,b)=>a+b,0)/gaps.length):0;
-  const hrs=v.reduce((a,s)=>a+s.sevaHrs,0);
-
-  const byCat={}, byReg={};
-  v.forEach(s=>{ byCat[s.category]=(byCat[s.category]||0)+1; byReg[s.region]=(byReg[s.region]||0)+1; });
-
-  const bars=(o,cls)=>{ const mx=Math.max(1,...Object.values(o));
-    return Object.entries(o).map(([k,n])=>`<div class="bar">
-      <span style="color:var(--ink-2)">${esc(k)}</span>
-      <span class="track"><span class="fill ${cls||''}" style="width:${Math.round(n/mx*100)}%"></span></span>
-      <span class="num">${n}</span></div>`).join(''); };
-
-  // real deltas, computed from recorded dates — not typed in
-  const newThisWk = v.filter(p=>{const f=seekerFirstSeen(p); return f && days(f)<=7;}).length;
-  const newPrevWk = v.filter(p=>{const f=seekerFirstSeen(p); return f && days(f)>7 && days(f)<=14;}).length;
-  const hrsThisWk = v.reduce((a,s)=>a+s.inter.filter(i=>i.type==='Seva'&&days(i.dt)<=7).reduce((x,i)=>x+(i.hrs||0),0),0);
-
-  const catEntries = Object.entries(byCat).map(([k,v2])=>({k,v:v2}));
-  const regEntries = Object.entries(byReg).map(([k,v2])=>({k,v:v2}));
-  const weeks = weeklyActivity(8);
-  const weekLabels = ["7wk ago","6wk ago","5wk ago","4wk ago","3wk ago","2wk ago","Last wk","This wk"];
-
-  document.getElementById('dash').innerHTML=`
-    <div class="grid4">
-      <div class="kpi"><div class="n">${v.length}</div><div class="l">Seekers in view</div>
-        <div class="d">${hiddenCount()?hiddenCount()+' outside your region':'All regions'}
-          ${newThisWk?` · <span style="color:var(--sage);font-weight:600">+${newThisWk} this week</span>`:''}</div></div>
-      <div class="kpi"><div class="n" style="color:${od?'var(--amber)':'var(--sage)'}">${od}</div>
-        <div class="l">Contact overdue</div><div class="d">Against the ${CONTACT_SLA_DAYS}-day window</div></div>
-      <div class="kpi"><div class="n">${avg}</div><div class="l">Average days since contact</div>
-        <div class="d">Across seekers in view</div></div>
-      <div class="kpi"><div class="n">${hrs}</div><div class="l">Seva hours recorded</div>
-        <div class="d">Summed from the timeline${hrsThisWk?` · <span style="color:var(--sage);font-weight:600">+${hrsThisWk} this week</span>`:''}</div></div>
-    </div>
-
-    <div class="card pad" style="margin-bottom:16px">
-      <h2 class="sec">Activity over the last 8 weeks</h2>
-      <p class="sub">Every interaction logged, of any kind, across the seekers you can see. Counted from the timeline, the same way the four numbers above are.</p>
-      ${svgTrend(weeks, weekLabels)}
-    </div>
-
-    <div class="grid2">
-      <div class="card pad"><h2 class="sec">Seekers by category</h2>
-        <p class="sub">The only classification the schema tracks — Seeker_Category.</p>${bars(byCat)}</div>
-      <div class="card pad"><h2 class="sec">Seva capacity by skill</h2>
-        <p class="sub">What the Seva Distribution team searches against.</p>
-        ${(()=>{const sk={};v.forEach(s=>s.skills.forEach(k=>sk[k]=(sk[k]||0)+1));
-          const top=Object.fromEntries(Object.entries(sk).sort((a,b)=>b[1]-a[1]).slice(0,7));
-          return bars(top,'s2');})()}</div>
-      <div class="card pad"><h2 class="sec">By category</h2>
-        <p class="sub">Same figures as the bar chart above, as a proportion.</p>
-        <div style="display:flex;gap:18px;align-items:center;flex-wrap:wrap">
-          ${svgDonut(catEntries)}
-          <div style="flex:1;min-width:160px">${donutLegend(catEntries)}</div>
-        </div></div>
-      <div class="card pad"><h2 class="sec">By region</h2>
-        <p class="sub">Only regions you may see appear here.</p>
-        <div style="display:flex;gap:18px;align-items:center;flex-wrap:wrap">
-          ${svgDonut(regEntries)}
-          <div style="flex:1;min-width:160px">${donutLegend(regEntries)}</div>
-        </div></div>
-    </div>
-    <div class="note">The same screen produces different numbers for different roles, because the filtering happens
-      in the database rather than on screen. A Regional RS cannot reach another region's figures even by exporting.</div>`;
-}
 
 /* ============ operations ============ */
 const SERVICES=[
@@ -5151,7 +5081,7 @@ function renderAbout(){
     ["Operations tab","Overdue volunteer access review","Volunteer deprovisioning gap"],
     ["Operations tab","Upgrade queue routed by risk level","Maintenance model"]
   ];
-  document.getElementById('about').innerHTML=`
+  const aboutEl = document.getElementById('about'); if(!aboutEl) return; aboutEl.innerHTML=`
     <thead><tr><th>Where to click</th><th>What it shows</th><th>Requirement</th></tr></thead>
     <tbody>${rowsA.map(r=>`<tr style="cursor:default">
       <td>${esc(r[0])}</td><td style="color:var(--ink-2)">${esc(r[1])}</td>
@@ -5216,7 +5146,7 @@ function mockDeptRegion(id){
 }
 function renderProfiles(){
   const serving = visible().filter(p=>p.sevaHrs>0).sort((a,b)=>b.sevaHrs-a.sevaHrs);
-  document.getElementById('profiles').innerHTML = `
+  const profilesEl = document.getElementById('profiles'); if(!profilesEl) return; profilesEl.innerHTML = `
     <div class="grid2">
       ${serving.map(p=>{
         const dep = DEPT.find(d=>mockDeptRegion(d.id)===p.region && d.head===p.name) ||
@@ -5443,74 +5373,181 @@ function renderOverview(){
   const el = document.getElementById('overview'); if(!el) return;
   const v = visible();
   const od = v.filter(overdue).length;
-  const fl = []; v.forEach(p=>p.inter.forEach(i=>{ if(i.flag) fl.push(1); }));
+  const flagged = []; v.forEach(p=>p.inter.forEach(i=>{ if(i.flag) flagged.push({p,i}); }));
   const vIds = new Set(v.map(p=>p.id));
   const unreadInbox = INBOX.filter(m=>m.unread && vIds.has(m.pid)).length;
-  const overdueReports = pendingReports().filter(c=>days(c.at)>REPORT_SLA_DAYS).length;
+  const overduePending = pendingReports().filter(c=>days(c.at)>REPORT_SLA_DAYS);
+  const overdueReports = overduePending.length;
   // Intake has no per-conductor or per-region concept in the live data —
   // Form_Submission_Key_Details' Country is free text, not a Country_ID
   // link, so it can't be filtered by region the way seekers can. Counts
   // everyone's pending submissions, not just this role's.
   const pendingIntake = LIVE_INTAKE===null ? 0 : LIVE_INTAKE.length;
-  const totalNotify = od + fl.length + unreadInbox + overdueReports + pendingIntake;
+  const totalNotify = od + flagged.length + unreadInbox + overdueReports + pendingIntake;
   setPip('pip6', totalNotify);
 
-  const feed = unifiedActivity(12);
-
-  const notifyCards = [
-    {n:od, l:"Contact overdue", go:"alerts", show:R().tabs.includes("alerts")},
-    {n:fl.length, l:"Sensitivity flags", go:"alerts", show:R().tabs.includes("alerts")},
-    {n:unreadInbox, l:"Messages", go:"alerts", show:R().tabs.includes("alerts")},
-    {n:overdueReports, l:"Reports overdue", go:"reports", show:R().tabs.includes("reports")},
-    {n:pendingIntake, l:"Intake awaiting review", go:"alerts", show:R().tabs.includes("alerts")}
-  ].filter(c=>c.show);
-
+  const feed = unifiedActivity(10);
   const isAdmin = ROLE==="tech";
+  const isConductor = !!R().conductorName;
   const healthBad = SERVICES.filter(s=>s.s!=='ok').length + SECURITY.filter(s=>s.s!=='ok').length;
+  const hrs = v.reduce((a,s)=>a+s.sevaHrs,0);
+  const hrsThisWk = v.reduce((a,s)=>a+s.inter.filter(i=>i.type==='Seva'&&days(i.dt)<=7).reduce((x,i)=>x+(i.hrs||0),0),0);
+  const newThisWk = v.filter(p=>{const f=seekerFirstSeen(p); return f && days(f)<=7;}).length;
+
+  /* ---- tile row: five or six colour-coded squares, one glance each ---- */
+  const tiles = [
+    {c:'--deep',   l:'Seekers in view',      n:v.length, d:newThisWk?`+${newThisWk} this week`:(hiddenCount()?hiddenCount()+' outside your region':'All in your scope'), go:'search'},
+    {c:'--amber',  l:'Contact overdue',      n:od, d:`Past the ${CONTACT_SLA_DAYS}-day window`, go:R().tabs.includes('alerts')?'alerts':null, show: R().tabs.includes('alerts')||R().tabs.includes('journey')},
+    {c:'--rose',   l:'Sensitivity flags',    n:flagged.length, d:'Needs a careful read, not a form', go:R().tabs.includes('alerts')?'alerts':null, show: R().tabs.includes('alerts')},
+    {c:'--violet', l:'Reports overdue',      n:overdueReports, d:`Past the ${REPORT_SLA_DAYS}-day filing window`, go:'reports', show: R().tabs.includes('reports')},
+    {c:'--sage',   l:'Seva hours logged',    n:hrs, d:hrsThisWk?`+${hrsThisWk} this week`:'Summed from the timeline', go:'sevahub', show: R().tabs.includes('sevahub')},
+    {c:'--deep-2', l:'Intake awaiting review', n:pendingIntake, d:'Held for a human to confirm', go:R().tabs.includes('alerts')?'alerts':null, show: R().tabs.includes('alerts')}
+  ].filter(t=>t.show!==false);
+
+  /* ---- needs your attention: same numbers as the tiles, framed as action ---- */
+  const flagItems = [
+    {sev:od>0?'hi':null, n:od, txt:`${od} seeker${od===1?'':'s'} not contacted in ${CONTACT_SLA_DAYS} days`,
+     sub: od ? `Longest gap: ${Math.max(...v.filter(overdue).map(since))} days.` : '', go:'alerts', show:od>0 && R().tabs.includes('alerts')},
+    {sev:'hi', n:flagged.length, txt:`${flagged.length} sensitivity flag${flagged.length===1?'':'s'} on record`,
+     sub: flagged[0] ? esc(flagged[0].p.name)+' — '+esc((flagged[0].i.flag||'').slice(0,70))+(flagged[0].i.flag&&flagged[0].i.flag.length>70?'…':'') : '',
+     go:'alerts', show:flagged.length>0 && R().tabs.includes('alerts')},
+    {sev:overdueReports>0?'mid':null, n:overdueReports, txt:`${overdueReports} satsang report${overdueReports===1?'':'s'} overdue`,
+     sub: overduePending[0] ? `Oldest: ${esc(overduePending[0].title)}, held ${fmt(overduePending[0].at)}.` : '', go:'reports', show:overdueReports>0 && R().tabs.includes('reports')},
+    {sev:pendingIntake>0?'mid':null, n:pendingIntake, txt:`${pendingIntake} intake submission${pendingIntake===1?'':'s'} awaiting review`,
+     sub:'Held for a human to confirm before becoming a record.', go:'alerts', show:pendingIntake>0 && R().tabs.includes('alerts')},
+    {sev:unreadInbox>0?'lo':null, n:unreadInbox, txt:`${unreadInbox} unread message${unreadInbox===1?'':'s'}`,
+     sub:'', go:'alerts', show:unreadInbox>0 && R().tabs.includes('alerts')}
+  ].filter(f=>f.show).slice(0,4);
+
+  /* ---- journey: category composition, the one classification the schema tracks ---- */
+  const byCat={}; v.forEach(s=>{ byCat[s.category]=(byCat[s.category]||0)+1; });
+  const catMax = Math.max(1,...Object.values(byCat));
+  const catOrder = ["Curious","Well-wisher","Partner"].filter(k=>byCat[k]!==undefined);
+  Object.keys(byCat).forEach(k=>{ if(!catOrder.includes(k)) catOrder.push(k); });
+
+  /* ---- follow-up: most overdue first, capped to a short list ---- */
+  const followUp = v.slice().sort((a,b)=>since(b)-since(a)).slice(0,4);
+
+  /* ---- your satsangs: only for a role tied to a named conductor ---- */
+  let satsangStrip = '';
+  if(isConductor){
+    const mine = CAL.filter(c=>c.kind==='Satsang' && c.conductor===R().conductorName);
+    const groups = {};
+    mine.forEach(c=>{ (groups[c.title]=groups[c.title]||[]).push(c); });
+    const rows = Object.entries(groups).map(([title,sessions])=>{
+      sessions.sort((a,b)=>a.at-b.at);
+      const next = sessions.find(c=>c.at>=TODAY);
+      const past = sessions.filter(c=>c.at<TODAY).sort((a,b)=>b.at-a.at);
+      const lastReported = past.map(c=>SUBMITTED_REPORTS.find(r=>r.calId===c.id)).find(Boolean);
+      const owed = past.some(c=>!SUBMITTED_REPORTS.some(r=>r.calId===c.id));
+      const present = lastReported ? lastReported.entries.filter(e=>e.attended).length : null;
+      const total = lastReported ? lastReported.entries.length : null;
+      return {title, region:sessions[0].region, next, owed, present, total};
+    });
+    if(rows.length){
+      satsangStrip = `
+    <p class="sub" style="margin:0 0 8px;font-weight:600;color:var(--ink-2)">Your satsangs</p>
+    <div class="grid2" style="margin-bottom:16px">
+      ${rows.map(r=>`<div class="card pad">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px">
+          <span class="nm serif" style="font-size:16.5px">${esc(r.title)}</span>
+          ${r.owed?'<span class="tag t-warn">Report owed</span>':''}
+        </div>
+        <div class="sub2" style="margin-top:2px">${esc(r.region)}${r.next?` · next ${fmt(r.next.at)}, ${esc(r.next.time)}`:' · no session scheduled'}</div>
+        ${r.total!==null?`<div style="margin-top:8px" class="bar" style="grid-template-columns:1fr 40px">
+          <span class="track"><span class="fill" style="width:${Math.round(r.present/Math.max(1,r.total)*100)}%"></span></span>
+          <span class="num">${r.present}/${r.total}</span></div><div class="sub2">Attended last session held</div>`
+          :'<div class="sub2" style="margin-top:8px">No session reported yet.</div>'}
+      </div>`).join('')}
+    </div>`;
+    }
+  }
+
+  const sevColor = {hi:'var(--rose)', mid:'var(--amber)', lo:'var(--deep)'};
+  const sevLabel = {hi:'High', mid:'Medium', lo:'Low'};
 
   el.innerHTML = `
-    <div class="grid4" style="grid-template-columns:repeat(${Math.max(notifyCards.length,1)},1fr);margin-bottom:16px">
-      ${notifyCards.map(c=>`<div class="kpi" style="cursor:pointer" onclick="tab('${c.go}')">
-        <div class="n" style="color:${c.n?'var(--amber)':'var(--sage)'}">${c.n}</div>
-        <div class="l">${esc(c.l)}</div><div class="d">Tap to open</div></div>`).join('')}
+    <div class="grid4" style="grid-template-columns:repeat(${Math.min(Math.max(tiles.length,1),6)},1fr);margin-bottom:18px">
+      ${tiles.map(t=>`<div class="kpi" ${t.go?`style="cursor:pointer" onclick="tab('${t.go}')"`:''}>
+        <div class="n" style="color:var(${t.c})">${t.n}</div>
+        <div class="l">${esc(t.l)}</div><div class="d">${esc(t.d)}</div></div>`).join('')}
     </div>
 
-    <div class="${isAdmin?'grid2':''}">
+    <div class="grid2" style="margin-bottom:18px">
       <div class="card pad">
-        <h2 class="sec">Latest updates</h2>
-        <p class="sub">Every interaction, milestone, category move and filed report — across everyone you can see, most recent first.</p>
-        ${feed.length ? feed.map(f=>`<div style="padding:9px 0;border-bottom:1px solid #EEF4F9;display:flex;gap:10px;align-items:flex-start">
-          <span class="tag ${ACT_TAG[f.kind]||'t-semi'}" style="flex:0 0 auto;margin-top:1px">${esc(f.kind)}</span>
-          <div style="flex:1">
-            <div style="font-size:15px">${f.pname?`<b>${esc(f.pname)}</b> — `:''}${esc(f.text)}</div>
-            <div class="sub2" style="margin-top:1px">${esc(f.who)} · ${fmt(f.at)}</div>
-          </div>
-        </div>`).join('') : '<p class="sub" style="margin:0">Nothing recorded yet in your scope.</p>'}
+        <h2 class="sec">Seeker composition</h2>
+        <p class="sub">The one classification the schema tracks — Seeker_Category. Same figures as Journey, just at a glance.</p>
+        ${catOrder.map(k=>`<div class="bar">
+          <span style="color:var(--ink-2)">${esc(k)}</span>
+          <span class="track"><span class="fill" style="width:${Math.round(byCat[k]/catMax*100)}%"></span></span>
+          <span class="num">${byCat[k]}</span></div>`).join('') || '<p class="sub" style="margin:0">Nothing in view yet.</p>'}
       </div>
-
-      ${isAdmin?`<div>
-        <div class="card pad" style="margin-bottom:12px">
-          <h2 class="sec">System health</h2>
-          <p class="sub">Full detail on the Operations tab.</p>
-          ${SERVICES.map(s=>`<div style="display:flex;gap:9px;align-items:center;padding:5px 0">
-            <span style="width:8px;height:8px;border-radius:50%;background:${s.s==='ok'?'var(--sage)':'var(--amber)'};flex:0 0 auto"></span>
-            <span style="font-size:14.5px;flex:1">${esc(s.n)}</span>
-            <span class="tag ${s.s==='ok'?'t-active':'t-warn'}" style="font-size:12.5px">${s.s==='ok'?'Healthy':'Recovered'}</span>
-          </div>`).join('')}
-          ${healthBad?`<div class="warn" style="margin-bottom:0">${healthBad} item(s) need a look.
-            <span class="lnk-btn" onclick="tab('ops')" style="cursor:pointer;color:var(--deep);font-weight:600"> Open Operations →</span></div>`
-            :`<div class="ok" style="margin-bottom:0">Everything healthy.</div>`}
-        </div>
-        <div class="card pad">
-          <h2 class="sec">Needs an administrator</h2>
-          ${SECURITY.filter(s=>s.s!=='ok').map(s=>`<div class="warn" style="margin:0 0 8px">
-            <b>${esc(s.n)}</b> — ${esc(s.v)}<br><span style="font-size:13.5px">${esc(s.d)}</span></div>`).join('')
-            || '<p class="sub" style="margin:0">Nothing outstanding.</p>'}
-          <div class="btnrow" style="margin-top:8px"><button class="btn sm ghost" onclick="tab('ops')">Full Operations view</button></div>
-        </div>
-      </div>`:''}
+      <div class="card pad">
+        <h2 class="sec">Needs your attention</h2>
+        <p class="sub">Computed from data already on record — nothing typed in separately.</p>
+        ${flagItems.length ? flagItems.map(f=>`<div style="padding:9px 0;border-bottom:1px solid #EEF4F9;display:flex;gap:10px;align-items:flex-start;${f.go?'cursor:pointer':''}" ${f.go?`onclick="tab('${f.go}')"`:''}>
+          <span class="tag" style="background:${sevColor[f.sev]};color:#fff;flex:0 0 auto">${sevLabel[f.sev]}</span>
+          <div style="flex:1">
+            <div style="font-size:15px;font-weight:500">${esc(f.txt)}</div>
+            ${f.sub?`<div class="sub2" style="margin-top:1px">${f.sub}</div>`:''}
+          </div>
+        </div>`).join('') : '<p class="sub" style="margin:0">Nothing needs attention right now.</p>'}
+      </div>
     </div>
-    <div class="hidden-note"><b>This is a view, not a new store.</b> Every number above is read from data that
+
+    ${satsangStrip}
+
+    <div class="card pad" style="margin-bottom:18px">
+      <h2 class="sec">Seekers to follow up</h2>
+      <p class="sub">Longest since last contact, first.</p>
+      <table style="margin-top:8px"><thead><tr><th>Seeker</th><th>Category</th><th>Last contact</th><th>Most recent note</th></tr></thead>
+        <tbody>${followUp.length ? followUp.map(p=>{
+          const lastI = p.inter.length ? p.inter.slice().sort((a,b)=>b.dt-a.dt)[0] : null;
+          return `<tr onclick="open_(${p.id})">
+            <td><span class="nm serif" style="font-size:15.5px">${esc(p.name)}</span></td>
+            <td>${categoryTag(p.category)}</td>
+            <td>${since(p)} days${overdue(p)?' <span class="tag t-warn" style="font-size:12px">overdue</span>':''}</td>
+            <td class="sub2" style="max-width:340px">${lastI?esc(lastI.txt):'No interaction logged yet.'}</td>
+          </tr>`;
+        }).join('') : '<tr><td colspan="4" style="color:var(--ink-3)">Nothing in view yet.</td></tr>'}</tbody>
+      </table>
+    </div>
+
+    <div class="card pad">
+      <h2 class="sec">Latest updates</h2>
+      <p class="sub">Every interaction, milestone, category move and filed report — across everyone you can see, most recent first.</p>
+      ${feed.length ? feed.map(f=>`<div style="padding:9px 0;border-bottom:1px solid #EEF4F9;display:flex;gap:10px;align-items:flex-start">
+        <span class="tag ${ACT_TAG[f.kind]||'t-semi'}" style="flex:0 0 auto;margin-top:1px">${esc(f.kind)}</span>
+        <div style="flex:1">
+          <div style="font-size:15px">${f.pname?`<b>${esc(f.pname)}</b> — `:''}${esc(f.text)}</div>
+          <div class="sub2" style="margin-top:1px">${esc(f.who)} · ${fmt(f.at)}</div>
+        </div>
+      </div>`).join('') : '<p class="sub" style="margin:0">Nothing recorded yet in your scope.</p>'}
+    </div>
+
+    ${isAdmin?`<div class="grid2" style="margin-top:18px">
+      <div class="card pad">
+        <h2 class="sec">System health</h2>
+        <p class="sub">Full detail on the Operations tab.</p>
+        ${SERVICES.map(s=>`<div style="display:flex;gap:9px;align-items:center;padding:5px 0">
+          <span style="width:8px;height:8px;border-radius:50%;background:${s.s==='ok'?'var(--sage)':'var(--amber)'};flex:0 0 auto"></span>
+          <span style="font-size:14.5px;flex:1">${esc(s.n)}</span>
+          <span class="tag ${s.s==='ok'?'t-active':'t-warn'}" style="font-size:12.5px">${s.s==='ok'?'Healthy':'Recovered'}</span>
+        </div>`).join('')}
+        ${healthBad?`<div class="warn" style="margin-bottom:0">${healthBad} item(s) need a look.
+          <span class="lnk-btn" onclick="tab('ops')" style="cursor:pointer;color:var(--deep);font-weight:600"> Open Operations →</span></div>`
+          :`<div class="ok" style="margin-bottom:0">Everything healthy.</div>`}
+      </div>
+      <div class="card pad">
+        <h2 class="sec">Needs an administrator</h2>
+        ${SECURITY.filter(s=>s.s!=='ok').map(s=>`<div class="warn" style="margin:0 0 8px">
+          <b>${esc(s.n)}</b> — ${esc(s.v)}<br><span style="font-size:13.5px">${esc(s.d)}</span></div>`).join('')
+          || '<p class="sub" style="margin:0">Nothing outstanding.</p>'}
+        <div class="btnrow" style="margin-top:8px"><button class="btn sm ghost" onclick="tab('ops')">Full Operations view</button></div>
+      </div>
+    </div>`:''}
+
+    <div class="hidden-note" style="margin-top:18px"><b>This is a view, not a new store.</b> Every number above is read from data that
       already exists elsewhere in the system — nothing is duplicated to build this screen, so it cannot drift
       out of step with the tabs it summarises.</div>`;
 }
