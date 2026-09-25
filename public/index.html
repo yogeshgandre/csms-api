@@ -224,6 +224,30 @@ tbody tr:last-child td{border-bottom:none}
 .check{display:flex;align-items:flex-start;gap:8px;font-size:15px;color:var(--ink-2)}
 .check input{width:auto;margin-top:2px}
 
+/* ---------- dashboard (demo / sample data only) ---------- */
+.dash-banner{background:var(--amber-wash);border:1px solid #F0DFAE;color:var(--amber);
+  border-radius:var(--r-sm);padding:10px 14px;font-size:14.5px;margin-bottom:16px}
+.dash-banner b{color:var(--ink)}
+.dash-seg{display:inline-flex;background:var(--card);border:1px solid var(--line);
+  border-radius:10px;padding:3px;gap:2px;margin-bottom:12px}
+.dash-seg button{border:0;background:transparent;color:var(--ink-2);padding:7px 14px;
+  border-radius:8px;font-size:14.5px;font-weight:500;cursor:pointer}
+.dash-seg button.on{background:var(--deep-wash);color:var(--deep);font-weight:600}
+.dash-scope{color:var(--ink-2);font-size:14.5px;margin-bottom:16px;display:flex;
+  align-items:center;gap:10px;flex-wrap:wrap}
+.dash-scope b{color:var(--ink);font-weight:600}
+.dash-chip{background:var(--card);border:1px solid var(--line);color:var(--ink-2);
+  padding:3px 10px;border-radius:7px;font-size:13px}
+.dash-tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:18px}
+.dash-tile{border-radius:12px;padding:16px 18px}
+.dash-tile .l{display:flex;align-items:center;gap:7px;font-size:14.5px;color:var(--ink-2);margin-bottom:6px}
+.dash-tile .l i{width:7px;height:7px;border-radius:50%;background:currentColor;flex:0 0 auto}
+.dash-tile .n{font-family:var(--font-head);font-size:32px;font-weight:600;color:var(--ink);
+  line-height:1.05;letter-spacing:-.015em;font-variant-numeric:tabular-nums}
+.dash-tile .d{font-size:13px;color:var(--ink-3);margin-top:5px}
+@media(max-width:900px){.dash-tiles{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:600px){.dash-tiles{grid-template-columns:1fr}}
+
 /* ---------- intake ---------- */
 .sub-card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);
   padding:17px 19px;margin-bottom:12px;box-shadow:var(--sh)}
@@ -592,6 +616,7 @@ nav .pip.r{background:var(--sage-wash);color:var(--sage)}
 <nav>
   <div class="nav-logo"><img src="assets/csms-logo-sidebar.png" alt="CSMS — Connect · Serve · Grow" width="150" height="75"></div>
   <button class="on" data-p="overview" data-icon="home" data-color="sage" onclick="tab('overview')"><span class="nb-label">Overview</span><span class="pip r" id="pip6">0</span></button>
+  <button data-p="dash" data-icon="grid" data-color="violet" onclick="tab('dash'); renderDashDemo()"><span class="nb-label">Dashboard</span></button>
   <button data-p="search" data-icon="idcard" data-color="deep" onclick="tab('search'); renderLiveSeekers()"><span class="nb-label">Search Seekers</span></button>
   <button data-p="alerts" data-icon="heart" data-color="rose" onclick="tab('alerts')"><span class="nb-label">My Seva Activities</span><span class="pip" id="pip">0</span></button>
   <button data-p="journey" data-icon="sprout" data-color="sage" onclick="tab('journey')"><span class="nb-label">Curious and Seeker Spiritual Journey</span></button>
@@ -610,6 +635,10 @@ nav .pip.r{background:var(--sage-wash);color:var(--sage)}
     <h2 class="sec">Overview</h2>
     <p class="sub">The pulse of what you're responsible for — one screen instead of six tabs. Scoped to your access, same as everywhere else.</p>
     <div id="overview"></div>
+  </section>
+
+  <section class="pane" id="p-dash">
+    <div id="dash"></div>
   </section>
 
   <section class="pane" id="p-search">
@@ -1157,6 +1186,7 @@ function applyRoleNav(){
   // proper per-role access control for it is a follow-up (Access Management),
   // not yet decided. Every other tab still follows the normal role scoping.
   allowed.add('overview');
+  allowed.add('dash');
   document.querySelectorAll('nav button[data-p]').forEach(b=>{
     b.style.display = allowed.has(b.dataset.p) ? '' : 'none';
   });
@@ -5410,6 +5440,167 @@ const ACT_TAG = {Call:"t-core",WhatsApp:"t-active",Email:"t-core",Satsang:"t-a9"
 // data source for a real API once Yogesh's events/registrations tables
 // exist; this function's shape (tiles, funnel, attention, follow-up) does
 // not need to change.
+// ============ Dashboard (demo tab — sample data, not read from SEEKERS/CAL) ============
+// Explicitly separate from Overview: Overview is real, live-scoped data;
+// this tab exists purely so stakeholders can see the fuller, more colourful
+// design direction with realistic-looking volume before enough real data
+// exists to make Overview look the same way. Nothing here is wired to
+// anything else in the file — safe to delete once it's no longer needed.
+const DASH_DATA = {
+  admin:{label:"Global Admin", scope:"All regions · 5 satsang groups",
+    tiles:[["deep","Active seekers","2,486","▲ 3.1%","Steady growth"],
+      ["sage","New this month","142","▲ 18","Mostly from livestream"],
+      ["amber","Not spoken to in 30 days","213","▲ 9 this week","Assign before it grows"],
+      ["rose","Forms awaiting review","37","12 older than 3 days","Clear the oldest first"],
+      ["sage","Satsang attendance","71%","▼ 4 pts","Below 4-week average"],
+      ["violet","Seva hours","1,904","▲ 6%","Ahead of last month"]],
+    funnel:[["Visitors",5200],["Followers",2140],["Talkers",860],["Satsang group",412]],
+    fnote:"Follower → Talker is the weakest step (40%). Livestream leads convert best.",
+    flags:[["hi","213 seekers not spoken to in 30 days","62 are in Germany. Assign to conductors."],
+      ["hi","Attendance dropped 4 pts","Munich group is down most (−11 pts)."],
+      ["mid","37 forms waiting for review","12 are older than 3 days."]],
+    rows:[["A. Keller","Talker","41 days","Missed 3 satsangs","M. Roth"],
+      ["S. Dubois","Follower","36 days","New, no first call","L. Martin"],
+      ["R. Patil","Satsang group","33 days","Sadhana drop","V. Kulkarni"],
+      ["J. Weber","Talker","31 days","Form pending","M. Roth"]]},
+  rs:{label:"Regional RS", scope:"Region: Germany · 2 satsang groups",
+    tiles:[["deep","Active seekers","412","▲ 2.4%","Steady growth"],
+      ["sage","New this month","23","▲ 4","Mostly from website"],
+      ["amber","Not spoken to in 30 days","62","▲ 5 this week","Highest in Munich"],
+      ["rose","Forms awaiting review","9","3 older than 3 days","Clear the oldest first"],
+      ["sage","Satsang attendance","63%","▼ 7 pts","Below target of 70%"],
+      ["violet","Seva hours","318","▲ 2%","Flat vs last month"]],
+    funnel:[["Visitors",980],["Followers",410],["Talkers",150],["Satsang group",58]],
+    fnote:"Talker → Satsang group is 39%. Two conductors have no open slots.",
+    flags:[["hi","Attendance fell 7 pts in 12 weeks","Munich is the main driver."],
+      ["hi","62 seekers not spoken to in 30 days","41 have no owner."],
+      ["mid","9 forms waiting for review","3 older than 3 days."]],
+    rows:[["A. Keller","Talker","41 days","Missed 3 satsangs","M. Roth"],
+      ["J. Weber","Talker","31 days","Form pending","M. Roth"],
+      ["T. Braun","Follower","28 days","No owner","—"],
+      ["K. Fischer","Visitor","27 days","Opened 6 emails","—"]]},
+  conductor:{label:"Satsang Conductor", scope:"Munich · 3 satsangs · 78 seekers",
+    tiles:[["deep","Seekers in your satsangs","78","▲ 3","Across 3 satsangs"],
+      ["sage","Attended last week","53","of 78","Across 3 satsangs"],
+      ["amber","Not spoken to in 30 days","11","▲ 2 this week","Call these first"],
+      ["rose","Notes to write","4","From last week","Private to you"],
+      ["sage","Average attendance","67%","▼ 5 pts","Tuesday is lowest"],
+      ["violet","Seva this month","46 h","▲ 8 h","9 seekers serving"]],
+    strip:{title:"Your satsangs", items:[
+      ["Tuesday satsang · Munich","Tue · 19:00 · in person","58%",58,"38 seekers · next Tue 22 Sep","var(--amber)"],
+      ["Thursday online satsang","Thu · 20:00 · online","72%",72,"26 seekers · next Thu 24 Sep","var(--deep)"],
+      ["Sunday sadhana circle","Sun · 09:00 · in person","84%",84,"14 seekers · next Sun 27 Sep","var(--sage)"]]},
+    funnel:[["In your satsangs",78],["Attended last week",53],["Regular (3 of 4)",41],["Serving in seva",9]],
+    fnote:"6 Talkers are ready to be invited into your satsangs.",
+    flags:[["hi","11 seekers not spoken to in 30 days","4 missed the last 3 satsangs."],
+      ["mid","Tuesday attendance down 11 pts","Mostly regulars from the last quarter."],
+      ["mid","4 satsang notes still to write","Due before the next session."]],
+    rows:[["A. Keller","Group","41 days","Missed 3 Tuesday satsangs","You"],
+      ["D. Neumann","Group","35 days","Missed 2 Thursday satsangs","You"],
+      ["F. Schulz","Group","33 days","Sadhana drop","You"],
+      ["H. Wolf","Group","30 days","No contact logged","You"]]},
+  event:{label:"Event Conductor", scope:"Munich region · 3 upcoming events",
+    tiles:[["deep","Upcoming events","3","Next: Sat 26 Sep","Introductory talk"],
+      ["sage","Registrations","64","▲ 12 this week","Across 3 events"],
+      ["sage","Attended last event","41","79% of registered","52 registered"],
+      ["violet","First-time attendees","27","▲ 6 vs prior event","Curious seekers"],
+      ["amber","Follow-ups due","19","Within 7 days","First-timers"],
+      ["rose","Feedback pending","8","Oldest 9 days","Forms not filled"]],
+    strip:{title:"Your events", items:[
+      ["Introductory talk · Munich","Sat 26 Sep · in person","32",64,"32 of 50 seats","var(--deep)"],
+      ["Online introduction","Wed 30 Sep · online","21",42,"21 of 50 seats","var(--amber)"],
+      ["Meditation workshop","Sat 3 Oct · in person","11",28,"11 of 40 seats","var(--amber)"]]},
+    funnel:[["Registered",64],["Attended",41],["First-timers",27],["Followed up",8],["Joined a satsang",3]],
+    fnote:"Only 8 of 27 first-timers have been followed up. Most drop-off is after the event.",
+    flags:[["hi","19 first-time attendees not followed up","9 attended more than 7 days ago."],
+      ["mid","Online introduction under half full","21 of 50 seats, 9 days to go."],
+      ["mid","8 feedback forms not filled","From the last event."]],
+    rows:[["R. Sharma","Visitor","Not yet","First event, 9 days ago","—"],
+      ["T. Meier","Visitor","Not yet","First event, 9 days ago","—"],
+      ["L. Costa","Follower","2 days","Asked about satsang","P. Rao"],
+      ["M. Iyer","Follower","Not yet","Attended twice","—"]]}
+};
+let DASH_ROLE = "admin";
+function setDashRole(r){ DASH_ROLE = r; renderDashDemo(); }
+function renderDashDemo(){
+  const el = document.getElementById('dash'); if(!el) return;
+  const d = DASH_DATA[DASH_ROLE];
+  const washMap = {deep:'var(--deep-wash)',sage:'var(--sage-wash)',amber:'var(--amber-wash)',
+    rose:'var(--rose-wash)',violet:'var(--violet-wash)'};
+  const colMap = {deep:'var(--deep)',sage:'var(--sage)',amber:'var(--amber)',
+    rose:'var(--rose)',violet:'var(--violet)'};
+  const sevColor = {hi:'var(--rose)', mid:'var(--amber)', lo:'var(--deep)'};
+  const sevLabel = {hi:'High', mid:'Medium', lo:'Low'};
+  const stageTagD = {Talker:'t-semi',Follower:'t-active',Visitor:'t-warn','Satsang group':'t-active',Group:'t-active'};
+
+  el.innerHTML = `
+    <h2 class="sec">Dashboard</h2>
+    <p class="sub">One screen per role, for demo purposes — the design direction for what Overview will look like once
+      there's enough real data to fill it out this way.</p>
+    <div class="dash-banner"><b>Sample data.</b> Everything on this tab is hand-authored to show scale and layout —
+      not read from SEEKERS, CAL, or any live record. Overview (in the sidebar above) is the real, live-scoped screen.</div>
+
+    <div class="dash-seg">
+      ${Object.entries(DASH_DATA).map(([k,v])=>
+        `<button class="${k===DASH_ROLE?'on':''}" onclick="setDashRole('${k}')">${esc(v.label)}</button>`).join('')}
+    </div>
+    <div class="dash-scope"><b>${esc(d.scope)}</b><span class="dash-chip">Last 30 days</span><span class="dash-chip">Sample data only</span></div>
+
+    <div class="dash-tiles">
+      ${d.tiles.map(t=>`<div class="dash-tile" style="background:${washMap[t[0]]}">
+        <div class="l" style="color:${colMap[t[0]]}"><i></i>${esc(t[1])}</div>
+        <div class="n">${esc(t[2])}</div>
+        <div class="d" style="color:${colMap[t[0]]}">${esc(t[3])}</div>
+        <div class="d">${esc(t[4])}</div></div>`).join('')}
+    </div>
+
+    <div class="grid2" style="margin-bottom:18px">
+      <div class="card pad">
+        <h2 class="sec">Seeker journey</h2>
+        ${d.funnel.map(([label,n],i)=>{
+          const max = d.funnel[0][1];
+          return `<div class="bar">
+            <span style="color:var(--ink-2)">${esc(label)}</span>
+            <span class="track"><span class="fill" style="width:${Math.max(6,Math.round(n/max*100))}%;opacity:${1-i*.16}"></span></span>
+            <span class="num">${n.toLocaleString()}</span></div>`;
+        }).join('')}
+        <div class="hidden-note" style="margin-top:12px;margin-bottom:0">${esc(d.fnote)}</div>
+      </div>
+      <div class="card pad">
+        <h2 class="sec">Needs your attention</h2>
+        ${d.flags.map(f=>`<div style="padding:9px 0;border-bottom:1px solid #EEF4F9;display:flex;gap:10px;align-items:flex-start">
+          <span class="tag" style="background:${sevColor[f[0]]};color:#fff;flex:0 0 auto">${sevLabel[f[0]]}</span>
+          <div style="flex:1"><div style="font-size:16px;font-weight:500">${esc(f[1])}</div>
+          <div class="sub2" style="margin-top:1px">${esc(f[2])}</div></div>
+        </div>`).join('')}
+      </div>
+    </div>
+
+    ${d.strip ? `<p class="sub" style="margin:0 0 8px;font-weight:600;color:var(--ink-2)">${esc(d.strip.title)}</p>
+    <div class="grid2" style="margin-bottom:18px">
+      ${d.strip.items.map(it=>`<div class="card pad">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px">
+          <span class="nm serif" style="font-size:16.5px">${esc(it[0])}</span></div>
+        <div class="sub2" style="margin-top:2px">${esc(it[1])}</div>
+        <div style="margin-top:8px" class="bar" style="grid-template-columns:1fr 40px">
+          <span class="track"><span class="fill" style="width:${it[3]}%;background:${it[5]||'var(--deep)'}"></span></span>
+          <span class="num">${esc(it[2])}</span></div>
+        <div class="sub2">${esc(it[4])}</div>
+      </div>`).join('')}
+    </div>` : ''}
+
+    <div class="card pad">
+      <h2 class="sec">Seekers to follow up</h2>
+      <table style="margin-top:8px"><thead><tr><th>Seeker</th><th>Stage</th><th>Last spoken</th><th>Reason</th><th>Owner</th></tr></thead>
+        <tbody>${d.rows.map(r=>`<tr>
+          <td><span class="nm serif" style="font-size:15.5px">${esc(r[0])}</span></td>
+          <td><span class="tag ${stageTagD[r[1]]||'t-semi'}">${esc(r[1])}</span></td>
+          <td>${esc(r[2])}</td><td>${esc(r[3])}</td><td>${esc(r[4])}</td></tr>`).join('')}</tbody>
+      </table>
+    </div>`;
+}
+
+
 function renderOverviewEvents(el){
   const name = R().eventConductorName;
   const mine = EVENT_CAL.filter(c=>c.conductor===name && (R().regions===null || R().regions.includes(c.region)));
