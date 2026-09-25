@@ -133,13 +133,16 @@ router.post('/defs', requireAuth, async (req, res) => {
       `SELECT COALESCE(MAX(${qi('Satsang_ID')}), 0) + 1 AS next_id FROM ${qi('SCS')}.${qi('M_Satsang')}`
     );
     const id = maxQ.rows[0].next_id;
+    // Created_By_CSMS_ID removed from the column list — same missing column
+    // as the GET/status-change fixes above. This satsang will now be
+    // created with no recorded creator until the real column is confirmed.
     await pool.query(
       `INSERT INTO ${qi('SCS')}.${qi('M_Satsang')}
         (${qi('Satsang_ID')}, ${qi('Satsang_Type_ID')}, ${qi('Satsang_Short_Name')}, ${qi('Satsang_Name')},
-         ${qi('Created_By_CSMS_ID')}, ${qi('Satsang_Start_Date')}, ${qi('Satsang_Frequency')},
+         ${qi('Satsang_Start_Date')}, ${qi('Satsang_Frequency')},
          ${qi('Satsang_Status')}, ${qi('Ver_From_DT')}, ${qi('Ver_To_DT')})
-       VALUES ($1,$2,$3,$4,$5,$6,$7,'Draft',CURRENT_DATE,$8)`,
-      [id, typeId, shortName, name, req.user.csmsId, startDate, frequency || null, FAR_FUTURE]
+       VALUES ($1,$2,$3,$4,$5,$6,'Draft',CURRENT_DATE,$7)`,
+      [id, typeId, shortName, name, startDate, frequency || null, FAR_FUTURE]
     );
     res.status(201).json({ ok: true, satsangId: id });
   } catch (err) {
@@ -194,11 +197,13 @@ router.post('/defs/:id/submit', requireAuth, async (req, res) => {
       await client.query('ROLLBACK');
       return res.status(409).json({ error: 'BAD_STATE', message: 'Only a Draft or Rejected definition can be submitted for review.' });
     }
+    // Status_Changed_By_CSMS_ID doesn't exist on M_Satsang either (same
+    // family as Created_By_CSMS_ID above) — dropped from the SET list.
     await client.query(
       `UPDATE ${qi('SCS')}.${qi('M_Satsang')}
-       SET ${qi('Satsang_Status')}='In Review', ${qi('Status_Changed_By_CSMS_ID')}=$1, ${qi('Status_Changed_DT')}=now()
-       WHERE ${qi('Satsang_ID')} = $2`,
-      [req.user.csmsId, req.params.id]
+       SET ${qi('Satsang_Status')}='In Review', ${qi('Status_Changed_DT')}=now()
+       WHERE ${qi('Satsang_ID')} = $1`,
+      [req.params.id]
     );
 
     const reviewerRoleIdsQ = await client.query(
@@ -243,8 +248,11 @@ async function setDefStatus(req, res, newStatus, messageFor) {
   try {
     client = await pool.connect();
     await client.query('BEGIN');
+    // Created_By_CSMS_ID dropped — doesn't exist (see the /defs GET comment
+    // above). This also means the notify-the-creator call below can never
+    // fire; removed rather than left as silent dead code.
     const cur = await client.query(
-      `SELECT ${qi('Satsang_Status')}, ${qi('Satsang_Name')}, ${qi('Created_By_CSMS_ID')}
+      `SELECT ${qi('Satsang_Status')}, ${qi('Satsang_Name')}
        FROM ${qi('SCS')}.${qi('M_Satsang')} WHERE ${qi('Satsang_ID')} = $1 FOR UPDATE`,
       [req.params.id]
     );
@@ -255,13 +263,13 @@ async function setDefStatus(req, res, newStatus, messageFor) {
     }
     await client.query(
       `UPDATE ${qi('SCS')}.${qi('M_Satsang')}
-       SET ${qi('Satsang_Status')}=$1, ${qi('Status_Changed_By_CSMS_ID')}=$2, ${qi('Status_Changed_DT')}=now()
-       WHERE ${qi('Satsang_ID')} = $3`,
-      [newStatus, req.user.csmsId, req.params.id]
+       SET ${qi('Satsang_Status')}=$1, ${qi('Status_Changed_DT')}=now()
+       WHERE ${qi('Satsang_ID')} = $2`,
+      [newStatus, req.params.id]
     );
-    if (cur.rows[0].Created_By_CSMS_ID) {
-      await notify(client, cur.rows[0].Created_By_CSMS_ID, messageFor(cur.rows[0].Satsang_Name), 'satsang_def', req.params.id);
-    }
+    // Notifying the creator on approve/reject is disabled until
+    // Created_By_CSMS_ID (or whatever the real column is) is confirmed —
+    // there's currently no way to know who to notify.
     await client.query('COMMIT');
     res.json({ ok: true });
   } catch (err) {
