@@ -608,7 +608,7 @@ nav .pip.r{background:var(--sage-wash);color:var(--sage)}
   <button data-p="calendar" data-icon="calendar" data-color="deep" onclick="tab('calendar'); renderCalendar()"><span class="nb-label">Calendar</span></button>
   <button data-p="reports" data-icon="chart" data-color="violet" onclick="tab('reports')"><span class="nb-label">Reports</span><span class="pip r" id="pip5">0</span></button>
   <button data-p="sevahub" data-icon="gear" data-color="amber" onclick="tab('sevahub')"><span class="nb-label">Seva Management</span></button>
-  <button data-p="dash" data-icon="grid" data-color="sage" onclick="tab('dash')"><span class="nb-label">Dashboard</span></button>
+  <button data-p="dash" data-icon="grid" data-color="sage" onclick="tab('dash'); renderDash()"><span class="nb-label">Dashboard</span></button>
   <button data-p="org" data-icon="users" data-color="deep" onclick="tab('org')"><span class="nb-label">Organisation and Team Management</span></button>
   <button data-p="satsangmgmt" data-icon="lotus" data-color="amber" onclick="tab('satsangmgmt'); satsangSubtab('defs')"><span class="nb-label">Satsang Management</span></button>
   <button data-p="formmgmt" data-icon="file" data-color="violet" onclick="tab('formmgmt'); formSubtab('defs')"><span class="nb-label">Form Management System</span></button>
@@ -709,7 +709,7 @@ nav .pip.r{background:var(--sage-wash);color:var(--sage)}
 
   <section class="pane" id="p-dash">
     <h2 class="sec">Dashboard</h2>
-    <p class="sub">Everything below respects your regional access. Change role in the header and the numbers change with it.</p>
+    <p class="sub">Live counts from Postgres — nothing here is illustrative.</p>
     <div id="dash"></div>
   </section>
 
@@ -2554,74 +2554,57 @@ function weeklyActivity(weeks=8){
 }
 function seekerFirstSeen(p){ return p.inter.length ? new Date(Math.min(...p.inter.map(i=>+i.dt))) : null; }
 
+let LIVE_DASH = null;
+async function loadDash(){
+  try{
+    LIVE_DASH = await apiFetch('/api/master/dashboard-stats');
+    renderDash();
+  }catch(err){
+    const el = document.getElementById('dash');
+    if(el) el.innerHTML = `<div class="hidden-note" style="background:var(--rose-wash);border-color:#EBCBCE;color:var(--rose)"><b>Could not load dashboard.</b> ${esc(err.message||'')}</div>`;
+  }
+}
 function renderDash(){
-  const v=visible();
-  const od=v.filter(overdue).length;
-  const gaps=v.map(since);
-  const avg=gaps.length?Math.round(gaps.reduce((a,b)=>a+b,0)/gaps.length):0;
-  const hrs=v.reduce((a,s)=>a+s.sevaHrs,0);
+  const el = document.getElementById('dash');
+  if(!el) return;
+  if(LIVE_DASH === null){ el.innerHTML = genericSkeleton(6); loadDash(); return; }
+  const s = LIVE_DASH.stats || {};
+  const byCat = (LIVE_DASH.byCategory||[]).map(c=>({k:c.Category_Name, v:Number(c.n)}));
+  const uncat = Number(s.uncategorised||0);
 
-  const byCat={}, byReg={};
-  v.forEach(s=>{ byCat[s.category]=(byCat[s.category]||0)+1; byReg[s.region]=(byReg[s.region]||0)+1; });
+  const seekerRow = p => `<tr onclick="openSeekerPage(${p.Seeker_ID})" style="cursor:pointer">
+      <td><div class="nm serif">${esc([p.Sal,p.First_Name,p.Last_Name].filter(Boolean).join(' '))}</div></td>
+      <td class="hide-sm">${esc(p.City||'\u2014')}</td>
+    </tr>`;
 
-  const bars=(o,cls)=>{ const mx=Math.max(1,...Object.values(o));
-    return Object.entries(o).map(([k,n])=>`<div class="bar">
-      <span style="color:var(--ink-2)">${esc(k)}</span>
-      <span class="track"><span class="fill ${cls||''}" style="width:${Math.round(n/mx*100)}%"></span></span>
-      <span class="num">${n}</span></div>`).join(''); };
-
-  // real deltas, computed from recorded dates — not typed in
-  const newThisWk = v.filter(p=>{const f=seekerFirstSeen(p); return f && days(f)<=7;}).length;
-  const newPrevWk = v.filter(p=>{const f=seekerFirstSeen(p); return f && days(f)>7 && days(f)<=14;}).length;
-  const hrsThisWk = v.reduce((a,s)=>a+s.inter.filter(i=>i.type==='Seva'&&days(i.dt)<=7).reduce((x,i)=>x+(i.hrs||0),0),0);
-
-  const catEntries = Object.entries(byCat).map(([k,v2])=>({k,v:v2}));
-  const regEntries = Object.entries(byReg).map(([k,v2])=>({k,v:v2}));
-  const weeks = weeklyActivity(8);
-  const weekLabels = ["7wk ago","6wk ago","5wk ago","4wk ago","3wk ago","2wk ago","Last wk","This wk"];
-
-  document.getElementById('dash').innerHTML=`
+  el.innerHTML = `
     <div class="grid4">
-      <div class="kpi"><div class="n">${v.length}</div><div class="l">Seekers in view</div>
-        <div class="d">${hiddenCount()?hiddenCount()+' outside your region':'All regions'}
-          ${newThisWk?` · <span style="color:var(--sage);font-weight:600">+${newThisWk} this week</span>`:''}</div></div>
-      <div class="kpi"><div class="n" style="color:${od?'var(--amber)':'var(--sage)'}">${od}</div>
-        <div class="l">Contact overdue</div><div class="d">Against the ${CONTACT_SLA_DAYS}-day window</div></div>
-      <div class="kpi"><div class="n">${avg}</div><div class="l">Average days since contact</div>
-        <div class="d">Across seekers in view</div></div>
-      <div class="kpi"><div class="n">${hrs}</div><div class="l">Seva hours recorded</div>
-        <div class="d">Summed from the timeline${hrsThisWk?` · <span style="color:var(--sage);font-weight:600">+${hrsThisWk} this week</span>`:''}</div></div>
-    </div>
-
-    <div class="card pad" style="margin-bottom:16px">
-      <h2 class="sec">Activity over the last 8 weeks</h2>
-      <p class="sub">Every interaction logged, of any kind, across the seekers you can see. Counted from the timeline, the same way the four numbers above are.</p>
-      ${svgTrend(weeks, weekLabels)}
+      <div class="kpi"><div class="n">${s.total_seekers||0}</div><div class="l">Total seekers</div><div class="d">All categories</div></div>
+      <div class="kpi"><div class="n" style="color:var(--sage)">${s.new_this_month||0}</div><div class="l">New this month</div><div class="d">Added in the last 30 days</div></div>
+      <div class="kpi"><div class="n" style="color:${uncat?'var(--amber)':'var(--sage)'}">${uncat}</div><div class="l">Not yet categorised</div><div class="d">Need a Spiritual Journey category</div></div>
+      <div class="kpi"><div class="n">${Number(s.total_seva_hrs||0)}</div><div class="l">Weekly seva hours</div><div class="d">Summed across all seekers</div></div>
+      <div class="kpi"><div class="n">${s.distinct_skills||0}</div><div class="l">Skills recorded</div><div class="d">Distinct skills in the Seva pool</div></div>
+      <div class="kpi"><div class="n">${s.milestones_this_month||0}</div><div class="l">Milestones this month</div><div class="d">Logged in the last 30 days</div></div>
     </div>
 
     <div class="grid2">
       <div class="card pad"><h2 class="sec">Seekers by category</h2>
-        <p class="sub">The only classification the schema tracks — Seeker_Category.</p>${bars(byCat)}</div>
-      <div class="card pad"><h2 class="sec">Seva capacity by skill</h2>
-        <p class="sub">What the Seva Distribution team searches against.</p>
-        ${(()=>{const sk={};v.forEach(s=>s.skills.forEach(k=>sk[k]=(sk[k]||0)+1));
-          const top=Object.fromEntries(Object.entries(sk).sort((a,b)=>b[1]-a[1]).slice(0,7));
-          return bars(top,'s2');})()}</div>
-      <div class="card pad"><h2 class="sec">By category</h2>
-        <p class="sub">Same figures as the bar chart above, as a proportion.</p>
-        <div style="display:flex;gap:18px;align-items:center;flex-wrap:wrap">
-          ${svgDonut(catEntries)}
-          <div style="flex:1;min-width:160px">${donutLegend(catEntries)}</div>
-        </div></div>
-      <div class="card pad"><h2 class="sec">By region</h2>
-        <p class="sub">Only regions you may see appear here.</p>
-        <div style="display:flex;gap:18px;align-items:center;flex-wrap:wrap">
-          ${svgDonut(regEntries)}
-          <div style="flex:1;min-width:160px">${donutLegend(regEntries)}</div>
-        </div></div>
+        <p class="sub">Master.M_Seeker_Category \u2014 live counts.</p>
+        ${byCat.length ? `<div style="display:flex;gap:18px;align-items:center;flex-wrap:wrap">
+          ${svgDonut(byCat)}<div style="flex:1;min-width:160px">${donutLegend(byCat)}</div>
+        </div>` : '<p class="sub2">No categories loaded yet.</p>'}</div>
+      <div class="card pad"><h2 class="sec">Needs a category</h2>
+        <p class="sub">Seekers with no Seeker_Category row \u2014 click to open and assign one.</p>
+        <div class="card" style="overflow:hidden"><table>
+          <tbody>${(LIVE_DASH.uncategorisedSeekers||[]).length ? LIVE_DASH.uncategorisedSeekers.map(seekerRow).join('') : '<tr><td style="padding:20px;text-align:center;color:var(--ink-3)">Everyone is categorised.</td></tr>'}</tbody>
+        </table></div></div>
     </div>
-    <div class="note">The same screen produces different numbers for different roles, because the filtering happens
-      in the database rather than on screen. A Regional RS cannot reach another region's figures even by exporting.</div>`;
+
+    <div class="card pad" style="margin-top:16px"><h2 class="sec">Recently added</h2>
+      <p class="sub">Newest seekers by record creation date.</p>
+      <div class="card" style="overflow:hidden"><table>
+        <tbody>${(LIVE_DASH.recentSeekers||[]).length ? LIVE_DASH.recentSeekers.map(seekerRow).join('') : '<tr><td style="padding:20px;text-align:center;color:var(--ink-3)">No seekers yet.</td></tr>'}</tbody>
+      </table></div></div>`;
 }
 
 /* ============ operations ============ */

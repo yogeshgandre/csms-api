@@ -6,6 +6,56 @@ const { pool, qi } = require('../db/pool');
 const { requireAuth } = require('../middleware/auth');
 const router = express.Router();
 
+// Real, computed KPIs for the Dashboard tab. No invented funnel stages or
+// "days since contact" flags here — the schema has no generic contact-log
+// concept, so this sticks to what's genuinely tracked: seeker counts,
+// category spread, seva hours, skills, milestones, and who has no
+// category yet (a real, actionable data-quality signal).
+router.get('/dashboard-stats', requireAuth, async (_req, res) => {
+  try {
+    const statsQ = await pool.query(`
+      SELECT
+        (SELECT COUNT(*) FROM ${qi('MSR')}.${qi('Seeker')}) AS total_seekers,
+        (SELECT COUNT(*) FROM ${qi('MSR')}.${qi('Seeker')} WHERE ${qi('Creation_DT')} >= now() - interval '30 days') AS new_this_month,
+        (SELECT COALESCE(SUM(${qi('Weekly_Seva_Hrs')}),0) FROM ${qi('MSR')}.${qi('Seeker_Other_MasterList_Info')} WHERE ${qi('Ver_To_DT')} >= CURRENT_DATE) AS total_seva_hrs,
+        (SELECT COUNT(DISTINCT ${qi('Skill_ID')}) FROM ${qi('MSR')}.${qi('Seeker_Skills')}) AS distinct_skills,
+        (SELECT COUNT(*) FROM ${qi('MSR')}.${qi('Seeker_Milestone')} WHERE ${qi('Creation_DT')} >= now() - interval '30 days') AS milestones_this_month,
+        (SELECT COUNT(*) FROM ${qi('MSR')}.${qi('Seeker')} s WHERE NOT EXISTS (
+           SELECT 1 FROM ${qi('MSR')}.${qi('Seeker_Category')} sc
+           WHERE sc.${qi('Seeker_ID')} = s.${qi('Seeker_ID')} AND sc.${qi('Ver_To_DT')} >= CURRENT_DATE
+         )) AS uncategorised
+    `);
+    const categoryQ = await pool.query(`
+      SELECT cat.${qi('Category_Name')}, COUNT(*) AS n
+      FROM ${qi('MSR')}.${qi('Seeker_Category')} sc
+      JOIN ${qi('Master')}.${qi('M_Seeker_Category')} cat ON cat.${qi('Category_ID')} = sc.${qi('Seeker_Category_ID')}
+      WHERE sc.${qi('Ver_To_DT')} >= CURRENT_DATE
+      GROUP BY cat.${qi('Category_Name')}
+      ORDER BY n DESC
+    `);
+    const recentQ = await pool.query(`
+      SELECT ${qi('Seeker_ID')}, ${qi('Sal')}, ${qi('First_Name')}, ${qi('Last_Name')}, ${qi('City')}, ${qi('Creation_DT')}
+      FROM ${qi('MSR')}.${qi('Seeker')} ORDER BY ${qi('Creation_DT')} DESC LIMIT 8
+    `);
+    const uncatQ = await pool.query(`
+      SELECT s.${qi('Seeker_ID')}, s.${qi('Sal')}, s.${qi('First_Name')}, s.${qi('Last_Name')}, s.${qi('City')}
+      FROM ${qi('MSR')}.${qi('Seeker')} s WHERE NOT EXISTS (
+        SELECT 1 FROM ${qi('MSR')}.${qi('Seeker_Category')} sc
+        WHERE sc.${qi('Seeker_ID')} = s.${qi('Seeker_ID')} AND sc.${qi('Ver_To_DT')} >= CURRENT_DATE
+      ) ORDER BY s.${qi('Creation_DT')} DESC LIMIT 8
+    `);
+    res.json({
+      stats: statsQ.rows[0],
+      byCategory: categoryQ.rows,
+      recentSeekers: recentQ.rows,
+      uncategorisedSeekers: uncatQ.rows,
+    });
+  } catch (err) {
+    console.error('[GET /master/dashboard-stats] error', err);
+    res.status(500).json({ error: 'INTERNAL', message: err.message });
+  }
+});
+
 router.get('/countries', requireAuth, async (_req, res) => {
   try {
     const r = await pool.query(
