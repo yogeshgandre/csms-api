@@ -72,8 +72,13 @@ async function notify(client, csmsId, message, linkKind, linkId) {
 
 router.get('/types', requireAuth, async (req, res) => {
   try {
+    // SS_Desc was in the original query but doesn't exist on M_Satsang_type in
+    // the real schema — removed rather than guessed at, since nothing else in
+    // this file reads it (the two JOINs on this table below only use ST_Name).
+    // If satsang types do have a real description column, add it back here
+    // once the actual name is confirmed against the schema.
     const r = await pool.query(
-      `SELECT ${qi('Satsang_Type_ID')}, ${qi('ST_Name')}, ${qi('SS_Desc')}
+      `SELECT ${qi('Satsang_Type_ID')}, ${qi('ST_Name')}
        FROM ${qi('SCS')}.${qi('M_Satsang_type')} WHERE ${qi('Active_Flag')} = true ORDER BY ${qi('ST_Name')}`
     );
     res.json(r.rows);
