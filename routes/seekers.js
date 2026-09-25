@@ -36,9 +36,7 @@ router.get('/', requireAuth, async (req, res) => {
               s.${qi('Email')}, s.${qi('WhatsApp_Number')},
               s.${qi('Country_ISD')}, s.${qi('Ref_Seeker_ID')},
               cat.${qi('Category_Name')},
-              ml.${qi('Weekly_Seva_Hrs')}, ml.${qi('Pranshakti')}, ml.${qi('Sensitive_List')}, ml.${qi('Availability')},
-              COALESCE(sk.skill_names, '{}') AS skill_names,
-              COALESCE(ms.milestone_count, 0) AS milestone_count
+              ml.${qi('Weekly_Seva_Hrs')}, ml.${qi('Pranshakti')}, ml.${qi('Sensitive_List')}
        FROM ${qi('MSR')}.${qi('Seeker')} s
        LEFT JOIN ${qi('Master')}.${qi('M_Country')} mc ON mc.${qi('Country_ID')} = s.${qi('Country_ID')}
        LEFT JOIN ${qi('MSR')}.${qi('Seeker_Category')} sc
@@ -47,17 +45,6 @@ router.get('/', requireAuth, async (req, res) => {
          ON cat.${qi('Category_ID')} = sc.${qi('Seeker_Category_ID')}
        LEFT JOIN ${qi('MSR')}.${qi('Seeker_Other_MasterList_Info')} ml
          ON ml.${qi('Seeker_ID')} = s.${qi('Seeker_ID')} AND ml.${qi('Ver_To_DT')} >= CURRENT_DATE
-       LEFT JOIN LATERAL (
-         SELECT array_agg(sm.${qi('Skill_Name')} ORDER BY sm.${qi('Skill_Name')}) AS skill_names
-         FROM ${qi('MSR')}.${qi('Seeker_Skills')} sks
-         LEFT JOIN ${qi('SMS')}.${qi('Skills')} sm ON sm.${qi('Skill_ID')} = sks.${qi('Skill_ID')}
-         WHERE sks.${qi('Seeker_ID')} = s.${qi('Seeker_ID')}
-       ) sk ON true
-       LEFT JOIN LATERAL (
-         SELECT COUNT(*) AS milestone_count
-         FROM ${qi('MSR')}.${qi('Seeker_Milestone')} sm2
-         WHERE sm2.${qi('Seeker_ID')} = s.${qi('Seeker_ID')}
-       ) ms ON true
        ${where}
        ORDER BY s.${qi('First_Name')}, s.${qi('Last_Name')}`,
       params
