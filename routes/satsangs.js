@@ -92,15 +92,23 @@ router.get('/types', requireAuth, async (req, res) => {
 
 router.get('/defs', requireAuth, async (req, res) => {
   try {
+    // Created_By_CSMS_ID doesn't exist on M_Satsang in the real schema, so
+    // both it and the LEFT JOIN that used it to look up created_by_name are
+    // removed here for now. Unlike SS_Desc/Active_Flag on M_Satsang_type,
+    // this one is NOT just cosmetic — the same column name is also used in
+    // POST /satsangs/defs (the INSERT) and PATCH .../status (the approval +
+    // notify-the-creator flow) in this same file. Those two are untouched
+    // and will very likely throw this identical error the first time
+    // someone creates a satsang or changes a definition's status. Confirm
+    // the real "who created this" column (and Status_Changed_By_CSMS_ID,
+    // same risk) against the schema before relying on either of those.
     const r = await pool.query(
       `SELECT ms.${qi('Satsang_ID')}, ms.${qi('Satsang_Short_Name')}, ms.${qi('Satsang_Name')},
               ms.${qi('Satsang_Type_ID')}, mt.${qi('ST_Name')},
               ms.${qi('Satsang_Start_Date')}, ms.${qi('Satsang_Frequency')},
-              ms.${qi('Satsang_Status')}, ms.${qi('Created_By_CSMS_ID')},
-              up.${qi('Seeker_Name')} AS created_by_name
+              ms.${qi('Satsang_Status')}
        FROM ${qi('SCS')}.${qi('M_Satsang')} ms
        LEFT JOIN ${qi('SCS')}.${qi('M_Satsang_type')} mt ON mt.${qi('Satsang_Type_ID')} = ms.${qi('Satsang_Type_ID')}
-       LEFT JOIN ${qi('RMS')}.${qi('User_Profile')} up ON up.${qi('CSMS_ID')} = ms.${qi('Created_By_CSMS_ID')}
        WHERE ms.${qi('Ver_To_DT')} >= CURRENT_DATE
        ORDER BY ms.${qi('Satsang_Name')}`
     );
