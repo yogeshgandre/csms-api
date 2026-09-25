@@ -611,6 +611,7 @@ nav .pip.r{background:var(--sage-wash);color:var(--sage)}
   <button data-p="dash" data-icon="grid" data-color="sage" onclick="tab('dash'); renderDash()"><span class="nb-label">Dashboard</span></button>
   <button data-p="org" data-icon="users" data-color="deep" onclick="tab('org')"><span class="nb-label">Organisation and Team Management</span></button>
   <button data-p="satsangmgmt" data-icon="lotus" data-color="amber" onclick="tab('satsangmgmt'); satsangSubtab('defs')"><span class="nb-label">Satsang Management</span></button>
+  <button data-p="eventmgmt" data-icon="ticket" data-color="violet" onclick="tab('eventmgmt'); renderEventMgmt()"><span class="nb-label">Event Management</span></button>
   <button data-p="formmgmt" data-icon="file" data-color="violet" onclick="tab('formmgmt'); formSubtab('defs')"><span class="nb-label">Form Management System</span></button>
   <button data-p="tickermgmt" data-icon="ticket" data-color="rose" onclick="tab('tickermgmt'); renderTickerMgmt()"><span class="nb-label">Ticker Management</span></button>
   <button data-p="ops" data-icon="clipboard" data-color="deep" class="nb-divider" onclick="tab('ops')"><span class="nb-label">Operations</span><span class="pip" id="pip3">0</span></button>
@@ -655,6 +656,12 @@ nav .pip.r{background:var(--sage-wash);color:var(--sage)}
     <div id="satsangEvents" style="display:none"></div>
     <div id="satsangTransfers" style="display:none"></div>
     <div id="satsangAccess" style="display:none"></div>
+  </section>
+
+  <section class="pane" id="p-eventmgmt">
+    <h2 class="sec">Event Management</h2>
+    <p class="sub">Retreats, workshops, introductory talks and online sessions — distinct from recurring Satsangs.</p>
+    <div id="eventMgmt"></div>
   </section>
 
   <section class="pane" id="p-formmgmt">
@@ -818,7 +825,7 @@ const CONTACT_SLA_DAYS = 60; /* flat window — there is no longer a per-stage S
 const ROLES = {
   abroad:{name:"Abroad RS — global admin", regions:null, mask:[],
     can:"Full access to all regions and all fields.",
-    tabs:["overview","search","alerts","journey","calendar","reports","sevahub","dash","org","satsangmgmt","formmgmt","tickermgmt"],
+    tabs:["overview","search","alerts","journey","calendar","reports","sevahub","dash","org","satsangmgmt","eventmgmt","formmgmt","tickermgmt"],
     landing:"overview"},
   tech:{name:"Technical Admin", regions:null, mask:[],
     can:"System health and infrastructure. Not scoped to any region.",
@@ -826,21 +833,26 @@ const ROLES = {
     landing:"ops"},
   rs_de:{name:"Regional RS — Germany", regions:["Germany"], mask:[],
     can:"Germany only. All fields within that region.",
-    tabs:["overview","search","alerts","journey","calendar","reports","sevahub","dash","org","satsangmgmt","formmgmt","tickermgmt"],
-    landing:"overview"},
+    tabs:["overview","search","alerts","journey","calendar","reports","sevahub","dash","org","satsangmgmt","eventmgmt","formmgmt","tickermgmt"],
+    landing:"dash"},
   rs_fr:{name:"Regional RS — France", regions:["France"], mask:[],
     can:"France only. All fields within that region.",
-    tabs:["overview","search","alerts","journey","calendar","reports","sevahub","dash","org","satsangmgmt","formmgmt","tickermgmt"],
-    landing:"overview"},
+    tabs:["overview","search","alerts","journey","calendar","reports","sevahub","dash","org","satsangmgmt","eventmgmt","formmgmt","tickermgmt"],
+    landing:"dash"},
   seva:{name:"Seva RS — service allocation", regions:null, mask:["whatsapp","email","dob"],
     can:"All regions, but personal contact details and date of birth are hidden.",
     tabs:["sevahub","search"],
     landing:"sevahub"},
   satsang:{name:"Satsang conductor — Germany", regions:["Germany"], mask:["dob","remedy"],
     can:"Germany only. Attendance and notes; no remedy or date of birth.",
-    tabs:["calendar","reports","search","satsangmgmt"],
-    landing:"calendar",
-    conductorName:"Satsang conductor"}
+    tabs:["dash","calendar","reports","search","satsangmgmt"],
+    landing:"dash",
+    conductorName:"Satsang conductor"},
+  event:{name:"Event conductor — Germany", regions:["Germany"], mask:["dob","remedy"],
+    can:"Germany only. Event registrations and attendance.",
+    tabs:["dash","calendar","reports","search","eventmgmt"],
+    landing:"dash",
+    conductorName:"Event conductor"}
 };
 let ROLE="abroad", FILTER="all", OPEN=null;
 
@@ -1143,7 +1155,12 @@ function setRole(r){
   document.getElementById('scope').textContent = R().regions ? R().regions.join(', ')+' only' : 'All regions';
   applyRoleNav();
   tab(R().landing);
-  render();
+  renderOverview();
+  // Landing on a tab programmatically (role switch) bypasses that nav
+  // button's own onclick, which is where most tabs trigger their render —
+  // so re-fire it here for whichever tab this role opens on.
+  const landingRender = {dash:renderDash, calendar:renderCalendar, journey:renderJourney};
+  if(landingRender[R().landing]) landingRender[R().landing]();
 }
 function applyRoleNav(){
   const allowed = new Set(R().tabs);
@@ -2555,9 +2572,17 @@ function weeklyActivity(weeks=8){
 function seekerFirstSeen(p){ return p.inter.length ? new Date(Math.min(...p.inter.map(i=>+i.dt))) : null; }
 
 let LIVE_DASH = null;
+function dashViewParams(){
+  if(ROLE==='satsang') return {view:'satsang'};
+  if(ROLE==='event') return {view:'event'};
+  if(R().regions) return {view:'rs', regions:R().regions.join(',')};
+  return {view:'admin'};
+}
 async function loadDash(){
   try{
-    LIVE_DASH = await apiFetch('/api/master/dashboard-stats');
+    const p = dashViewParams();
+    const qs = new URLSearchParams(p).toString();
+    LIVE_DASH = await apiFetch('/api/master/dashboard-stats?'+qs);
     renderDash();
   }catch(err){
     const el = document.getElementById('dash');
@@ -2567,7 +2592,11 @@ async function loadDash(){
 function renderDash(){
   const el = document.getElementById('dash');
   if(!el) return;
-  if(LIVE_DASH === null){ el.innerHTML = genericSkeleton(6); loadDash(); return; }
+  const wantView = dashViewParams().view;
+  if(LIVE_DASH === null || LIVE_DASH.view !== wantView){ el.innerHTML = genericSkeleton(6); loadDash(); return; }
+  if(LIVE_DASH.view==='satsang') return renderDashSatsang();
+  if(LIVE_DASH.view==='event') return renderDashEvent();
+
   const s = LIVE_DASH.stats || {};
   const byCat = (LIVE_DASH.byCategory||[]).map(c=>({k:c.Category_Name, v:Number(c.n)}));
   const uncat = Number(s.uncategorised||0);
@@ -2605,6 +2634,179 @@ function renderDash(){
       <div class="card" style="overflow:hidden"><table>
         <tbody>${(LIVE_DASH.recentSeekers||[]).length ? LIVE_DASH.recentSeekers.map(seekerRow).join('') : '<tr><td style="padding:20px;text-align:center;color:var(--ink-3)">No seekers yet.</td></tr>'}</tbody>
       </table></div></div>`;
+}
+function renderDashSatsang(){
+  const el = document.getElementById('dash');
+  const s = LIVE_DASH.stats || {};
+  const mine = LIVE_DASH.mySatsangs || [];
+  const byCat = (LIVE_DASH.byCategory||[]).map(c=>({k:c.Category_Name, v:Number(c.n)}));
+  const seekerRow = p => `<tr onclick="openSeekerPage(${p.Seeker_ID})" style="cursor:pointer">
+      <td><div class="nm serif">${esc([p.Sal,p.First_Name,p.Last_Name].filter(Boolean).join(' '))}</div></td>
+      <td class="hide-sm">${esc(p.City||'\u2014')}</td>
+    </tr>`;
+  if(!mine.length){
+    el.innerHTML = `<div class="note">You are not listed as a conductor on any satsang yet (SCS.Satsang_Conductor). Ask an admin to add you.</div>`;
+    return;
+  }
+  el.innerHTML = `
+    <p class="sub2" style="margin-bottom:12px">Conducting: ${mine.map(m=>esc(m.Satsang_Name)).join(', ')}</p>
+    <div class="grid4">
+      <div class="kpi"><div class="n">${s.attending_seekers||0}</div><div class="l">Attending seekers</div><div class="d">Across your satsangs</div></div>
+      <div class="kpi"><div class="n">${s.sessions_this_month||0}</div><div class="l">Sessions, last 30 days</div><div class="d">Satsang_Event_Defn</div></div>
+      <div class="kpi"><div class="n">${s.completed_sessions||0}</div><div class="l">Completed sessions</div><div class="d">All-time</div></div>
+    </div>
+    <div class="grid2">
+      <div class="card pad"><h2 class="sec">Attending seekers by category</h2>
+        <p class="sub">Across all your satsangs.</p>
+        ${byCat.length ? `<div style="display:flex;gap:18px;align-items:center;flex-wrap:wrap">
+          ${svgDonut(byCat)}<div style="flex:1;min-width:160px">${donutLegend(byCat)}</div></div>` : '<p class="sub2">No attendees recorded yet.</p>'}</div>
+      <div class="card pad"><h2 class="sec">Seekers</h2>
+        <p class="sub">Everyone attending your satsangs.</p>
+        <div class="card" style="overflow:hidden;max-height:280px;overflow-y:auto"><table>
+          <tbody>${(LIVE_DASH.recentSeekers||[]).length ? LIVE_DASH.recentSeekers.map(seekerRow).join('') : '<tr><td style="padding:20px;text-align:center;color:var(--ink-3)">Nobody recorded yet.</td></tr>'}</tbody>
+        </table></div></div>
+    </div>`;
+}
+function renderDashEvent(){
+  const el = document.getElementById('dash');
+  const s = LIVE_DASH.stats || {};
+  const mine = LIVE_DASH.myEvents || [];
+  const regRow = r => `<tr onclick="openSeekerPage(${r.Seeker_ID})" style="cursor:pointer">
+      <td><div class="nm serif">${esc([r.Sal,r.First_Name,r.Last_Name].filter(Boolean).join(' '))}</div></td>
+      <td>${r.Is_First_Time ? '<span class="tag t-active">First-timer</span>' : ''}</td>
+      <td>${esc(r.Attended||'Pending')}</td>
+    </tr>`;
+  if(!mine.length){
+    el.innerHTML = `<div class="note">You are not listed as a conductor on any event yet (SCS.Event_Conductor). Create an event or ask an admin to add you.</div>`;
+    return;
+  }
+  el.innerHTML = `
+    <div class="grid4">
+      <div class="kpi"><div class="n">${mine.length}</div><div class="l">Your events</div><div class="d">All-time</div></div>
+      <div class="kpi"><div class="n">${s.total_registrations||0}</div><div class="l">Registrations</div><div class="d">Across your events</div></div>
+      <div class="kpi"><div class="n">${s.attended||0}</div><div class="l">Attended</div><div class="d">of ${s.total_registrations||0} registered</div></div>
+      <div class="kpi"><div class="n" style="color:var(--sage)">${s.first_timers||0}</div><div class="l">First-time attendees</div><div class="d">${s.first_timers_attended||0} attended</div></div>
+    </div>
+    <div class="card pad" style="margin-bottom:16px"><h2 class="sec">Your events</h2>
+      <div class="card" style="overflow:hidden"><table>
+        <thead><tr><th>Event</th><th>Type</th><th>When</th><th>Status</th><th>Registered</th></tr></thead>
+        <tbody>${mine.map(e=>`<tr><td><div class="nm serif">${esc(e.Event_Name)}</div></td><td>${esc(e.Event_Type||'')}</td>
+          <td>${esc(new Date(e.Event_ST_DT_TIME).toLocaleDateString())}</td><td>${esc(e.Event_Status)}</td></tr>`).join('')}</tbody>
+      </table></div></div>
+    <div class="card pad"><h2 class="sec">Recent registrations</h2>
+      <p class="sub">Click to follow up on a first-timer.</p>
+      <div class="card" style="overflow:hidden"><table>
+        <tbody>${(LIVE_DASH.recentRegistrations||[]).length ? LIVE_DASH.recentRegistrations.map(regRow).join('') : '<tr><td style="padding:20px;text-align:center;color:var(--ink-3)">No registrations yet.</td></tr>'}</tbody>
+      </table></div></div>`;
+}
+
+/* ============ event management ============ */
+let LIVE_EVENTS = null;
+let EVENT_REG_OPEN = null;
+async function loadEvents(){
+  try{ LIVE_EVENTS = await apiFetch('/api/events'); renderEventMgmt(); }
+  catch(err){
+    const el = document.getElementById('eventMgmt');
+    if(el) el.innerHTML = `<div class="hidden-note" style="background:var(--rose-wash);border-color:#EBCBCE;color:var(--rose)"><b>Could not load events.</b> ${esc(err.message||'')}</div>`;
+  }
+}
+function renderEventMgmt(){
+  const el = document.getElementById('eventMgmt');
+  if(!el) return;
+  if(LIVE_EVENTS === null){ el.innerHTML = genericSkeleton(4); loadEvents(); return; }
+  el.innerHTML = `
+    <div class="card pad" style="margin-bottom:16px">
+      <h2 class="sec">New event</h2>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <input id="evName" placeholder="Event name" style="flex:2;min-width:160px;border-radius:999px;padding:7px 14px;font-size:14.5px;border:1px solid var(--line-2)">
+        <select id="evType" style="border-radius:999px;padding:7px 14px;font-size:14.5px;border:1px solid var(--line-2)">
+          <option>Retreat</option><option>Workshop</option><option>Introductory Talk</option><option>Online</option>
+        </select>
+        <input id="evWhen" type="datetime-local" style="border-radius:999px;padding:7px 14px;font-size:14.5px;border:1px solid var(--line-2)">
+        <input id="evDuration" type="number" placeholder="Minutes" style="width:100px;border-radius:999px;padding:7px 14px;font-size:14.5px;border:1px solid var(--line-2)">
+        <input id="evVenue" placeholder="Venue / city" style="flex:1;min-width:120px;border-radius:999px;padding:7px 14px;font-size:14.5px;border:1px solid var(--line-2)">
+        <button class="btn sm" onclick="createEvent(this)"><span class="spin"></span><span class="lbl">Create</span></button>
+      </div>
+    </div>
+    ${(LIVE_EVENTS||[]).map(e=>`
+      <div class="card pad" style="margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap">
+          <div>
+            <div class="nm serif">${esc(e.Event_Name)}</div>
+            <div class="sub2">${esc(e.Event_Type||'')} \u00b7 ${esc(new Date(e.Event_ST_DT_TIME).toLocaleString())}${e.Venue_City?' \u00b7 '+esc(e.Venue_City):''} \u00b7 ${e.registration_count} registered</div>
+          </div>
+          <div style="display:flex;gap:6px;align-items:center">
+            <select onchange="setEventStatus(${e.Event_ID}, this.value)" style="border-radius:999px;padding:4px 10px;font-size:13px;border:1px solid var(--line-2)">
+              ${['Scheduled','Completed','Cancelled'].map(st=>`<option ${st===e.Event_Status?'selected':''}>${st}</option>`).join('')}
+            </select>
+            <button class="mini" onclick="toggleEventRegistrations(${e.Event_ID}, this)" style="width:auto;padding:0 12px;height:26px;font-size:13.5px">${EVENT_REG_OPEN===e.Event_ID?'Hide':'Registrations'}</button>
+          </div>
+        </div>
+        ${EVENT_REG_OPEN===e.Event_ID ? `<div id="evRegBody_${e.Event_ID}" style="margin-top:12px">${genericSkeleton(2)}</div>` : ''}
+      </div>`).join('') || '<p class="sub2">No events yet \u2014 create one above.</p>'}`;
+  if(EVENT_REG_OPEN!==null) loadEventRegistrations(EVENT_REG_OPEN);
+}
+async function createEvent(btn){
+  await withLoading(btn, async ()=>{
+    const eventName = document.getElementById('evName').value.trim();
+    const startDateTime = document.getElementById('evWhen').value;
+    if(!eventName || !startDateTime){ toast('Name and date/time are required.'); return; }
+    try{
+      await apiFetch('/api/events', {method:'POST', body: JSON.stringify({
+        eventName, eventType: document.getElementById('evType').value, startDateTime,
+        durationMinutes: Number(document.getElementById('evDuration').value)||null,
+        venueCity: document.getElementById('evVenue').value.trim()||null,
+      })});
+      toast('Event created.');
+      LIVE_EVENTS = null; await loadEvents();
+    }catch(err){ toast('Could not create: '+(err.message||'')); }
+  });
+}
+async function setEventStatus(eventId, status){
+  try{ await apiFetch('/api/events/'+eventId, {method:'PUT', body: JSON.stringify({eventStatus: status})}); toast('Status updated.'); }
+  catch(err){ toast('Could not update: '+(err.message||'')); }
+}
+function toggleEventRegistrations(eventId, btn){
+  EVENT_REG_OPEN = EVENT_REG_OPEN===eventId ? null : eventId;
+  renderEventMgmt();
+}
+async function loadEventRegistrations(eventId){
+  const el = document.getElementById('evRegBody_'+eventId);
+  if(!el) return;
+  try{
+    const regs = await apiFetch('/api/events/'+eventId+'/registrations');
+    el.innerHTML = `
+      <div style="display:flex;gap:8px;margin-bottom:10px">
+        <input id="evRegSeekerId_${eventId}" type="number" placeholder="Seeker ID to register" style="flex:1;border-radius:999px;padding:6px 12px;font-size:13.5px;border:1px solid var(--line-2)">
+        <button class="mini" onclick="registerSeekerToEvent(${eventId})" style="width:auto;padding:0 12px;height:28px;font-size:13.5px">Register</button>
+      </div>
+      <div class="card" style="overflow:hidden"><table>
+        <thead><tr><th>Seeker</th><th>First-timer</th><th>Attended</th></tr></thead>
+        <tbody>${regs.length ? regs.map(r=>`<tr>
+            <td><a href="#" onclick="event.preventDefault();openSeekerPage(${r.Seeker_ID})" class="nm serif" style="color:var(--deep);text-decoration:none">${esc([r.Sal,r.First_Name,r.Last_Name].filter(Boolean).join(' '))}</a></td>
+            <td>${r.Is_First_Time?'<span class="tag t-active">Yes</span>':'\u2014'}</td>
+            <td><select onchange="setEventAttendance(${eventId}, ${r.Seeker_ID}, this.value)" style="border-radius:999px;padding:3px 8px;font-size:13px;border:1px solid var(--line-2)">
+              ${['Pending','Yes','No'].map(a=>`<option ${a===r.Attended?'selected':''}>${a}</option>`).join('')}</select></td>
+          </tr>`).join('') : '<tr><td colspan="3" style="padding:16px;text-align:center;color:var(--ink-3)">No one registered yet.</td></tr>'}</tbody>
+      </table></div>`;
+  }catch(err){ el.innerHTML = `<p class="sub2">Could not load: ${esc(err.message||'')}</p>`; }
+}
+async function registerSeekerToEvent(eventId){
+  const input = document.getElementById('evRegSeekerId_'+eventId);
+  const seekerId = Number(input.value);
+  if(!seekerId){ toast('Enter a valid Seeker ID.'); return; }
+  try{
+    await apiFetch('/api/events/'+eventId+'/registrations', {method:'POST', body: JSON.stringify({seekerId})});
+    toast('Registered.');
+    input.value = '';
+    LIVE_EVENTS = null;
+    const evs = await apiFetch('/api/events'); LIVE_EVENTS = evs;
+    loadEventRegistrations(eventId);
+  }catch(err){ toast('Could not register: '+(err.message||'')); }
+}
+async function setEventAttendance(eventId, seekerId, attended){
+  try{ await apiFetch('/api/events/'+eventId+'/registrations/'+seekerId, {method:'PUT', body: JSON.stringify({attended})}); toast('Updated.'); }
+  catch(err){ toast('Could not update: '+(err.message||'')); }
 }
 
 /* ============ operations ============ */
