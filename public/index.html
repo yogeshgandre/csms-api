@@ -1153,6 +1153,10 @@ function setRole(r){
 }
 function applyRoleNav(){
   const allowed = new Set(R().tabs);
+  // Overview is shown for every role regardless of R().tabs, on request —
+  // proper per-role access control for it is a follow-up (Access Management),
+  // not yet decided. Every other tab still follows the normal role scoping.
+  allowed.add('overview');
   document.querySelectorAll('nav button[data-p]').forEach(b=>{
     b.style.display = allowed.has(b.dataset.p) ? '' : 'none';
   });
