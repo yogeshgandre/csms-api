@@ -224,6 +224,16 @@ tbody tr:last-child td{border-bottom:none}
 .check{display:flex;align-items:flex-start;gap:8px;font-size:15px;color:var(--ink-2)}
 .check input{width:auto;margin-top:2px}
 
+.sf-journey{display:flex;flex-direction:column}
+.sf-journey-row{display:grid;grid-template-columns:1fr 220px;align-items:stretch;gap:14px}
+.sf-journey-band{display:flex;align-items:center;justify-content:center;margin:-6px 0}
+.sf-journey-txt{display:flex;gap:12px;align-items:flex-start;padding:10px 0}
+.sf-journey-icon{width:38px;height:38px;border-radius:10px;flex:0 0 auto;display:flex;align-items:center;justify-content:center}
+.sf-journey-icon svg{width:20px;height:20px}
+.sf-journey-title{font-family:var(--font-head);font-weight:700;font-size:15.5px}
+.sf-journey-desc{font-size:13px;color:var(--ink-2);margin-top:2px}
+.sf-journey-notes{font-size:12.5px;color:var(--ink-3);font-style:italic;margin-top:2px}
+
 /* ---------- satsang funnel (demo / sample data only) ---------- */
 .sf-tiles{display:grid;grid-template-columns:repeat(6,1fr);gap:14px;margin-bottom:18px}
 .sf-tile{border-radius:12px;padding:14px 16px;background:var(--card);border:1px solid var(--line)}
@@ -5628,38 +5638,12 @@ const SATSANG_FUNNEL_DATA = {
       ["Event Live","",""],["Attendance","",""],["Follow-up","",""],["Completed","",""]]}}
 };
 const CHEV_COLORS = ['var(--deep)','var(--sage)','var(--amber)','var(--rose)','var(--violet)','var(--pink)'];
-// Vertical tapering funnel — stacked bands, each band's own width scaled
-// to its value (not a row of equal-size labeled blocks like sfChevrons
-// above). Classic conversion-funnel shape: top band widest, each band
-// below it exactly as wide as the value below calls for, last band
-// narrows to a point rather than a straight edge.
-function svgFunnel(stages, opts){
-  opts = opts||{};
-  const W = opts.width||520, rowH = opts.rowH||58, gap=2, labelW=opts.labelW||120;
-  const plotW = W - labelW;
-  const max = Math.max(...stages.map(s=>s[1]));
-  // Enough of a floor that even a 4-digit value's text always fits fully
-  // inside its own band — a too-thin final segment leaves part of the
-  // (white) label spilling onto the white page background, invisible.
-  const wAt = v => Math.max(0.22, v/max) * plotW;
-  const n = stages.length;
-  const H = n*rowH + (n-1)*gap;
-  let shapes = '', labels = '';
-  stages.forEach((st,i)=>{
-    const [label, val] = st;
-    const topW = wAt(val);
-    const botW = i < n-1 ? wAt(stages[i+1][1]) : 0; // last band tapers to a point
-    const y0 = i*(rowH+gap), y1 = y0+rowH;
-    const xTopL = labelW + (plotW-topW)/2, xTopR = xTopL+topW;
-    const xBotL = labelW + (plotW-botW)/2, xBotR = xBotL+botW;
-    const color = CHEV_COLORS[i%6];
-    shapes += `<polygon points="${xTopL},${y0} ${xTopR},${y0} ${xBotR},${y1} ${xBotL},${y1}" fill="${color}"/>`;
-    shapes += `<text x="${labelW+plotW/2}" y="${y0+rowH/2+5}" text-anchor="middle" fill="#fff" font-weight="700" font-size="15" font-family="var(--font-head)">${val.toLocaleString()}</text>`;
-    labels += `<text x="0" y="${y0+rowH/2+5}" fill="var(--ink-2)" font-size="13.5px" font-family="var(--font-body)">${esc(label)}</text>`;
-  });
-  return `<svg viewBox="0 0 ${W} ${H}" width="100%" style="max-width:${W}px;height:auto;display:block;margin:0 auto">
-    <g>${labels}</g>${shapes}</svg>`;
-}
+// A softer, more "spectrum" palette (blue -> green -> gold -> orange) for the
+// rounded seeker-journey funnel specifically, since it's read top-to-bottom
+// like the reference design rather than left-to-right like the lifecycle
+// chevrons above.
+const FUNNEL_SPECTRUM = ['#0B8FC4','#4F9D6E','#D4A017','#D9782D','#B3571F','#8B4A8F'];
+const FUNNEL_ICONS = ['home','heart','message','users','flag','sprout'];
 
 function sfChevrons(funnel){
   // A real funnel chart: each stage's width is proportional to its value,
@@ -5680,6 +5664,50 @@ function sfTiles(tiles){
   return `<div class="sf-tiles" style="grid-template-columns:repeat(${tiles.length},1fr)">${tiles.map(t=>
     `<div class="sf-tile"><div class="n">${esc(t[0])}</div><div class="l">${esc(t[1])}</div>${t[2]?`<div class="d" style="color:${t[2].startsWith('▼')?'var(--rose)':'var(--sage)'}">${esc(t[2])}</div>`:''}</div>`).join('')}</div>`;
 }
+// One stage = one row: icon + stage name + description on the left, a
+// rounded "collar" band on the right sized to that stage's value, with
+// the next stage's value as its narrower bottom edge — so consecutive
+// bands still read as one continuous tapering funnel even though each
+// row is its own small SVG. Elliptical top/bottom edges (not straight
+// trapezoid edges) for the rounded, tube-like look instead of flat facets.
+function funnelBandSvg(topVal, botVal, max, color, w, h){
+  const wAt = v => Math.max(0.24, v/max) * (w-16);
+  const topW = wAt(topVal), botW = botVal!=null ? wAt(botVal) : topW*0.22;
+  const cx = w/2, ry = Math.min(9, h*0.16);
+  const topL = cx-topW/2, topR = cx+topW/2, botL = cx-botW/2, botR = cx+botW/2;
+  const yTop = ry, yBot = h-ry;
+  return `<svg viewBox="0 0 ${w} ${h}" width="100%" height="${h}" style="display:block">
+    <path d="M ${topL} ${yTop}
+             A ${topW/2} ${ry} 0 0 0 ${topR} ${yTop}
+             L ${botR} ${yBot}
+             A ${botW/2} ${ry} 0 0 1 ${botL} ${yBot}
+             Z" fill="${color}" opacity="0.92"/>
+    <ellipse cx="${cx}" cy="${yTop}" rx="${topW/2}" ry="${ry}" fill="${color}"/>
+    <text x="${cx}" y="${h/2+5}" text-anchor="middle" fill="#fff" font-weight="700" font-size="15" font-family="var(--font-head)">${topVal.toLocaleString()}</text>
+  </svg>`;
+}
+function svgFunnel(stages, notesByStage){
+  const max = Math.max(...stages.map(s=>s[1]));
+  const rowH = 72;
+  return `<div class="sf-journey">${stages.map(([label,val],i)=>{
+    const next = i<stages.length-1 ? stages[i+1][1] : null;
+    const color = FUNNEL_SPECTRUM[i%FUNNEL_SPECTRUM.length];
+    const icon = FUNNEL_ICONS[i%FUNNEL_ICONS.length];
+    const note = (notesByStage && notesByStage[i]) || null;
+    return `<div class="sf-journey-row">
+      <div class="sf-journey-txt">
+        <div class="sf-journey-icon" style="background:${color}22;color:${color}">${spIconSvg(icon)}</div>
+        <div>
+          <div class="sf-journey-title" style="color:${color}">${esc(label)}</div>
+          ${note?`<div class="sf-journey-desc">${esc(note.desc)}</div>
+          <div class="sf-journey-notes">${esc(note.notes)}</div>`:''}
+        </div>
+      </div>
+      <div class="sf-journey-band">${funnelBandSvg(val, next, max, color, 220, rowH)}</div>
+    </div>`;
+  }).join('')}</div>`;
+}
+
 function renderSatsangFunnel(){
   const f = SATSANG_FUNNEL_DATA[DASH_ROLE];
   if(!f) return '';
@@ -5779,13 +5807,8 @@ function renderDashDemo(){
     <div class="grid2" style="margin-bottom:18px">
       <div class="card pad">
         <h2 class="sec">Seeker journey</h2>
-        ${svgFunnel(d.funnel, {width:420, rowH:52, labelW:118})}
+        ${svgFunnel(d.funnel, STAGE_NOTES)}
         <div class="hidden-note" style="margin-top:12px;margin-bottom:0">${esc(d.fnote)}</div>
-        ${STAGE_NOTES.map(sn=>`<div style="padding:9px 0;border-bottom:1px solid #EEF4F9">
-          <div style="font-size:14px;font-weight:600">${esc(sn.stage)}</div>
-          <div class="sub2" style="margin-top:1px">${esc(sn.desc)}</div>
-          <div class="sub2" style="margin-top:1px;font-style:italic">${esc(sn.notes)}</div>
-        </div>`).join('')}
       </div>
       <div class="card pad">
         <h2 class="sec">Needs your attention</h2>
