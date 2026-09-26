@@ -5491,6 +5491,12 @@ const ACT_TAG = {Call:"t-core",WhatsApp:"t-active",Email:"t-core",Satsang:"t-a9"
 // design direction with realistic-looking volume before enough real data
 // exists to make Overview look the same way. Nothing here is wired to
 // anything else in the file — safe to delete once it's no longer needed.
+const STAGE_NOTES = [
+  {stage:"1. Visitors", desc:"Shop, Social Media, LiveChat (first touch)", notes:"Entry point of the funnel; not yet committed"},
+  {stage:"2. Followers", desc:"Social media / community followers, weekly meditation attendees", notes:"Not yet talking to us; newsletter signup signals stronger commitment"},
+  {stage:"3. Talkers", desc:"Engage via LiveChat 1-on-1", notes:"Comfort level varies (see Comfort Zones); not everyone wants 1-on-1"},
+  {stage:"4. Satsang Group", desc:"Full participants, including Live Satsang via weekly Livestream", notes:"Low-pressure framing: \u201ccomfortable, do what you want, no pressure\u201d"}
+];
 const DASH_DATA = {
   admin:{label:"Global Admin", scope:"All regions · 5 satsang groups",
     tiles:[["deep","Active seekers","2,486","▲ 3.1%","Steady growth"],
@@ -5622,6 +5628,39 @@ const SATSANG_FUNNEL_DATA = {
       ["Event Live","",""],["Attendance","",""],["Follow-up","",""],["Completed","",""]]}}
 };
 const CHEV_COLORS = ['var(--deep)','var(--sage)','var(--amber)','var(--rose)','var(--violet)','var(--pink)'];
+// Vertical tapering funnel — stacked bands, each band's own width scaled
+// to its value (not a row of equal-size labeled blocks like sfChevrons
+// above). Classic conversion-funnel shape: top band widest, each band
+// below it exactly as wide as the value below calls for, last band
+// narrows to a point rather than a straight edge.
+function svgFunnel(stages, opts){
+  opts = opts||{};
+  const W = opts.width||520, rowH = opts.rowH||58, gap=2, labelW=opts.labelW||120;
+  const plotW = W - labelW;
+  const max = Math.max(...stages.map(s=>s[1]));
+  // Enough of a floor that even a 4-digit value's text always fits fully
+  // inside its own band — a too-thin final segment leaves part of the
+  // (white) label spilling onto the white page background, invisible.
+  const wAt = v => Math.max(0.22, v/max) * plotW;
+  const n = stages.length;
+  const H = n*rowH + (n-1)*gap;
+  let shapes = '', labels = '';
+  stages.forEach((st,i)=>{
+    const [label, val] = st;
+    const topW = wAt(val);
+    const botW = i < n-1 ? wAt(stages[i+1][1]) : 0; // last band tapers to a point
+    const y0 = i*(rowH+gap), y1 = y0+rowH;
+    const xTopL = labelW + (plotW-topW)/2, xTopR = xTopL+topW;
+    const xBotL = labelW + (plotW-botW)/2, xBotR = xBotL+botW;
+    const color = CHEV_COLORS[i%6];
+    shapes += `<polygon points="${xTopL},${y0} ${xTopR},${y0} ${xBotR},${y1} ${xBotL},${y1}" fill="${color}"/>`;
+    shapes += `<text x="${labelW+plotW/2}" y="${y0+rowH/2+5}" text-anchor="middle" fill="#fff" font-weight="700" font-size="15" font-family="var(--font-head)">${val.toLocaleString()}</text>`;
+    labels += `<text x="0" y="${y0+rowH/2+5}" fill="var(--ink-2)" font-size="13.5px" font-family="var(--font-body)">${esc(label)}</text>`;
+  });
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" style="max-width:${W}px;height:auto;display:block;margin:0 auto">
+    <g>${labels}</g>${shapes}</svg>`;
+}
+
 function sfChevrons(funnel){
   // A real funnel chart: each stage's width is proportional to its value,
   // so the shape actually tapers as the numbers drop, not just a row of
@@ -5740,14 +5779,13 @@ function renderDashDemo(){
     <div class="grid2" style="margin-bottom:18px">
       <div class="card pad">
         <h2 class="sec">Seeker journey</h2>
-        ${d.funnel.map(([label,n],i)=>{
-          const max = d.funnel[0][1];
-          return `<div class="bar">
-            <span style="color:var(--ink-2)">${esc(label)}</span>
-            <span class="track"><span class="fill" style="width:${Math.max(6,Math.round(n/max*100))}%;opacity:${1-i*.16}"></span></span>
-            <span class="num">${n.toLocaleString()}</span></div>`;
-        }).join('')}
+        ${svgFunnel(d.funnel, {width:420, rowH:52, labelW:118})}
         <div class="hidden-note" style="margin-top:12px;margin-bottom:0">${esc(d.fnote)}</div>
+        ${STAGE_NOTES.map(sn=>`<div style="padding:9px 0;border-bottom:1px solid #EEF4F9">
+          <div style="font-size:14px;font-weight:600">${esc(sn.stage)}</div>
+          <div class="sub2" style="margin-top:1px">${esc(sn.desc)}</div>
+          <div class="sub2" style="margin-top:1px;font-style:italic">${esc(sn.notes)}</div>
+        </div>`).join('')}
       </div>
       <div class="card pad">
         <h2 class="sec">Needs your attention</h2>
