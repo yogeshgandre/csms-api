@@ -224,6 +224,41 @@ tbody tr:last-child td{border-bottom:none}
 .check{display:flex;align-items:flex-start;gap:8px;font-size:15px;color:var(--ink-2)}
 .check input{width:auto;margin-top:2px}
 
+/* ---------- satsang funnel (demo / sample data only) ---------- */
+.sf-tiles{display:grid;grid-template-columns:repeat(6,1fr);gap:14px;margin-bottom:18px}
+.sf-tile{border-radius:12px;padding:14px 16px;background:var(--card);border:1px solid var(--line)}
+.sf-tile .n{font-family:var(--font-head);font-size:26px;font-weight:600;color:var(--ink);line-height:1.1}
+.sf-tile .l{font-size:13px;color:var(--ink-2);margin-top:4px}
+.sf-tile .d{font-size:12.5px;margin-top:4px;font-weight:600}
+.sf-chevrons{display:flex;gap:6px;margin-bottom:14px}
+.sf-chev{position:relative;color:#fff;padding:14px 18px 14px 30px;min-height:76px;flex:0 1 auto;min-width:0;
+  display:flex;flex-direction:column;justify-content:center;overflow:hidden;
+  clip-path:polygon(0 0,calc(100% - 18px) 0,100% 50%,calc(100% - 18px) 100%,0 100%,18px 50%)}
+.sf-chev:first-child{clip-path:polygon(0 0,calc(100% - 18px) 0,100% 50%,calc(100% - 18px) 100%,0 100%)}
+.sf-chev .n{font-family:var(--font-head);font-size:24px;font-weight:700;line-height:1}
+.sf-chev .l{font-size:13px;opacity:.92;margin-top:2px}
+.sf-conv{display:flex;gap:6px;margin-bottom:18px}
+.sf-conv > div{flex:1;text-align:center;font-size:13px;color:var(--ink-2)}
+.sf-conv b{color:var(--ink);font-family:var(--font-head)}
+.sf-hbar-row{display:grid;grid-template-columns:110px 1fr 34px;align-items:center;gap:8px;margin-bottom:9px}
+.sf-hbar-row .lab{font-size:13.5px;color:var(--ink-2)}
+.sf-hbar-row .track{height:10px;border-radius:5px;background:var(--line);overflow:hidden}
+.sf-hbar-row .track i{display:block;height:100%;border-radius:5px}
+.sf-hbar-row .num{font-size:13px;text-align:right;color:var(--ink)}
+.sf-timeline{position:relative;padding-left:22px}
+.sf-timeline::before{content:"";position:absolute;left:6px;top:4px;bottom:4px;width:1px;background:var(--line-2)}
+.sf-tl{position:relative;padding-bottom:16px;font-size:14px}
+.sf-tl:last-child{padding-bottom:0}
+.sf-tl::before{content:"";position:absolute;left:-22px;top:2px;width:13px;height:13px;border-radius:50%;
+  background:var(--card);border:2px solid var(--line-2)}
+.sf-tl.done::before{background:var(--sage);border-color:var(--sage)}
+.sf-tl.now::before{background:var(--deep);border-color:var(--deep)}
+.sf-tl.now{font-weight:600;color:var(--deep)}
+.sf-tl.done{color:var(--ink-2)}
+.sf-tl .d{font-size:12px;color:var(--ink-3);font-weight:400}
+@media(max-width:1000px){.sf-tiles{grid-template-columns:repeat(3,1fr)}.sf-chevrons{flex-wrap:wrap}.sf-chev{flex:1 1 30%;clip-path:none!important;border-radius:8px}}
+@media(max-width:600px){.sf-tiles{grid-template-columns:repeat(2,1fr)}}
+
 /* ---------- dashboard (demo / sample data only) ---------- */
 .dash-banner{background:var(--amber-wash);border:1px solid #F0DFAE;color:var(--amber);
   border-radius:var(--r-sm);padding:10px 14px;font-size:14.5px;margin-bottom:16px}
@@ -5532,6 +5567,144 @@ const DASH_DATA = {
 };
 let DASH_ROLE = "admin";
 function setDashRole(r){ DASH_ROLE = r; renderDashDemo(); }
+// ---- Satsang lifecycle funnel (demo / sample data only, uploaded reference
+// designs). Numbers taken as-is from those references, not invented here:
+// the Global figures agree across four of the five uploads, and the
+// regional (Europe) breakdown in the fifth cross-checks against Global's
+// own "24 in Europe" region figure, so that's the set used. One upload had
+// a differing, later-period snapshot (126 total etc.) — not merged in, to
+// avoid mixing two inconsistent datasets into one screen.
+const SATSANG_FUNNEL_DATA = {
+  admin:{
+    tiles:[["42","Countries","▲ 12% vs last year"],["8","Regions","0% vs last year"],
+      ["82","Active Satsangs","▲ 18% vs last year"],["34","Upcoming Events","▲ 21% vs last year"],
+      ["17","Pending Approvals","▼ 5% vs last year"],["8","Attention Required","▼ 27% vs last year"]],
+    funnel:[["Planned",82],["Draft",64],["In Review",51],["Approved",43],["Scheduled",36],["Completed",29]],
+    conv:["78%","80%","84%","84%","81%"],
+    regions:[["Europe",24],["North America",18],["Asia Pacific",16],["Africa",12],["South America",8],["Middle East",6]],
+    avgTime:[["Planned","1.2 days",15],["Draft","1.8 days",23],["In Review","2.4 days",30],
+      ["Approved","1.2 days",15],["Scheduled","3.1 days",39],["Completed","2.6 days",33]],
+    approvals:[["Berlin Satsang","Germany","Europe","2"],["Paris Satsang","France","Europe","1"],
+      ["London Satsang","UK","Europe","4"],["Sydney Satsang","Australia","Asia Pacific","6"],
+      ["Toronto Satsang","Canada","North America","3"]],
+    events:[["Berlin Event","Berlin Satsang","20 Oct 2026","In Preparation"],
+      ["Paris Event","Paris Satsang","05 Nov 2026","Registration Open"],
+      ["London Event","London Satsang","12 Nov 2026","Details Pending"],
+      ["Munich Event","Munich Satsang","25 Nov 2026","Conductor Assigned"],
+      ["Toronto Event","Toronto Satsang","03 Dec 2026","Draft"]],
+    activity:[["Berlin Satsang approved","Global Admin","2 hours ago"],
+      ["France Event submitted for review","Regional RS","5 hours ago"],
+      ["Conductor assigned for Sydney Event","Asia Pacific RS","1 day ago"],
+      ["New Satsang created — Spain","Regional Conductor","1 day ago"],
+      ["Italy Satsang missing event date","System","2 days ago"]]},
+  rs:{
+    tiles:[["24","Active Satsangs",""],["8","Upcoming Events",""],["3","Pending Actions",""],["2","Overdue",""]],
+    funnel:[["Planned",24],["Draft",19],["In Review",15],["Approved",11],["Scheduled",8],["Completed",6]],
+    conv:["79%","79%","73%","73%","75%"],
+    countries:[["Germany",6,2,2,1,2],["France",5,1,1,1,2],["UK",4,1,2,1,1],["Italy",4,1,1,1,1]],
+    actions:[["Germany Satsang","Approval pending","Today"],["France Event","Conductor not assigned","1 day"],
+      ["Italy Satsang","Missing event date","2 days"],["Spain Event","Awaiting approval","3 days"]]},
+  conductor:{
+    tiles:[["24","Active Satsangs",""],["8","Upcoming Events",""],["3","Pending Actions",""],["2","Overdue",""]],
+    funnel:[["Planned",24],["Draft",19],["In Review",15],["Approved",11],["Scheduled",8],["Completed",6]],
+    conv:["79%","79%","73%","73%","75%"],
+    countries:[["Germany",6,2,2,1,2],["France",5,1,1,1,2],["UK",4,1,2,1,1],["Italy",4,1,1,1,1]],
+    actions:[["Germany Satsang","Approval pending","Today"],["France Event","Conductor not assigned","1 day"],
+      ["Italy Satsang","Missing event date","2 days"],["Spain Event","Awaiting approval","3 days"]]},
+  event:{
+    tiles:[["4","Upcoming",""],["1","Today",""],["12","Completed",""],["2","Need Attention",""]],
+    myEvents:[["Berlin Satsang","20 Oct 2026","In Preparation"],["Paris Satsang","05 Nov 2026","Registration Open"],
+      ["London Satsang","12 Nov 2026","Details Pending"],["Munich Satsang","25 Nov 2026","Conductor Assigned"]],
+    workflow:{title:"Berlin Satsang", date:"20 Oct 2026", steps:[
+      ["Event Created","15 Sep 2026","done"],["Details Completed","18 Sep 2026","done"],
+      ["Conductor Assigned","18 Sep 2026","done"],["Venue Confirmed","20 Sep 2026","done"],
+      ["Registration Open","In progress","now"],["Registration Complete","",""],["Event Ready","",""],
+      ["Event Live","",""],["Attendance","",""],["Follow-up","",""],["Completed","",""]]}}
+};
+const CHEV_COLORS = ['var(--deep)','var(--sage)','var(--amber)','var(--rose)','var(--violet)','var(--pink)'];
+function sfChevrons(funnel){
+  // A real funnel chart: each stage's width is proportional to its value,
+  // so the shape actually tapers as the numbers drop, not just a row of
+  // equal-size colored arrows with different numbers printed on them.
+  const max = Math.max(...funnel.map(f=>f[1]));
+  const totalFlex = funnel.reduce((a,f)=>a+Math.max(18,Math.round(f[1]/max*100)),0);
+  return `<div class="sf-chevrons">${funnel.map(([l,n],i)=>{
+    const pct = Math.max(18,Math.round(n/max*100));
+    return `<div class="sf-chev" style="background:${CHEV_COLORS[i%6]};flex-basis:${(pct/totalFlex*100).toFixed(2)}%">
+      <div class="n">${n}</div><div class="l">${esc(l)}</div></div>`;
+  }).join('')}</div>`;
+}
+function sfConv(conv){
+  return conv.length ? `<div class="sf-conv">${conv.map(c=>`<div><b>${c}</b> conversion</div>`).join('')}</div>` : '';
+}
+function sfTiles(tiles){
+  return `<div class="sf-tiles" style="grid-template-columns:repeat(${tiles.length},1fr)">${tiles.map(t=>
+    `<div class="sf-tile"><div class="n">${esc(t[0])}</div><div class="l">${esc(t[1])}</div>${t[2]?`<div class="d" style="color:${t[2].startsWith('▼')?'var(--rose)':'var(--sage)'}">${esc(t[2])}</div>`:''}</div>`).join('')}</div>`;
+}
+function renderSatsangFunnel(){
+  const f = SATSANG_FUNNEL_DATA[DASH_ROLE];
+  if(!f) return '';
+  let extra = '';
+  if(f.regions){ // admin: region bars, avg time, approvals + events tables, activity feed
+    const maxR = Math.max(...f.regions.map(r=>r[1]));
+    extra += `<div class="grid2" style="margin-bottom:18px">
+      <div class="card pad"><h2 class="sec">Satsangs by Region</h2>
+        ${f.regions.map((r,i)=>`<div class="sf-hbar-row"><div class="lab">${esc(r[0])}</div>
+          <div class="track"><i style="width:${Math.round(r[1]/maxR*100)}%;background:${CHEV_COLORS[i%6]}"></i></div>
+          <div class="num">${r[1]}</div></div>`).join('')}
+      </div>
+      <div class="card pad"><h2 class="sec">Average Time in Stage</h2>
+        ${f.avgTime.map((t,i)=>`<div class="sf-hbar-row"><div class="lab">${esc(t[0])}</div>
+          <div class="track"><i style="width:${t[2]}%;background:${CHEV_COLORS[i%6]}"></i></div>
+          <div class="num">${esc(t[1])}</div></div>`).join('')}
+      </div>
+    </div>
+    <div class="grid2" style="margin-bottom:18px">
+      <div class="card pad"><h2 class="sec">Pending Approvals</h2>
+        <table style="margin-top:6px"><thead><tr><th>Satsang</th><th>Country</th><th>Region</th><th>Days</th></tr></thead>
+        <tbody>${f.approvals.map(a=>`<tr><td><b>${esc(a[0])}</b></td><td>${esc(a[1])}</td><td>${esc(a[2])}</td><td>${esc(a[3])}</td></tr>`).join('')}</tbody></table>
+      </div>
+      <div class="card pad"><h2 class="sec">Upcoming Events</h2>
+        <table style="margin-top:6px"><thead><tr><th>Event</th><th>Date</th><th>Status</th></tr></thead>
+        <tbody>${f.events.map(e=>`<tr><td><b>${esc(e[0])}</b><div class="sub2">${esc(e[1])}</div></td><td>${esc(e[2])}</td><td><span class="tag t-semi">${esc(e[3])}</span></td></tr>`).join('')}</tbody></table>
+      </div>
+    </div>
+    <div class="card pad"><h2 class="sec">Recent Activity</h2>
+      ${f.activity.map(a=>`<div style="padding:9px 0;border-bottom:1px solid #EEF4F9">
+        <div style="font-size:15px">${esc(a[0])}</div><div class="sub2">by ${esc(a[1])} · ${esc(a[2])}</div></div>`).join('')}
+    </div>`;
+  } else if(f.countries){ // rs/conductor: country table + my actions
+    extra += `<div class="grid2" style="margin-bottom:18px">
+      <div class="card pad"><h2 class="sec">Satsangs by Country</h2>
+        <table style="margin-top:6px"><thead><tr><th>Country</th><th>Total</th><th>Draft</th><th>Review</th><th>Approved</th><th>Events</th></tr></thead>
+        <tbody>${f.countries.map(c=>`<tr><td><b>${esc(c[0])}</b></td><td>${c[1]}</td><td>${c[2]}</td><td>${c[3]}</td><td>${c[4]}</td><td>${c[5]}</td></tr>`).join('')}</tbody></table>
+      </div>
+      <div class="card pad"><h2 class="sec">My Actions</h2>
+        ${f.actions.map(a=>`<div style="padding:9px 0;border-bottom:1px solid #EEF4F9">
+          <div style="font-size:15px"><b>${esc(a[0])}</b> — ${esc(a[1])}</div><div class="sub2">${esc(a[2])}</div></div>`).join('')}
+      </div>
+    </div>`;
+  }
+  if(f.myEvents){ // event conductor: upcoming events list + workflow timeline
+    extra += `<div class="grid2" style="margin-bottom:18px">
+      <div class="card pad"><h2 class="sec">My Upcoming Events</h2>
+        ${f.myEvents.map(e=>`<div style="padding:9px 0;border-bottom:1px solid #EEF4F9;display:flex;justify-content:space-between;gap:10px">
+          <div><div style="font-size:15px"><b>${esc(e[0])}</b></div><div class="sub2">${esc(e[1])}</div></div>
+          <span class="tag t-semi" style="align-self:center">${esc(e[2])}</span></div>`).join('')}
+      </div>
+      <div class="card pad"><h2 class="sec">Event Funnel — ${esc(f.workflow.title)}</h2>
+        <p class="sub2" style="margin-bottom:10px">${esc(f.workflow.date)}</p>
+        <div class="sf-timeline">${f.workflow.steps.map(st=>`<div class="sf-tl ${st[2]}">${esc(st[0])}${st[1]?` <span class="d">— ${esc(st[1])}</span>`:''}</div>`).join('')}</div>
+      </div>
+    </div>`;
+  }
+  return `<h2 class="sec" style="margin-top:26px">Satsang Funnel</h2>
+    <p class="sub" style="margin-bottom:14px">Satsang lifecycle, planning through completion — sample data, same reference designs as above.</p>
+    ${sfTiles(f.tiles)}
+    ${f.funnel ? sfChevrons(f.funnel) + sfConv(f.conv) : ''}
+    ${extra}`;
+}
+
 function renderDashDemo(){
   const el = document.getElementById('dash'); if(!el) return;
   const d = DASH_DATA[DASH_ROLE];
@@ -5607,9 +5780,8 @@ function renderDashDemo(){
           <td><span class="tag ${stageTagD[r[1]]||'t-semi'}">${esc(r[1])}</span></td>
           <td>${esc(r[2])}</td><td>${esc(r[3])}</td><td>${esc(r[4])}</td></tr>`).join('')}</tbody>
       </table>
-    </div>`;
+    </div>${renderSatsangFunnel()}`;
 }
-
 
 function renderOverviewEvents(el){
   const name = R().eventConductorName;
