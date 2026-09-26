@@ -224,6 +224,11 @@ tbody tr:last-child td{border-bottom:none}
 .check{display:flex;align-items:flex-start;gap:8px;font-size:15px;color:var(--ink-2)}
 .check input{width:auto;margin-top:2px}
 
+.sf-count-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:16px}
+.sf-count{border:1.5px solid var(--line);border-top-width:4px;border-radius:10px;padding:12px 14px;text-align:center}
+.sf-count .n{font-family:var(--font-head);font-size:24px;font-weight:700}
+.sf-count .l{font-size:13px;color:var(--ink-2);margin-top:3px}
+@media(max-width:700px){.sf-count-strip{grid-template-columns:repeat(2,1fr)}}
 .sf-journey{display:flex;flex-direction:column}
 .sf-journey-row{display:grid;grid-template-columns:1fr 220px;align-items:stretch;gap:14px}
 .sf-journey-band{display:flex;align-items:center;justify-content:center;margin:-6px 0}
@@ -5502,10 +5507,10 @@ const ACT_TAG = {Call:"t-core",WhatsApp:"t-active",Email:"t-core",Satsang:"t-a9"
 // exists to make Overview look the same way. Nothing here is wired to
 // anything else in the file — safe to delete once it's no longer needed.
 const STAGE_NOTES = [
-  {stage:"1. Visitors", desc:"Shop, Social Media, LiveChat (first touch)", notes:"Entry point of the funnel; not yet committed"},
-  {stage:"2. Followers", desc:"Social media / community followers, weekly meditation attendees", notes:"Not yet talking to us; newsletter signup signals stronger commitment"},
-  {stage:"3. Talkers", desc:"Engage via LiveChat 1-on-1", notes:"Comfort level varies (see Comfort Zones); not everyone wants 1-on-1"},
-  {stage:"4. Satsang Group", desc:"Full participants, including Live Satsang via weekly Livestream", notes:"Low-pressure framing: \u201ccomfortable, do what you want, no pressure\u201d"}
+  {stage:"1. Visitors", tagline:"Discover Satsang", desc:"Shop, Social Media, LiveChat (first touch)", notes:"Entry point of the journey · Discovers Satsang through various channels · Not yet committed"},
+  {stage:"2. Followers", tagline:"Stay Connected", desc:"Social media / community followers, weekly meditation attendees", notes:"Stays connected with content and community · Attends meditation sessions such as weekly events · Newsletter signup signals stronger interest"},
+  {stage:"3. Exploring Our Path", tagline:"Engage & Explore", desc:"Engaging through LiveChat, questions, meditation, content or other interactions", notes:"Explores at their own comfort level · Personal conversations when comfortable · No pressure — do what you feel right for you"},
+  {stage:"4. Satsang Group", tagline:"Participate Regularly", desc:"Full participants, including Live Satsang via weekly Livestream", notes:"Regular participation in Satsang · Comfortable, do what you want, no pressure · Part of the growing Satsang community"}
 ];
 const DASH_DATA = {
   admin:{label:"Global Admin", scope:"All regions · 5 satsang groups",
@@ -5515,15 +5520,15 @@ const DASH_DATA = {
       ["rose","Forms awaiting review","37","12 older than 3 days","Clear the oldest first"],
       ["sage","Satsang attendance","71%","▼ 4 pts","Below 4-week average"],
       ["violet","Seva hours","1,904","▲ 6%","Ahead of last month"]],
-    funnel:[["Visitors",5200],["Followers",2140],["Talkers",860],["Satsang group",412]],
-    fnote:"Follower → Talker is the weakest step (40%). Livestream leads convert best.",
+    funnel:[["Visitors",5200],["Followers",2140],["Exploring Our Path",860],["Satsang Group",412]],
+    fnote:"Follower → Exploring Our Path is the weakest step (40%). Livestream leads convert best.",
     flags:[["hi","213 seekers not spoken to in 30 days","62 are in Germany. Assign to conductors."],
       ["hi","Attendance dropped 4 pts","Munich group is down most (−11 pts)."],
       ["mid","37 forms waiting for review","12 are older than 3 days."]],
-    rows:[["A. Keller","Talker","41 days","Missed 3 satsangs","M. Roth"],
+    rows:[["A. Keller","Exploring Our Path","41 days","Missed 3 satsangs","M. Roth"],
       ["S. Dubois","Follower","36 days","New, no first call","L. Martin"],
-      ["R. Patil","Satsang group","33 days","Sadhana drop","V. Kulkarni"],
-      ["J. Weber","Talker","31 days","Form pending","M. Roth"]]},
+      ["R. Patil","Satsang Group","33 days","Sadhana drop","V. Kulkarni"],
+      ["J. Weber","Exploring Our Path","31 days","Form pending","M. Roth"]]},
   rs:{label:"Regional RS", scope:"Region: Germany · 2 satsang groups",
     tiles:[["deep","Active seekers","412","▲ 2.4%","Steady growth"],
       ["sage","New this month","23","▲ 4","Mostly from website"],
@@ -5531,13 +5536,13 @@ const DASH_DATA = {
       ["rose","Forms awaiting review","9","3 older than 3 days","Clear the oldest first"],
       ["sage","Satsang attendance","63%","▼ 7 pts","Below target of 70%"],
       ["violet","Seva hours","318","▲ 2%","Flat vs last month"]],
-    funnel:[["Visitors",980],["Followers",410],["Talkers",150],["Satsang group",58]],
-    fnote:"Talker → Satsang group is 39%. Two conductors have no open slots.",
+    funnel:[["Visitors",980],["Followers",410],["Exploring Our Path",150],["Satsang Group",58]],
+    fnote:"Exploring Our Path → Satsang Group is 39%. Two conductors have no open slots.",
     flags:[["hi","Attendance fell 7 pts in 12 weeks","Munich is the main driver."],
       ["hi","62 seekers not spoken to in 30 days","41 have no owner."],
       ["mid","9 forms waiting for review","3 older than 3 days."]],
-    rows:[["A. Keller","Talker","41 days","Missed 3 satsangs","M. Roth"],
-      ["J. Weber","Talker","31 days","Form pending","M. Roth"],
+    rows:[["A. Keller","Exploring Our Path","41 days","Missed 3 satsangs","M. Roth"],
+      ["J. Weber","Exploring Our Path","31 days","Form pending","M. Roth"],
       ["T. Braun","Follower","28 days","No owner","—"],
       ["K. Fischer","Visitor","27 days","Opened 6 emails","—"]]},
   conductor:{label:"Satsang Conductor", scope:"Munich · 3 satsangs · 78 seekers",
@@ -5552,7 +5557,7 @@ const DASH_DATA = {
       ["Thursday online satsang","Thu · 20:00 · online","72%",72,"26 seekers · next Thu 24 Sep","var(--deep)"],
       ["Sunday sadhana circle","Sun · 09:00 · in person","84%",84,"14 seekers · next Sun 27 Sep","var(--sage)"]]},
     funnel:[["In your satsangs",78],["Attended last week",53],["Regular (3 of 4)",41],["Serving in seva",9]],
-    fnote:"6 Talkers are ready to be invited into your satsangs.",
+    fnote:"6 people Exploring Our Path are ready to be invited into your satsangs.",
     flags:[["hi","11 seekers not spoken to in 30 days","4 missed the last 3 satsangs."],
       ["mid","Tuesday attendance down 11 pts","Mostly regulars from the last quarter."],
       ["mid","4 satsang notes still to write","Due before the next session."]],
@@ -5781,7 +5786,7 @@ function renderDashDemo(){
     rose:'var(--rose)',violet:'var(--violet)'};
   const sevColor = {hi:'var(--rose)', mid:'var(--amber)', lo:'var(--deep)'};
   const sevLabel = {hi:'High', mid:'Medium', lo:'Low'};
-  const stageTagD = {Talker:'t-semi',Follower:'t-active',Visitor:'t-warn','Satsang group':'t-active',Group:'t-active'};
+  const stageTagD = {'Exploring Our Path':'t-semi',Follower:'t-active',Visitor:'t-warn','Satsang Group':'t-active',Group:'t-active'};
 
   el.innerHTML = `
     <h2 class="sec">Dashboard</h2>
@@ -5804,20 +5809,25 @@ function renderDashDemo(){
         <div class="d">${esc(t[4])}</div></div>`).join('')}
     </div>
 
-    <div class="grid2" style="margin-bottom:18px">
-      <div class="card pad">
-        <h2 class="sec">Seeker journey</h2>
-        ${svgFunnel(d.funnel, STAGE_NOTES)}
-        <div class="hidden-note" style="margin-top:12px;margin-bottom:0">${esc(d.fnote)}</div>
+    <div class="card pad" style="margin-bottom:18px">
+      <h2 class="sec">Seeker journey</h2>
+      <img src="assets/funnel-visitor-to-satsang.png" alt="Visitor to Satsang Journey funnel diagram"
+        style="display:block;width:100%;max-width:900px;margin:0 auto;border-radius:8px"/>
+      <div class="sf-count-strip">
+        ${d.funnel.map(([label,n],i)=>`<div class="sf-count" style="border-color:${FUNNEL_SPECTRUM[i%FUNNEL_SPECTRUM.length]}">
+          <div class="n" style="color:${FUNNEL_SPECTRUM[i%FUNNEL_SPECTRUM.length]}">${n.toLocaleString()}</div>
+          <div class="l">${esc(label)}</div></div>`).join('')}
       </div>
-      <div class="card pad">
-        <h2 class="sec">Needs your attention</h2>
-        ${d.flags.map(f=>`<div style="padding:9px 0;border-bottom:1px solid #EEF4F9;display:flex;gap:10px;align-items:flex-start">
-          <span class="tag" style="background:${sevColor[f[0]]};color:#fff;flex:0 0 auto">${sevLabel[f[0]]}</span>
-          <div style="flex:1"><div style="font-size:16px;font-weight:500">${esc(f[1])}</div>
-          <div class="sub2" style="margin-top:1px">${esc(f[2])}</div></div>
-        </div>`).join('')}
-      </div>
+      <div class="hidden-note" style="margin-top:14px;margin-bottom:0">${esc(d.fnote)}</div>
+    </div>
+
+    <div class="card pad" style="margin-bottom:18px">
+      <h2 class="sec">Needs your attention</h2>
+      ${d.flags.map(f=>`<div style="padding:9px 0;border-bottom:1px solid #EEF4F9;display:flex;gap:10px;align-items:flex-start">
+        <span class="tag" style="background:${sevColor[f[0]]};color:#fff;flex:0 0 auto">${sevLabel[f[0]]}</span>
+        <div style="flex:1"><div style="font-size:16px;font-weight:500">${esc(f[1])}</div>
+        <div class="sub2" style="margin-top:1px">${esc(f[2])}</div></div>
+      </div>`).join('')}
     </div>
 
     ${d.strip ? `<p class="sub" style="margin:0 0 8px;font-weight:600;color:var(--ink-2)">${esc(d.strip.title)}</p>
