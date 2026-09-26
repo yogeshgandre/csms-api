@@ -576,8 +576,20 @@ router.post('/defs/:id/events', requireAuth, async (req, res) => {
       [seId]
     );
 
-    for (const cId of [sc1Id, sc2Id].filter(Boolean)) {
-      await notify(client, cId, `A new "${defQ.rows[0].Satsang_Name}" event needs your approval.`, 'satsang_event', seId);
+    // sc1Id/sc2Id used to come from this endpoint's own request body, back
+    // when an event carried up to two conductors directly. Since conductors
+    // moved to SCS.Satsang_Conductor scoped by Satsang_ID (see the comment
+    // above), those two variables were never defined here — this loop threw
+    // a ReferenceError every time. Fetching the satsang's current conductor
+    // roster the same way GET /defs/:id/conductors and GET /events already
+    // do, rather than reintroducing the old two-conductor request fields.
+    const condQ = await client.query(
+      `SELECT ${qi('SC_CSMS_ID')} FROM ${qi('SCS')}.${qi('Satsang_Conductor')}
+       WHERE ${qi('Satsang_ID')} = $1 AND ${qi('Ver_To_DT')} >= CURRENT_DATE`,
+      [req.params.id]
+    );
+    for (const row of condQ.rows) {
+      await notify(client, row.SC_CSMS_ID, `A new "${defQ.rows[0].Satsang_Name}" event needs your approval.`, 'satsang_event', seId);
     }
 
     await client.query('COMMIT');
