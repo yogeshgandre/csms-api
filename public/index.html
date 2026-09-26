@@ -3652,9 +3652,14 @@ function eventAttendeesPanelHTML(seId){
   const comments = EVENT_COMMENTS_CACHE[seId] || [];
   const events = LIVE_SATSANG_EVENTS[SATSANG_EVENTS_DEF_ID] || [];
   const ev = events.find(x=>x.SE_ID==seId);
-  const conductorOptions = ev
-    ? [ev.SC1_CSMS_ID ? `<option value="${ev.SC1_CSMS_ID}">${esc(ev.sc1_name||'Conductor 1')}</option>` : '',
-       ev.SC2_CSMS_ID ? `<option value="${ev.SC2_CSMS_ID}">${esc(ev.sc2_name||'Conductor 2')}</option>` : ''].join('')
+  // ev.SC1_CSMS_ID/SC2_CSMS_ID/sc1_name/sc2_name are from the old two-
+  // conductor-per-event design and don't exist on event rows anymore —
+  // GET /defs/:id/events now attaches the satsang's shared conductor
+  // roster as ev.conductors (an array), same data as the definition
+  // screen's Conductors list. This always fell through to "no options"
+  // before, which is why a real assigned conductor never showed here.
+  const conductorOptions = (ev && ev.conductors && ev.conductors.length)
+    ? ev.conductors.map(c=>`<option value="${c.SC_CSMS_ID}">${esc(c.Seeker_Name||c.Seeker_Email||('Conductor #'+c.SC_CSMS_ID))}</option>`).join('')
     : '';
   return `<div class="card pad" style="background:var(--paper)">
     <p class="sub2" style="font-weight:600;margin-bottom:6px">Satsang roster \u2014 shared across every event of this satsang</p>
@@ -3941,9 +3946,14 @@ function renderSatsangCommentsBody(){
   const body = document.getElementById('satsangCommentsBody');
   if(!body) return;
   const ev = (LIVE_SATSANG_COMMENTS_EVENTS||[]).find(e=>e.SE_ID==SATSANG_COMMENTS_SE_ID);
-  const conductorOptions = ev
-    ? [ev.SC1_CSMS_ID ? `<option value="${ev.SC1_CSMS_ID}">${esc(ev.sc1_name||'Conductor 1')}</option>` : '',
-       ev.SC2_CSMS_ID ? `<option value="${ev.SC2_CSMS_ID}">${esc(ev.sc2_name||'Conductor 2')}</option>` : ''].join('')
+  // ev.SC1_CSMS_ID/SC2_CSMS_ID/sc1_name/sc2_name are from the old two-
+  // conductor-per-event design and don't exist on event rows anymore —
+  // GET /defs/:id/events now attaches the satsang's shared conductor
+  // roster as ev.conductors (an array), same data as the definition
+  // screen's Conductors list. This always fell through to "no options"
+  // before, which is why a real assigned conductor never showed here.
+  const conductorOptions = (ev && ev.conductors && ev.conductors.length)
+    ? ev.conductors.map(c=>`<option value="${c.SC_CSMS_ID}">${esc(c.Seeker_Name||c.Seeker_Email||('Conductor #'+c.SC_CSMS_ID))}</option>`).join('')
     : '';
 
   body.innerHTML = `
