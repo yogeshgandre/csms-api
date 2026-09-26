@@ -212,12 +212,16 @@ router.post('/defs/:id/submit', requireAuth, async (req, res) => {
       [req.params.id]
     );
 
-    // Table is Role_Seva_Dept_Access, not Satsangs_Seva_Dept_Access, and the
-    // review-role column is Dept_Review_Role_ID — confirmed against the real
-    // schema dump, not a guess.
+    // Table is Role_Seva_Dept_Access (not Satsangs_Seva_Dept_Access), in
+    // RMS (not SCS) — it's a generic Seva-department access table, same
+    // domain as RMS.Seva_Dept and RMS.User_Seva_Dept_Role, not satsang-
+    // specific. The schema dump didn't list which Postgres schema each
+    // table lives in, only column names, so the schema qualifier here is
+    // inferred from that grouping, not independently confirmed the way the
+    // table/column names were.
     const reviewerRoleIdsQ = await client.query(
       `SELECT DISTINCT unnest(string_to_array(${qi('Dept_Review_Role_ID')}, ',')) AS role_id
-       FROM ${qi('SCS')}.${qi('Role_Seva_Dept_Access')}
+       FROM ${qi('RMS')}.${qi('Role_Seva_Dept_Access')}
        WHERE ${qi('Ver_To_DT')} >= CURRENT_DATE AND ${qi('Dept_Review_Role_ID')} IS NOT NULL`
     );
     const roleIds = reviewerRoleIdsQ.rows.map(r => r.role_id.trim()).filter(Boolean);
@@ -914,7 +918,7 @@ router.get('/access-config', requireAuth, async (req, res) => {
               d.${qi('Seva_Dept_Name')},
               sda.${qi('Dept_Create_Role_ID')}, sda.${qi('Dept_Review_Role_ID')},
               sda.${qi('Dept_Approve_Role_ID')}, sda.${qi('Notify_Role_ID')}
-       FROM ${qi('SCS')}.${qi('Role_Seva_Dept_Access')} sda
+       FROM ${qi('RMS')}.${qi('Role_Seva_Dept_Access')} sda
        LEFT JOIN ${qi('RMS')}.${qi('Seva_Dept')} d ON d.${qi('Seva_Dept_ID')} = sda.${qi('Seva_Dept_ID')}
        WHERE sda.${qi('Ver_To_DT')} >= CURRENT_DATE
        ORDER BY d.${qi('Seva_Dept_Name')}`
@@ -933,11 +937,11 @@ router.post('/access-config', requireAuth, async (req, res) => {
   }
   try {
     const maxQ = await pool.query(
-      `SELECT COALESCE(MAX(${qi('Role_Access_ID')}), 0) + 1 AS next_id FROM ${qi('SCS')}.${qi('Role_Seva_Dept_Access')}`
+      `SELECT COALESCE(MAX(${qi('Role_Access_ID')}), 0) + 1 AS next_id FROM ${qi('RMS')}.${qi('Role_Seva_Dept_Access')}`
     );
     const id = maxQ.rows[0].next_id;
     await pool.query(
-      `INSERT INTO ${qi('SCS')}.${qi('Role_Seva_Dept_Access')}
+      `INSERT INTO ${qi('RMS')}.${qi('Role_Seva_Dept_Access')}
         (${qi('Role_Access_ID')}, ${qi('Seva_Dept_ID')},
          ${qi('Dept_Create_Role_ID')}, ${qi('Dept_Review_Role_ID')}, ${qi('Dept_Approve_Role_ID')}, ${qi('Notify_Role_ID')},
          ${qi('Ver_From_DT')}, ${qi('Ver_To_DT')})
@@ -954,7 +958,7 @@ router.post('/access-config', requireAuth, async (req, res) => {
 router.delete('/access-config/:id', requireAuth, async (req, res) => {
   try {
     await pool.query(
-      `UPDATE ${qi('SCS')}.${qi('Role_Seva_Dept_Access')} SET ${qi('Ver_To_DT')} = CURRENT_DATE - INTERVAL '1 day'
+      `UPDATE ${qi('RMS')}.${qi('Role_Seva_Dept_Access')} SET ${qi('Ver_To_DT')} = CURRENT_DATE - INTERVAL '1 day'
        WHERE ${qi('Role_Access_ID')} = $1`,
       [req.params.id]
     );
