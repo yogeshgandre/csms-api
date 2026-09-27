@@ -30,8 +30,8 @@
   .field input:focus, .field select:focus{outline:2px solid var(--deep-2);outline-offset:1px}
   .field input[readonly]{background:var(--paper);color:#9CB1C4}
   .whatsapp-row{display:flex;gap:8px}
-  .whatsapp-row input[readonly]{flex:0 0 78px;text-align:center}
-  .whatsapp-row input:not([readonly]){flex:1;min-width:0}
+  .whatsapp-row select{flex:0 0 92px}
+  .whatsapp-row input{flex:1;min-width:0}
   button{width:100%;padding:11px;border:none;border-radius:999px;background:var(--deep);color:#fff;
     font-size:14.5px;font-weight:600;cursor:pointer;font-family:inherit}
   button:disabled{opacity:.6;cursor:default}
@@ -114,8 +114,12 @@ function mandatoryFieldHTML(f, countries){
     input = `<input id="${id}" type="email" placeholder="you@example.com" autocomplete="email">`;
   } else if(f.type === 'number'){
     fullWidth = true;
+    const isdOptions = uniqueIsdOptions(countries);
     input = `<div class="whatsapp-row">
-        <input id="m_Country_ISD_whatsapp" type="text" readonly placeholder="+ Code">
+        <select id="m_Country_ISD_whatsapp" onchange="this.dataset.touched='1'">
+          <option value="">Code</option>
+          ${isdOptions}
+        </select>
         <input id="${id}" type="tel" inputmode="numeric" placeholder="Enter WhatsApp number" autocomplete="tel">
       </div>`;
   } else {
@@ -130,6 +134,20 @@ function mandatoryFieldHTML(f, countries){
   return `<div class="field"${span}><label for="${id}">${esc(f.label)}${f.required?' <span class="req">*</span>':''}</label>${input}</div>${extra}`;
 }
 
+// Deduplicated, numerically-sorted list of "+code" options for the
+// WhatsApp dialing-code select \u2014 country name shown as a hint since
+// several countries can share the same code.
+function uniqueIsdOptions(countries){
+  const seen = new Map();
+  (countries||[]).forEach(c=>{
+    if(!c.Country_ISD) return;
+    if(!seen.has(c.Country_ISD)) seen.set(c.Country_ISD, c.Country_Name);
+  });
+  return Array.from(seen.entries())
+    .sort((a,b)=>Number(a[0])-Number(b[0]))
+    .map(([code,name])=>`<option value="+${esc(code)}">+${esc(code)} (${esc(name)})</option>`).join('');
+}
+
 // Resolves the typed country name against the real list (case-insensitive
 // exact match \u2014 the datalist only offers suggestions, it doesn't force a
 // choice) and fills the read-only ISD code alongside it.
@@ -140,8 +158,13 @@ function onCountryTyped(){
   const isd = match && match.Country_ISD ? ('+'+match.Country_ISD) : '';
   const ispEl = document.getElementById('m_Country_ISD_display');
   if(ispEl) ispEl.value = isd;
+  // WhatsApp code is a select the person can override \u2014 only auto-fill
+  // it if they haven't already changed it away from the auto-filled value.
   const waEl = document.getElementById('m_Country_ISD_whatsapp');
-  if(waEl) waEl.value = isd;
+  if(waEl && (!waEl.dataset.touched || waEl.value === waEl.dataset.autoFilled)){
+    waEl.value = isd;
+    waEl.dataset.autoFilled = isd;
+  }
 }
 
 function additionalFieldHTML(f){

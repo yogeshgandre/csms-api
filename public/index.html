@@ -614,7 +614,7 @@ nav .pip.r{background:var(--sage-wash);color:var(--sage)}
 <div class="shell" id="shell" style="display:none">
 
 <div class="org-banner">
-  <img class="banner-img" src="assets/csms-banner.png" alt="CSMS \u2014 Curious and Seeker Management System, Spiritual Science Research Foundation">
+  <img class="banner-img" src="assets/csms-banner.png" alt="CSMS — Curious and Seeker Management System, Spiritual Science Research Foundation">
 </div>
 
 <header>
@@ -713,7 +713,7 @@ nav .pip.r{background:var(--sage-wash);color:var(--sage)}
 
   <section class="pane" id="p-tickermgmt">
     <h2 class="sec">Ticker Management</h2>
-    <p class="sub">Notifications that scroll across the top of every screen, for everyone signed in \u2014 not scoped to a single tab.</p>
+    <p class="sub">Notifications that scroll across the top of every screen, for everyone signed in — not scoped to a single tab.</p>
     <div id="tickerMgmt"></div>
   </section>
 
@@ -3721,7 +3721,7 @@ function renderSatsangGroupBody(id){
           <button class="mini" onclick="removeSatsangConductor(${id}, ${c.SC_CSMS_ID}, this)" style="width:20px;height:20px;font-size:12px">&times;</button>
         </div>`).join('')}</div>` : '<div class="igrp-empty">No conductors assigned yet.</div>'}
       <div class="igrp-inline-form" id="scnd_${id}">
-        <input id="condName_${id}" placeholder="Start typing a name\u2026" autocomplete="off" oninput="peopleAutocomplete(this,'cond_${id}')">
+        <input id="cond_${id}Name" placeholder="Start typing a name\u2026" autocomplete="off" oninput="peopleAutocomplete(this,'cond_${id}')">
         <div id="cond_${id}_ac" class="ac-dropdown" style="display:none"></div>
         <input id="cond_${id}Email" type="email" placeholder="name@ssrf.org">
         <button class="small-btn save" onclick="addSatsangConductor(${id}, this)">Add</button>
@@ -3787,7 +3787,7 @@ async function addSatsangConductor(defId, btn){
     try{
       const email=document.getElementById('cond_'+defId+'Email').value.trim();
       if(!email) return;
-      await apiFetch('/api/satsangs/defs/'+defId+'/conductors', {method:'POST', body: JSON.stringify({email, name: document.getElementById('condName_'+defId).value.trim()})});
+      await apiFetch('/api/satsangs/defs/'+defId+'/conductors', {method:'POST', body: JSON.stringify({email, name: document.getElementById('cond_'+defId+'Name').value.trim()})});
       toast('Conductor added.');
       SATSANG_DETAIL_DATA[defId].conductors = await apiFetch('/api/satsangs/defs/'+defId+'/conductors');
       delete SATSANG_EVENT_CONDUCTORS[defId]; // Event Management shows the same roster \u2014 refresh it too

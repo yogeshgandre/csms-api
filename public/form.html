@@ -23,6 +23,13 @@
   .field input, .field select{width:100%;padding:9px 12px;font-size:14px;border:1px solid var(--line-2);
     border-radius:10px;background:#fff;color:var(--ink);font-family:inherit}
   .field input:focus, .field select:focus{outline:2px solid var(--deep-2);outline-offset:1px}
+  .day-row{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
+  .day-col{display:flex;flex-direction:column;align-items:stretch;gap:4px}
+  .day-label{font-size:10.5px;color:var(--ink);opacity:.6;text-align:center}
+  .day-input{width:100%;padding:6px 4px;font-size:13px;border:1px solid var(--line-2);border-radius:7px;
+    background:#fff;color:var(--ink);font-family:inherit;text-align:center;box-sizing:border-box}
+  .day-done{padding:6px 4px;font-size:12px;border-radius:7px;background:var(--deep-wash,#eef);
+    color:var(--deep);text-align:center;box-sizing:border-box;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   button{width:100%;padding:11px;border:none;border-radius:999px;background:var(--deep);color:#fff;
     font-size:14.5px;font-weight:600;cursor:pointer;font-family:inherit}
   button:disabled{opacity:.6;cursor:default}
@@ -50,6 +57,7 @@
 const API_BASE = 'https://csms-api.onrender.com';
 const token = new URLSearchParams(location.search).get('token');
 const app = document.getElementById('app');
+let CURRENT_FIELDS = [];
 
 function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
@@ -84,6 +92,7 @@ async function init(){
 }
 
 function renderForm(data){
+  CURRENT_FIELDS = data.fields || [];
   const when = data.eventTime ? new Date(data.eventTime).toLocaleString(undefined, {dateStyle:'medium', timeStyle:'short'}) : '';
   app.innerHTML = `
     <h1>${esc(data.satsangName)}</h1>
@@ -98,12 +107,24 @@ function renderForm(data){
     formEl.innerHTML = `<p class="sub">No additional details are needed for this satsang \u2014 just tap Submit to confirm.</p>`;
     return;
   }
-  const openFields = fields.filter(f=>!f.alreadySubmitted);
+  const openFields = fields.filter(f=>!(f.Review_Frequency==='Daily' ? (f.week||[]).every(d=>d.submitted) : f.alreadySubmitted));
   formEl.innerHTML = fields.map(f=>{
     const id = 'f_' + f.Field_Name.replace(/[^a-zA-Z0-9]/g,'_');
     const cadenceNote = f.Review_Frequency==='Daily' ? ' (daily)' : f.Review_Frequency==='Weekly' ? ' (weekly)' : '';
+    if(f.Review_Frequency==='Daily'){
+      const week = f.week || [];
+      const dayInput = (d,i) => d.submitted
+        ? `<div class="day-col"><div class="day-label">${esc(d.label)}</div><div class="day-done" title="Submitted">${esc(d.value||'\u2713')}</div></div>`
+        : `<div class="day-col"><div class="day-label">${esc(d.label)}</div>${
+            f.Field_Data_Type==='boolean'
+              ? `<select id="${id}__${d.date}" class="day-input"><option value="">\u2014</option><option value="Yes">Y</option><option value="No">N</option></select>`
+              : `<input id="${id}__${d.date}" class="day-input" type="${f.Field_Data_Type==='number'?'number':f.Field_Data_Type==='date'?'date':'text'}">`
+          }</div>`;
+      return `<div class="field"><label>${esc(f.Field_Name)}${cadenceNote}</label>
+        <div class="day-row">${week.map(dayInput).join('')}</div></div>`;
+    }
     if(f.alreadySubmitted){
-      const periodNote = f.Review_Frequency==='Daily' ? 'Submitted for today.' : f.Review_Frequency==='Weekly' ? 'Submitted for this week.' : 'Already submitted.';
+      const periodNote = f.Review_Frequency==='Weekly' ? 'Submitted for this week.' : 'Already submitted.';
       return `<div class="field"><label>${esc(f.Field_Name)}${cadenceNote}</label>
         <div class="msg ok" style="margin-bottom:0">${esc(periodNote)}${f.lastValue?(' Last answer: '+esc(f.lastValue)):''}</div></div>`;
     }
@@ -123,12 +144,24 @@ async function submitForm(){
   const btn = document.getElementById('submitBtn');
   const errEl = document.getElementById('formErr');
   errEl.innerHTML = '';
-  const fields = document.querySelectorAll('#satsangForm .field label');
   const values = {};
-  fields.forEach(lbl=>{
-    const input = document.getElementById(lbl.getAttribute('for'));
-    if(!input) return; // already-submitted fields render as a message, not an input
-    values[lbl.textContent.replace(/\s*\((daily|weekly)\)\s*$/i,'')] = input.value;
+  (CURRENT_FIELDS||[]).forEach(f=>{
+    if(f.Review_Frequency==='Daily'){
+      const id = 'f_' + f.Field_Name.replace(/[^a-zA-Z0-9]/g,'_');
+      const dayValues = {};
+      (f.week||[]).forEach(d=>{
+        if(d.submitted) return;
+        const el = document.getElementById(id+'__'+d.date);
+        if(el && el.value !== '') dayValues[d.date] = el.value;
+      });
+      if(Object.keys(dayValues).length) values[f.Field_Name] = dayValues;
+      return;
+    }
+    if(f.alreadySubmitted) return;
+    const id = 'f_' + f.Field_Name.replace(/[^a-zA-Z0-9]/g,'_');
+    const input = document.getElementById(id);
+    if(!input) return;
+    values[f.Field_Name] = input.value;
   });
   btn.disabled = true; btn.textContent = 'Submitting\u2026';
   try{

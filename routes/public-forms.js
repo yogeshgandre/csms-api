@@ -50,6 +50,22 @@ function currentWeekStart() {
   return monday.toISOString().slice(0, 10);
 }
 
+// The 7 dates (Sun\u2192Sat) of the calendar week containing today, for a
+// Daily field's self-service columns \u2014 separate from currentWeekStart()
+// above, which is Monday-based and only used by "Weekly" fields.
+function currentSundayWeekDates() {
+  const now = new Date();
+  const day = now.getUTCDay(); // 0=Sun..6=Sat
+  const sunday = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - day));
+  const labels = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const out = [];
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(sunday); d.setUTCDate(sunday.getUTCDate() + i);
+    out.push({ date: d.toISOString().slice(0, 10), label: labels[i] });
+  }
+  return out;
+}
+
 async function loadTokenContext(token) {
   const tokQ = await pool.query(
     `SELECT t.${qi('SE_ID')}, t.${qi('Seeker_ID')}
@@ -87,19 +103,30 @@ router.get('/satsang-form/:token', async (req, res) => {
     );
 
     const weekStart = currentWeekStart();
+    const sundayWeek = currentSundayWeekDates();
     const hasAnswers = await satsangAnswersTableExists(ctx.Satsang_ID);
     const fields = [];
     for (const f of fieldsQ.rows) {
       let existingQ = { rowCount: 0, rows: [] };
+      let week = null;
       if (hasAnswers) {
         const tbl = `${qi('SCS')}.${qi(satsangAnswersTable(ctx.Satsang_ID))}`;
         if (f.Review_Frequency === 'Daily') {
-          existingQ = await pool.query(
-            `SELECT ${qi('Field_Value')} FROM ${tbl}
-             WHERE ${qi('SE_ID')} = $1 AND ${qi('Seeker_ID')} = $2 AND ${qi('Field_Name')} = $3 AND ${qi('Review_Date')} = CURRENT_DATE
-             ORDER BY ${qi('Submitted_DT')} DESC LIMIT 1`,
-            [ctx.SE_ID, ctx.Seeker_ID, f.Field_Name]
+          // 7 columns, Sun\u2192Sat, each independently fillable/back-fillable
+          // for its own date \u2014 not just "today".
+          const weekQ = await pool.query(
+            `SELECT ${qi('Review_Date')}, ${qi('Field_Value')} FROM ${tbl}
+             WHERE ${qi('SE_ID')} = $1 AND ${qi('Seeker_ID')} = $2 AND ${qi('Field_Name')} = $3
+               AND ${qi('Review_Date')} >= $4 AND ${qi('Review_Date')} <= $5
+             ORDER BY ${qi('Submitted_DT')} DESC`,
+            [ctx.SE_ID, ctx.Seeker_ID, f.Field_Name, sundayWeek[0].date, sundayWeek[6].date]
           );
+          const byDate = new Map();
+          for (const row of weekQ.rows) {
+            const key = new Date(row.Review_Date).toISOString().slice(0, 10);
+            if (!byDate.has(key)) byDate.set(key, row.Field_Value); // first hit wins (newest, per ORDER BY)
+          }
+          week = sundayWeek.map(d => ({ date: d.date, label: d.label, value: byDate.has(d.date) ? byDate.get(d.date) : null, submitted: byDate.has(d.date) }));
         } else if (f.Review_Frequency === 'Weekly') {
           existingQ = await pool.query(
             `SELECT ${qi('Field_Value')} FROM ${tbl}
@@ -115,11 +142,14 @@ router.get('/satsang-form/:token', async (req, res) => {
             [ctx.SE_ID, ctx.Seeker_ID, f.Field_Name]
           );
         }
+      } else if (f.Review_Frequency === 'Daily') {
+        week = sundayWeek.map(d => ({ date: d.date, label: d.label, value: null, submitted: false }));
       }
       fields.push({
         ...f,
         alreadySubmitted: existingQ.rowCount > 0,
         lastValue: existingQ.rowCount > 0 ? existingQ.rows[0].Field_Value : null,
+        week,
       });
     }
 
@@ -167,14 +197,34 @@ router.post('/satsang-form/:token', async (req, res) => {
       const freq = freqByField.get(fieldName);
       if (!freq) continue; // not a real field on this satsang — ignore rather than trust the client
 
-      let existingQ;
       if (freq === 'Daily') {
-        existingQ = await client.query(
-          `SELECT 1 FROM ${tbl}
-           WHERE ${qi('SE_ID')} = $1 AND ${qi('Seeker_ID')} = $2 AND ${qi('Field_Name')} = $3 AND ${qi('Review_Date')} = CURRENT_DATE`,
-          [ctx.SE_ID, ctx.Seeker_ID, fieldName]
-        );
-      } else if (freq === 'Weekly') {
+        // fieldValue is an object keyed by date (one of the 7 Sun\u2192Sat
+        // columns), e.g. {"2026-09-27": "5"} \u2014 each date is checked and
+        // inserted independently, so back-filling earlier days in the same
+        // week is fine as long as that specific date hasn't been given yet.
+        if (!fieldValue || typeof fieldValue !== 'object') continue;
+        for (const [dateStr, dayValue] of Object.entries(fieldValue)) {
+          if (dayValue == null || dayValue === '') continue;
+          const dQ = await client.query(
+            `SELECT 1 FROM ${tbl}
+             WHERE ${qi('SE_ID')} = $1 AND ${qi('Seeker_ID')} = $2 AND ${qi('Field_Name')} = $3 AND ${qi('Review_Date')} = $4`,
+            [ctx.SE_ID, ctx.Seeker_ID, fieldName, dateStr]
+          );
+          if (dQ.rowCount > 0) continue; // already given for that date — skip, don't overwrite
+          const maxQ = await client.query(`SELECT COALESCE(MAX(${qi('SEFV_ID')}), 0) + 1 AS next_id FROM ${tbl}`);
+          await client.query(
+            `INSERT INTO ${tbl}
+              (${qi('SEFV_ID')}, ${qi('SE_ID')}, ${qi('Seeker_ID')}, ${qi('Field_Name')}, ${qi('Field_Value')}, ${qi('Review_Date')}, ${qi('Submitted_DT')})
+             VALUES ($1,$2,$3,$4,$5,$6,now())`,
+            [maxQ.rows[0].next_id, ctx.SE_ID, ctx.Seeker_ID, fieldName, String(dayValue), dateStr]
+          );
+          accepted++;
+        }
+        continue;
+      }
+
+      let existingQ;
+      if (freq === 'Weekly') {
         existingQ = await client.query(
           `SELECT 1 FROM ${tbl}
            WHERE ${qi('SE_ID')} = $1 AND ${qi('Seeker_ID')} = $2 AND ${qi('Field_Name')} = $3 AND ${qi('Review_Date')} >= $4`,
