@@ -72,13 +72,9 @@ async function notify(client, csmsId, message, linkKind, linkId) {
 
 router.get('/types', requireAuth, async (req, res) => {
   try {
-    // SS_Desc was wrong (confirmed against the real schema — the real
-    // column is ST_Desc, restored below). Active_Flag doesn't exist at all
-    // on this table — there is no "active" concept here, so every row is
-    // returned; that part stays as the intentional fallback.
     const r = await pool.query(
       `SELECT ${qi('Satsang_Type_ID')}, ${qi('ST_Name')}, ${qi('ST_Desc')}
-       FROM ${qi('SCS')}.${qi('M_Satsang_type')} ORDER BY ${qi('ST_Name')}`
+       FROM ${qi('SCS')}.${qi('M_Satsang_type')} WHERE ${qi('Ver_To_DT')} >= CURRENT_DATE ORDER BY ${qi('ST_Name')}`
     );
     res.json(r.rows);
   } catch (err) {
@@ -89,15 +85,6 @@ router.get('/types', requireAuth, async (req, res) => {
 
 router.get('/defs', requireAuth, async (req, res) => {
   try {
-    // Created_By_CSMS_ID doesn't exist on M_Satsang in the real schema, so
-    // both it and the LEFT JOIN that used it to look up created_by_name are
-    // Created_By_CSMS_ID was wrong — confirmed against the real schema.
-    // Every table in this schema uses a single generic Created_ID +
-    // Creation_DT pair, not per-action columns like Created_By_CSMS_ID or
-    // Status_Changed_By_CSMS_ID/Status_Changed_DT (those genuinely don't
-    // exist anywhere — there's no per-status-change audit trail in this
-    // schema, only "who/when was the row first created"). Restored the
-    // creator join on that basis.
     const r = await pool.query(
       `SELECT ms.${qi('Satsang_ID')}, ms.${qi('Satsang_Short_Name')}, ms.${qi('Satsang_Name')},
               ms.${qi('Satsang_Type_ID')}, mt.${qi('ST_Name')},
@@ -117,13 +104,10 @@ router.get('/defs', requireAuth, async (req, res) => {
   }
 });
 
-// NOTE: the real column is Satsang_Adv_Notification_Email (bigint) —
-// confirmed against the schema, but neither this endpoint nor the frontend
-// currently sends or reads a value for it (there's no advNotification field
-// in the create form or the request body below), so it's left unset here
-// rather than wired up speculatively. The bigint type and the "_Email"
-// name don't obviously agree — worth asking Yogesh what this column
-// actually holds before building a form field for it.
+// NOTE: advNotification is accepted from the client but not yet persisted —
+// the real column name for "days advance notification" on M_Satsang isn't
+// confirmed (Satsang_Adv_Notification doesn't exist as written). Add it
+// back to the SELECT/INSERT/UPDATE below once the exact name is known.
 router.post('/defs', requireAuth, async (req, res) => {
   const { shortName, name, typeId, startDate, frequency } = req.body || {};
   if (!shortName || !name || !typeId || !startDate) {
@@ -134,19 +118,13 @@ router.post('/defs', requireAuth, async (req, res) => {
       `SELECT COALESCE(MAX(${qi('Satsang_ID')}), 0) + 1 AS next_id FROM ${qi('SCS')}.${qi('M_Satsang')}`
     );
     const id = maxQ.rows[0].next_id;
-    // Created_By_CSMS_ID removed — the real column is Created_ID (see the
-    // GET /defs comment above), but no INSERT anywhere else in this file
-    // sets Created_ID/Creation_DT either, so this satsang is created with
-    // no recorded creator to stay consistent with that existing pattern,
-    // rather than fixing it in just this one spot. Populating Created_ID
-    // app-wide is a deliberate, larger change, not a one-line patch.
     await pool.query(
       `INSERT INTO ${qi('SCS')}.${qi('M_Satsang')}
         (${qi('Satsang_ID')}, ${qi('Satsang_Type_ID')}, ${qi('Satsang_Short_Name')}, ${qi('Satsang_Name')},
-         ${qi('Satsang_Start_Date')}, ${qi('Satsang_Frequency')},
+         ${qi('Created_ID')}, ${qi('Satsang_Start_Date')}, ${qi('Satsang_Frequency')},
          ${qi('Satsang_Status')}, ${qi('Ver_From_DT')}, ${qi('Ver_To_DT')})
-       VALUES ($1,$2,$3,$4,$5,$6,'Draft',CURRENT_DATE,$7)`,
-      [id, typeId, shortName, name, startDate, frequency || null, FAR_FUTURE]
+       VALUES ($1,$2,$3,$4,$5,$6,$7,'Draft',CURRENT_DATE,$8)`,
+      [id, typeId, shortName, name, req.user.csmsId, startDate, frequency || null, FAR_FUTURE]
     );
     res.status(201).json({ ok: true, satsangId: id });
   } catch (err) {
@@ -181,7 +159,7 @@ router.put('/defs/:id', requireAuth, async (req, res) => {
 });
 
 // Submit for review. Notifies whoever holds a role listed as a review role
-// in Role_Seva_Dept_Access (union across all active rows) — this is a
+// in Satsangs_Seva_Dept_Access (union across all active rows) — this is a
 // simplification: it doesn't scope by which department "owns" this
 // particular satsang, since nothing in the given schema links a Satsang to
 // a department directly. Review and approve are also collapsed into one
@@ -201,10 +179,6 @@ router.post('/defs/:id/submit', requireAuth, async (req, res) => {
       await client.query('ROLLBACK');
       return res.status(409).json({ error: 'BAD_STATE', message: 'Only a Draft or Rejected definition can be submitted for review.' });
     }
-    // Status_Changed_By_CSMS_ID and Status_Changed_DT don't exist on
-    // M_Satsang either (same family as Created_By_CSMS_ID above) — this
-    // update now only touches Satsang_Status. No "when did the status
-    // change" timestamp is recorded anywhere until a real column is found.
     await client.query(
       `UPDATE ${qi('SCS')}.${qi('M_Satsang')}
        SET ${qi('Satsang_Status')}='In Review'
@@ -212,17 +186,10 @@ router.post('/defs/:id/submit', requireAuth, async (req, res) => {
       [req.params.id]
     );
 
-    // Table is Role_Seva_Dept_Access (not Satsangs_Seva_Dept_Access), in
-    // RMS (not SCS) — it's a generic Seva-department access table, same
-    // domain as RMS.Seva_Dept and RMS.User_Seva_Dept_Role, not satsang-
-    // specific. The schema dump didn't list which Postgres schema each
-    // table lives in, only column names, so the schema qualifier here is
-    // inferred from that grouping, not independently confirmed the way the
-    // table/column names were.
     const reviewerRoleIdsQ = await client.query(
-      `SELECT DISTINCT unnest(string_to_array(${qi('Dept_Review_Role_ID')}, ',')) AS role_id
-       FROM ${qi('RMS')}.${qi('Role_Seva_Dept_Access')}
-       WHERE ${qi('Ver_To_DT')} >= CURRENT_DATE AND ${qi('Dept_Review_Role_ID')} IS NOT NULL`
+      `SELECT DISTINCT unnest(string_to_array(${qi('Satsang_Review_Role_ID')}, ',')) AS role_id
+       FROM ${qi('SCS')}.${qi('Satsangs_Seva_Dept_Access')}
+       WHERE ${qi('Ver_To_DT')} >= CURRENT_DATE AND ${qi('Satsang_Review_Role_ID')} IS NOT NULL`
     );
     const roleIds = reviewerRoleIdsQ.rows.map(r => r.role_id.trim()).filter(Boolean);
     if (roleIds.length) {
@@ -261,11 +228,8 @@ async function setDefStatus(req, res, newStatus, messageFor) {
   try {
     client = await pool.connect();
     await client.query('BEGIN');
-    // Created_By_CSMS_ID dropped — doesn't exist (see the /defs GET comment
-    // above). This also means the notify-the-creator call below can never
-    // fire; removed rather than left as silent dead code.
     const cur = await client.query(
-      `SELECT ${qi('Satsang_Status')}, ${qi('Satsang_Name')}
+      `SELECT ${qi('Satsang_Status')}, ${qi('Satsang_Name')}, ${qi('Created_ID')}
        FROM ${qi('SCS')}.${qi('M_Satsang')} WHERE ${qi('Satsang_ID')} = $1 FOR UPDATE`,
       [req.params.id]
     );
@@ -274,17 +238,15 @@ async function setDefStatus(req, res, newStatus, messageFor) {
       await client.query('ROLLBACK');
       return res.status(409).json({ error: 'BAD_STATE', message: 'Only a definition currently In Review can be ' + newStatus.toLowerCase() + '.' });
     }
-    // Same missing columns as /submit above — Status_Changed_By_CSMS_ID and
-    // Status_Changed_DT dropped, this only updates Satsang_Status now.
     await client.query(
       `UPDATE ${qi('SCS')}.${qi('M_Satsang')}
        SET ${qi('Satsang_Status')}=$1
        WHERE ${qi('Satsang_ID')} = $2`,
       [newStatus, req.params.id]
     );
-    // Notifying the creator on approve/reject is disabled until
-    // Created_By_CSMS_ID (or whatever the real column is) is confirmed —
-    // there's currently no way to know who to notify.
+    if (cur.rows[0].Created_ID) {
+      await notify(client, cur.rows[0].Created_ID, messageFor(cur.rows[0].Satsang_Name), 'satsang_def', req.params.id);
+    }
     await client.query('COMMIT');
     res.json({ ok: true });
   } catch (err) {
@@ -349,7 +311,7 @@ router.post('/defs/:id/fields', requireAuth, async (req, res) => {
     const id = maxQ.rows[0].next_id;
     await pool.query(
       `INSERT INTO ${qi('SCS')}.${qi('M_Satsang_Defn')}
-        (${qi('MSD_ID')}, ${qi('Satsang_ID')}, ${qi('Field_Name')}, ${qi('Field_Data_Type')}, ${qi('QLT_FIELD')}, ${qi('QTY_FIELD')}, ${qi('Display_Order')}, ${qi('Review_Frequency')}, ${qi('Ver_From_DT')}, ${qi('Ver_To_DT')})
+        (${qi('MSD_ID')}, ${qi('Satsang_ID')}, ${qi('Field_Name')}, ${qi('Field_Data_Type')}, ${qi('QLT_FIELD')}, ${qi('QTY_FIELD')}, ${qi('Display_Order')}, ${qi('Review_Frequency')}, ${qi('Ver_from_DT')}, ${qi('Ver_To_DT')})
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,CURRENT_DATE,$9)`,
       [id, req.params.id, fieldName, dataType || 'text', !!isQlt, !!isQty, displayOrder || null, freq, FAR_FUTURE]
     );
@@ -465,6 +427,17 @@ router.post('/defs/:id/attendees', requireAuth, async (req, res) => {
        VALUES ($1, $2, $3, CURRENT_DATE, $4)`,
       [req.params.id, seekerId, remarks || null, FAR_FUTURE]
     );
+    // Mirror onto the Journey milestone table (same pattern as category
+    // changes) so joining a satsang shows up on the seeker's own timeline,
+    // not just in the satsang's own roster.
+    const satsangQ = await pool.query(`SELECT ${qi('Satsang_Name')} FROM ${qi('SCS')}.${qi('M_Satsang')} WHERE ${qi('Satsang_ID')} = $1`, [req.params.id]);
+    const satsangName = satsangQ.rows[0] ? satsangQ.rows[0].Satsang_Name : null;
+    const maxQ = await pool.query(`SELECT COALESCE(MAX(${qi('Milestone_ID')}), 0) + 1 AS next_id FROM ${qi('MSR')}.${qi('Seeker_Milestone')}`);
+    await pool.query(
+      `INSERT INTO ${qi('MSR')}.${qi('Seeker_Milestone')} (${qi('Milestone_ID')}, ${qi('Seeker_ID')}, ${qi('Milestone_Kind')}, ${qi('Milestone_Label')}, ${qi('Milestone_DT')}, ${qi('Created_ID')})
+       VALUES ($1,$2,$3,$4,CURRENT_DATE,$5)`,
+      [maxQ.rows[0].next_id, seekerId, 'Satsang', `Joined ${satsangName || 'satsang #' + req.params.id}`, req.user.csmsId]
+    );
     res.status(201).json({ ok: true });
   } catch (err) {
     console.error('[POST /satsangs/defs/:id/attendees] error', err);
@@ -576,20 +549,8 @@ router.post('/defs/:id/events', requireAuth, async (req, res) => {
       [seId]
     );
 
-    // sc1Id/sc2Id used to come from this endpoint's own request body, back
-    // when an event carried up to two conductors directly. Since conductors
-    // moved to SCS.Satsang_Conductor scoped by Satsang_ID (see the comment
-    // above), those two variables were never defined here — this loop threw
-    // a ReferenceError every time. Fetching the satsang's current conductor
-    // roster the same way GET /defs/:id/conductors and GET /events already
-    // do, rather than reintroducing the old two-conductor request fields.
-    const condQ = await client.query(
-      `SELECT ${qi('SC_CSMS_ID')} FROM ${qi('SCS')}.${qi('Satsang_Conductor')}
-       WHERE ${qi('Satsang_ID')} = $1 AND ${qi('Ver_To_DT')} >= CURRENT_DATE`,
-      [req.params.id]
-    );
-    for (const row of condQ.rows) {
-      await notify(client, row.SC_CSMS_ID, `A new "${defQ.rows[0].Satsang_Name}" event needs your approval.`, 'satsang_event', seId);
+    for (const cId of [sc1Id, sc2Id].filter(Boolean)) {
+      await notify(client, cId, `A new "${defQ.rows[0].Satsang_Name}" event needs your approval.`, 'satsang_event', seId);
     }
 
     await client.query('COMMIT');
@@ -911,29 +872,20 @@ async function setTransferStage(req, res, { fromStatuses, toStatus, apply }) {
   }
 }
 
-/* ============ Role_Seva_Dept_Access (configuration only — not
-   enforced anywhere yet, per instruction: everyone has access for now) ============
-
-   The code used to call this table Satsangs_Seva_Dept_Access with a
-   Satsang_Function column, as if there were one configurable row per
-   (function, department) pair. The real table is Role_Seva_Dept_Access —
-   generic to every Seva Dept, not satsang-specific — and has no function
-   column at all: one row per Seva_Dept_ID, full stop. satsangFunction has
-   been removed from every query below to match. This does narrow the
-   feature (no more per-function role sets within a department) — flagging
-   that as a real scope change, not a silent one. */
+/* ============ Satsangs_Seva_Dept_Access (configuration only — not
+   enforced anywhere yet, per instruction: everyone has access for now) ============ */
 
 router.get('/access-config', requireAuth, async (req, res) => {
   try {
     const r = await pool.query(
-      `SELECT sda.${qi('Role_Access_ID')}, sda.${qi('Seva_Dept_ID')},
+      `SELECT sda.${qi('Satsang_Access_ID')}, sda.${qi('Satsang_Function')}, sda.${qi('Seva_Dept_ID')},
               d.${qi('Seva_Dept_Name')},
-              sda.${qi('Dept_Create_Role_ID')}, sda.${qi('Dept_Review_Role_ID')},
-              sda.${qi('Dept_Approve_Role_ID')}, sda.${qi('Notify_Role_ID')}
-       FROM ${qi('RMS')}.${qi('Role_Seva_Dept_Access')} sda
+              sda.${qi('Satsang_Create_Role_ID')}, sda.${qi('Satsang_Review_Role_ID')},
+              sda.${qi('Satsang_Approve_Role_ID')}, sda.${qi('Satsang_Notify_Role_ID')}
+       FROM ${qi('SCS')}.${qi('Satsangs_Seva_Dept_Access')} sda
        LEFT JOIN ${qi('RMS')}.${qi('Seva_Dept')} d ON d.${qi('Seva_Dept_ID')} = sda.${qi('Seva_Dept_ID')}
        WHERE sda.${qi('Ver_To_DT')} >= CURRENT_DATE
-       ORDER BY d.${qi('Seva_Dept_Name')}`
+       ORDER BY d.${qi('Seva_Dept_Name')}, sda.${qi('Satsang_Function')}`
     );
     res.json(r.rows);
   } catch (err) {
@@ -943,22 +895,22 @@ router.get('/access-config', requireAuth, async (req, res) => {
 });
 
 router.post('/access-config', requireAuth, async (req, res) => {
-  const { sevaDeptId, createRoleId, reviewRoleIds, approveRoleIds, notifyRoleIds } = req.body || {};
-  if (!sevaDeptId) {
-    return res.status(400).json({ error: 'sevaDeptId is required' });
+  const { satsangFunction, sevaDeptId, createRoleId, reviewRoleIds, approveRoleIds, notifyRoleIds } = req.body || {};
+  if (!satsangFunction || !sevaDeptId) {
+    return res.status(400).json({ error: 'satsangFunction and sevaDeptId are required' });
   }
   try {
     const maxQ = await pool.query(
-      `SELECT COALESCE(MAX(${qi('Role_Access_ID')}), 0) + 1 AS next_id FROM ${qi('RMS')}.${qi('Role_Seva_Dept_Access')}`
+      `SELECT COALESCE(MAX(${qi('Satsang_Access_ID')}), 0) + 1 AS next_id FROM ${qi('SCS')}.${qi('Satsangs_Seva_Dept_Access')}`
     );
     const id = maxQ.rows[0].next_id;
     await pool.query(
-      `INSERT INTO ${qi('RMS')}.${qi('Role_Seva_Dept_Access')}
-        (${qi('Role_Access_ID')}, ${qi('Seva_Dept_ID')},
-         ${qi('Dept_Create_Role_ID')}, ${qi('Dept_Review_Role_ID')}, ${qi('Dept_Approve_Role_ID')}, ${qi('Notify_Role_ID')},
+      `INSERT INTO ${qi('SCS')}.${qi('Satsangs_Seva_Dept_Access')}
+        (${qi('Satsang_Access_ID')}, ${qi('Satsang_Function')}, ${qi('Seva_Dept_ID')},
+         ${qi('Satsang_Create_Role_ID')}, ${qi('Satsang_Review_Role_ID')}, ${qi('Satsang_Approve_Role_ID')}, ${qi('Satsang_Notify_Role_ID')},
          ${qi('Ver_From_DT')}, ${qi('Ver_To_DT')})
-       VALUES ($1,$2,$3,$4,$5,$6,CURRENT_DATE,$7)`,
-      [id, sevaDeptId, createRoleId || null, reviewRoleIds || null, approveRoleIds || null, notifyRoleIds || null, FAR_FUTURE]
+       VALUES ($1,$2,$3,$4,$5,$6,$7,CURRENT_DATE,$8)`,
+      [id, satsangFunction, sevaDeptId, createRoleId || null, reviewRoleIds || null, approveRoleIds || null, notifyRoleIds || null, FAR_FUTURE]
     );
     res.status(201).json({ ok: true, accessId: id });
   } catch (err) {
@@ -970,8 +922,8 @@ router.post('/access-config', requireAuth, async (req, res) => {
 router.delete('/access-config/:id', requireAuth, async (req, res) => {
   try {
     await pool.query(
-      `UPDATE ${qi('RMS')}.${qi('Role_Seva_Dept_Access')} SET ${qi('Ver_To_DT')} = CURRENT_DATE - INTERVAL '1 day'
-       WHERE ${qi('Role_Access_ID')} = $1`,
+      `UPDATE ${qi('SCS')}.${qi('Satsangs_Seva_Dept_Access')} SET ${qi('Ver_To_DT')} = CURRENT_DATE - INTERVAL '1 day'
+       WHERE ${qi('Satsang_Access_ID')} = $1`,
       [req.params.id]
     );
     res.json({ ok: true });

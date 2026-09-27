@@ -43,7 +43,7 @@ html{scroll-behavior:smooth}
 body{
   color:var(--ink);
   font-family:var(--font-body);
-  font-size:18.5px; line-height:1.6;
+  font-size:17.5px; line-height:1.6;
   background:var(--paper);
   -webkit-font-smoothing:antialiased;
   text-wrap:pretty;
@@ -59,7 +59,7 @@ header{
   padding:14px 22px; display:flex; align-items:center; gap:22px; flex-wrap:wrap;
 }
 .brand{display:flex;flex-direction:column;gap:1px;margin-right:auto}
-.brand .t{font-family:var(--font-head);font-size:22px;font-weight:600;letter-spacing:-.015em}
+.brand .t{font-family:var(--font-head);font-size:20px;font-weight:600;letter-spacing:-.015em}
 .brand .s{font-size:13px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.1em;font-weight:500}
 .roleblock{display:flex;align-items:center;gap:10px}
 .roleblock label{font-size:13.5px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.08em}
@@ -73,7 +73,7 @@ select:hover{border-color:var(--ink-3)}
 nav{background:rgba(255,255,255,.86);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);
   padding:8px 22px 0;display:flex;gap:4px;overflow-x:auto}
 nav button{
-  background:none;border:none;padding:11px 15px;font-size:16.5px;color:var(--ink-2);
+  background:none;border:none;padding:11px 15px;font-size:15.5px;color:var(--ink-2);
   border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap;font-weight:500;
 }
 nav button:hover{color:var(--ink);background:rgba(227,240,249,.6)}
@@ -93,8 +93,8 @@ main{padding:22px;max-width:1320px;margin:0 auto}
 .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r)}
 .card:hover{border-color:var(--deep-2);background:var(--deep-wash);box-shadow:0 4px 16px rgba(11,143,196,.14)}
 .pad{padding:16px 18px}
-h2.sec{font-family:var(--font-head);font-size:23px;font-weight:600;margin:0 0 4px;letter-spacing:-.015em}
-p.sub{margin:0 0 16px;color:var(--ink-3);font-size:15.5px;max-width:62ch}
+h2.sec{font-family:var(--font-head);font-size:21px;font-weight:600;margin:0 0 4px;letter-spacing:-.015em}
+p.sub{margin:0 0 16px;color:var(--ink-3);font-size:14.5px;max-width:62ch}
 .note{
   background:var(--deep-wash);border-left:3px solid var(--deep);border-radius:0 var(--r-sm) var(--r-sm) 0;
   padding:10px 14px;font-size:14.5px;color:#20454F;margin:14px 0;
@@ -120,14 +120,14 @@ th{
   color:var(--deep);font-weight:700;padding:11px 14px;border-bottom:1px solid var(--line-2);
   background:var(--deep-wash);position:sticky;top:0;
 }
-td{padding:11px 14px;border-bottom:1px solid #EEF4F9;font-size:16.5px;vertical-align:middle;font-variant-numeric:tabular-nums}
+td{padding:11px 14px;border-bottom:1px solid #EEF4F9;font-size:15.5px;vertical-align:middle;font-variant-numeric:tabular-nums}
 tbody tr{cursor:pointer}
 tbody tr:hover{background:#F6FAFD}
 tbody tr:last-child td{border-bottom:none}
 .nm{font-size:17px;font-weight:500;font-family:var(--font-head)}
-.sub2{font-size:14.5px;color:var(--ink-3);margin-top:1px;font-variant-numeric:normal}
+.sub2{font-size:13.5px;color:var(--ink-3);margin-top:1px;font-variant-numeric:normal}
 
-.tag{display:inline-block;font-size:14.5px;font-weight:600;padding:3px 9px;border-radius:var(--r-tag);white-space:nowrap;border:1px solid transparent}
+.tag{display:inline-block;font-size:13.5px;font-weight:600;padding:3px 9px;border-radius:var(--r-tag);white-space:nowrap;border:1px solid transparent}
 .t-core{background:var(--deep-wash);color:var(--deep);border-color:#C4DBE1}
 .t-active{background:var(--sage-wash);color:var(--sage);border-color:#CBDFD1}
 .t-semi{background:#F1EFEA;color:var(--ink-2);border-color:var(--line-2)}
@@ -148,21 +148,19 @@ tbody tr:last-child td{border-bottom:none}
 .hidden-note{margin-top:12px;font-size:14.5px;color:var(--amber);background:var(--amber-wash);
   border:1px solid #F0DFAE;border-radius:var(--r-sm);padding:10px 14px}
 
-/* ---------- seeker full page (was a right-side drawer; now a full takeover,
-   same content, same IDs — every form and function below still targets them) ---------- */
-.scrim{position:fixed;inset:0;background:var(--paper);overflow-y:auto;
-  z-index:40;animation:fadein .12s var(--ease);
+/* ---------- drawer ---------- */
+.scrim{position:absolute;inset:0;background:rgba(22,51,74,.30);backdrop-filter:blur(2px);
+  display:flex;justify-content:flex-end;z-index:40;animation:fadein .16s var(--ease);
 }
-.drawer{background:transparent;width:100%;max-width:900px;margin:0 auto;min-height:100%;
-  padding-bottom:40px}
-.dhead{background:var(--paper);position:sticky;top:0;z-index:2;border-bottom:1px solid var(--line);
-  padding:16px 0 14px;margin-bottom:8px}
+.drawer{background:var(--paper);width:min(660px,100%);height:100%;overflow-y:auto;
+  border-left:1px solid var(--line-2);box-shadow:-12px 0 32px rgba(22,51,74,.10)}
+.dhead{background:var(--card);border-bottom:1px solid var(--line);padding:18px 22px}
 .dclose{
-  float:none;display:inline-flex;align-items:center;gap:6px;background:none;border:0;
-  padding:2px 2px 2px 0;line-height:1;color:var(--deep);font-size:15.5px;font-weight:600;cursor:pointer;
+  float:right;background:none;border:1px solid var(--line-2);border-radius:var(--r-sm);
+  width:28px;height:28px;line-height:1;color:var(--ink-2);font-size:18px;
 }
-.dclose:hover{text-decoration:underline}
-.dbody{padding:0}
+.dclose:hover{border-color:var(--ink-3);color:var(--ink);background:var(--paper)}
+.dbody{padding:18px 22px 40px}
 .kv{display:grid;grid-template-columns:132px 1fr;gap:7px 14px;font-size:15.5px;margin-top:4px}
 .kv dt{color:var(--ink-3);font-size:14.5px}
 .kv dd{margin:0;font-variant-numeric:tabular-nums}
@@ -224,80 +222,6 @@ tbody tr:last-child td{border-bottom:none}
 .check{display:flex;align-items:flex-start;gap:8px;font-size:15px;color:var(--ink-2)}
 .check input{width:auto;margin-top:2px}
 
-.sf-count-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:16px}
-.sf-count{border:1.5px solid var(--line);border-top-width:4px;border-radius:10px;padding:12px 14px;text-align:center}
-.sf-count .n{font-family:var(--font-head);font-size:24px;font-weight:700}
-.sf-count .l{font-size:13px;color:var(--ink-2);margin-top:3px}
-@media(max-width:700px){.sf-count-strip{grid-template-columns:repeat(2,1fr)}}
-.sf-journey{display:flex;flex-direction:column}
-.sf-journey-row{display:grid;grid-template-columns:1fr 220px;align-items:stretch;gap:14px}
-.sf-journey-band{display:flex;align-items:center;justify-content:center;margin:-6px 0}
-.sf-journey-txt{display:flex;gap:12px;align-items:flex-start;padding:10px 0}
-.sf-journey-icon{width:38px;height:38px;border-radius:10px;flex:0 0 auto;display:flex;align-items:center;justify-content:center}
-.sf-journey-icon svg{width:20px;height:20px}
-.sf-journey-title{font-family:var(--font-head);font-weight:700;font-size:15.5px}
-.sf-journey-desc{font-size:13px;color:var(--ink-2);margin-top:2px}
-.sf-journey-notes{font-size:12.5px;color:var(--ink-3);font-style:italic;margin-top:2px}
-
-/* ---------- satsang funnel (demo / sample data only) ---------- */
-.sf-tiles{display:grid;grid-template-columns:repeat(6,1fr);gap:14px;margin-bottom:18px}
-.sf-tile{border-radius:12px;padding:14px 16px;background:var(--card);border:1px solid var(--line)}
-.sf-tile .n{font-family:var(--font-head);font-size:26px;font-weight:600;color:var(--ink);line-height:1.1}
-.sf-tile .l{font-size:13px;color:var(--ink-2);margin-top:4px}
-.sf-tile .d{font-size:12.5px;margin-top:4px;font-weight:600}
-.sf-chevrons{display:flex;gap:6px;margin-bottom:14px}
-.sf-chev{position:relative;color:#fff;padding:14px 18px 14px 30px;min-height:76px;flex:0 1 auto;min-width:0;
-  display:flex;flex-direction:column;justify-content:center;overflow:hidden;
-  clip-path:polygon(0 0,calc(100% - 18px) 0,100% 50%,calc(100% - 18px) 100%,0 100%,18px 50%)}
-.sf-chev:first-child{clip-path:polygon(0 0,calc(100% - 18px) 0,100% 50%,calc(100% - 18px) 100%,0 100%)}
-.sf-chev .n{font-family:var(--font-head);font-size:24px;font-weight:700;line-height:1}
-.sf-chev .l{font-size:13px;opacity:.92;margin-top:2px}
-.sf-conv{display:flex;gap:6px;margin-bottom:18px}
-.sf-conv > div{flex:1;text-align:center;font-size:13px;color:var(--ink-2)}
-.sf-conv b{color:var(--ink);font-family:var(--font-head)}
-.sf-hbar-row{display:grid;grid-template-columns:110px 1fr 34px;align-items:center;gap:8px;margin-bottom:9px}
-.sf-hbar-row .lab{font-size:13.5px;color:var(--ink-2)}
-.sf-hbar-row .track{height:10px;border-radius:5px;background:var(--line);overflow:hidden}
-.sf-hbar-row .track i{display:block;height:100%;border-radius:5px}
-.sf-hbar-row .num{font-size:13px;text-align:right;color:var(--ink)}
-.sf-timeline{position:relative;padding-left:22px}
-.sf-timeline::before{content:"";position:absolute;left:6px;top:4px;bottom:4px;width:1px;background:var(--line-2)}
-.sf-tl{position:relative;padding-bottom:16px;font-size:14px}
-.sf-tl:last-child{padding-bottom:0}
-.sf-tl::before{content:"";position:absolute;left:-22px;top:2px;width:13px;height:13px;border-radius:50%;
-  background:var(--card);border:2px solid var(--line-2)}
-.sf-tl.done::before{background:var(--sage);border-color:var(--sage)}
-.sf-tl.now::before{background:var(--deep);border-color:var(--deep)}
-.sf-tl.now{font-weight:600;color:var(--deep)}
-.sf-tl.done{color:var(--ink-2)}
-.sf-tl .d{font-size:12px;color:var(--ink-3);font-weight:400}
-@media(max-width:1000px){.sf-tiles{grid-template-columns:repeat(3,1fr)}.sf-chevrons{flex-wrap:wrap}.sf-chev{flex:1 1 30%;clip-path:none!important;border-radius:8px}}
-@media(max-width:600px){.sf-tiles{grid-template-columns:repeat(2,1fr)}}
-
-/* ---------- dashboard (demo / sample data only) ---------- */
-.dash-banner{background:var(--amber-wash);border:1px solid #F0DFAE;color:var(--amber);
-  border-radius:var(--r-sm);padding:10px 14px;font-size:14.5px;margin-bottom:16px}
-.dash-banner b{color:var(--ink)}
-.dash-seg{display:inline-flex;background:var(--card);border:1px solid var(--line);
-  border-radius:10px;padding:3px;gap:2px;margin-bottom:12px}
-.dash-seg button{border:0;background:transparent;color:var(--ink-2);padding:7px 14px;
-  border-radius:8px;font-size:14.5px;font-weight:500;cursor:pointer}
-.dash-seg button.on{background:var(--deep-wash);color:var(--deep);font-weight:600}
-.dash-scope{color:var(--ink-2);font-size:14.5px;margin-bottom:16px;display:flex;
-  align-items:center;gap:10px;flex-wrap:wrap}
-.dash-scope b{color:var(--ink);font-weight:600}
-.dash-chip{background:var(--card);border:1px solid var(--line);color:var(--ink-2);
-  padding:3px 10px;border-radius:7px;font-size:13px}
-.dash-tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:18px}
-.dash-tile{border-radius:12px;padding:16px 18px}
-.dash-tile .l{display:flex;align-items:center;gap:7px;font-size:14.5px;color:var(--ink-2);margin-bottom:6px}
-.dash-tile .l i{width:7px;height:7px;border-radius:50%;background:currentColor;flex:0 0 auto}
-.dash-tile .n{font-family:var(--font-head);font-size:32px;font-weight:600;color:var(--ink);
-  line-height:1.05;letter-spacing:-.015em;font-variant-numeric:tabular-nums}
-.dash-tile .d{font-size:13px;color:var(--ink-3);margin-top:5px}
-@media(max-width:900px){.dash-tiles{grid-template-columns:repeat(2,1fr)}}
-@media(max-width:600px){.dash-tiles{grid-template-columns:1fr}}
-
 /* ---------- intake ---------- */
 .sub-card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);
   padding:17px 19px;margin-bottom:12px;box-shadow:var(--sh)}
@@ -318,9 +242,9 @@ tbody tr:last-child td{border-bottom:none}
   transition:box-shadow .2s var(--ease), transform .2s var(--ease)}
 .kpi[onclick]:hover{box-shadow:0 2px 4px rgba(22,51,74,.06), 0 10px 24px rgba(11,143,196,.14), inset 0 1px 0 rgba(255,255,255,.6);
   transform:translateY(-1px)}
-.kpi .n{font-family:var(--font-head);font-size:37px;font-weight:600;color:var(--deep);line-height:1.05;letter-spacing:-.015em;font-variant-numeric:tabular-nums}
-.kpi .l{font-size:15.5px;color:var(--ink-2);margin-top:3px;font-weight:500}
-.kpi .d{font-size:14px;color:var(--ink-3);margin-top:5px}
+.kpi .n{font-family:var(--font-head);font-size:32px;font-weight:600;color:var(--deep);line-height:1.05;letter-spacing:-.015em;font-variant-numeric:tabular-nums}
+.kpi .l{font-size:14px;color:var(--ink-2);margin-top:3px;font-weight:500}
+.kpi .d{font-size:13px;color:var(--ink-3);margin-top:5px}
 .bar{display:grid;grid-template-columns:118px 1fr 40px;gap:10px;align-items:center;margin-bottom:8px;font-size:15px}
 .track{display:block;background:#E9F1F7;border-radius:20px;height:16px;overflow:hidden}
 .fill{display:block;background:linear-gradient(90deg,var(--deep),var(--deep-2));height:100%;border-radius:20px;min-width:3px}
@@ -423,14 +347,26 @@ nav .pip.r{background:var(--sage-wash);color:var(--sage)}
 .klane-empty{color:var(--ink-3);font-size:14.5px;background:var(--card);border:1px solid var(--line);
   border-radius:var(--r-sm);padding:14px;text-align:center}
 .kcard{background:var(--card);border:1px solid var(--line);border-radius:var(--r-sm);
-  padding:11px 12px;cursor:grab;box-shadow:var(--sh-sm);display:flex;flex-direction:column}
+  padding:11px 12px;cursor:pointer;box-shadow:var(--sh-sm);display:flex;flex-direction:column}
 .kcard:hover{box-shadow:var(--sh);border-color:var(--deep-2);background:var(--deep-wash)}
 .kcard.dragging{opacity:.4}
 .kcard.od{border-left:3px solid var(--amber)}
-.kcard-name{font-size:16px;cursor:pointer}
-.kcard-name:hover{color:var(--deep);background:var(--deep-wash);border-radius:var(--r-sm)}
 .kcard-actions{display:flex;align-items:center;gap:8px;margin-top:auto;padding-top:8px}
-.kcard-drag{margin-left:auto;font-size:12.5px;color:var(--ink-3);cursor:grab}/* ---------- organisation chart + modal ---------- */
+.kcard-drag{margin-left:auto;font-size:12.5px;color:var(--ink-3);cursor:grab}
+.kcard-top{display:flex;align-items:flex-start;gap:10px;cursor:pointer}
+.kcard-avatar{flex:none;width:34px;height:34px;border-radius:50%;background:var(--deep-wash);color:var(--deep);
+  display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700}
+.kcard-badge{margin-left:auto;flex:none;font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;
+  background:var(--rose-wash);color:var(--rose)}
+.kcard-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:10px 0;cursor:pointer}
+.kcard-stat{background:var(--paper);border-radius:9px;padding:8px 4px;text-align:center}
+.kcard-stat .n{font-size:17px;font-weight:700;color:var(--deep);line-height:1.15}
+.kcard-stat .l{font-size:10px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.03em;margin-top:1px}
+.kcard-chips{display:flex;flex-wrap:wrap;gap:5px;cursor:pointer}
+.kcard-chip{font-size:11px;font-weight:600;padding:3px 9px;border-radius:999px;
+  background:var(--deep-wash);color:var(--deep);border:1px solid #B9E0F0}
+.kcard-avail{font-size:12.5px;color:var(--ink-3);margin-top:8px;cursor:pointer}
+/* ---------- organisation chart + modal ---------- */
 .deptcard{border-radius:16px;padding:20px 18px;display:flex;flex-direction:column;min-width:0}
 .deptcard .dc-icon{width:52px;height:52px;border-radius:50%;background:var(--card);display:flex;align-items:center;
   justify-content:center;margin:0 auto 12px;box-shadow:0 1px 2px rgba(22,51,74,.08)}
@@ -510,6 +446,41 @@ nav .pip.r{background:var(--sage-wash);color:var(--sage)}
   border-bottom:1px solid var(--line);font-size:15.5px;cursor:pointer}
 .oteamrow:last-of-type{border-bottom:none}
 .oteamrow:hover{color:var(--deep);background:var(--paper);border-radius:var(--r-sm)}
+/* ---------- inline-expand accordion groups (Satsang Defs, Org Chart, Forms) ---------- */
+.igrp{background:var(--card);border:1px solid var(--line);border-radius:var(--r);margin-bottom:14px;overflow:hidden}
+.igrp-head{width:100%;border:0;background:transparent;padding:16px 18px;display:flex;align-items:center;
+  text-align:left;cursor:pointer;font:inherit;color:inherit}
+.igrp-chevron{width:28px;height:28px;border-radius:50%;background:var(--deep-wash);color:var(--deep);
+  display:flex;align-items:center;justify-content:center;margin-right:13px;font-size:17px;flex:none;transition:.18s var(--ease)}
+.igrp.open .igrp-chevron{transform:rotate(90deg)}
+.igrp-title{flex:1;min-width:0}
+.igrp-name{font-size:16.5px;font-weight:700;color:var(--ink)}
+.igrp-summary{color:var(--ink-3);font-size:13px;margin-top:3px}
+.igrp-actions{display:flex;gap:8px;margin-left:14px;align-items:center;flex:none}
+.igrp-details{display:none;border-top:1px solid var(--line);background:var(--paper)}
+.igrp.open .igrp-details{display:block}
+.igrp-details-inner{padding:18px 20px 20px 61px}
+.igrp-section{margin-bottom:20px}
+.igrp-section:last-child{margin-bottom:0}
+.igrp-section-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:9px}
+.igrp-section-title{color:var(--ink-2);font-weight:700;font-size:13.5px}
+.igrp-link-btn{border:0;background:transparent;color:var(--deep);font-size:13px;cursor:pointer;padding:4px 0}
+.igrp-link-btn:before{content:"\uFF0B";font-weight:700;margin-right:3px}
+.igrp-field-list{border:1px solid var(--line);border-radius:10px;background:var(--card);overflow:hidden}
+.igrp-field-row{display:flex;align-items:center;gap:14px;min-height:48px;padding:9px 12px;border-bottom:1px solid var(--line)}
+.igrp-field-row:last-child{border-bottom:0}
+.igrp-field-name{font-size:14px;color:var(--ink);font-weight:600}
+.igrp-field-meta{color:var(--ink-3);font-size:11.5px;margin-top:3px}
+.igrp-empty{border:1px dashed var(--line-2);border-radius:10px;background:var(--card);padding:16px;color:var(--ink-3);font-size:13px}
+.igrp-person-list{display:flex;flex-wrap:wrap;gap:8px}
+.igrp-person{display:flex;align-items:center;gap:7px;border:1px solid var(--line);background:var(--card);
+  border-radius:9px;padding:7px 8px 7px 10px;font-size:13px;color:var(--ink-2)}
+.igrp-avatar{width:25px;height:25px;border-radius:50%;background:var(--deep-wash);color:var(--deep);
+  display:flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:700;flex:none}
+.igrp-inline-form{display:none;margin-top:9px;padding:12px;border:1px solid var(--line-2);background:var(--card);border-radius:10px}
+.igrp-inline-form.show{display:flex;gap:8px;align-items:center;flex-wrap:wrap;position:relative}
+.igrp-inline-form input,.igrp-inline-form select{border:1px solid var(--line-2);border-radius:7px;padding:8px 10px;font-size:13px;outline:none}
+.igrp-inline-form input{flex:1;min-width:130px}
 .ac-dropdown{position:absolute;top:100%;left:0;right:0;z-index:50;background:var(--card);
   border:1px solid var(--line-2);border-radius:12px;box-shadow:var(--sh);margin-top:4px;
   max-height:200px;overflow-y:auto}
@@ -666,15 +637,16 @@ nav .pip.r{background:var(--sage-wash);color:var(--sage)}
 <nav>
   <div class="nav-logo"><img src="assets/csms-logo-sidebar.png" alt="CSMS — Connect · Serve · Grow" width="150" height="75"></div>
   <button class="on" data-p="overview" data-icon="home" data-color="sage" onclick="tab('overview')"><span class="nb-label">Overview</span><span class="pip r" id="pip6">0</span></button>
-  <button data-p="dash" data-icon="grid" data-color="violet" onclick="tab('dash'); renderDashDemo()"><span class="nb-label">Dashboard</span></button>
   <button data-p="search" data-icon="idcard" data-color="deep" onclick="tab('search'); renderLiveSeekers()"><span class="nb-label">Search Seekers</span></button>
   <button data-p="alerts" data-icon="heart" data-color="rose" onclick="tab('alerts')"><span class="nb-label">My Seva Activities</span><span class="pip" id="pip">0</span></button>
-  <button data-p="journey" data-icon="sprout" data-color="sage" onclick="tab('journey')"><span class="nb-label">Curious and Seeker Spiritual Journey</span></button>
+  <button data-p="journey" data-icon="sprout" data-color="sage" onclick="tab('journey'); renderLiveSeekers('journeySearch', false); renderJourney()"><span class="nb-label">Spiritual Journey</span></button>
   <button data-p="calendar" data-icon="calendar" data-color="deep" onclick="tab('calendar'); renderCalendar()"><span class="nb-label">Calendar</span></button>
   <button data-p="reports" data-icon="chart" data-color="violet" onclick="tab('reports')"><span class="nb-label">Reports</span><span class="pip r" id="pip5">0</span></button>
   <button data-p="sevahub" data-icon="gear" data-color="amber" onclick="tab('sevahub')"><span class="nb-label">Seva Management</span></button>
+  <button data-p="dash" data-icon="grid" data-color="sage" onclick="tab('dash'); renderDash()"><span class="nb-label">Dashboard</span></button>
   <button data-p="org" data-icon="users" data-color="deep" onclick="tab('org')"><span class="nb-label">Organisation and Team Management</span></button>
   <button data-p="satsangmgmt" data-icon="lotus" data-color="amber" onclick="tab('satsangmgmt'); satsangSubtab('defs')"><span class="nb-label">Satsang Management</span></button>
+  <button data-p="eventmgmt" data-icon="ticket" data-color="violet" onclick="tab('eventmgmt'); renderEventMgmt()"><span class="nb-label">Event Management</span></button>
   <button data-p="formmgmt" data-icon="file" data-color="violet" onclick="tab('formmgmt'); formSubtab('defs')"><span class="nb-label">Form Management System</span></button>
   <button data-p="tickermgmt" data-icon="ticket" data-color="rose" onclick="tab('tickermgmt'); renderTickerMgmt()"><span class="nb-label">Ticker Management</span></button>
   <button data-p="ops" data-icon="clipboard" data-color="deep" class="nb-divider" onclick="tab('ops')"><span class="nb-label">Operations</span><span class="pip" id="pip3">0</span></button>
@@ -685,10 +657,6 @@ nav .pip.r{background:var(--sage-wash);color:var(--sage)}
     <h2 class="sec">Overview</h2>
     <p class="sub">The pulse of what you're responsible for — one screen instead of six tabs. Scoped to your access, same as everywhere else.</p>
     <div id="overview"></div>
-  </section>
-
-  <section class="pane" id="p-dash">
-    <div id="dash"></div>
   </section>
 
   <section class="pane" id="p-search">
@@ -725,6 +693,12 @@ nav .pip.r{background:var(--sage-wash);color:var(--sage)}
     <div id="satsangAccess" style="display:none"></div>
   </section>
 
+  <section class="pane" id="p-eventmgmt">
+    <h2 class="sec">Event Management</h2>
+    <p class="sub">Retreats, workshops, introductory talks and online sessions — distinct from recurring Satsangs.</p>
+    <div id="eventMgmt"></div>
+  </section>
+
   <section class="pane" id="p-formmgmt">
     <h2 class="sec">Form Management System</h2>
     <p class="sub">Definitions go Draft \u2192 In Review \u2192 Published before a form is live. Submissions
@@ -751,14 +725,10 @@ nav .pip.r{background:var(--sage-wash);color:var(--sage)}
   </section>
 
   <section class="pane" id="p-journey">
-    <h2 class="sec">Curious and Seeker Spiritual Journey</h2>
+    <h2 class="sec">Spiritual Journey</h2>
     <p class="sub">Where every seeker sits, and what brought them in. Not a sales pipeline — there is no close, and moving backwards is ordinary.</p>
-    <div class="filters" style="border-bottom:1px solid var(--line-2);padding-bottom:0;margin-bottom:16px">
-      <button class="chip on" data-jsub="board" onclick="journeySubtab('board')">Board</button>
-      <button class="chip" data-jsub="masterlist" onclick="journeySubtab('masterlist')">MasterList Management</button>
-    </div>
+    <div id="journeySearch" style="margin-bottom:16px"></div>
     <div id="journey"></div>
-    <div id="journeyMasterlist" style="display:none"></div>
   </section>
 
   <section class="pane" id="p-calendar">
@@ -777,6 +747,12 @@ nav .pip.r{background:var(--sage-wash);color:var(--sage)}
     <h2 class="sec">Seva Management</h2>
     <p class="sub">Matching seekers to service, by skill and by capacity — not just a list of who volunteered once.</p>
     <div id="sevahub"></div>
+  </section>
+
+  <section class="pane" id="p-dash">
+    <h2 class="sec">Dashboard</h2>
+    <p class="sub">Live counts from Postgres — nothing here is illustrative.</p>
+    <div id="dash"></div>
   </section>
 
   <section class="pane" id="p-ops">
@@ -851,6 +827,16 @@ async function apiFetch(path, opts={}){
   return body;
 }
 
+async function completeLogin(idToken){
+  const session = await apiFetch('/api/auth/session', {
+    method:'POST', body: JSON.stringify({idToken})
+  });
+  SESSION = session;
+  document.getElementById('login-gate').style.display = 'none';
+  document.getElementById('shell').style.display = '';
+  initRole();
+}
+
 async function attemptGoogleLogin(){
   const errEl = document.getElementById('login-err');
   const btnEl = document.getElementById('google-signin-btn');
@@ -859,13 +845,7 @@ async function attemptGoogleLogin(){
 
   try{
     const idToken = await window.__csmsGoogleSignIn();
-    const session = await apiFetch('/api/auth/session', {
-      method:'POST', body: JSON.stringify({idToken})
-    });
-    SESSION = session;
-    document.getElementById('login-gate').style.display = 'none';
-    document.getElementById('shell').style.display = '';
-    initRole();
+    await completeLogin(idToken);
   }catch(err){
     // Firebase popup errors (user closed the window, blocked popup, etc.)
     // land here alongside real backend rejections — both get shown as-is.
@@ -880,7 +860,7 @@ const CONTACT_SLA_DAYS = 60; /* flat window — there is no longer a per-stage S
 const ROLES = {
   abroad:{name:"Abroad RS — global admin", regions:null, mask:[],
     can:"Full access to all regions and all fields.",
-    tabs:["overview","search","alerts","journey","calendar","reports","sevahub","org","satsangmgmt","formmgmt","tickermgmt"],
+    tabs:["overview","search","alerts","journey","calendar","reports","sevahub","dash","org","satsangmgmt","eventmgmt","formmgmt","tickermgmt"],
     landing:"overview"},
   tech:{name:"Technical Admin", regions:null, mask:[],
     can:"System health and infrastructure. Not scoped to any region.",
@@ -888,31 +868,26 @@ const ROLES = {
     landing:"ops"},
   rs_de:{name:"Regional RS — Germany", regions:["Germany"], mask:[],
     can:"Germany only. All fields within that region.",
-    tabs:["overview","search","alerts","journey","calendar","reports","sevahub","org","satsangmgmt","formmgmt","tickermgmt"],
-    landing:"overview"},
+    tabs:["overview","search","alerts","journey","calendar","reports","sevahub","dash","org","satsangmgmt","eventmgmt","formmgmt","tickermgmt"],
+    landing:"dash"},
   rs_fr:{name:"Regional RS — France", regions:["France"], mask:[],
     can:"France only. All fields within that region.",
-    tabs:["overview","search","alerts","journey","calendar","reports","sevahub","org","satsangmgmt","formmgmt","tickermgmt"],
-    landing:"overview"},
+    tabs:["overview","search","alerts","journey","calendar","reports","sevahub","dash","org","satsangmgmt","eventmgmt","formmgmt","tickermgmt"],
+    landing:"dash"},
   seva:{name:"Seva RS — service allocation", regions:null, mask:["whatsapp","email","dob"],
     can:"All regions, but personal contact details and date of birth are hidden.",
     tabs:["sevahub","search"],
     landing:"sevahub"},
   satsang:{name:"Satsang conductor — Germany", regions:["Germany"], mask:["dob","remedy"],
     can:"Germany only. Attendance and notes; no remedy or date of birth.",
-    tabs:["overview","calendar","reports","search","satsangmgmt"],
-    landing:"overview",
+    tabs:["dash","calendar","reports","search","satsangmgmt"],
+    landing:"dash",
     conductorName:"Satsang conductor"},
-  // Prototype only: no Event / Registration tables exist in the schema yet.
-  // Built against EVENT_CAL/EVENT_REG below (hand-authored, same pattern as
-  // CAL/SEEKERS) so the screen can be reviewed before Yogesh builds the real
-  // data model. Swap these two arrays for real API data once that exists —
-  // renderOverview()'s event-conductor branch doesn't need to change.
-  event:{name:"Event conductor — Germany", regions:["Germany"], mask:[],
-    can:"Germany only. Event registrations and first-contact follow-up.",
-    tabs:["overview","calendar","search"],
-    landing:"overview",
-    eventConductorName:"Event conductor"}
+  event:{name:"Event conductor — Germany", regions:["Germany"], mask:["dob","remedy"],
+    can:"Germany only. Event registrations and attendance.",
+    tabs:["dash","calendar","reports","search","eventmgmt"],
+    landing:"dash",
+    conductorName:"Event conductor"}
 };
 let ROLE="abroad", FILTER="all", OPEN=null;
 
@@ -1004,24 +979,6 @@ let CAL = [
   {id:"c8", title:"Foundation satsang — France",    kind:"Satsang", region:"France",  at:d(2026,8,22),time:"18:30", conductor:"Sophie Laurent"},
   {id:"c9", title:"Advanced bhav satsang — Germany",kind:"Satsang", region:"Germany", at:d(2026,8,24),time:"19:00", conductor:"Hannah Vogel"},
   {id:"c10",title:"Bhav satsang — France",          kind:"Satsang", region:"France",  at:d(2026,8,19),time:"18:30", conductor:"Sophie Laurent"}
-];
-
-// ---- Mock only (see the comment on ROLES.event above) ----
-let EVENT_CAL = [
-  {id:"e1", title:"Introductory talk — Munich",   region:"Germany", conductor:"Event conductor", at:d(2026,9,26), time:"18:00", seats:50},
-  {id:"e2", title:"Online introduction",          region:"Germany", conductor:"Event conductor", at:d(2026,9,30), time:"20:00", seats:50},
-  {id:"e3", title:"Meditation workshop — Munich", region:"Germany", conductor:"Event conductor", at:d(2026,10,3), time:"10:00", seats:40},
-  {id:"e0", title:"Introductory talk — Munich",   region:"Germany", conductor:"Event conductor", at:d(2026,8,14), time:"18:00", seats:50}
-];
-let EVENT_REG = [
-  {id:1, eventId:"e0", name:"Ravi Sharma",   firstTime:true,  attended:true, followedUp:false, feedback:false},
-  {id:2, eventId:"e0", name:"Tanja Meier",   firstTime:true,  attended:true, followedUp:false, feedback:false},
-  {id:3, eventId:"e0", name:"Lena Costa",    firstTime:true,  attended:true, followedUp:true,  feedback:true,  followedUpBy:"Prasar RS", followUpAt:d(2026,9,15)},
-  {id:4, eventId:"e0", name:"Manoj Iyer",    firstTime:false, attended:true, followedUp:false, feedback:false},
-  {id:5, eventId:"e0", name:"Petra Hoffman", firstTime:true,  attended:true, followedUp:false, feedback:true},
-  {id:6, eventId:"e1", name:"Karl Fischer",  firstTime:true,  attended:false,followedUp:false, feedback:false},
-  {id:7, eventId:"e1", name:"Nina Braun",    firstTime:true,  attended:false,followedUp:false, feedback:false},
-  {id:8, eventId:"e2", name:"Omar Said",     firstTime:true,  attended:false,followedUp:false, feedback:false}
 ];
 
 /* ---- satsang reporting: a report is OWED once the satsang has happened ----
@@ -1205,8 +1162,13 @@ function counts(s){
   });
   return c;
 }
+// Colour is derived from the category's position in the real list
+// (Master.M_Seeker_Category), not hardcoded names — those don't exist in
+// the schema and shouldn't be assumed.
+const CATEGORY_TAG_CLASSES = ['t-new','t-active','t-core','t-warn','t-bad'];
 function categoryTag(cat){
-  const k = cat==="Partner"?"t-core":cat==="Well-wisher"?"t-active":"t-new";
+  const idx = (LIVE_SEEKER_CATEGORIES||[]).findIndex(c=>c.Category_Name===cat);
+  const k = CATEGORY_TAG_CLASSES[idx >= 0 ? idx % CATEGORY_TAG_CLASSES.length : 0];
   return `<span class="tag ${k}">${esc(cat)}</span>`;
 }
 const esc = s => String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -1228,15 +1190,15 @@ function setRole(r){
   document.getElementById('scope').textContent = R().regions ? R().regions.join(', ')+' only' : 'All regions';
   applyRoleNav();
   tab(R().landing);
-  render();
+  renderOverview();
+  // Landing on a tab programmatically (role switch) bypasses that nav
+  // button's own onclick, which is where most tabs trigger their render —
+  // so re-fire it here for whichever tab this role opens on.
+  const landingRender = {dash:renderDash, calendar:renderCalendar, journey:renderJourney};
+  if(landingRender[R().landing]) landingRender[R().landing]();
 }
 function applyRoleNav(){
   const allowed = new Set(R().tabs);
-  // Overview is shown for every role regardless of R().tabs, on request —
-  // proper per-role access control for it is a follow-up (Access Management),
-  // not yet decided. Every other tab still follows the normal role scoping.
-  allowed.add('overview');
-  allowed.add('dash');
   document.querySelectorAll('nav button[data-p]').forEach(b=>{
     b.style.display = allowed.has(b.dataset.p) ? '' : 'none';
   });
@@ -1383,11 +1345,7 @@ function queryEnter(){
 }
 
 function rows(){
-  // #q belonged to the old mock Search & Records panel, since replaced by
-  // renderLiveSeekers()/#seekerSearch against the real API. This function's
-  // filtering is still used internally (Overview counts, etc.), so it stays —
-  // just guarded, since #q itself no longer exists in the markup.
-  const raw = (document.getElementById('q')||{}).value||'';
+  const raw = document.getElementById('q').value||'';
   const parsed = parseQuery(raw);
   return visible().filter(s=>{
     if(FILTER==='overdue'){ if(!overdue(s)) return false; }
@@ -1422,8 +1380,7 @@ function render(){
   renderOverview();
   renderQueryUI();
   const list=rows();
-  const cntEl = document.getElementById('cnt');
-  if(cntEl) cntEl.textContent = `${list.length} of ${visible().length} shown`;
+  document.getElementById('cnt').textContent = `${list.length} of ${visible().length} shown`;
 
   const catchipsEl = document.getElementById('catchips');
   if(catchipsEl && !catchipsEl.dataset.built){
@@ -1432,8 +1389,7 @@ function render(){
     catchipsEl.dataset.built = "1";
   }
 
-  const tblEl = document.getElementById('tbl');
-  if(tblEl) tblEl.innerHTML = `
+  document.getElementById('tbl').innerHTML = `
     <thead><tr>
       <th>Seeker</th><th>Category</th>
       <th class="hide-sm">WhatsApp</th><th>Last contact</th><th class="hide-sm">Seva hrs</th>
@@ -1459,12 +1415,11 @@ function render(){
        <b>Open question — cross-border access.</b> This role reaches records in every region.
        If the person holding it sits outside the EU, that is a transfer of special-category data out of Europe,
        and hosting in Germany does not resolve it. Tracked as ADR-0011.</div>` : '';
-  const hidnoteEl = document.getElementById('hidnote');
-  if(hidnoteEl) hidnoteEl.innerHTML = xborder + (h
+  document.getElementById('hidnote').innerHTML = xborder + (h
     ? `<div class="hidden-note"><b>${h} seeker records are outside your region</b> and are not shown.
        They are not merely hidden on screen — the database refuses to return them for this role.</div>` : '');
 
-  renderAlerts(); renderOps(); renderAbout();
+  renderAlerts(); renderDash(); renderOps(); renderAbout();
   if(LIVE_DEPTS!==null){ renderSevaDepartments(); renderTeamManagement(); } renderJourney(); renderCalendar(); renderProfiles(); renderReports(); renderSevahub();
   if(OPEN) drawer(OPEN);
 }
@@ -1487,34 +1442,42 @@ function seekersSubtab(s){
   if(s==='live') renderLiveSeekers();
 }
 
-async function loadLiveSeekers(){
-  const q = (document.getElementById('liveSeekerQ')||{}).value || '';
+async function loadLiveSeekers(containerId){
+  containerId = containerId || 'seekerSearch';
+  const q = (document.getElementById(containerId+'_q')||{}).value || '';
   try{
     const params = new URLSearchParams();
     if(q) params.set('q', q);
     LIVE_SEEKERS = await apiFetch('/api/seekers'+(params.toString()?('?'+params.toString()):''));
-    renderLiveSeekersBody();
+    renderLiveSeekersBody(containerId);
   }catch(err){
-    const el = document.getElementById('seekersLiveBody');
+    const el = document.getElementById(containerId+'_body');
     if(el) el.innerHTML = `<div class="hidden-note" style="background:var(--rose-wash);border-color:#EBCBCE;color:var(--rose)"><b>Could not load seekers.</b> ${esc(err.message||'')}</div>`;
   }
 }
 
-function renderLiveSeekers(){
-  const el = document.getElementById('seekerSearch');
+// Shared "search seekers" component — parametrized by containerId so it
+// can render into more than one pane at once (the standalone Search
+// Seekers tab, and the copy embedded in the Journey tab) without their
+// input/result element ids colliding in the DOM.
+function renderLiveSeekers(containerId, autoLoad){
+  containerId = containerId || 'seekerSearch';
+  if(autoLoad === undefined) autoLoad = true;
+  const el = document.getElementById(containerId);
   if(!el) return;
+  const qId = containerId+'_q', bodyId = containerId+'_body';
   el.innerHTML = `
     <div class="card pad" style="margin-bottom:14px;display:flex;gap:9px;align-items:center">
-      <input type="search" id="liveSeekerQ" style="flex:1;font-size:16px;padding:10px 13px" placeholder="Search name, email or WhatsApp" onkeydown="if(event.key==='Enter') loadLiveSeekers()">
-      <button class="btn ghost sm" onclick="document.getElementById('liveSeekerQ').value='';loadLiveSeekers()">Clear</button>
+      <input type="search" id="${qId}" style="flex:1;font-size:16px;padding:10px 13px" placeholder="Search name, email or WhatsApp" oninput="if(!this.value) document.getElementById('${bodyId}').innerHTML=''" onkeydown="if(event.key==='Enter') loadLiveSeekers('${containerId}')">
+      <button class="btn ghost sm" onclick="document.getElementById('${qId}').value='';document.getElementById('${bodyId}').innerHTML=''">Clear</button>
     </div>
-    <div id="seekersLiveBody"><p class="sub2">Loading\u2026</p></div>
-    <div id="seekerDetailRoot"></div>`;
-  loadLiveSeekers();
+    <div id="${bodyId}">${autoLoad ? '<p class="sub2">Loading\u2026</p>' : ''}</div>`;
+  if(autoLoad) loadLiveSeekers(containerId);
 }
 
-function renderLiveSeekersBody(){
-  const body = document.getElementById('seekersLiveBody');
+function renderLiveSeekersBody(containerId){
+  containerId = containerId || 'seekerSearch';
+  const body = document.getElementById(containerId+'_body');
   if(!body) return;
   const list = LIVE_SEEKERS || [];
   body.innerHTML = `<div class="card" style="overflow:hidden"><table>
@@ -2193,7 +2156,7 @@ function drawer(id){
   el.onclick=e=>{ if(e.target===el) close_(); };
   el.innerHTML=`<div class="drawer">
     <div class="dhead">
-      <button class="dclose" onclick="close_()">← Back</button>
+      <button class="dclose" onclick="close_()" aria-label="Close">×</button>
       <div class="nm serif" style="font-size:24px">${esc(s.name)}</div>
       <div class="sub2" style="margin-top:4px">${categoryTag(s.category)} &nbsp;·&nbsp; ${s.region}</div>
     </div>
@@ -2328,9 +2291,7 @@ function drawer(id){
           <button class="btn ghost" onclick="close_()">Cancel</button></div>
       </div>
     </div></div>`;
-  // appended to <body>, not #shell — #shell has overflow:hidden, which
-  // clips a position:fixed child instead of letting it cover the viewport
-  document.body.appendChild(el);
+  document.getElementById('shell').appendChild(el);
 }
 
 function toggleCallFields(){
@@ -2644,6 +2605,244 @@ function weeklyActivity(weeks=8){
   return buckets;
 }
 function seekerFirstSeen(p){ return p.inter.length ? new Date(Math.min(...p.inter.map(i=>+i.dt))) : null; }
+
+let LIVE_DASH = null;
+function dashViewParams(){
+  if(ROLE==='satsang') return {view:'satsang'};
+  if(ROLE==='event') return {view:'event'};
+  if(R().regions) return {view:'rs', regions:R().regions.join(',')};
+  return {view:'admin'};
+}
+async function loadDash(){
+  try{
+    const p = dashViewParams();
+    const qs = new URLSearchParams(p).toString();
+    LIVE_DASH = await apiFetch('/api/master/dashboard-stats?'+qs);
+    renderDash();
+  }catch(err){
+    const el = document.getElementById('dash');
+    if(el) el.innerHTML = `<div class="hidden-note" style="background:var(--rose-wash);border-color:#EBCBCE;color:var(--rose)"><b>Could not load dashboard.</b> ${esc(err.message||'')}</div>`;
+  }
+}
+function renderDash(){
+  const el = document.getElementById('dash');
+  if(!el) return;
+  const wantView = dashViewParams().view;
+  if(LIVE_DASH === null || LIVE_DASH.view !== wantView){ el.innerHTML = genericSkeleton(6); loadDash(); return; }
+  if(LIVE_DASH.view==='satsang') return renderDashSatsang();
+  if(LIVE_DASH.view==='event') return renderDashEvent();
+
+  const s = LIVE_DASH.stats || {};
+  const byCat = (LIVE_DASH.byCategory||[]).map(c=>({k:c.Category_Name, v:Number(c.n)}));
+  const uncat = Number(s.uncategorised||0);
+
+  const seekerRow = p => `<tr onclick="openSeekerPage(${p.Seeker_ID})" style="cursor:pointer">
+      <td><div class="nm serif">${esc([p.Sal,p.First_Name,p.Last_Name].filter(Boolean).join(' '))}</div></td>
+      <td class="hide-sm">${esc(p.City||'\u2014')}</td>
+    </tr>`;
+
+  el.innerHTML = `
+    <div class="grid4">
+      <div class="kpi"><div class="n">${s.total_seekers||0}</div><div class="l">Total seekers</div><div class="d">All categories</div></div>
+      <div class="kpi"><div class="n" style="color:var(--sage)">${s.new_this_month||0}</div><div class="l">New this month</div><div class="d">Added in the last 30 days</div></div>
+      <div class="kpi"><div class="n" style="color:${uncat?'var(--amber)':'var(--sage)'}">${uncat}</div><div class="l">Not yet categorised</div><div class="d">Need a Spiritual Journey category</div></div>
+      <div class="kpi"><div class="n">${Number(s.total_seva_hrs||0)}</div><div class="l">Weekly seva hours</div><div class="d">Summed across all seekers</div></div>
+      <div class="kpi"><div class="n">${s.distinct_skills||0}</div><div class="l">Skills recorded</div><div class="d">Distinct skills in the Seva pool</div></div>
+      <div class="kpi"><div class="n">${s.milestones_this_month||0}</div><div class="l">Milestones this month</div><div class="d">Logged in the last 30 days</div></div>
+    </div>
+
+    <div class="grid2">
+      <div class="card pad"><h2 class="sec">Seekers by category</h2>
+        <p class="sub">Master.M_Seeker_Category \u2014 live counts.</p>
+        ${byCat.length ? `<div style="display:flex;gap:18px;align-items:center;flex-wrap:wrap">
+          ${svgDonut(byCat)}<div style="flex:1;min-width:160px">${donutLegend(byCat)}</div>
+        </div>` : '<p class="sub2">No categories loaded yet.</p>'}</div>
+      <div class="card pad"><h2 class="sec">Needs a category</h2>
+        <p class="sub">Seekers with no Seeker_Category row \u2014 click to open and assign one.</p>
+        <div class="card" style="overflow:hidden"><table>
+          <tbody>${(LIVE_DASH.uncategorisedSeekers||[]).length ? LIVE_DASH.uncategorisedSeekers.map(seekerRow).join('') : '<tr><td style="padding:20px;text-align:center;color:var(--ink-3)">Everyone is categorised.</td></tr>'}</tbody>
+        </table></div></div>
+    </div>
+
+    <div class="card pad" style="margin-top:16px"><h2 class="sec">Recently added</h2>
+      <p class="sub">Newest seekers by record creation date.</p>
+      <div class="card" style="overflow:hidden"><table>
+        <tbody>${(LIVE_DASH.recentSeekers||[]).length ? LIVE_DASH.recentSeekers.map(seekerRow).join('') : '<tr><td style="padding:20px;text-align:center;color:var(--ink-3)">No seekers yet.</td></tr>'}</tbody>
+      </table></div></div>`;
+}
+function renderDashSatsang(){
+  const el = document.getElementById('dash');
+  const s = LIVE_DASH.stats || {};
+  const mine = LIVE_DASH.mySatsangs || [];
+  const byCat = (LIVE_DASH.byCategory||[]).map(c=>({k:c.Category_Name, v:Number(c.n)}));
+  const seekerRow = p => `<tr onclick="openSeekerPage(${p.Seeker_ID})" style="cursor:pointer">
+      <td><div class="nm serif">${esc([p.Sal,p.First_Name,p.Last_Name].filter(Boolean).join(' '))}</div></td>
+      <td class="hide-sm">${esc(p.City||'\u2014')}</td>
+    </tr>`;
+  if(!mine.length){
+    el.innerHTML = `<div class="note">You are not listed as a conductor on any satsang yet (SCS.Satsang_Conductor). Ask an admin to add you.</div>`;
+    return;
+  }
+  el.innerHTML = `
+    <p class="sub2" style="margin-bottom:12px">Conducting: ${mine.map(m=>esc(m.Satsang_Name)).join(', ')}</p>
+    <div class="grid4">
+      <div class="kpi"><div class="n">${s.attending_seekers||0}</div><div class="l">Attending seekers</div><div class="d">Across your satsangs</div></div>
+      <div class="kpi"><div class="n">${s.sessions_this_month||0}</div><div class="l">Sessions, last 30 days</div><div class="d">Satsang_Event_Defn</div></div>
+      <div class="kpi"><div class="n">${s.completed_sessions||0}</div><div class="l">Completed sessions</div><div class="d">All-time</div></div>
+    </div>
+    <div class="grid2">
+      <div class="card pad"><h2 class="sec">Attending seekers by category</h2>
+        <p class="sub">Across all your satsangs.</p>
+        ${byCat.length ? `<div style="display:flex;gap:18px;align-items:center;flex-wrap:wrap">
+          ${svgDonut(byCat)}<div style="flex:1;min-width:160px">${donutLegend(byCat)}</div></div>` : '<p class="sub2">No attendees recorded yet.</p>'}</div>
+      <div class="card pad"><h2 class="sec">Seekers</h2>
+        <p class="sub">Everyone attending your satsangs.</p>
+        <div class="card" style="overflow:hidden;max-height:280px;overflow-y:auto"><table>
+          <tbody>${(LIVE_DASH.recentSeekers||[]).length ? LIVE_DASH.recentSeekers.map(seekerRow).join('') : '<tr><td style="padding:20px;text-align:center;color:var(--ink-3)">Nobody recorded yet.</td></tr>'}</tbody>
+        </table></div></div>
+    </div>`;
+}
+function renderDashEvent(){
+  const el = document.getElementById('dash');
+  const s = LIVE_DASH.stats || {};
+  const mine = LIVE_DASH.myEvents || [];
+  const regRow = r => `<tr onclick="openSeekerPage(${r.Seeker_ID})" style="cursor:pointer">
+      <td><div class="nm serif">${esc([r.Sal,r.First_Name,r.Last_Name].filter(Boolean).join(' '))}</div></td>
+      <td>${r.Is_First_Time ? '<span class="tag t-active">First-timer</span>' : ''}</td>
+      <td>${esc(r.Attended||'Pending')}</td>
+    </tr>`;
+  if(!mine.length){
+    el.innerHTML = `<div class="note">You are not listed as a conductor on any event yet (SCS.Event_Conductor). Create an event or ask an admin to add you.</div>`;
+    return;
+  }
+  el.innerHTML = `
+    <div class="grid4">
+      <div class="kpi"><div class="n">${mine.length}</div><div class="l">Your events</div><div class="d">All-time</div></div>
+      <div class="kpi"><div class="n">${s.total_registrations||0}</div><div class="l">Registrations</div><div class="d">Across your events</div></div>
+      <div class="kpi"><div class="n">${s.attended||0}</div><div class="l">Attended</div><div class="d">of ${s.total_registrations||0} registered</div></div>
+      <div class="kpi"><div class="n" style="color:var(--sage)">${s.first_timers||0}</div><div class="l">First-time attendees</div><div class="d">${s.first_timers_attended||0} attended</div></div>
+    </div>
+    <div class="card pad" style="margin-bottom:16px"><h2 class="sec">Your events</h2>
+      <div class="card" style="overflow:hidden"><table>
+        <thead><tr><th>Event</th><th>Type</th><th>When</th><th>Status</th><th>Registered</th></tr></thead>
+        <tbody>${mine.map(e=>`<tr><td><div class="nm serif">${esc(e.Event_Name)}</div></td><td>${esc(e.Event_Type||'')}</td>
+          <td>${esc(new Date(e.Event_ST_DT_TIME).toLocaleDateString())}</td><td>${esc(e.Event_Status)}</td></tr>`).join('')}</tbody>
+      </table></div></div>
+    <div class="card pad"><h2 class="sec">Recent registrations</h2>
+      <p class="sub">Click to follow up on a first-timer.</p>
+      <div class="card" style="overflow:hidden"><table>
+        <tbody>${(LIVE_DASH.recentRegistrations||[]).length ? LIVE_DASH.recentRegistrations.map(regRow).join('') : '<tr><td style="padding:20px;text-align:center;color:var(--ink-3)">No registrations yet.</td></tr>'}</tbody>
+      </table></div></div>`;
+}
+
+/* ============ event management ============ */
+let LIVE_EVENTS = null;
+let EVENT_REG_OPEN = null;
+async function loadEvents(){
+  try{ LIVE_EVENTS = await apiFetch('/api/events'); renderEventMgmt(); }
+  catch(err){
+    const el = document.getElementById('eventMgmt');
+    if(el) el.innerHTML = `<div class="hidden-note" style="background:var(--rose-wash);border-color:#EBCBCE;color:var(--rose)"><b>Could not load events.</b> ${esc(err.message||'')}</div>`;
+  }
+}
+function renderEventMgmt(){
+  const el = document.getElementById('eventMgmt');
+  if(!el) return;
+  if(LIVE_EVENTS === null){ el.innerHTML = genericSkeleton(4); loadEvents(); return; }
+  el.innerHTML = `
+    <div class="card pad" style="margin-bottom:16px">
+      <h2 class="sec">New event</h2>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <input id="evName" placeholder="Event name" style="flex:2;min-width:160px;border-radius:999px;padding:7px 14px;font-size:14.5px;border:1px solid var(--line-2)">
+        <select id="evType" style="border-radius:999px;padding:7px 14px;font-size:14.5px;border:1px solid var(--line-2)">
+          <option>Retreat</option><option>Workshop</option><option>Introductory Talk</option><option>Online</option>
+        </select>
+        <input id="evWhen" type="datetime-local" style="border-radius:999px;padding:7px 14px;font-size:14.5px;border:1px solid var(--line-2)">
+        <input id="evDuration" type="number" placeholder="Minutes" style="width:100px;border-radius:999px;padding:7px 14px;font-size:14.5px;border:1px solid var(--line-2)">
+        <input id="evVenue" placeholder="Venue / city" style="flex:1;min-width:120px;border-radius:999px;padding:7px 14px;font-size:14.5px;border:1px solid var(--line-2)">
+        <button class="btn sm" onclick="createEvent(this)"><span class="spin"></span><span class="lbl">Create</span></button>
+      </div>
+    </div>
+    ${(LIVE_EVENTS||[]).map(e=>`
+      <div class="card pad" style="margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap">
+          <div>
+            <div class="nm serif">${esc(e.Event_Name)}</div>
+            <div class="sub2">${esc(e.Event_Type||'')} \u00b7 ${esc(new Date(e.Event_ST_DT_TIME).toLocaleString())}${e.Venue_City?' \u00b7 '+esc(e.Venue_City):''} \u00b7 ${e.registration_count} registered</div>
+          </div>
+          <div style="display:flex;gap:6px;align-items:center">
+            <select onchange="setEventStatus(${e.Event_ID}, this.value)" style="border-radius:999px;padding:4px 10px;font-size:13px;border:1px solid var(--line-2)">
+              ${['Scheduled','Completed','Cancelled'].map(st=>`<option ${st===e.Event_Status?'selected':''}>${st}</option>`).join('')}
+            </select>
+            <button class="mini" onclick="toggleEventRegistrations(${e.Event_ID}, this)" style="width:auto;padding:0 12px;height:26px;font-size:13.5px">${EVENT_REG_OPEN===e.Event_ID?'Hide':'Registrations'}</button>
+          </div>
+        </div>
+        ${EVENT_REG_OPEN===e.Event_ID ? `<div id="evRegBody_${e.Event_ID}" style="margin-top:12px">${genericSkeleton(2)}</div>` : ''}
+      </div>`).join('') || '<p class="sub2">No events yet \u2014 create one above.</p>'}`;
+  if(EVENT_REG_OPEN!==null) loadEventRegistrations(EVENT_REG_OPEN);
+}
+async function createEvent(btn){
+  await withLoading(btn, async ()=>{
+    const eventName = document.getElementById('evName').value.trim();
+    const startDateTime = document.getElementById('evWhen').value;
+    if(!eventName || !startDateTime){ toast('Name and date/time are required.'); return; }
+    try{
+      await apiFetch('/api/events', {method:'POST', body: JSON.stringify({
+        eventName, eventType: document.getElementById('evType').value, startDateTime,
+        durationMinutes: Number(document.getElementById('evDuration').value)||null,
+        venueCity: document.getElementById('evVenue').value.trim()||null,
+      })});
+      toast('Event created.');
+      LIVE_EVENTS = null; await loadEvents();
+    }catch(err){ toast('Could not create: '+(err.message||'')); }
+  });
+}
+async function setEventStatus(eventId, status){
+  try{ await apiFetch('/api/events/'+eventId, {method:'PUT', body: JSON.stringify({eventStatus: status})}); toast('Status updated.'); }
+  catch(err){ toast('Could not update: '+(err.message||'')); }
+}
+function toggleEventRegistrations(eventId, btn){
+  EVENT_REG_OPEN = EVENT_REG_OPEN===eventId ? null : eventId;
+  renderEventMgmt();
+}
+async function loadEventRegistrations(eventId){
+  const el = document.getElementById('evRegBody_'+eventId);
+  if(!el) return;
+  try{
+    const regs = await apiFetch('/api/events/'+eventId+'/registrations');
+    el.innerHTML = `
+      <div style="display:flex;gap:8px;margin-bottom:10px">
+        <input id="evRegSeekerId_${eventId}" type="number" placeholder="Seeker ID to register" style="flex:1;border-radius:999px;padding:6px 12px;font-size:13.5px;border:1px solid var(--line-2)">
+        <button class="mini" onclick="registerSeekerToEvent(${eventId})" style="width:auto;padding:0 12px;height:28px;font-size:13.5px">Register</button>
+      </div>
+      <div class="card" style="overflow:hidden"><table>
+        <thead><tr><th>Seeker</th><th>First-timer</th><th>Attended</th></tr></thead>
+        <tbody>${regs.length ? regs.map(r=>`<tr>
+            <td><a href="#" onclick="event.preventDefault();openSeekerPage(${r.Seeker_ID})" class="nm serif" style="color:var(--deep);text-decoration:none">${esc([r.Sal,r.First_Name,r.Last_Name].filter(Boolean).join(' '))}</a></td>
+            <td>${r.Is_First_Time?'<span class="tag t-active">Yes</span>':'\u2014'}</td>
+            <td><select onchange="setEventAttendance(${eventId}, ${r.Seeker_ID}, this.value)" style="border-radius:999px;padding:3px 8px;font-size:13px;border:1px solid var(--line-2)">
+              ${['Pending','Yes','No'].map(a=>`<option ${a===r.Attended?'selected':''}>${a}</option>`).join('')}</select></td>
+          </tr>`).join('') : '<tr><td colspan="3" style="padding:16px;text-align:center;color:var(--ink-3)">No one registered yet.</td></tr>'}</tbody>
+      </table></div>`;
+  }catch(err){ el.innerHTML = `<p class="sub2">Could not load: ${esc(err.message||'')}</p>`; }
+}
+async function registerSeekerToEvent(eventId){
+  const input = document.getElementById('evRegSeekerId_'+eventId);
+  const seekerId = Number(input.value);
+  if(!seekerId){ toast('Enter a valid Seeker ID.'); return; }
+  try{
+    await apiFetch('/api/events/'+eventId+'/registrations', {method:'POST', body: JSON.stringify({seekerId})});
+    toast('Registered.');
+    input.value = '';
+    LIVE_EVENTS = null;
+    const evs = await apiFetch('/api/events'); LIVE_EVENTS = evs;
+    loadEventRegistrations(eventId);
+  }catch(err){ toast('Could not register: '+(err.message||'')); }
+}
+async function setEventAttendance(eventId, seekerId, attended){
+  try{ await apiFetch('/api/events/'+eventId+'/registrations/'+seekerId, {method:'PUT', body: JSON.stringify({attended})}); toast('Updated.'); }
+  catch(err){ toast('Could not update: '+(err.message||'')); }
+}
 
 /* ============ operations ============ */
 const SERVICES=[
@@ -3016,7 +3215,7 @@ function roleAndMemberFormsHTML(dept, roles, key, submitFn){
         <input id="assignName_${k}" placeholder="Name (optional)" style="width:100%;border-radius:999px;padding:6px 14px;font-size:15px;border:1px solid var(--line-2);box-sizing:border-box;margin-bottom:6px">
         <input id="assignEmail_${k}" type="email" placeholder="name@ssrf.org" style="width:100%;border-radius:999px;padding:6px 14px;font-size:15px;border:1px solid var(--line-2);box-sizing:border-box;margin-bottom:6px">
         <select id="assignRole_${k}" onchange="document.getElementById('newRoleAssignRow_${k}').style.display=this.value==='__new__'?'flex':'none'" style="width:100%;border-radius:999px;padding:6px 14px;font-size:15px;border:1px solid var(--line-2);box-sizing:border-box;margin-bottom:6px">
-          ${roles.map(r=>`<option value="${r.Dept_Role_ID}">${esc(r.Dept_Role_Name)}</option>`).join('')}
+          ${roles.map(r=>`<option value="${r.Seva_Dept_Role_ID}">${esc(r.Role_Name)}</option>`).join('')}
           <option value="__new__">+ Add new role</option>
         </select>
         <div id="newRoleAssignRow_${k}" style="display:none;gap:6px;margin-bottom:6px">
@@ -3116,52 +3315,83 @@ function renderModalContent(){
 
   const kids = childrenOf(dept.Seva_Dept_ID);
   const roles = LIVE_DEPT_ROLES[dept.Seva_Dept_ID] || [];
+  const parsed = parseDeptName(dept.Seva_Dept_Name);
 
-  root.innerHTML = `<div class="obackdrop" onclick="if(event.target===this) closeDeptModal()">
-    <div class="omodal">
-      <button class="oclose" onclick="closeDeptModal()" aria-label="Close">&times;</button>
-      <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px">
-        ${MODAL_STACK.length>1 ? `<button class="mini" onclick="backToParent()" title="Back" style="width:24px;height:24px">&lsaquo;</button>` : ''}
-        <h3 style="margin:0">${esc(parseDeptName(dept.Seva_Dept_Name).name)}</h3>
-        ${parseDeptName(dept.Seva_Dept_Name).tag ? `<span class="dc-tag" style="background:${tagColor(parseDeptName(dept.Seva_Dept_Name).tag)}22;color:${tagColor(parseDeptName(dept.Seva_Dept_Name).tag)};margin:0">${esc(parseDeptName(dept.Seva_Dept_Name).tag)}</span>` : ''}
+  root.innerHTML = `<section class="igrp open" style="margin-top:16px">
+    <div class="igrp-head" style="cursor:default">
+      ${MODAL_STACK.length>1 ? `<button class="mini" onclick="backToParent()" title="Back" style="width:26px;height:26px;margin-right:10px">&lsaquo;</button>` : ''}
+      <span class="igrp-title">
+        <div class="igrp-name">${esc(parsed.name)}${parsed.tag ? ` <span class="dc-tag" style="background:${tagColor(parsed.tag)}22;color:${tagColor(parsed.tag)};margin:0 0 0 4px">${esc(parsed.tag)}</span>` : ''}</div>
+        <div class="igrp-summary">${kids.length} sub-department${kids.length===1?'':'s'} \u00b7 ${roles.length} role${roles.length===1?'':'s'}</div>
+      </span>
+      <button class="mini" onclick="closeDeptModal()" style="width:26px;height:26px">&times;</button>
+    </div>
+    <div class="igrp-details" style="display:block"><div class="igrp-details-inner">
+
+      <div class="igrp-section">
+        <div class="igrp-section-head"><div class="igrp-section-title">Sub-departments <span style="font-weight:400;color:var(--ink-3)">(${kids.length})</span></div>
+          <button class="igrp-link-btn" onclick="showIgrpForm('deptAdd_${dept.Seva_Dept_ID}')">Add sub-department</button></div>
+        ${kids.length ? `<div class="igrp-field-list">${kids.map(k=>{ const kp = parseDeptName(k.Seva_Dept_Name); return `<div class="igrp-field-row" style="cursor:pointer" onclick="drillInto(${k.Seva_Dept_ID})">
+              <div style="flex:1"><span class="igrp-field-name">${esc(kp.name)}</span>${kp.tag?` <span class="dc-tag" style="background:${tagColor(kp.tag)}22;color:${tagColor(kp.tag)};margin:0 0 0 4px">${esc(kp.tag)}</span>`:''}</div>
+              <span style="color:var(--ink-3)">&rsaquo;</span>
+            </div>`; }).join('')}</div>` : '<div class="igrp-empty">No sub-departments yet.</div>'}
+        <div class="igrp-inline-form" id="deptAdd_${dept.Seva_Dept_ID}">
+          <input id="mNewDeptName" placeholder="Department name">
+          <button class="small-btn save" onclick="createDept(document.getElementById('mNewDeptName').value.trim(), ${dept.Seva_Dept_ID}, this)">Add</button>
+          <button class="small-btn cancel" onclick="hideIgrpForm('deptAdd_${dept.Seva_Dept_ID}')">Cancel</button>
+        </div>
       </div>
 
-      ${kids.length ? `<p class="sub2" style="margin:10px 0 4px">${kids.length} sub-department${kids.length===1?'':'s'}</p>
-        ${kids.map(k=>{ const kp = parseDeptName(k.Seva_Dept_Name); return `<div class="oteamrow" onclick="drillInto(${k.Seva_Dept_ID})">
-            <span>${esc(kp.name)}${kp.tag?` <span class="dc-tag" style="background:${tagColor(kp.tag)}22;color:${tagColor(kp.tag)};margin:0 0 0 4px">${esc(kp.tag)}</span>`:''}</span><span>&rsaquo;</span>
-          </div>`; }).join('')}` : '<p class="sub2" style="margin-top:10px">No sub-departments yet.</p>'}
-      <details style="margin-top:10px">
-        <summary style="cursor:pointer;font-size:14px;color:var(--deep)">+ Add sub-department</summary>
-        <div style="display:flex;gap:6px;margin-top:8px">
-          <input id="mNewDeptName" placeholder="Department name" style="flex:1;border-radius:999px;padding:6px 14px;font-size:15px;border:1px solid var(--line-2)">
-          <button class="btn sm" onclick="createDept(document.getElementById('mNewDeptName').value.trim(), ${dept.Seva_Dept_ID}, this)"><span class="spin"></span><span class="lbl">Add</span></button>
+      <div class="igrp-section">
+        <div class="igrp-section-head"><div class="igrp-section-title">Roles <span style="font-weight:400;color:var(--ink-3)">(${roles.length})</span></div>
+          <button class="igrp-link-btn" onclick="showIgrpForm('roleAdd_m')">Add role</button></div>
+        ${roles.length ? `<div class="igrp-field-list">${roles.map(r=>`<div class="igrp-field-row" style="align-items:flex-start;flex-direction:column;gap:6px">
+            <div style="display:flex;align-items:center;justify-content:space-between;width:100%">
+              <div><div class="igrp-field-name">${esc(r.Role_Name)}</div>${r.Role_Desc?`<div class="igrp-field-meta">${esc(r.Role_Desc)}</div>`:''}</div>
+              <span style="display:flex;align-items:center;gap:6px">
+                <span class="sub2">Rank</span>
+                <input type="number" value="${r.HRCHY_ID!=null?r.HRCHY_ID:''}" style="width:50px;border-radius:999px;padding:3px 10px;font-size:14px;border:1px solid var(--line-2)"
+                  onchange="saveHierarchy(${dept.Seva_Dept_ID},${r.Seva_Dept_Role_ID},this.value)">
+                <button class="mini" onclick="deleteRole(${r.Seva_Dept_Role_ID}, this)" title="Delete role" style="width:22px;height:22px;color:var(--rose)">&times;</button>
+              </span>
+            </div>
+            ${(r.holders||[]).length ? `<div class="igrp-person-list" style="padding-left:2px">${r.holders.map(h=>`<div class="igrp-person">
+                <span class="igrp-avatar">${esc(initialsOf(h.name))}</span>${esc(h.name)}
+                <button class="mini" onclick="removeMember(${h.usdrId}, this)" style="width:20px;height:20px;font-size:12px">&times;</button>
+              </div>`).join('')}</div>` : ''}
+          </div>`).join('')}</div>` : '<div class="igrp-empty">No roles defined yet.</div>'}
+        <div class="igrp-inline-form" id="roleAdd_m">
+          <input id="newRoleName_m" placeholder="Role name">
+          <input id="newRoleDesc_m" placeholder="Description (optional)">
+          <button class="small-btn save" onclick="createRole(${dept.Seva_Dept_ID}, document.getElementById('newRoleName_m').value.trim(), document.getElementById('newRoleDesc_m').value.trim(), this)">Add</button>
+          <button class="small-btn cancel" onclick="hideIgrpForm('roleAdd_m')">Cancel</button>
         </div>
-      </details>
+      </div>
 
-      <hr style="border:none;border-top:1px solid var(--line-2);margin:14px 0">
-      <p class="sub2" style="margin-bottom:4px">Roles in this department</p>
-      ${roles.length ? roles.map(r=>`<div class="oteamrow" style="cursor:default;flex-direction:column;align-items:stretch;gap:4px">
-          <div style="display:flex;align-items:center;justify-content:space-between">
-            <span title="${esc(r.Dept_Role_Desc||'')}">${esc(r.Dept_Role_Name)}</span>
-            <span style="display:flex;align-items:center;gap:6px">
-              <span class="sub2">Rank</span>
-              <input type="number" value="${r.HRCHY_ID!=null?r.HRCHY_ID:''}" style="width:52px;border-radius:999px;padding:3px 10px;font-size:14px;border:1px solid var(--line-2)"
-                onchange="saveHierarchy(${dept.Seva_Dept_ID},${r.Dept_Role_ID},this.value)">
-              <button class="mini" onclick="deleteRole(${r.Dept_Role_ID}, this)" title="Delete role" style="width:22px;height:22px;color:var(--rose)">&times;</button>
-            </span>
+      ${roles.length ? `<div class="igrp-section">
+        <div class="igrp-section-head"><div class="igrp-section-title">Add a member</div></div>
+        <div style="display:flex;flex-direction:column;gap:6px;max-width:360px">
+          <input id="assignName_m" placeholder="Name (optional)" style="border-radius:999px;padding:6px 14px;font-size:15px;border:1px solid var(--line-2)">
+          <input id="assignEmail_m" type="email" placeholder="name@ssrf.org" style="border-radius:999px;padding:6px 14px;font-size:15px;border:1px solid var(--line-2)">
+          <select id="assignRole_m" onchange="document.getElementById('newRoleAssignRow_m').style.display=this.value==='__new__'?'flex':'none'" style="border-radius:999px;padding:6px 14px;font-size:15px;border:1px solid var(--line-2)">
+            ${roles.map(r=>`<option value="${r.Seva_Dept_Role_ID}">${esc(r.Role_Name)}</option>`).join('')}
+            <option value="__new__">+ Add new role</option>
+          </select>
+          <div id="newRoleAssignRow_m" style="display:none;gap:6px">
+            <input id="newRoleInline_m" placeholder="New role name" style="flex:1;border-radius:999px;padding:6px 14px;font-size:15px;border:1px solid var(--line-2)">
           </div>
-          ${(r.holders||[]).map(h=>`<div class="sub2" style="display:flex;justify-content:space-between;padding-left:8px">
-            <span style="color:var(--sage)">${esc(h.name)}</span>
-            <span class="mini" onclick="removeMember(${h.usdrId}, this)" title="Remove" style="width:18px;height:18px;font-size:12px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center">&times;</span>
-          </div>`).join('')}
-        </div>`).join('') : '<p class="sub2">No roles defined yet.</p>'}
-      ${roleAndMemberFormsHTML(dept, roles, 'm', 'submitAssign')}
+          <button class="btn sm" onclick="submitAssign(${dept.Seva_Dept_ID}, 'm', this)"><span class="spin"></span><span class="lbl">Add member</span></button>
+          <div class="err" id="assignErr_m"></div>
+          <p class="sub2">They don't need to have signed in yet \u2014 a CSMS profile is created for them automatically.</p>
+        </div>
+      </div>` : ''}
 
-      <div class="btnrow" style="margin-top:14px">
+      <div class="btnrow" style="margin-top:6px">
         <button class="btn ghost" style="color:var(--rose);border-color:var(--rose)" onclick="deleteDept(${dept.Seva_Dept_ID}, this)"><span class="spin"></span><span class="lbl">Delete department</span></button>
       </div>
-    </div>
-  </div>`;
+    </div></div>
+  </section>`;
+  root.scrollIntoView({behavior:'smooth', block:'nearest'});
 }
 
 /* ============ Team Management — flat list, no chart (people focus) ============ */
@@ -3175,13 +3405,13 @@ function renderTeamManagement(force){
   if(!force && el.style.display!=='none' && document.getElementById('teamTableBody')) return;
 
   const deptOptions = d => LIVE_DEPTS.map(dd=>`<option value="${dd.Seva_Dept_ID}" ${dd.Seva_Dept_ID==d?'selected':''}>${esc(dd.Seva_Dept_Name)}</option>`).join('');
-  const roleOptionsFor = (deptId, roleId) => (LIVE_DEPT_ROLES[deptId]||[]).map(r=>`<option value="${r.Dept_Role_ID}" ${r.Dept_Role_ID==roleId?'selected':''}>${esc(r.Dept_Role_Name)}</option>`).join('');
+  const roleOptionsFor = (deptId, roleId) => (LIVE_DEPT_ROLES[deptId]||[]).map(r=>`<option value="${r.Seva_Dept_Role_ID}" ${r.Seva_Dept_Role_ID==roleId?'selected':''}>${esc(r.Role_Name)}</option>`).join('');
 
   const rows = [];
   LIVE_DEPTS.forEach(d=>{
     (LIVE_DEPT_ROLES[d.Seva_Dept_ID]||[]).forEach(r=>{
       (r.holders||[]).forEach(h=>{
-        rows.push({usdrId:h.usdrId, csmsId:h.csmsId, name:h.name, email:h.email, deptId:d.Seva_Dept_ID, roleId:r.Dept_Role_ID});
+        rows.push({usdrId:h.usdrId, csmsId:h.csmsId, name:h.name, email:h.email, deptId:d.Seva_Dept_ID, roleId:r.Seva_Dept_Role_ID});
       });
     });
   });
@@ -3248,7 +3478,7 @@ function renderTeamManagement(force){
 }
 
 function teamRoleOptions(deptId){
-  return (LIVE_DEPT_ROLES[deptId]||[]).map(r=>`<option value="${r.Dept_Role_ID}">${esc(r.Dept_Role_Name)}</option>`).join('');
+  return (LIVE_DEPT_ROLES[deptId]||[]).map(r=>`<option value="${r.Seva_Dept_Role_ID}">${esc(r.Role_Name)}</option>`).join('');
 }
 
 function addTeamRow(){
@@ -3328,7 +3558,7 @@ async function submitTeamChanges(btn){
 let LIVE_SATSANG_DEFS = null;
 let LIVE_SATSANG_TYPES = null;
 let SATSANG_DETAIL_ID = null;
-let SATSANG_DETAIL_DATA = null;
+let SATSANG_DETAIL_DATA = {};
 let SATSANG_EVENTS_DEF_ID = null;
 let LIVE_SATSANG_EVENTS = {};
 
@@ -3370,7 +3600,6 @@ async function loadSatsangDefs(){
     const [defs, types] = await Promise.all([apiFetch('/api/satsangs/defs'), apiFetch('/api/satsangs/types')]);
     LIVE_SATSANG_DEFS = defs; LIVE_SATSANG_TYPES = types;
     renderSatsangDefs(true);
-    if(SATSANG_DETAIL_ID) openSatsangDetail(SATSANG_DETAIL_ID);
   }catch(err){
     const msg = `<div class="hidden-note" style="background:var(--rose-wash);border-color:#EBCBCE;color:var(--rose)"><b>Could not load satsang definitions.</b> ${esc(err.message||'')}</div>`;
     const el = document.getElementById('satsangDefs'); if(el) el.innerHTML = msg;
@@ -3403,23 +3632,226 @@ function renderSatsangDefs(force){
       </div>
     </details>
     <div id="satsangDefTable">
-      ${LIVE_SATSANG_DEFS.length ? LIVE_SATSANG_DEFS.map(satsangDefRowHTML).join('') : '<p class="sub2">No satsang definitions yet.</p>'}
-    </div>
-    <div id="satsangDetailRoot"></div>`;
-  if(SATSANG_DETAIL_ID && SATSANG_DETAIL_DATA) renderSatsangDetail();
+      ${LIVE_SATSANG_DEFS.length ? LIVE_SATSANG_DEFS.map(satsangGroupHTML).join('') : '<p class="sub2">No satsang definitions yet.</p>'}
+    </div>`;
+  // Re-render any groups the person already had open (e.g. after an edit)
+  // so expanded state survives a full list refresh.
+  (SATSANG_OPEN_IDS||[]).forEach(id=>{ if(SATSANG_DETAIL_DATA[id]) renderSatsangGroupBody(id); });
 }
 
-function satsangDefRowHTML(d){
-  return `<div class="card pad" style="margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
-    <div style="cursor:pointer" onclick="openSatsangDetail(${d.Satsang_ID})">
-      <div style="font-weight:600">${esc(d.Satsang_Name)} <span class="sub2">(${esc(d.Satsang_Short_Name)})</span></div>
-      <div class="sub2">${esc(d.ST_Name||'')} \u00b7 Starts ${esc(d.Satsang_Start_Date||'')} \u00b7 ${esc(d.Satsang_Frequency||'One-off')} \u00b7 by ${esc(d.created_by_name||'\u2014')}</div>
+function satsangGroupHTML(d){
+  const isOpen = (SATSANG_OPEN_IDS||[]).includes(d.Satsang_ID);
+  return `<section class="igrp${isOpen?' open':''}" id="sgrp_${d.Satsang_ID}">
+    <button class="igrp-head" onclick="toggleSatsangGroup(${d.Satsang_ID})">
+      <span class="igrp-chevron">\u203A</span>
+      <span class="igrp-title">
+        <div class="igrp-name">${esc(d.Satsang_Name)} <span class="sub2" style="font-weight:400">(${esc(d.Satsang_Short_Name)})</span></div>
+        <div class="igrp-summary">${esc(d.ST_Name||'')} \u00b7 Starts ${esc(d.Satsang_Start_Date||'')} \u00b7 ${esc(d.Satsang_Frequency||'One-off')} \u00b7 by ${esc(d.created_by_name||'\u2014')}</div>
+      </span>
+      <span class="igrp-actions" onclick="event.stopPropagation()">
+        ${statusBadge(d.Satsang_Status)}
+        ${satsangDefActionsHTML(d)}
+      </span>
+    </button>
+    <div class="igrp-details"><div class="igrp-details-inner" id="sgrpBody_${d.Satsang_ID}">${genericSkeleton(2)}</div></div>
+  </section>`;
+}
+
+let SATSANG_OPEN_IDS = [];
+async function toggleSatsangGroup(id){
+  const el = document.getElementById('sgrp_'+id);
+  if(!el) return;
+  const willOpen = !el.classList.contains('open');
+  el.classList.toggle('open', willOpen);
+  if(willOpen){
+    if(!SATSANG_OPEN_IDS.includes(id)) SATSANG_OPEN_IDS.push(id);
+    if(!SATSANG_DETAIL_DATA[id]) await loadSatsangGroupDetail(id);
+    else renderSatsangGroupBody(id);
+  }else{
+    SATSANG_OPEN_IDS = SATSANG_OPEN_IDS.filter(x=>x!==id);
+  }
+}
+async function loadSatsangGroupDetail(id){
+  try{
+    const [fields, conductors, attendees] = await Promise.all([
+      apiFetch('/api/satsangs/defs/'+id+'/fields'),
+      apiFetch('/api/satsangs/defs/'+id+'/conductors'),
+      apiFetch('/api/satsangs/defs/'+id+'/attendees')
+    ]);
+    SATSANG_DETAIL_DATA[id] = {fields, conductors, attendees};
+    renderSatsangGroupBody(id);
+  }catch(err){
+    const body = document.getElementById('sgrpBody_'+id);
+    if(body) body.innerHTML = `<div class="hidden-note" style="background:var(--rose-wash);border-color:#EBCBCE;color:var(--rose)"><b>Could not load.</b> ${esc(err.message||'')}</div>`;
+  }
+}
+function renderSatsangGroupBody(id){
+  const body = document.getElementById('sgrpBody_'+id);
+  const data = SATSANG_DETAIL_DATA[id];
+  if(!body || !data) return;
+  const {fields, conductors, attendees} = data;
+  body.innerHTML = `
+    <div class="igrp-section">
+      <div class="igrp-section-head"><div class="igrp-section-title">Custom fields</div>
+        <button class="igrp-link-btn" onclick="showIgrpForm('sfld_${id}')">Add field</button></div>
+      ${fields.length ? `<div class="igrp-field-list">${fields.map(f=>`<div class="igrp-field-row">
+          <div style="flex:1"><div class="igrp-field-name">${esc(f.Field_Name)}</div>
+            <div class="igrp-field-meta">${esc(f.Field_Data_Type)}${f.QTY_FIELD?' \u00b7 qty':''}${f.QLT_FIELD?' \u00b7 QLT':''}${f.Display_Order!=null?(' \u00b7 order '+esc(f.Display_Order)):''} \u00b7 ${esc(f.Review_Frequency||'One-time')}</div></div>
+          <button class="mini" onclick="deleteSatsangField(${id}, ${f.MSD_ID}, this)" style="width:22px;height:22px;color:var(--rose)">&times;</button>
+        </div>`).join('')}</div>` : '<div class="igrp-empty">No custom fields have been added to this satsang yet.</div>'}
+      <div class="igrp-inline-form" id="sfld_${id}">
+        <input id="fldName_${id}" placeholder="Field name, e.g. Upay Hours">
+        <select id="fldType_${id}"><option value="text">Text</option><option value="number">Number</option><option value="date">Date</option><option value="boolean">Yes/No</option></select>
+        <select id="fldFreq_${id}" title="How often an attendee is asked for this"><option value="One-time">One-time</option><option value="Daily">Daily</option><option value="Weekly">Weekly</option></select>
+        <input id="fldOrder_${id}" type="number" placeholder="Order" style="width:64px;flex:none">
+        <label class="sub2" style="display:flex;align-items:center;gap:4px"><input type="checkbox" id="fldQty_${id}" style="width:auto">Qty</label>
+        <label class="sub2" style="display:flex;align-items:center;gap:4px"><input type="checkbox" id="fldQlt_${id}" style="width:auto">QLT</label>
+        <button class="small-btn save" onclick="addSatsangField(${id}, this)">Add</button>
+        <button class="small-btn cancel" onclick="hideIgrpForm('sfld_${id}')">Cancel</button>
+      </div>
     </div>
-    <div style="display:flex;align-items:center;gap:8px">
-      ${statusBadge(d.Satsang_Status)}
-      ${satsangDefActionsHTML(d)}
+
+    <div class="igrp-section">
+      <div class="igrp-section-head"><div class="igrp-section-title">Conductors <span style="font-weight:400;color:var(--ink-3)">(${conductors.length})</span></div>
+        <button class="igrp-link-btn" onclick="showIgrpForm('scnd_${id}')">Add conductor</button></div>
+      ${conductors.length ? `<div class="igrp-person-list">${conductors.map(c=>`<div class="igrp-person">
+          <span class="igrp-avatar">${esc(initialsOf(c.Seeker_Name||c.Seeker_Email))}</span>${esc(c.Seeker_Name||c.Seeker_Email)}
+          <button class="mini" onclick="removeSatsangConductor(${id}, ${c.SC_CSMS_ID}, this)" style="width:20px;height:20px;font-size:12px">&times;</button>
+        </div>`).join('')}</div>` : '<div class="igrp-empty">No conductors assigned yet.</div>'}
+      <div class="igrp-inline-form" id="scnd_${id}">
+        <input id="condName_${id}" placeholder="Start typing a name\u2026" autocomplete="off" oninput="peopleAutocomplete(this,'cond_${id}')">
+        <div id="cond_${id}_ac" class="ac-dropdown" style="display:none"></div>
+        <input id="cond_${id}Email" type="email" placeholder="name@ssrf.org">
+        <button class="small-btn save" onclick="addSatsangConductor(${id}, this)">Add</button>
+        <button class="small-btn cancel" onclick="hideIgrpForm('scnd_${id}')">Cancel</button>
+      </div>
     </div>
-  </div>`;
+
+    <div class="igrp-section">
+      <div class="igrp-section-head"><div class="igrp-section-title">Attending seekers <span style="font-weight:400;color:var(--ink-3)">(${attendees.length})</span></div>
+        <button class="igrp-link-btn" onclick="showIgrpForm('satt_${id}')">Add seeker</button></div>
+      ${attendees.length ? `<div class="igrp-person-list">${attendees.map(a=>{
+          const nm = [a.First_Name,a.Last_Name].filter(Boolean).join(' ') || a.Email || ('Seeker #'+a.Seeker_ID);
+          return `<div class="igrp-person"><span class="igrp-avatar">${esc(initialsOf(nm))}</span>${esc(nm)}
+            <button class="mini" onclick="removeSatsangAttendee(${id}, ${a.Seeker_ID}, this)" style="width:20px;height:20px;font-size:12px">&times;</button>
+          </div>`;
+        }).join('')}</div>` : '<div class="igrp-empty">No seekers attending yet.</div>'}
+      <div class="igrp-inline-form" id="satt_${id}" style="position:relative">
+        <input id="attName_${id}" placeholder="Search seeker by name, email or WhatsApp" autocomplete="off" oninput="seekerAutocomplete(this,'att_${id}')">
+        <input type="hidden" id="att_${id}SeekerId">
+        <div id="att_${id}_ac" class="ac-dropdown" style="display:none"></div>
+        <button class="small-btn save" onclick="addSatsangAttendee(${id}, this)">Add</button>
+        <button class="small-btn cancel" onclick="hideIgrpForm('satt_${id}')">Cancel</button>
+      </div>
+      <p class="sub2" style="margin-top:6px">Adding or removing a seeker here also logs a milestone on their Spiritual Journey profile.</p>
+    </div>`;
+}
+function showIgrpForm(id){ const el = document.getElementById(id); if(el) el.classList.add('show'); }
+function hideIgrpForm(id){ const el = document.getElementById(id); if(el) el.classList.remove('show'); }
+function initialsOf(name){
+  return String(name||'').trim().split(/\s+/).slice(0,2).map(w=>w[0]).join('').toUpperCase() || '?';
+}
+
+async function addSatsangField(defId, btn){
+  await withLoading(btn, async ()=>{
+    try{
+      const fieldName=document.getElementById('fldName_'+defId).value.trim();
+      if(!fieldName) return;
+      await apiFetch('/api/satsangs/defs/'+defId+'/fields', {method:'POST', body: JSON.stringify({
+        fieldName, dataType: document.getElementById('fldType_'+defId).value,
+        isQty: document.getElementById('fldQty_'+defId).checked, isQlt: document.getElementById('fldQlt_'+defId).checked,
+        displayOrder: document.getElementById('fldOrder_'+defId).value ? Number(document.getElementById('fldOrder_'+defId).value) : null,
+        reviewFrequency: document.getElementById('fldFreq_'+defId).value
+      })});
+      toast('Field added.');
+      SATSANG_DETAIL_DATA[defId].fields = await apiFetch('/api/satsangs/defs/'+defId+'/fields');
+      renderSatsangGroupBody(defId);
+    }catch(err){ toast('Could not add field: '+(err.message||'')); }
+  });
+}
+async function deleteSatsangField(defId, msdId, btn){
+  if(!confirm('Remove this field?')) return;
+  await withLoading(btn, async ()=>{
+    try{
+      await apiFetch('/api/satsangs/fields/'+msdId, {method:'DELETE'});
+      toast('Removed.');
+      SATSANG_DETAIL_DATA[defId].fields = await apiFetch('/api/satsangs/defs/'+defId+'/fields');
+      renderSatsangGroupBody(defId);
+    }catch(err){ toast('Could not remove: '+(err.message||'')); }
+  });
+}
+async function addSatsangConductor(defId, btn){
+  await withLoading(btn, async ()=>{
+    try{
+      const email=document.getElementById('cond_'+defId+'Email').value.trim();
+      if(!email) return;
+      await apiFetch('/api/satsangs/defs/'+defId+'/conductors', {method:'POST', body: JSON.stringify({email, name: document.getElementById('condName_'+defId).value.trim()})});
+      toast('Conductor added.');
+      SATSANG_DETAIL_DATA[defId].conductors = await apiFetch('/api/satsangs/defs/'+defId+'/conductors');
+      renderSatsangGroupBody(defId);
+    }catch(err){ toast('Could not add: '+(err.message||'')); }
+  });
+}
+async function removeSatsangConductor(defId, csmsId, btn){
+  if(!confirm('Remove this conductor?')) return;
+  await withLoading(btn, async ()=>{
+    try{
+      await apiFetch('/api/satsangs/defs/'+defId+'/conductors/'+csmsId, {method:'DELETE'});
+      toast('Removed.');
+      SATSANG_DETAIL_DATA[defId].conductors = await apiFetch('/api/satsangs/defs/'+defId+'/conductors');
+      renderSatsangGroupBody(defId);
+    }catch(err){ toast('Could not remove: '+(err.message||'')); }
+  });
+}
+function seekerAutocomplete(inputEl, prefix){
+  clearTimeout(AC_DEBOUNCE[prefix]);
+  const dd = document.getElementById(prefix+'_ac');
+  const q = inputEl.value.trim();
+  document.getElementById(prefix+'SeekerId').value = '';
+  if(q.length < 2){ dd.style.display='none'; dd.innerHTML=''; return; }
+  AC_DEBOUNCE[prefix] = setTimeout(async ()=>{
+    try{
+      const people = await apiFetch('/api/seekers?q='+encodeURIComponent(q));
+      if(!people.length){ dd.style.display='none'; dd.innerHTML=''; return; }
+      dd.innerHTML = people.slice(0,8).map(p=>{
+        const nm = [p.Sal,p.First_Name,p.Last_Name].filter(Boolean).join(' ');
+        return `<div class="ac-item" onmousedown="selectAcSeeker('${prefix}', ${p.Seeker_ID}, '${esc(nm).replace(/'/g,"\\'")}')">
+          <div>${esc(nm)}</div><div class="sub2">${esc(p.Email||'')}</div></div>`;
+      }).join('');
+      dd.style.display = '';
+    }catch(err){ dd.style.display='none'; }
+  }, 250);
+}
+function selectAcSeeker(prefix, seekerId, name){
+  const defId = prefix.replace('att_','');
+  const nameInput = document.getElementById('attName_'+defId);
+  if(nameInput) nameInput.value = name;
+  document.getElementById(prefix+'SeekerId').value = seekerId;
+  const dd = document.getElementById(prefix+'_ac');
+  dd.style.display = 'none'; dd.innerHTML = '';
+}
+async function addSatsangAttendee(defId, btn){
+  await withLoading(btn, async ()=>{
+    try{
+      const seekerId = Number(document.getElementById('att_'+defId+'SeekerId').value);
+      if(!seekerId){ toast('Pick a seeker from the search results.'); return; }
+      await apiFetch('/api/satsangs/defs/'+defId+'/attendees', {method:'POST', body: JSON.stringify({seekerId})});
+      toast('Seeker added.');
+      SATSANG_DETAIL_DATA[defId].attendees = await apiFetch('/api/satsangs/defs/'+defId+'/attendees');
+      renderSatsangGroupBody(defId);
+    }catch(err){ toast('Could not add: '+(err.message||'')); }
+  });
+}
+async function removeSatsangAttendee(defId, seekerId, btn){
+  if(!confirm('Remove this seeker from the satsang?')) return;
+  await withLoading(btn, async ()=>{
+    try{
+      await apiFetch('/api/satsangs/defs/'+defId+'/attendees/'+seekerId, {method:'DELETE'});
+      toast('Removed.');
+      SATSANG_DETAIL_DATA[defId].attendees = await apiFetch('/api/satsangs/defs/'+defId+'/attendees');
+      renderSatsangGroupBody(defId);
+    }catch(err){ toast('Could not remove: '+(err.message||'')); }
+  });
 }
 
 function satsangDefActionsHTML(d){
@@ -3477,140 +3909,6 @@ async function deleteSatsangDef(id, btn){
     catch(err){ toast('Could not delete: '+(err.message||'')); }
   });
 }
-
-/* ---- Satsang detail modal: dynamic fields, conductors, attendees ---- */
-async function openSatsangDetail(id){
-  SATSANG_DETAIL_ID = id;
-  const root = document.getElementById('satsangDetailRoot');
-  if(!root) return;
-  root.innerHTML = `<div class="obackdrop" onclick="if(event.target===this) closeSatsangDetail()">
-    <div class="omodal" style="max-width:520px"><button class="oclose" onclick="closeSatsangDetail()">&times;</button><p class="sub2">Loading\u2026</p></div></div>`;
-  try{
-    const [fields, conductors, attendees] = await Promise.all([
-      apiFetch('/api/satsangs/defs/'+id+'/fields'),
-      apiFetch('/api/satsangs/defs/'+id+'/conductors'),
-      apiFetch('/api/satsangs/defs/'+id+'/attendees')
-    ]);
-    SATSANG_DETAIL_DATA = {fields, conductors, attendees};
-    renderSatsangDetail();
-  }catch(err){
-    const modal = root.querySelector('.omodal');
-    if(modal) modal.innerHTML = `<button class="oclose" onclick="closeSatsangDetail()">&times;</button><p class="sub2">Could not load: ${esc(err.message||'')}</p>`;
-  }
-}
-function closeSatsangDetail(){ SATSANG_DETAIL_ID=null; SATSANG_DETAIL_DATA=null; const el=document.getElementById('satsangDetailRoot'); if(el) el.innerHTML=''; }
-
-function renderSatsangDetail(){
-  const root = document.getElementById('satsangDetailRoot');
-  if(!root || !SATSANG_DETAIL_ID || !SATSANG_DETAIL_DATA || !LIVE_SATSANG_DEFS) return;
-  const d = LIVE_SATSANG_DEFS.find(x=>x.Satsang_ID==SATSANG_DETAIL_ID);
-  if(!d){ closeSatsangDetail(); return; }
-  const {fields, conductors} = SATSANG_DETAIL_DATA;
-  root.innerHTML = `<div class="obackdrop" onclick="if(event.target===this) closeSatsangDetail()">
-    <div class="omodal" style="max-width:520px;max-height:80vh;overflow-y:auto">
-      <button class="oclose" onclick="closeSatsangDetail()">&times;</button>
-      <h3 style="margin:0 0 2px">${esc(d.Satsang_Name)}</h3>
-      <p style="margin-bottom:10px">${statusBadge(d.Satsang_Status)}</p>
-
-      <p class="sub2" style="font-weight:600;margin-top:14px">Custom fields</p>
-      ${fields.length ? fields.map(f=>`<div class="oteamrow" style="cursor:default">
-          <span>${esc(f.Field_Name)} <span class="sub2">(${esc(f.Field_Data_Type)}${f.QTY_FIELD?', qty':''}${f.QLT_FIELD?', QLT':''}${f.Display_Order!=null?(', order '+esc(f.Display_Order)):''}, ${esc(f.Review_Frequency||'One-time')})</span></span>
-          <button class="mini" onclick="deleteSatsangField(${f.MSD_ID}, this)" style="width:22px;height:22px;color:var(--rose)">&times;</button>
-        </div>`).join('') : '<p class="sub2">None yet.</p>'}
-      <details style="margin-top:6px">
-        <summary style="cursor:pointer;font-size:14px;color:var(--deep)">+ Add field</summary>
-        <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;align-items:center">
-          <input id="fldName" placeholder="Field name" style="border-radius:999px;padding:5px 12px;font-size:14.5px;border:1px solid var(--line-2);flex:1;min-width:100px">
-          <select id="fldType" style="border-radius:999px;padding:5px 12px;font-size:14.5px;border:1px solid var(--line-2)">
-            <option value="text">Text</option><option value="number">Number</option><option value="date">Date</option><option value="boolean">Yes/No</option>
-          </select>
-          <select id="fldFreq" style="border-radius:999px;padding:5px 12px;font-size:14.5px;border:1px solid var(--line-2)" title="How often an attendee is asked for this on the self-service form">
-            <option value="One-time">One-time</option><option value="Daily">Daily</option><option value="Weekly">Weekly</option>
-          </select>
-          <input id="fldOrder" type="number" placeholder="Order" style="width:64px;border-radius:999px;padding:5px 10px;font-size:14.5px;border:1px solid var(--line-2)">
-          <label class="sub2" style="display:flex;align-items:center;gap:4px"><input type="checkbox" id="fldQty">Qty</label>
-          <label class="sub2" style="display:flex;align-items:center;gap:4px"><input type="checkbox" id="fldQlt">QLT</label>
-          <button class="btn sm" onclick="addSatsangField(${d.Satsang_ID}, this)"><span class="spin"></span><span class="lbl">Add</span></button>
-        </div>
-        <p class="sub2" style="margin-top:4px">Daily/Weekly fields can be answered again by the same attendee link once the day or week resets.</p>
-      </details>
-
-      <p class="sub2" style="font-weight:600;margin-top:16px">Conductors</p>
-      ${conductors.length ? conductors.map(c=>`<div class="oteamrow" style="cursor:default">
-          <span>${esc(c.Seeker_Name||c.Seeker_Email)}</span>
-          <button class="mini" onclick="removeSatsangConductor(${d.Satsang_ID}, ${c.SC_CSMS_ID}, this)" style="width:22px;height:22px;color:var(--rose)">&times;</button>
-        </div>`).join('') : '<p class="sub2">None yet.</p>'}
-      <details style="margin-top:6px">
-        <summary style="cursor:pointer;font-size:14px;color:var(--deep)">+ Add conductor</summary>
-        <div style="display:flex;gap:6px;margin-top:8px;position:relative">
-          <div style="flex:1;position:relative">
-            <input id="condName" placeholder="Start typing a name\u2026" autocomplete="off" oninput="peopleAutocomplete(this,'cond')" style="width:100%;border-radius:999px;padding:5px 12px;font-size:14.5px;border:1px solid var(--line-2);box-sizing:border-box">
-            <div id="cond_ac" class="ac-dropdown" style="display:none"></div>
-          </div>
-          <input id="condEmail" type="email" placeholder="name@ssrf.org" style="border-radius:999px;padding:5px 12px;font-size:14.5px;border:1px solid var(--line-2);flex:1">
-          <button class="btn sm" onclick="addSatsangConductor(${d.Satsang_ID}, this)"><span class="spin"></span><span class="lbl">Add</span></button>
-        </div>
-        <p class="sub2" style="margin-top:4px">Pick an existing CSMS person, or type a new name and email \u2014 they don't need to have signed in yet.</p>
-      </details>
-    </div>
-  </div>`;
-}
-
-async function addSatsangField(defId, btn){
-  await withLoading(btn, async ()=>{
-    try{
-      const fieldName=document.getElementById('fldName').value.trim();
-      if(!fieldName) return;
-      await apiFetch('/api/satsangs/defs/'+defId+'/fields', {method:'POST', body: JSON.stringify({
-        fieldName, dataType: document.getElementById('fldType').value,
-        isQty: document.getElementById('fldQty').checked, isQlt: document.getElementById('fldQlt').checked,
-        displayOrder: document.getElementById('fldOrder').value ? Number(document.getElementById('fldOrder').value) : null,
-        reviewFrequency: document.getElementById('fldFreq').value
-      })});
-      toast('Field added.');
-      SATSANG_DETAIL_DATA.fields = await apiFetch('/api/satsangs/defs/'+defId+'/fields');
-      renderSatsangDetail();
-    }catch(err){ toast('Could not add field: '+(err.message||'')); }
-  });
-}
-async function deleteSatsangField(msdId, btn){
-  if(!confirm('Remove this field?')) return;
-  await withLoading(btn, async ()=>{
-    try{
-      await apiFetch('/api/satsangs/fields/'+msdId, {method:'DELETE'});
-      toast('Removed.');
-      SATSANG_DETAIL_DATA.fields = await apiFetch('/api/satsangs/defs/'+SATSANG_DETAIL_ID+'/fields');
-      renderSatsangDetail();
-    }catch(err){ toast('Could not remove: '+(err.message||'')); }
-  });
-}
-async function addSatsangConductor(defId, btn){
-  await withLoading(btn, async ()=>{
-    try{
-      const email=document.getElementById('condEmail').value.trim();
-      if(!email) return;
-      await apiFetch('/api/satsangs/defs/'+defId+'/conductors', {method:'POST', body: JSON.stringify({email, name: document.getElementById('condName').value.trim()})});
-      toast('Conductor added.');
-      SATSANG_DETAIL_DATA.conductors = await apiFetch('/api/satsangs/defs/'+defId+'/conductors');
-      renderSatsangDetail();
-    }catch(err){ toast('Could not add: '+(err.message||'')); }
-  });
-}
-async function removeSatsangConductor(defId, csmsId, btn){
-  if(!confirm('Remove this conductor?')) return;
-  await withLoading(btn, async ()=>{
-    try{
-      await apiFetch('/api/satsangs/defs/'+defId+'/conductors/'+csmsId, {method:'DELETE'});
-      toast('Removed.');
-      SATSANG_DETAIL_DATA.conductors = await apiFetch('/api/satsangs/defs/'+defId+'/conductors');
-      renderSatsangDetail();
-    }catch(err){ toast('Could not remove: '+(err.message||'')); }
-  });
-}
-/* ---- Attendee Addition sub-tab removed \u2014 its add/remove now lives
-   inline under Satsang Event Management (toggleEventAttendees etc.,
-   below), reusing the same /api/satsangs/defs/:id/attendees endpoint, so
-   there's one place to manage a satsang's roster instead of two. ---- */
 
 /* ---- Satsang Events ---- */
 function renderSatsangEvents(force){
@@ -3702,14 +4000,9 @@ function eventAttendeesPanelHTML(seId){
   const comments = EVENT_COMMENTS_CACHE[seId] || [];
   const events = LIVE_SATSANG_EVENTS[SATSANG_EVENTS_DEF_ID] || [];
   const ev = events.find(x=>x.SE_ID==seId);
-  // ev.SC1_CSMS_ID/SC2_CSMS_ID/sc1_name/sc2_name are from the old two-
-  // conductor-per-event design and don't exist on event rows anymore —
-  // GET /defs/:id/events now attaches the satsang's shared conductor
-  // roster as ev.conductors (an array), same data as the definition
-  // screen's Conductors list. This always fell through to "no options"
-  // before, which is why a real assigned conductor never showed here.
-  const conductorOptions = (ev && ev.conductors && ev.conductors.length)
-    ? ev.conductors.map(c=>`<option value="${c.SC_CSMS_ID}">${esc(c.Seeker_Name||c.Seeker_Email||('Conductor #'+c.SC_CSMS_ID))}</option>`).join('')
+  const conductorOptions = ev
+    ? [ev.SC1_CSMS_ID ? `<option value="${ev.SC1_CSMS_ID}">${esc(ev.sc1_name||'Conductor 1')}</option>` : '',
+       ev.SC2_CSMS_ID ? `<option value="${ev.SC2_CSMS_ID}">${esc(ev.sc2_name||'Conductor 2')}</option>` : ''].join('')
     : '';
   return `<div class="card pad" style="background:var(--paper)">
     <p class="sub2" style="font-weight:600;margin-bottom:6px">Satsang roster \u2014 shared across every event of this satsang</p>
@@ -3996,14 +4289,9 @@ function renderSatsangCommentsBody(){
   const body = document.getElementById('satsangCommentsBody');
   if(!body) return;
   const ev = (LIVE_SATSANG_COMMENTS_EVENTS||[]).find(e=>e.SE_ID==SATSANG_COMMENTS_SE_ID);
-  // ev.SC1_CSMS_ID/SC2_CSMS_ID/sc1_name/sc2_name are from the old two-
-  // conductor-per-event design and don't exist on event rows anymore —
-  // GET /defs/:id/events now attaches the satsang's shared conductor
-  // roster as ev.conductors (an array), same data as the definition
-  // screen's Conductors list. This always fell through to "no options"
-  // before, which is why a real assigned conductor never showed here.
-  const conductorOptions = (ev && ev.conductors && ev.conductors.length)
-    ? ev.conductors.map(c=>`<option value="${c.SC_CSMS_ID}">${esc(c.Seeker_Name||c.Seeker_Email||('Conductor #'+c.SC_CSMS_ID))}</option>`).join('')
+  const conductorOptions = ev
+    ? [ev.SC1_CSMS_ID ? `<option value="${ev.SC1_CSMS_ID}">${esc(ev.sc1_name||'Conductor 1')}</option>` : '',
+       ev.SC2_CSMS_ID ? `<option value="${ev.SC2_CSMS_ID}">${esc(ev.sc2_name||'Conductor 2')}</option>` : ''].join('')
     : '';
 
   body.innerHTML = `
@@ -4198,7 +4486,12 @@ async function acceptTransfer(id, btn){
       await apiFetch('/api/satsangs/transfers/'+id+'/accept', {method:'POST', body: JSON.stringify({remarks})});
       toast('Transfer accepted \u2014 attendee moved.');
       loadSatsangTransfers();
-      if(SATSANG_DETAIL_ID){ SATSANG_DETAIL_DATA=null; openSatsangDetail(SATSANG_DETAIL_ID); }
+      // A transfer can move the attendee into or out of any open satsang
+      // group's roster, so refresh whichever ones are currently expanded.
+      for(const openId of (SATSANG_OPEN_IDS||[])){
+        delete SATSANG_DETAIL_DATA[openId];
+        await loadSatsangGroupDetail(openId);
+      }
     }catch(err){ toast('Could not accept: '+(err.message||'')); }
   });
 }
@@ -4243,7 +4536,7 @@ function renderSatsangAccessBody(){
           ${LIVE_DEPTS.map(d=>`<option value="${d.Seva_Dept_ID}">${esc(d.Seva_Dept_Name)}</option>`).join('')}
         </select>
         <label class="sub2">Create role ID</label>
-        <input id="acCreate" type="number" placeholder="Single Dept_Role_ID" style="border-radius:999px;padding:7px 14px;font-size:15px;border:1px solid var(--line-2)">
+        <input id="acCreate" type="number" placeholder="Single Seva_Dept_Role_ID" style="border-radius:999px;padding:7px 14px;font-size:15px;border:1px solid var(--line-2)">
         <label class="sub2">Review role IDs</label>
         <input id="acReview" placeholder="Comma-separated, e.g. 3,7,12" style="border-radius:999px;padding:7px 14px;font-size:15px;border:1px solid var(--line-2)">
         <label class="sub2">Approve role IDs</label>
@@ -4312,13 +4605,13 @@ function formSubtab(s){
 
 let LIVE_FORMS = null;
 let FORM_DETAIL_ID = null;
-let FORM_DETAIL_FIELDS = null;
+let FORM_DETAIL_FIELDS = {};
+let FORM_OPEN_IDS = [];
 
 async function loadForms(){
   try{
     LIVE_FORMS = await apiFetch('/api/forms');
     renderFormDefs(true);
-    if(FORM_DETAIL_ID) openFormDetail(FORM_DETAIL_ID);
   }catch(err){
     const el = document.getElementById('formDefs');
     if(el) el.innerHTML = `<div class="hidden-note" style="background:var(--rose-wash);border-color:#EBCBCE;color:var(--rose)"><b>Could not load forms.</b> ${esc(err.message||'')}</div>`;
@@ -4332,10 +4625,9 @@ function renderFormDefs(force){
   el.innerHTML = `
     <button class="btn sm" onclick="createForm(this)" style="margin-bottom:14px"><span class="spin"></span><span class="lbl">+ New form (Draft)</span></button>
     <div id="formDefTable">
-      ${LIVE_FORMS.length ? LIVE_FORMS.map(formRowHTML).join('') : '<p class="sub2">No forms yet.</p>'}
-    </div>
-    <div id="formDetailRoot"></div>`;
-  if(FORM_DETAIL_ID && FORM_DETAIL_FIELDS) renderFormDetail();
+      ${LIVE_FORMS.length ? LIVE_FORMS.map(formGroupHTML).join('') : '<p class="sub2">No forms yet.</p>'}
+    </div>`;
+  (FORM_OPEN_IDS||[]).forEach(id=>{ if(FORM_DETAIL_FIELDS[id]) renderFormGroupBody(id); });
 }
 
 // Display label: <Platform_Name>_<Form_ID> (falls back to Form_<id> for
@@ -4345,17 +4637,43 @@ function formLabel(f){
   return (f.Platform_Name || 'Form') + '_' + f.Form_ID;
 }
 
-function formRowHTML(f){
-  return `<div class="card pad" style="margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
-    <div style="cursor:pointer" onclick="openFormDetail(${f.Form_ID})">
-      <div style="font-weight:600">${esc(formLabel(f))}</div>
-      <div class="sub2">Owner: ${esc(f.owner_name||'\u2014')} \u00b7 Last changed ${esc(f.Current_Status_Change_Date||'\u2014')}${f.Form_Published_URL?(' \u00b7 <a href="'+esc(f.Form_Published_URL)+'" target="_blank" rel="noopener">'+esc(f.Form_Published_URL)+'</a>'):''}</div>
-    </div>
-    <div style="display:flex;align-items:center;gap:8px">
-      ${statusBadge(f.Form_Status_Name)}
-      ${formActionsHTML(f)}
-    </div>
-  </div>`;
+function formGroupHTML(f){
+  const isOpen = (FORM_OPEN_IDS||[]).includes(f.Form_ID);
+  return `<section class="igrp${isOpen?' open':''}" id="fgrp_${f.Form_ID}">
+    <button class="igrp-head" onclick="toggleFormGroup(${f.Form_ID})">
+      <span class="igrp-chevron">\u203A</span>
+      <span class="igrp-title">
+        <div class="igrp-name">${esc(formLabel(f))}</div>
+        <div class="igrp-summary">Owner: ${esc(f.owner_name||'\u2014')} \u00b7 Last changed ${esc(f.Current_Status_Change_Date||'\u2014')}${f.Form_Published_URL?(' \u00b7 <a href="'+esc(f.Form_Published_URL)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()">'+esc(f.Form_Published_URL)+'</a>'):''}</div>
+      </span>
+      <span class="igrp-actions" onclick="event.stopPropagation()">
+        ${statusBadge(f.Form_Status_Name)}
+        ${formActionsHTML(f)}
+      </span>
+    </button>
+    <div class="igrp-details"><div class="igrp-details-inner" id="fgrpBody_${f.Form_ID}">${genericSkeleton(2)}</div></div>
+  </section>`;
+}
+
+let FORM_PENDING_FIELDS = {};
+async function toggleFormGroup(id){
+  const el = document.getElementById('fgrp_'+id);
+  if(!el) return;
+  const willOpen = !el.classList.contains('open');
+  el.classList.toggle('open', willOpen);
+  if(willOpen){
+    if(!FORM_OPEN_IDS.includes(id)) FORM_OPEN_IDS.push(id);
+    if(!FORM_PENDING_FIELDS[id]) FORM_PENDING_FIELDS[id] = [];
+    if(!FORM_DETAIL_FIELDS[id]){
+      try{ FORM_DETAIL_FIELDS[id] = await apiFetch('/api/forms/'+id+'/fields'); renderFormGroupBody(id); }
+      catch(err){
+        const body = document.getElementById('fgrpBody_'+id);
+        if(body) body.innerHTML = `<div class="hidden-note" style="background:var(--rose-wash);border-color:#EBCBCE;color:var(--rose)"><b>Could not load.</b> ${esc(err.message||'')}</div>`;
+      }
+    }else renderFormGroupBody(id);
+  }else{
+    FORM_OPEN_IDS = FORM_OPEN_IDS.filter(x=>x!==id);
+  }
 }
 
 // Preview is available at every stage now \u2014 including Archived, which
@@ -4422,7 +4740,7 @@ async function confirmCreateForm(platformId, btn){
       closeFormTypePicker();
       LIVE_FORMS=null;
       await loadForms();
-      if(res && res.formId) openFormDetail(res.formId); // land straight in it, no extra click to find it in the list
+      if(res && res.formId) toggleFormGroup(res.formId); // land straight in it, no extra click to find it in the list
     }catch(err){ toast('Could not create: '+(err.message||'')); }
   });
 }
@@ -4469,22 +4787,6 @@ async function archiveForm(id, btn){
   });
 }
 
-async function openFormDetail(id){
-  FORM_DETAIL_ID = id;
-  const root = document.getElementById('formDetailRoot');
-  if(!root) return;
-  root.innerHTML = `<div class="obackdrop" onclick="if(event.target===this) closeFormDetail()">
-    <div class="omodal"><button class="oclose" onclick="closeFormDetail()">&times;</button><p class="sub2">Loading\u2026</p></div></div>`;
-  try{
-    FORM_DETAIL_FIELDS = await apiFetch('/api/forms/'+id+'/fields');
-    renderFormDetail();
-  }catch(err){
-    const modal = root.querySelector('.omodal');
-    if(modal) modal.innerHTML = `<button class="oclose" onclick="closeFormDetail()">&times;</button><p class="sub2">Could not load: ${esc(err.message||'')}</p>`;
-  }
-}
-function closeFormDetail(){ FORM_DETAIL_ID=null; FORM_DETAIL_FIELDS=null; const el=document.getElementById('formDetailRoot'); if(el) el.innerHTML=''; }
-
 // Same fixed columns every intake submission collects, mirroring
 // MANDATORY_INTAKE_FIELDS in routes/public-forms.js \u2014 shown read-only
 // here since they're always present on every form, not something this
@@ -4494,77 +4796,101 @@ const FORM_DEFAULT_FIELDS = [
   {label:'Country'}, {label:'WhatsApp number'}, {label:'Email'},
 ];
 
-function renderFormDetail(){
-  const root = document.getElementById('formDetailRoot');
-  if(!root) return;
-  const f = (LIVE_FORMS||[]).find(x=>x.Form_ID==FORM_DETAIL_ID);
-  const fields = FORM_DETAIL_FIELDS || [];
-  root.innerHTML = `<div class="obackdrop" onclick="if(event.target===this) closeFormDetail()">
-    <div class="omodal">
-      <button class="oclose" onclick="closeFormDetail()">&times;</button>
-      <h3 style="margin:0 0 4px">${esc(formLabel(f))}</h3>
-      <p class="sub2" style="margin-bottom:14px">${f?statusBadge(f.Form_Status_Name):''}</p>
+function renderFormGroupBody(id){
+  const body = document.getElementById('fgrpBody_'+id);
+  if(!body) return;
+  const f = (LIVE_FORMS||[]).find(x=>x.Form_ID==id);
+  const fields = FORM_DETAIL_FIELDS[id] || [];
+  const pending = FORM_PENDING_FIELDS[id] || [];
+  body.innerHTML = `
+    <div class="igrp-section">
+      <div class="igrp-section-head"><div class="igrp-section-title">Title &amp; description</div></div>
+      <p class="sub2" style="font-weight:600">Form title \u2014 shown as the heading on the public form</p>
+      <input id="ffTitle_${id}" placeholder="e.g. \u201cCurious Intake\u201d" style="width:100%;border-radius:10px;padding:8px 14px;font-size:15px;border:1px solid var(--line-2);box-sizing:border-box;font-family:inherit;margin-bottom:12px" value="${esc((f&&f.Form_Title)||'')}">
+      <p class="sub2" style="font-weight:600">Form description \u2014 shown underneath the title</p>
+      <textarea id="ffDesc_${id}" rows="2" placeholder="What is this form for? e.g. \u201cTell us a bit about you \u2014 it only takes a minute.\u201d" style="width:100%;border-radius:12px;padding:8px 14px;font-size:15px;border:1px solid var(--line-2);box-sizing:border-box;font-family:inherit;resize:vertical">${esc((f&&f.Form_Desc)||'')}</textarea>
+    </div>
 
-      <p class="sub2" style="font-weight:600">Form heading \u2014 shown to whoever opens the public form</p>
-      <textarea id="ffDesc" rows="2" placeholder="What is this form for? e.g. \u201cTell us a bit about you \u2014 it only takes a minute.\u201d" style="width:100%;border-radius:12px;padding:8px 14px;font-size:15px;border:1px solid var(--line-2);box-sizing:border-box;font-family:inherit;resize:vertical;margin-bottom:6px">${esc((f&&f.Form_Desc)||'')}</textarea>
-      <button class="mini" onclick="saveFormDesc(this)" style="width:auto;padding:0 12px;height:26px;font-size:13.5px;margin-bottom:14px">Save heading</button>
+    <div class="igrp-section">
+      <div class="igrp-section-head"><div class="igrp-section-title">Default fields \u2014 every form collects these</div></div>
+      <div class="igrp-field-list">${FORM_DEFAULT_FIELDS.map(d=>`<div class="igrp-field-row"><span class="igrp-field-name">${esc(d.label)}</span><span class="sub2">Read-only</span></div>`).join('')}</div>
+    </div>
 
-      <p class="sub2" style="font-weight:600">Default fields \u2014 every form collects these</p>
-      <div class="kv" style="grid-template-columns:1fr;margin-bottom:14px">
-        ${FORM_DEFAULT_FIELDS.map(d=>`<div class="oteamrow" style="cursor:default"><span>${esc(d.label)}</span><span class="sub2">Read-only</span></div>`).join('')}
-      </div>
-      <p class="sub2" style="font-weight:600">Additional fields (this form's own questions)</p>
-      ${fields.length ? fields.map(ff=>`<div class="oteamrow">
-          <span>${esc(ff.Question_Name)} <span class="sub2">(${esc(ff.Question_Type)}, ${esc(ff.Component_Type)})</span></span>
-          <button class="mini" onclick="deleteFormField(${ff.FAF_ID}, this)" style="width:22px;height:22px;color:var(--rose)">&times;</button>
-        </div>`).join('') : '<p class="sub2">None yet.</p>'}
-      <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;align-items:center">
-        <input id="ffName" placeholder="Question" style="border-radius:999px;padding:5px 12px;font-size:14.5px;border:1px solid var(--line-2);flex:1;min-width:120px">
-        <select id="ffQType" style="border-radius:999px;padding:5px 12px;font-size:14.5px;border:1px solid var(--line-2)">
-          <option value="STRING">String</option><option value="INTEGER">Integer</option><option value="BOOLEAN">Boolean</option><option value="DATE">Date</option>
-        </select>
-        <select id="ffCType" style="border-radius:999px;padding:5px 12px;font-size:14.5px;border:1px solid var(--line-2)">
+    <div class="igrp-section">
+      <div class="igrp-section-head"><div class="igrp-section-title">Additional questions <span style="font-weight:400;color:var(--ink-3)">(${fields.length})</span></div>
+        <button class="igrp-link-btn" onclick="showIgrpForm('qadd_${id}')">Add question</button></div>
+      ${fields.length ? `<div class="igrp-field-list">${fields.map(ff=>`<div class="igrp-field-row">
+          <div style="flex:1"><div class="igrp-field-name">${esc(ff.Question_Name)}</div>
+            <div class="igrp-field-meta">${esc(ff.Question_Type)} \u00b7 ${esc(ff.Component_Type)}${ff.Component_Type==='CHECKBOX'&&ff.Question_Options?' \u00b7 '+esc(ff.Question_Options):''}</div></div>
+          <button class="mini" onclick="deleteFormField(${id}, ${ff.FAF_ID}, this)" style="width:22px;height:22px;color:var(--rose)">&times;</button>
+        </div>`).join('')}</div>` : '<div class="igrp-empty">No additional questions yet.</div>'}
+
+      ${pending.length ? `<p class="sub2" style="font-weight:600;margin-top:10px">Not yet saved</p>
+      <div class="igrp-field-list">${pending.map((pf,i)=>`<div class="igrp-field-row" style="background:var(--amber-wash)">
+          <div style="flex:1"><div class="igrp-field-name">${esc(pf.questionName)}</div>
+            <div class="igrp-field-meta">${esc(pf.questionType)} \u00b7 ${esc(pf.componentType)}${pf.componentType==='CHECKBOX'&&pf.questionOptions?' \u00b7 '+esc(pf.questionOptions):''}</div></div>
+          <button class="mini" onclick="removePendingFormField(${id}, ${i})" style="width:22px;height:22px;color:var(--rose)">&times;</button>
+        </div>`).join('')}</div>` : ''}
+
+      <div class="igrp-inline-form show" id="qadd_${id}" style="border:none;background:transparent;padding:10px 0 0">
+        <input id="ffName_${id}" placeholder="Question">
+        <select id="ffQType_${id}"><option value="STRING">String</option><option value="INTEGER">Integer</option><option value="BOOLEAN">Boolean</option><option value="DATE">Date</option></select>
+        <select id="ffCType_${id}" onchange="document.getElementById('ffOptions_${id}').style.display = this.value==='CHECKBOX' ? '' : 'none'">
           <option value="INPUT">Input</option><option value="CHECKBOX">Checkbox</option><option value="CONSENT">Consent</option>
           <option value="INFORMATION">Information</option><option value="WARNING">Warning</option><option value="HIGHLIGHT">Highlight</option>
         </select>
-        <button class="btn sm" onclick="addFormField(this)"><span class="spin"></span><span class="lbl">Add</span></button>
+        <button class="small-btn save" onclick="addPendingFormField(${id})">Add to list</button>
       </div>
+      <input id="ffOptions_${id}" placeholder="Checkbox options, comma-separated \u2014 e.g. Counselling, Translation, Event coordination" style="display:none;width:100%;border-radius:999px;padding:5px 14px;font-size:14.5px;border:1px solid var(--line-2);box-sizing:border-box;margin-top:6px">
     </div>
-  </div>`;
+
+    <button class="btn" onclick="saveFormAll(${id}, this)" style="width:100%"><span class="spin"></span><span class="lbl">Save form</span></button>`;
 }
 
-async function saveFormDesc(btn){
+function addPendingFormField(id){
+  const questionName = document.getElementById('ffName_'+id).value.trim();
+  if(!questionName) return;
+  const componentType = document.getElementById('ffCType_'+id).value;
+  const questionOptions = componentType==='CHECKBOX' ? document.getElementById('ffOptions_'+id).value.trim() : '';
+  if(!FORM_PENDING_FIELDS[id]) FORM_PENDING_FIELDS[id] = [];
+  FORM_PENDING_FIELDS[id].push({questionName, questionType: document.getElementById('ffQType_'+id).value, componentType, questionOptions});
+  document.getElementById('ffName_'+id).value = '';
+  document.getElementById('ffOptions_'+id).value = '';
+  renderFormGroupBody(id);
+}
+function removePendingFormField(id, i){
+  FORM_PENDING_FIELDS[id].splice(i,1);
+  renderFormGroupBody(id);
+}
+// One button saves everything composed so far: title, description, and
+// every question added to the "Not yet saved" list \u2014 instead of a
+// separate save click for each piece.
+async function saveFormAll(id, btn){
   await withLoading(btn, async ()=>{
     try{
-      const desc = document.getElementById('ffDesc').value.trim();
-      await apiFetch('/api/forms/'+FORM_DETAIL_ID+'/desc', {method:'PUT', body: JSON.stringify({desc})});
-      toast('Heading saved.');
+      const title = document.getElementById('ffTitle_'+id).value.trim();
+      const desc = document.getElementById('ffDesc_'+id).value.trim();
+      await apiFetch('/api/forms/'+id+'/title', {method:'PUT', body: JSON.stringify({title})});
+      await apiFetch('/api/forms/'+id+'/desc', {method:'PUT', body: JSON.stringify({desc})});
+      for(const pf of (FORM_PENDING_FIELDS[id]||[])){
+        await apiFetch('/api/forms/'+id+'/fields', {method:'POST', body: JSON.stringify(pf)});
+      }
+      FORM_PENDING_FIELDS[id] = [];
+      toast('Form saved.');
       LIVE_FORMS = null; await loadForms();
+      FORM_DETAIL_FIELDS[id] = await apiFetch('/api/forms/'+id+'/fields');
+      renderFormGroupBody(id);
     }catch(err){ toast('Could not save: '+(err.message||'')); }
   });
 }
-async function addFormField(btn){
-  await withLoading(btn, async ()=>{
-    try{
-      const questionName = document.getElementById('ffName').value.trim();
-      if(!questionName) return;
-      await apiFetch('/api/forms/'+FORM_DETAIL_ID+'/fields', {method:'POST', body: JSON.stringify({
-        questionName, questionType: document.getElementById('ffQType').value, componentType: document.getElementById('ffCType').value
-      })});
-      toast('Question added.');
-      FORM_DETAIL_FIELDS = await apiFetch('/api/forms/'+FORM_DETAIL_ID+'/fields');
-      renderFormDetail();
-    }catch(err){ toast('Could not add: '+(err.message||'')); }
-  });
-}
-async function deleteFormField(fafId, btn){
+async function deleteFormField(id, fafId, btn){
   if(!confirm('Remove this question?')) return;
   await withLoading(btn, async ()=>{
     try{
       await apiFetch('/api/forms/fields/'+fafId, {method:'DELETE'});
       toast('Removed.');
-      FORM_DETAIL_FIELDS = await apiFetch('/api/forms/'+FORM_DETAIL_ID+'/fields');
-      renderFormDetail();
+      FORM_DETAIL_FIELDS[id] = await apiFetch('/api/forms/'+id+'/fields');
+      renderFormGroupBody(id);
     }catch(err){ toast('Could not remove: '+(err.message||'')); }
   });
 }
@@ -4602,7 +4928,7 @@ function renderFormAccessBody(){
           ${LIVE_DEPTS.map(d=>`<option value="${d.Seva_Dept_ID}">${esc(d.Seva_Dept_Name)}</option>`).join('')}
         </select>
         <label class="sub2">Create role ID</label>
-        <input id="fac_Create" type="number" placeholder="Single Dept_Role_ID" style="border-radius:999px;padding:7px 14px;font-size:15px;border:1px solid var(--line-2)">
+        <input id="fac_Create" type="number" placeholder="Single Seva_Dept_Role_ID" style="border-radius:999px;padding:7px 14px;font-size:15px;border:1px solid var(--line-2)">
         <label class="sub2">Review role IDs</label>
         <input id="fac_Review" placeholder="Comma-separated" style="border-radius:999px;padding:7px 14px;font-size:15px;border:1px solid var(--line-2)">
         <label class="sub2">Approve role IDs</label>
@@ -4837,14 +5163,24 @@ function toggleTask(id){ const t=TASKS.find(x=>x.id===id); t.done=!t.done; rende
    milestones, donations/attribution) have no real-schema equivalent yet, so
    only Journey itself has been switched over here; wiring the rest is a
    separate call once that's decided, not done silently as part of this. */
-let LANES = ["Curious","Well-wisher","Partner"]; // fallback until Master.M_Seeker_Category loads
+let LANES = []; // populated only from Master.M_Seeker_Category — empty means "not loaded yet", never fabricated
 let LIVE_SEEKER_CATEGORIES = null;
 let LIVE_JOURNEY_SEEKERS = null;
+let JOURNEY_CATEGORIES_ERROR = null;
 async function loadSeekerCategories(){
   try{
     const cats = await apiFetch('/api/master/categories');
-    if(cats && cats.length){ LANES = cats.map(c=>c.Category_Name); LIVE_SEEKER_CATEGORIES = cats; renderJourney(); }
-  }catch(err){ /* keep the fallback lanes — the illustrative board still works either way */ }
+    LANES = (cats||[]).map(c=>c.Category_Name);
+    LIVE_SEEKER_CATEGORIES = cats||[];
+    JOURNEY_CATEGORIES_ERROR = null;
+    renderJourney();
+  }catch(err){
+    // Surfaced in the board itself (see renderJourney) instead of being
+    // silently swallowed \u2014 showing made-up category names when the real
+    // ones fail to load would be worse than showing an error.
+    JOURNEY_CATEGORIES_ERROR = err.message || 'Could not load categories.';
+    renderJourney();
+  }
 }
 async function loadJourneySeekers(){
   try{
@@ -4894,6 +5230,11 @@ function renderJourney(){
   const el = document.getElementById('journey');
   if(!el) return;
   if(LIVE_JOURNEY_SEEKERS === null){ el.innerHTML = genericSkeleton(5); loadJourneySeekers(); return; }
+  if(JOURNEY_CATEGORIES_ERROR){
+    el.innerHTML = `<div class="hidden-note" style="background:var(--rose-wash);border-color:#EBCBCE;color:var(--rose)"><b>Could not load categories.</b> ${esc(JOURNEY_CATEGORIES_ERROR)} <button class="mini" onclick="loadSeekerCategories()" style="width:auto;padding:0 10px;height:24px;margin-left:6px">Retry</button></div>`;
+    return;
+  }
+  if(LIVE_SEEKER_CATEGORIES === null){ el.innerHTML = genericSkeleton(5); loadSeekerCategories(); return; }
   const v = LIVE_JOURNEY_SEEKERS;
 
   const lanes = LANES.map(L=>{
@@ -4917,14 +5258,27 @@ function renderJourney(){
         ${ppl.length ? ppl.map(p=>{
           const i = laneIdx(p.Category_Name);
           const name = [p.Sal,p.First_Name,p.Last_Name].filter(Boolean).join(' ') || ('Seeker #'+p.Seeker_ID);
-          return `<div class="kcard" ${readonly?'':`draggable="true" ondragstart="dragCard(event,${p.Seeker_ID})" ondragend="dragEndCard(event)"`}>
-            <div class="nm serif kcard-name" onclick="openSeekerPage(${p.Seeker_ID})">${esc(name)}</div>
-            <div class="sub2">${esc([p.City,p.Country_Name].filter(Boolean).join(', ')||'\u2014')}</div>
-            <div class="sub2" style="font-size:13.5px">${esc(p.Email||'')}</div>
+          const skills = p.skill_names || [];
+          return `<div class="kcard" onclick="openSeekerPage(${p.Seeker_ID})" ${readonly?'':`draggable="true" ondragstart="dragCard(event,${p.Seeker_ID})" ondragend="dragEndCard(event)"`}>
+            <div class="kcard-top">
+              <div class="kcard-avatar">${esc(seekerInitials(p))}</div>
+              <div style="min-width:0;flex:1">
+                <div class="nm serif" style="font-size:16px">${esc(name)}</div>
+                <div class="sub2">${esc([p.City,p.Country_Name].filter(Boolean).join(', ')||'\u2014')}</div>
+              </div>
+              ${p.Sensitive_List ? '<span class="kcard-badge">Sensitive</span>' : ''}
+            </div>
+            <div class="kcard-stats">
+              <div class="kcard-stat"><div class="n">${p.Weekly_Seva_Hrs!=null?esc(p.Weekly_Seva_Hrs):'\u2014'}</div><div class="l">Seva hrs</div></div>
+              <div class="kcard-stat"><div class="n">${skills.length}</div><div class="l">Skills</div></div>
+              <div class="kcard-stat"><div class="n">${p.milestone_count||0}</div><div class="l">Milestones</div></div>
+            </div>
+            ${skills.length ? `<div class="kcard-chips">${skills.map(sk=>`<span class="kcard-chip">${esc(sk)}</span>`).join('')}</div>` : ''}
+            ${p.Availability ? `<div class="kcard-avail">Availability: ${esc(p.Availability)}</div>` : ''}
             ${readonly ? '' : `<div class="kcard-actions">
-              <button class="mini" onclick="moveCategory(${p.Seeker_ID},-1)" ${i<=0?'disabled':''} title="Move back">‹</button>
-              <span class="kcard-drag" title="Drag to another category">⠿ drag</span>
-              <button class="mini" onclick="moveCategory(${p.Seeker_ID},1)" ${i<0||i===LANES.length-1?'disabled':''} title="Move forward">›</button>
+              <button class="mini" onclick="event.stopPropagation();moveCategory(${p.Seeker_ID},-1)" ${i<=0?'disabled':''} title="Move back">‹</button>
+              <span class="kcard-drag" title="Drag to another category" onclick="event.stopPropagation()">⠿ drag</span>
+              <button class="mini" onclick="event.stopPropagation();moveCategory(${p.Seeker_ID},1)" ${i<0||i===LANES.length-1?'disabled':''} title="Move forward">›</button>
             </div>`}
           </div>`;
         }).join('') : '<div class="klane-empty">Nobody here.</div>'}
@@ -4947,9 +5301,11 @@ function renderJourney(){
 function journeySubtab(s){
   document.getElementById('journey').style.display = s==='board' ? '' : 'none';
   document.getElementById('journeyMasterlist').style.display = s==='masterlist' ? '' : 'none';
+  document.getElementById('journeySearch').style.display = s==='search' ? '' : 'none';
   document.querySelectorAll('#p-journey .chip').forEach(c=>c.classList.toggle('on', c.dataset.jsub===s));
   if(s==='board') renderJourney();
-  else renderMasterlistMgmt();
+  else if(s==='masterlist') renderMasterlistMgmt();
+  else renderLiveSeekers('journeySearch');
 }
 
 let LIVE_ML_SEEKERS = null;
@@ -5207,7 +5563,7 @@ function renderAbout(){
     ["Operations tab","Overdue volunteer access review","Volunteer deprovisioning gap"],
     ["Operations tab","Upgrade queue routed by risk level","Maintenance model"]
   ];
-  const aboutEl = document.getElementById('about'); if(!aboutEl) return; aboutEl.innerHTML=`
+  document.getElementById('about').innerHTML=`
     <thead><tr><th>Where to click</th><th>What it shows</th><th>Requirement</th></tr></thead>
     <tbody>${rowsA.map(r=>`<tr style="cursor:default">
       <td>${esc(r[0])}</td><td style="color:var(--ink-2)">${esc(r[1])}</td>
@@ -5272,7 +5628,7 @@ function mockDeptRegion(id){
 }
 function renderProfiles(){
   const serving = visible().filter(p=>p.sevaHrs>0).sort((a,b)=>b.sevaHrs-a.sevaHrs);
-  const profilesEl = document.getElementById('profiles'); if(!profilesEl) return; profilesEl.innerHTML = `
+  document.getElementById('profiles').innerHTML = `
     <div class="grid2">
       ${serving.map(p=>{
         const dep = DEPT.find(d=>mockDeptRegion(d.id)===p.region && d.head===p.name) ||
@@ -5495,672 +5851,78 @@ function unifiedActivity(limit=12){
 const ACT_TAG = {Call:"t-core",WhatsApp:"t-active",Email:"t-core",Satsang:"t-a9",Retreat:"t-semi",
   Seva:"t-live",Milestone:"t-warn","Category move":"t-core","Report filed":"t-live","Face to face":"t-semi"};
 
-// Prototype only — see the comment on ROLES.event. Reads EVENT_CAL/EVENT_REG,
-// the same mock arrays SEEKERS/CAL follow elsewhere in this file. Swap the
-// data source for a real API once Yogesh's events/registrations tables
-// exist; this function's shape (tiles, funnel, attention, follow-up) does
-// not need to change.
-// ============ Dashboard (demo tab — sample data, not read from SEEKERS/CAL) ============
-// Explicitly separate from Overview: Overview is real, live-scoped data;
-// this tab exists purely so stakeholders can see the fuller, more colourful
-// design direction with realistic-looking volume before enough real data
-// exists to make Overview look the same way. Nothing here is wired to
-// anything else in the file — safe to delete once it's no longer needed.
-const STAGE_NOTES = [
-  {stage:"1. Visitors", tagline:"Discover Satsang", desc:"Shop, Social Media, LiveChat (first touch)", notes:"Entry point of the journey · Discovers Satsang through various channels · Not yet committed"},
-  {stage:"2. Followers", tagline:"Stay Connected", desc:"Social media / community followers, weekly meditation attendees", notes:"Stays connected with content and community · Attends meditation sessions such as weekly events · Newsletter signup signals stronger interest"},
-  {stage:"3. Exploring Our Path", tagline:"Engage & Explore", desc:"Engaging through LiveChat, questions, meditation, content or other interactions", notes:"Explores at their own comfort level · Personal conversations when comfortable · No pressure — do what you feel right for you"},
-  {stage:"4. Satsang Group", tagline:"Participate Regularly", desc:"Full participants, including Live Satsang via weekly Livestream", notes:"Regular participation in Satsang · Comfortable, do what you want, no pressure · Part of the growing Satsang community"}
-];
-const DASH_DATA = {
-  admin:{label:"Global Admin", scope:"All regions · 5 satsang groups",
-    tiles:[["deep","Active seekers","2,486","▲ 3.1%","Steady growth"],
-      ["sage","New this month","142","▲ 18","Mostly from livestream"],
-      ["amber","Not spoken to in 30 days","213","▲ 9 this week","Assign before it grows"],
-      ["rose","Forms awaiting review","37","12 older than 3 days","Clear the oldest first"],
-      ["sage","Satsang attendance","71%","▼ 4 pts","Below 4-week average"],
-      ["violet","Seva hours","1,904","▲ 6%","Ahead of last month"]],
-    funnel:[["Visitors",5200],["Followers",2140],["Exploring Our Path",860],["Satsang Group",412]],
-    fnote:"Follower → Exploring Our Path is the weakest step (40%). Livestream leads convert best.",
-    flags:[["hi","213 seekers not spoken to in 30 days","62 are in Germany. Assign to conductors."],
-      ["hi","Attendance dropped 4 pts","Munich group is down most (−11 pts)."],
-      ["mid","37 forms waiting for review","12 are older than 3 days."]],
-    rows:[["A. Keller","Exploring Our Path","41 days","Missed 3 satsangs","M. Roth"],
-      ["S. Dubois","Follower","36 days","New, no first call","L. Martin"],
-      ["R. Patil","Satsang Group","33 days","Sadhana drop","V. Kulkarni"],
-      ["J. Weber","Exploring Our Path","31 days","Form pending","M. Roth"]]},
-  rs:{label:"Regional RS", scope:"Region: Germany · 2 satsang groups",
-    tiles:[["deep","Active seekers","412","▲ 2.4%","Steady growth"],
-      ["sage","New this month","23","▲ 4","Mostly from website"],
-      ["amber","Not spoken to in 30 days","62","▲ 5 this week","Highest in Munich"],
-      ["rose","Forms awaiting review","9","3 older than 3 days","Clear the oldest first"],
-      ["sage","Satsang attendance","63%","▼ 7 pts","Below target of 70%"],
-      ["violet","Seva hours","318","▲ 2%","Flat vs last month"]],
-    funnel:[["Visitors",980],["Followers",410],["Exploring Our Path",150],["Satsang Group",58]],
-    fnote:"Exploring Our Path → Satsang Group is 39%. Two conductors have no open slots.",
-    flags:[["hi","Attendance fell 7 pts in 12 weeks","Munich is the main driver."],
-      ["hi","62 seekers not spoken to in 30 days","41 have no owner."],
-      ["mid","9 forms waiting for review","3 older than 3 days."]],
-    rows:[["A. Keller","Exploring Our Path","41 days","Missed 3 satsangs","M. Roth"],
-      ["J. Weber","Exploring Our Path","31 days","Form pending","M. Roth"],
-      ["T. Braun","Follower","28 days","No owner","—"],
-      ["K. Fischer","Visitor","27 days","Opened 6 emails","—"]]},
-  conductor:{label:"Satsang Conductor", scope:"Munich · 3 satsangs · 78 seekers",
-    tiles:[["deep","Seekers in your satsangs","78","▲ 3","Across 3 satsangs"],
-      ["sage","Attended last week","53","of 78","Across 3 satsangs"],
-      ["amber","Not spoken to in 30 days","11","▲ 2 this week","Call these first"],
-      ["rose","Notes to write","4","From last week","Private to you"],
-      ["sage","Average attendance","67%","▼ 5 pts","Tuesday is lowest"],
-      ["violet","Seva this month","46 h","▲ 8 h","9 seekers serving"]],
-    strip:{title:"Your satsangs", items:[
-      ["Tuesday satsang · Munich","Tue · 19:00 · in person","58%",58,"38 seekers · next Tue 22 Sep","var(--amber)"],
-      ["Thursday online satsang","Thu · 20:00 · online","72%",72,"26 seekers · next Thu 24 Sep","var(--deep)"],
-      ["Sunday sadhana circle","Sun · 09:00 · in person","84%",84,"14 seekers · next Sun 27 Sep","var(--sage)"]]},
-    funnel:[["In your satsangs",78],["Attended last week",53],["Regular (3 of 4)",41],["Serving in seva",9]],
-    fnote:"6 people Exploring Our Path are ready to be invited into your satsangs.",
-    flags:[["hi","11 seekers not spoken to in 30 days","4 missed the last 3 satsangs."],
-      ["mid","Tuesday attendance down 11 pts","Mostly regulars from the last quarter."],
-      ["mid","4 satsang notes still to write","Due before the next session."]],
-    rows:[["A. Keller","Group","41 days","Missed 3 Tuesday satsangs","You"],
-      ["D. Neumann","Group","35 days","Missed 2 Thursday satsangs","You"],
-      ["F. Schulz","Group","33 days","Sadhana drop","You"],
-      ["H. Wolf","Group","30 days","No contact logged","You"]]},
-  event:{label:"Event Conductor", scope:"Munich region · 3 upcoming events",
-    tiles:[["deep","Upcoming events","3","Next: Sat 26 Sep","Introductory talk"],
-      ["sage","Registrations","64","▲ 12 this week","Across 3 events"],
-      ["sage","Attended last event","41","79% of registered","52 registered"],
-      ["violet","First-time attendees","27","▲ 6 vs prior event","Curious seekers"],
-      ["amber","Follow-ups due","19","Within 7 days","First-timers"],
-      ["rose","Feedback pending","8","Oldest 9 days","Forms not filled"]],
-    strip:{title:"Your events", items:[
-      ["Introductory talk · Munich","Sat 26 Sep · in person","32",64,"32 of 50 seats","var(--deep)"],
-      ["Online introduction","Wed 30 Sep · online","21",42,"21 of 50 seats","var(--amber)"],
-      ["Meditation workshop","Sat 3 Oct · in person","11",28,"11 of 40 seats","var(--amber)"]]},
-    funnel:[["Registered",64],["Attended",41],["First-timers",27],["Followed up",8],["Joined a satsang",3]],
-    fnote:"Only 8 of 27 first-timers have been followed up. Most drop-off is after the event.",
-    flags:[["hi","19 first-time attendees not followed up","9 attended more than 7 days ago."],
-      ["mid","Online introduction under half full","21 of 50 seats, 9 days to go."],
-      ["mid","8 feedback forms not filled","From the last event."]],
-    rows:[["R. Sharma","Visitor","Not yet","First event, 9 days ago","—"],
-      ["T. Meier","Visitor","Not yet","First event, 9 days ago","—"],
-      ["L. Costa","Follower","2 days","Asked about satsang","P. Rao"],
-      ["M. Iyer","Follower","Not yet","Attended twice","—"]]}
-};
-let DASH_ROLE = "admin";
-function setDashRole(r){ DASH_ROLE = r; renderDashDemo(); }
-// ---- Satsang lifecycle funnel (demo / sample data only, uploaded reference
-// designs). Numbers taken as-is from those references, not invented here:
-// the Global figures agree across four of the five uploads, and the
-// regional (Europe) breakdown in the fifth cross-checks against Global's
-// own "24 in Europe" region figure, so that's the set used. One upload had
-// a differing, later-period snapshot (126 total etc.) — not merged in, to
-// avoid mixing two inconsistent datasets into one screen.
-const SATSANG_FUNNEL_DATA = {
-  admin:{
-    tiles:[["42","Countries","▲ 12% vs last year"],["8","Regions","0% vs last year"],
-      ["82","Active Satsangs","▲ 18% vs last year"],["34","Upcoming Events","▲ 21% vs last year"],
-      ["17","Pending Approvals","▼ 5% vs last year"],["8","Attention Required","▼ 27% vs last year"]],
-    funnel:[["Planned",82],["Draft",64],["In Review",51],["Approved",43],["Scheduled",36],["Completed",29]],
-    conv:["78%","80%","84%","84%","81%"],
-    regions:[["Europe",24],["North America",18],["Asia Pacific",16],["Africa",12],["South America",8],["Middle East",6]],
-    avgTime:[["Planned","1.2 days",15],["Draft","1.8 days",23],["In Review","2.4 days",30],
-      ["Approved","1.2 days",15],["Scheduled","3.1 days",39],["Completed","2.6 days",33]],
-    approvals:[["Berlin Satsang","Germany","Europe","2"],["Paris Satsang","France","Europe","1"],
-      ["London Satsang","UK","Europe","4"],["Sydney Satsang","Australia","Asia Pacific","6"],
-      ["Toronto Satsang","Canada","North America","3"]],
-    events:[["Berlin Event","Berlin Satsang","20 Oct 2026","In Preparation"],
-      ["Paris Event","Paris Satsang","05 Nov 2026","Registration Open"],
-      ["London Event","London Satsang","12 Nov 2026","Details Pending"],
-      ["Munich Event","Munich Satsang","25 Nov 2026","Conductor Assigned"],
-      ["Toronto Event","Toronto Satsang","03 Dec 2026","Draft"]],
-    activity:[["Berlin Satsang approved","Global Admin","2 hours ago"],
-      ["France Event submitted for review","Regional RS","5 hours ago"],
-      ["Conductor assigned for Sydney Event","Asia Pacific RS","1 day ago"],
-      ["New Satsang created — Spain","Regional Conductor","1 day ago"],
-      ["Italy Satsang missing event date","System","2 days ago"]]},
-  rs:{
-    tiles:[["24","Active Satsangs",""],["8","Upcoming Events",""],["3","Pending Actions",""],["2","Overdue",""]],
-    funnel:[["Planned",24],["Draft",19],["In Review",15],["Approved",11],["Scheduled",8],["Completed",6]],
-    conv:["79%","79%","73%","73%","75%"],
-    countries:[["Germany",6,2,2,1,2],["France",5,1,1,1,2],["UK",4,1,2,1,1],["Italy",4,1,1,1,1]],
-    actions:[["Germany Satsang","Approval pending","Today"],["France Event","Conductor not assigned","1 day"],
-      ["Italy Satsang","Missing event date","2 days"],["Spain Event","Awaiting approval","3 days"]]},
-  conductor:{
-    tiles:[["24","Active Satsangs",""],["8","Upcoming Events",""],["3","Pending Actions",""],["2","Overdue",""]],
-    funnel:[["Planned",24],["Draft",19],["In Review",15],["Approved",11],["Scheduled",8],["Completed",6]],
-    conv:["79%","79%","73%","73%","75%"],
-    countries:[["Germany",6,2,2,1,2],["France",5,1,1,1,2],["UK",4,1,2,1,1],["Italy",4,1,1,1,1]],
-    actions:[["Germany Satsang","Approval pending","Today"],["France Event","Conductor not assigned","1 day"],
-      ["Italy Satsang","Missing event date","2 days"],["Spain Event","Awaiting approval","3 days"]]},
-  event:{
-    tiles:[["4","Upcoming",""],["1","Today",""],["12","Completed",""],["2","Need Attention",""]],
-    myEvents:[["Berlin Satsang","20 Oct 2026","In Preparation"],["Paris Satsang","05 Nov 2026","Registration Open"],
-      ["London Satsang","12 Nov 2026","Details Pending"],["Munich Satsang","25 Nov 2026","Conductor Assigned"]],
-    workflow:{title:"Berlin Satsang", date:"20 Oct 2026", steps:[
-      ["Event Created","15 Sep 2026","done"],["Details Completed","18 Sep 2026","done"],
-      ["Conductor Assigned","18 Sep 2026","done"],["Venue Confirmed","20 Sep 2026","done"],
-      ["Registration Open","In progress","now"],["Registration Complete","",""],["Event Ready","",""],
-      ["Event Live","",""],["Attendance","",""],["Follow-up","",""],["Completed","",""]]}}
-};
-const CHEV_COLORS = ['var(--deep)','var(--sage)','var(--amber)','var(--rose)','var(--violet)','var(--pink)'];
-// A softer, more "spectrum" palette (blue -> green -> gold -> orange) for the
-// rounded seeker-journey funnel specifically, since it's read top-to-bottom
-// like the reference design rather than left-to-right like the lifecycle
-// chevrons above.
-const FUNNEL_SPECTRUM = ['#0B8FC4','#4F9D6E','#D4A017','#D9782D','#B3571F','#8B4A8F'];
-const FUNNEL_ICONS = ['home','heart','message','users','flag','sprout'];
-
-function sfChevrons(funnel){
-  // A real funnel chart: each stage's width is proportional to its value,
-  // so the shape actually tapers as the numbers drop, not just a row of
-  // equal-size colored arrows with different numbers printed on them.
-  const max = Math.max(...funnel.map(f=>f[1]));
-  const totalFlex = funnel.reduce((a,f)=>a+Math.max(18,Math.round(f[1]/max*100)),0);
-  return `<div class="sf-chevrons">${funnel.map(([l,n],i)=>{
-    const pct = Math.max(18,Math.round(n/max*100));
-    return `<div class="sf-chev" style="background:${CHEV_COLORS[i%6]};flex-basis:${(pct/totalFlex*100).toFixed(2)}%">
-      <div class="n">${n}</div><div class="l">${esc(l)}</div></div>`;
-  }).join('')}</div>`;
-}
-function sfConv(conv){
-  return conv.length ? `<div class="sf-conv">${conv.map(c=>`<div><b>${c}</b> conversion</div>`).join('')}</div>` : '';
-}
-function sfTiles(tiles){
-  return `<div class="sf-tiles" style="grid-template-columns:repeat(${tiles.length},1fr)">${tiles.map(t=>
-    `<div class="sf-tile"><div class="n">${esc(t[0])}</div><div class="l">${esc(t[1])}</div>${t[2]?`<div class="d" style="color:${t[2].startsWith('▼')?'var(--rose)':'var(--sage)'}">${esc(t[2])}</div>`:''}</div>`).join('')}</div>`;
-}
-// One stage = one row: icon + stage name + description on the left, a
-// rounded "collar" band on the right sized to that stage's value, with
-// the next stage's value as its narrower bottom edge — so consecutive
-// bands still read as one continuous tapering funnel even though each
-// row is its own small SVG. Elliptical top/bottom edges (not straight
-// trapezoid edges) for the rounded, tube-like look instead of flat facets.
-function funnelBandSvg(topVal, botVal, max, color, w, h){
-  const wAt = v => Math.max(0.24, v/max) * (w-16);
-  const topW = wAt(topVal), botW = botVal!=null ? wAt(botVal) : topW*0.22;
-  const cx = w/2, ry = Math.min(9, h*0.16);
-  const topL = cx-topW/2, topR = cx+topW/2, botL = cx-botW/2, botR = cx+botW/2;
-  const yTop = ry, yBot = h-ry;
-  return `<svg viewBox="0 0 ${w} ${h}" width="100%" height="${h}" style="display:block">
-    <path d="M ${topL} ${yTop}
-             A ${topW/2} ${ry} 0 0 0 ${topR} ${yTop}
-             L ${botR} ${yBot}
-             A ${botW/2} ${ry} 0 0 1 ${botL} ${yBot}
-             Z" fill="${color}" opacity="0.92"/>
-    <ellipse cx="${cx}" cy="${yTop}" rx="${topW/2}" ry="${ry}" fill="${color}"/>
-    <text x="${cx}" y="${h/2+5}" text-anchor="middle" fill="#fff" font-weight="700" font-size="15" font-family="var(--font-head)">${topVal.toLocaleString()}</text>
-  </svg>`;
-}
-function svgFunnel(stages, notesByStage){
-  const max = Math.max(...stages.map(s=>s[1]));
-  const rowH = 72;
-  return `<div class="sf-journey">${stages.map(([label,val],i)=>{
-    const next = i<stages.length-1 ? stages[i+1][1] : null;
-    const color = FUNNEL_SPECTRUM[i%FUNNEL_SPECTRUM.length];
-    const icon = FUNNEL_ICONS[i%FUNNEL_ICONS.length];
-    const note = (notesByStage && notesByStage[i]) || null;
-    return `<div class="sf-journey-row">
-      <div class="sf-journey-txt">
-        <div class="sf-journey-icon" style="background:${color}22;color:${color}">${spIconSvg(icon)}</div>
-        <div>
-          <div class="sf-journey-title" style="color:${color}">${esc(label)}</div>
-          ${note?`<div class="sf-journey-desc">${esc(note.desc)}</div>
-          <div class="sf-journey-notes">${esc(note.notes)}</div>`:''}
-        </div>
-      </div>
-      <div class="sf-journey-band">${funnelBandSvg(val, next, max, color, 220, rowH)}</div>
-    </div>`;
-  }).join('')}</div>`;
-}
-
-function renderSatsangFunnel(){
-  const f = SATSANG_FUNNEL_DATA[DASH_ROLE];
-  if(!f) return '';
-  let extra = '';
-  if(f.regions){ // admin: region bars, avg time, approvals + events tables, activity feed
-    const maxR = Math.max(...f.regions.map(r=>r[1]));
-    extra += `<div class="grid2" style="margin-bottom:18px">
-      <div class="card pad"><h2 class="sec">Satsangs by Region</h2>
-        ${f.regions.map((r,i)=>`<div class="sf-hbar-row"><div class="lab">${esc(r[0])}</div>
-          <div class="track"><i style="width:${Math.round(r[1]/maxR*100)}%;background:${CHEV_COLORS[i%6]}"></i></div>
-          <div class="num">${r[1]}</div></div>`).join('')}
-      </div>
-      <div class="card pad"><h2 class="sec">Average Time in Stage</h2>
-        ${f.avgTime.map((t,i)=>`<div class="sf-hbar-row"><div class="lab">${esc(t[0])}</div>
-          <div class="track"><i style="width:${t[2]}%;background:${CHEV_COLORS[i%6]}"></i></div>
-          <div class="num">${esc(t[1])}</div></div>`).join('')}
-      </div>
-    </div>
-    <div class="grid2" style="margin-bottom:18px">
-      <div class="card pad"><h2 class="sec">Pending Approvals</h2>
-        <table style="margin-top:6px"><thead><tr><th>Satsang</th><th>Country</th><th>Region</th><th>Days</th></tr></thead>
-        <tbody>${f.approvals.map(a=>`<tr><td><b>${esc(a[0])}</b></td><td>${esc(a[1])}</td><td>${esc(a[2])}</td><td>${esc(a[3])}</td></tr>`).join('')}</tbody></table>
-      </div>
-      <div class="card pad"><h2 class="sec">Upcoming Events</h2>
-        <table style="margin-top:6px"><thead><tr><th>Event</th><th>Date</th><th>Status</th></tr></thead>
-        <tbody>${f.events.map(e=>`<tr><td><b>${esc(e[0])}</b><div class="sub2">${esc(e[1])}</div></td><td>${esc(e[2])}</td><td><span class="tag t-semi">${esc(e[3])}</span></td></tr>`).join('')}</tbody></table>
-      </div>
-    </div>
-    <div class="card pad"><h2 class="sec">Recent Activity</h2>
-      ${f.activity.map(a=>`<div style="padding:9px 0;border-bottom:1px solid #EEF4F9">
-        <div style="font-size:15px">${esc(a[0])}</div><div class="sub2">by ${esc(a[1])} · ${esc(a[2])}</div></div>`).join('')}
-    </div>`;
-  } else if(f.countries){ // rs/conductor: country table + my actions
-    extra += `<div class="grid2" style="margin-bottom:18px">
-      <div class="card pad"><h2 class="sec">Satsangs by Country</h2>
-        <table style="margin-top:6px"><thead><tr><th>Country</th><th>Total</th><th>Draft</th><th>Review</th><th>Approved</th><th>Events</th></tr></thead>
-        <tbody>${f.countries.map(c=>`<tr><td><b>${esc(c[0])}</b></td><td>${c[1]}</td><td>${c[2]}</td><td>${c[3]}</td><td>${c[4]}</td><td>${c[5]}</td></tr>`).join('')}</tbody></table>
-      </div>
-      <div class="card pad"><h2 class="sec">My Actions</h2>
-        ${f.actions.map(a=>`<div style="padding:9px 0;border-bottom:1px solid #EEF4F9">
-          <div style="font-size:15px"><b>${esc(a[0])}</b> — ${esc(a[1])}</div><div class="sub2">${esc(a[2])}</div></div>`).join('')}
-      </div>
-    </div>`;
-  }
-  if(f.myEvents){ // event conductor: upcoming events list + workflow timeline
-    extra += `<div class="grid2" style="margin-bottom:18px">
-      <div class="card pad"><h2 class="sec">My Upcoming Events</h2>
-        ${f.myEvents.map(e=>`<div style="padding:9px 0;border-bottom:1px solid #EEF4F9;display:flex;justify-content:space-between;gap:10px">
-          <div><div style="font-size:15px"><b>${esc(e[0])}</b></div><div class="sub2">${esc(e[1])}</div></div>
-          <span class="tag t-semi" style="align-self:center">${esc(e[2])}</span></div>`).join('')}
-      </div>
-      <div class="card pad"><h2 class="sec">Event Funnel — ${esc(f.workflow.title)}</h2>
-        <p class="sub2" style="margin-bottom:10px">${esc(f.workflow.date)}</p>
-        <div class="sf-timeline">${f.workflow.steps.map(st=>`<div class="sf-tl ${st[2]}">${esc(st[0])}${st[1]?` <span class="d">— ${esc(st[1])}</span>`:''}</div>`).join('')}</div>
-      </div>
-    </div>`;
-  }
-  return `<h2 class="sec" style="margin-top:26px">Satsang Funnel</h2>
-    <p class="sub" style="margin-bottom:14px">Satsang lifecycle, planning through completion — sample data, same reference designs as above.</p>
-    ${sfTiles(f.tiles)}
-    ${f.funnel ? sfChevrons(f.funnel) + sfConv(f.conv) : ''}
-    ${extra}`;
-}
-
-function renderDashDemo(){
-  const el = document.getElementById('dash'); if(!el) return;
-  const d = DASH_DATA[DASH_ROLE];
-  const washMap = {deep:'var(--deep-wash)',sage:'var(--sage-wash)',amber:'var(--amber-wash)',
-    rose:'var(--rose-wash)',violet:'var(--violet-wash)'};
-  const colMap = {deep:'var(--deep)',sage:'var(--sage)',amber:'var(--amber)',
-    rose:'var(--rose)',violet:'var(--violet)'};
-  const sevColor = {hi:'var(--rose)', mid:'var(--amber)', lo:'var(--deep)'};
-  const sevLabel = {hi:'High', mid:'Medium', lo:'Low'};
-  const stageTagD = {'Exploring Our Path':'t-semi',Follower:'t-active',Visitor:'t-warn','Satsang Group':'t-active',Group:'t-active'};
-
-  el.innerHTML = `
-    <h2 class="sec">Dashboard</h2>
-    <p class="sub">One screen per role, for demo purposes — the design direction for what Overview will look like once
-      there's enough real data to fill it out this way.</p>
-    <div class="dash-banner"><b>Sample data.</b> Everything on this tab is hand-authored to show scale and layout —
-      not read from SEEKERS, CAL, or any live record. Overview (in the sidebar above) is the real, live-scoped screen.</div>
-
-    <div class="dash-seg">
-      ${Object.entries(DASH_DATA).map(([k,v])=>
-        `<button class="${k===DASH_ROLE?'on':''}" onclick="setDashRole('${k}')">${esc(v.label)}</button>`).join('')}
-    </div>
-    <div class="dash-scope"><b>${esc(d.scope)}</b><span class="dash-chip">Last 30 days</span><span class="dash-chip">Sample data only</span></div>
-
-    <div class="dash-tiles">
-      ${d.tiles.map(t=>`<div class="dash-tile" style="background:${washMap[t[0]]}">
-        <div class="l" style="color:${colMap[t[0]]}"><i></i>${esc(t[1])}</div>
-        <div class="n">${esc(t[2])}</div>
-        <div class="d" style="color:${colMap[t[0]]}">${esc(t[3])}</div>
-        <div class="d">${esc(t[4])}</div></div>`).join('')}
-    </div>
-
-    <div class="card pad" style="margin-bottom:18px">
-      <h2 class="sec">Seeker journey</h2>
-      <img src="assets/funnel-visitor-to-satsang.png" alt="Visitor to Satsang Journey funnel diagram"
-        style="display:block;width:100%;max-width:900px;margin:0 auto;border-radius:8px"/>
-      <div class="sf-count-strip">
-        ${d.funnel.map(([label,n],i)=>`<div class="sf-count" style="border-color:${FUNNEL_SPECTRUM[i%FUNNEL_SPECTRUM.length]}">
-          <div class="n" style="color:${FUNNEL_SPECTRUM[i%FUNNEL_SPECTRUM.length]}">${n.toLocaleString()}</div>
-          <div class="l">${esc(label)}</div></div>`).join('')}
-      </div>
-      <div class="hidden-note" style="margin-top:14px;margin-bottom:0">${esc(d.fnote)}</div>
-    </div>
-
-    <div class="card pad" style="margin-bottom:18px">
-      <h2 class="sec">Needs your attention</h2>
-      ${d.flags.map(f=>`<div style="padding:9px 0;border-bottom:1px solid #EEF4F9;display:flex;gap:10px;align-items:flex-start">
-        <span class="tag" style="background:${sevColor[f[0]]};color:#fff;flex:0 0 auto">${sevLabel[f[0]]}</span>
-        <div style="flex:1"><div style="font-size:16px;font-weight:500">${esc(f[1])}</div>
-        <div class="sub2" style="margin-top:1px">${esc(f[2])}</div></div>
-      </div>`).join('')}
-    </div>
-
-    ${d.strip ? `<p class="sub" style="margin:0 0 8px;font-weight:600;color:var(--ink-2)">${esc(d.strip.title)}</p>
-    <div class="grid2" style="margin-bottom:18px">
-      ${d.strip.items.map(it=>`<div class="card pad">
-        <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px">
-          <span class="nm serif" style="font-size:16.5px">${esc(it[0])}</span></div>
-        <div class="sub2" style="margin-top:2px">${esc(it[1])}</div>
-        <div style="margin-top:8px" class="bar" style="grid-template-columns:1fr 40px">
-          <span class="track"><span class="fill" style="width:${it[3]}%;background:${it[5]||'var(--deep)'}"></span></span>
-          <span class="num">${esc(it[2])}</span></div>
-        <div class="sub2">${esc(it[4])}</div>
-      </div>`).join('')}
-    </div>` : ''}
-
-    <div class="card pad">
-      <h2 class="sec">Seekers to follow up</h2>
-      <table style="margin-top:8px"><thead><tr><th>Seeker</th><th>Stage</th><th>Last spoken</th><th>Reason</th><th>Owner</th></tr></thead>
-        <tbody>${d.rows.map(r=>`<tr>
-          <td><span class="nm serif" style="font-size:15.5px">${esc(r[0])}</span></td>
-          <td><span class="tag ${stageTagD[r[1]]||'t-semi'}">${esc(r[1])}</span></td>
-          <td>${esc(r[2])}</td><td>${esc(r[3])}</td><td>${esc(r[4])}</td></tr>`).join('')}</tbody>
-      </table>
-    </div>${renderSatsangFunnel()}`;
-}
-
-function renderOverviewEvents(el){
-  const name = R().eventConductorName;
-  const mine = EVENT_CAL.filter(c=>c.conductor===name && (R().regions===null || R().regions.includes(c.region)));
-  const mineIds = new Set(mine.map(c=>c.id));
-  const regs = EVENT_REG.filter(r=>mineIds.has(r.eventId));
-  const upcoming = mine.filter(c=>c.at>=TODAY).sort((a,b)=>a.at-b.at);
-  const past = mine.filter(c=>c.at<TODAY).sort((a,b)=>b.at-a.at);
-  const lastEvent = past[0]||null;
-  const lastRegs = lastEvent ? regs.filter(r=>r.eventId===lastEvent.id) : [];
-  const attendedLast = lastRegs.filter(r=>r.attended).length;
-  const firstTimers = regs.filter(r=>r.firstTime && r.attended);
-  const followUpsDue = firstTimers.filter(r=>!r.followedUp);
-  const feedbackPending = regs.filter(r=>r.attended && !r.feedback).length;
-
-  const tiles = [
-    {c:'--deep',   l:'Upcoming events', n:upcoming.length, d:upcoming[0]?`Next: ${fmt(upcoming[0].at)}`:'None scheduled'},
-    {c:'--sage',   l:'Registrations',   n:regs.length,      d:`Across ${mine.length} event${mine.length===1?'':'s'}`},
-    {c:'--violet', l:'Attended last event', n:attendedLast, d:lastEvent?`${attendedLast} of ${lastRegs.length} registered`:'No past event yet'},
-    {c:'--amber',  l:'First-time attendees', n:firstTimers.length, d:'Curious, not yet a tracked seeker'},
-    {c:'--rose',   l:'Follow-ups due',  n:followUpsDue.length, d:'First-timers not yet contacted'},
-    {c:'--deep-2', l:'Feedback pending',n:feedbackPending,  d:'Attended, no feedback form yet'}
-  ];
-
-  const flagItems = [
-    {sev:'hi', n:followUpsDue.length,
-     txt:`${followUpsDue.length} first-time attendee${followUpsDue.length===1?'':'s'} not followed up`,
-     sub: followUpsDue[0]?`${esc(followUpsDue[0].name)} — attended ${lastEvent?fmt(lastEvent.at):''}.`:'', show:followUpsDue.length>0}
-  ].filter(f=>f.show);
-  upcoming.forEach(c=>{
-    const r = regs.filter(x=>x.eventId===c.id).length;
-    if(r < c.seats*0.5 && days(c.at)>=-10){
-      flagItems.push({sev:'mid', n:r, txt:`${esc(c.title)} under half full`, sub:`${r} of ${c.seats} seats, ${fmt(c.at)}.`, show:true});
-    }
-  });
-  if(feedbackPending>0) flagItems.push({sev:'mid', n:feedbackPending, txt:`${feedbackPending} feedback form${feedbackPending===1?'':'s'} not filled`, sub:'From attended events.', show:true});
-
-  const sevColor = {hi:'var(--rose)', mid:'var(--amber)', lo:'var(--deep)'};
-  const sevLabel = {hi:'High', mid:'Medium', lo:'Low'};
-
-  const groups = {};
-  mine.forEach(c=>{ (groups[c.title]=groups[c.title]||[]).push(c); });
-  const eventRows = Object.entries(groups).map(([title,sessions])=>{
-    sessions.sort((a,b)=>a.at-b.at);
-    const next = sessions.find(c=>c.at>=TODAY);
-    const r = next ? regs.filter(x=>x.eventId===next.id).length : 0;
-    return {title, region:sessions[0].region, next, r};
-  });
-
-  const funnel = [
-    ['Registered', regs.length],
-    ['Attended', regs.filter(r=>r.attended).length],
-    ['First-timers', firstTimers.length],
-    ['Followed up', firstTimers.length-followUpsDue.length]
-  ];
-  const base = Math.max(1, funnel[0][1]);
-
-  el.innerHTML = `
-    <div class="hidden-note" style="background:var(--amber-wash);border-color:#F0DFAE;color:var(--amber);margin-bottom:16px">
-      <b>Prototype data.</b> There is no events/registrations table in the schema yet — the figures below are
-      hand-authored sample data, not read from the database like the rest of this screen.
-    </div>
-    <div class="grid4" style="grid-template-columns:repeat(6,1fr);margin-bottom:18px">
-      ${tiles.map(t=>`<div class="kpi">
-        <div class="n" style="color:var(${t.c})">${t.n}</div>
-        <div class="l">${esc(t.l)}</div><div class="d">${esc(t.d)}</div></div>`).join('')}
-    </div>
-
-    <div class="grid2" style="margin-bottom:18px">
-      <div class="card pad">
-        <h2 class="sec">Event journey</h2>
-        <p class="sub">Registered, then attended, then a first-timer, then followed up. Each bar sized against Registered.</p>
-        ${funnel.map(([label,n],i)=>`<div class="bar">
-          <span style="color:var(--ink-2)">${esc(label)}</span>
-          <span class="track"><span class="fill" style="width:${Math.max(6,Math.round(n/base*100))}%;opacity:${1-i*.16}"></span></span>
-          <span class="num">${n}</span></div>`).join('')}
-      </div>
-      <div class="card pad">
-        <h2 class="sec">Needs your attention</h2>
-        <p class="sub">Computed from the sample data above.</p>
-        ${flagItems.length ? flagItems.map(f=>`<div style="padding:9px 0;border-bottom:1px solid #EEF4F9;display:flex;gap:10px;align-items:flex-start">
-          <span class="tag" style="background:${sevColor[f.sev]};color:#fff;flex:0 0 auto">${sevLabel[f.sev]}</span>
-          <div style="flex:1"><div style="font-size:16px;font-weight:500">${esc(f.txt)}</div>
-          ${f.sub?`<div class="sub2" style="margin-top:1px">${f.sub}</div>`:''}</div>
-        </div>`).join('') : '<p class="sub" style="margin:0">Nothing needs attention right now.</p>'}
-      </div>
-    </div>
-
-    <p class="sub" style="margin:0 0 8px;font-weight:600;color:var(--ink-2)">Your events</p>
-    <div class="grid2" style="margin-bottom:18px">
-      ${eventRows.map(r=>`<div class="card pad">
-        <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px">
-          <span class="nm serif" style="font-size:17px">${esc(r.title)}</span>
-        </div>
-        <div class="sub2" style="margin-top:2px">${esc(r.region)}${r.next?` · ${fmt(r.next.at)}, ${esc(r.next.time)}`:' · none upcoming'}</div>
-        ${r.next?`<div style="margin-top:8px" class="bar" style="grid-template-columns:1fr 40px">
-          <span class="track"><span class="fill" style="width:${Math.round(r.r/r.next.seats*100)}%"></span></span>
-          <span class="num">${r.r}/${r.next.seats}</span></div><div class="sub2">Registered of total seats</div>`:''}
-      </div>`).join('') || '<p class="sub" style="margin:0">No events yet.</p>'}
-    </div>
-
-    <div class="card pad">
-      <h2 class="sec">First-time attendees to follow up</h2>
-      <p class="sub">Attended, not yet contacted.</p>
-      <table style="margin-top:8px"><thead><tr><th>Name</th><th>Event</th><th>Attended</th><th>Status</th></tr></thead>
-        <tbody>${followUpsDue.length ? followUpsDue.map(r=>{
-          const ev = EVENT_CAL.find(c=>c.id===r.eventId);
-          return `<tr><td><span class="nm serif" style="font-size:15.5px">${esc(r.name)}</span></td>
-            <td>${esc(ev?ev.title:'')}</td><td>${ev?fmt(ev.at):''}</td>
-            <td><span class="tag t-warn">Not yet contacted</span></td></tr>`;
-        }).join('') : '<tr><td colspan="4" style="color:var(--ink-3)">Nobody waiting on follow-up right now.</td></tr>'}</tbody>
-      </table>
-    </div>`;
-}
-
 function renderOverview(){
   const el = document.getElementById('overview'); if(!el) return;
-  if(R().eventConductorName){ renderOverviewEvents(el); return; }
   const v = visible();
   const od = v.filter(overdue).length;
-  const flagged = []; v.forEach(p=>p.inter.forEach(i=>{ if(i.flag) flagged.push({p,i}); }));
+  const fl = []; v.forEach(p=>p.inter.forEach(i=>{ if(i.flag) fl.push(1); }));
   const vIds = new Set(v.map(p=>p.id));
   const unreadInbox = INBOX.filter(m=>m.unread && vIds.has(m.pid)).length;
-  const overduePending = pendingReports().filter(c=>days(c.at)>REPORT_SLA_DAYS);
-  const overdueReports = overduePending.length;
+  const overdueReports = pendingReports().filter(c=>days(c.at)>REPORT_SLA_DAYS).length;
   // Intake has no per-conductor or per-region concept in the live data —
   // Form_Submission_Key_Details' Country is free text, not a Country_ID
   // link, so it can't be filtered by region the way seekers can. Counts
   // everyone's pending submissions, not just this role's.
   const pendingIntake = LIVE_INTAKE===null ? 0 : LIVE_INTAKE.length;
-  const totalNotify = od + flagged.length + unreadInbox + overdueReports + pendingIntake;
+  const totalNotify = od + fl.length + unreadInbox + overdueReports + pendingIntake;
   setPip('pip6', totalNotify);
 
-  const feed = unifiedActivity(10);
+  const feed = unifiedActivity(12);
+
+  const notifyCards = [
+    {n:od, l:"Contact overdue", go:"alerts", show:R().tabs.includes("alerts")},
+    {n:fl.length, l:"Sensitivity flags", go:"alerts", show:R().tabs.includes("alerts")},
+    {n:unreadInbox, l:"Messages", go:"alerts", show:R().tabs.includes("alerts")},
+    {n:overdueReports, l:"Reports overdue", go:"reports", show:R().tabs.includes("reports")},
+    {n:pendingIntake, l:"Intake awaiting review", go:"alerts", show:R().tabs.includes("alerts")}
+  ].filter(c=>c.show);
+
   const isAdmin = ROLE==="tech";
-  const isConductor = !!R().conductorName;
   const healthBad = SERVICES.filter(s=>s.s!=='ok').length + SECURITY.filter(s=>s.s!=='ok').length;
-  const hrs = v.reduce((a,s)=>a+s.sevaHrs,0);
-  const hrsThisWk = v.reduce((a,s)=>a+s.inter.filter(i=>i.type==='Seva'&&days(i.dt)<=7).reduce((x,i)=>x+(i.hrs||0),0),0);
-  const newThisWk = v.filter(p=>{const f=seekerFirstSeen(p); return f && days(f)<=7;}).length;
-
-  /* ---- tile row: five or six colour-coded squares, one glance each ---- */
-  const tiles = [
-    {c:'--deep',   l:'Seekers in view',      n:v.length, d:newThisWk?`+${newThisWk} this week`:(hiddenCount()?hiddenCount()+' outside your region':'All in your scope'), go:'search'},
-    {c:'--amber',  l:'Contact overdue',      n:od, d:`Past the ${CONTACT_SLA_DAYS}-day window`, go:R().tabs.includes('alerts')?'alerts':null, show: R().tabs.includes('alerts')||R().tabs.includes('journey')},
-    {c:'--rose',   l:'Sensitivity flags',    n:flagged.length, d:'Needs a careful read, not a form', go:R().tabs.includes('alerts')?'alerts':null, show: R().tabs.includes('alerts')},
-    {c:'--violet', l:'Reports overdue',      n:overdueReports, d:`Past the ${REPORT_SLA_DAYS}-day filing window`, go:'reports', show: R().tabs.includes('reports')},
-    {c:'--sage',   l:'Seva hours logged',    n:hrs, d:hrsThisWk?`+${hrsThisWk} this week`:'Summed from the timeline', go:'sevahub', show: R().tabs.includes('sevahub')},
-    {c:'--deep-2', l:'Intake awaiting review', n:pendingIntake, d:'Held for a human to confirm', go:R().tabs.includes('alerts')?'alerts':null, show: R().tabs.includes('alerts')}
-  ].filter(t=>t.show!==false);
-
-  /* ---- needs your attention: same numbers as the tiles, framed as action ---- */
-  const flagItems = [
-    {sev:od>0?'hi':null, n:od, txt:`${od} seeker${od===1?'':'s'} not contacted in ${CONTACT_SLA_DAYS} days`,
-     sub: od ? `Longest gap: ${Math.max(...v.filter(overdue).map(since))} days.` : '', go:'alerts', show:od>0 && R().tabs.includes('alerts')},
-    {sev:'hi', n:flagged.length, txt:`${flagged.length} sensitivity flag${flagged.length===1?'':'s'} on record`,
-     sub: flagged[0] ? esc(flagged[0].p.name)+' — '+esc((flagged[0].i.flag||'').slice(0,70))+(flagged[0].i.flag&&flagged[0].i.flag.length>70?'…':'') : '',
-     go:'alerts', show:flagged.length>0 && R().tabs.includes('alerts')},
-    {sev:overdueReports>0?'mid':null, n:overdueReports, txt:`${overdueReports} satsang report${overdueReports===1?'':'s'} overdue`,
-     sub: overduePending[0] ? `Oldest: ${esc(overduePending[0].title)}, held ${fmt(overduePending[0].at)}.` : '', go:'reports', show:overdueReports>0 && R().tabs.includes('reports')},
-    {sev:pendingIntake>0?'mid':null, n:pendingIntake, txt:`${pendingIntake} intake submission${pendingIntake===1?'':'s'} awaiting review`,
-     sub:'Held for a human to confirm before becoming a record.', go:'alerts', show:pendingIntake>0 && R().tabs.includes('alerts')},
-    {sev:unreadInbox>0?'lo':null, n:unreadInbox, txt:`${unreadInbox} unread message${unreadInbox===1?'':'s'}`,
-     sub:'', go:'alerts', show:unreadInbox>0 && R().tabs.includes('alerts')}
-  ].filter(f=>f.show).slice(0,4);
-
-  /* ---- journey: category composition, the one classification the schema tracks ---- */
-  const byCat={}; v.forEach(s=>{ byCat[s.category]=(byCat[s.category]||0)+1; });
-  const catMax = Math.max(1,...Object.values(byCat));
-  const catOrder = ["Curious","Well-wisher","Partner"].filter(k=>byCat[k]!==undefined);
-  Object.keys(byCat).forEach(k=>{ if(!catOrder.includes(k)) catOrder.push(k); });
-
-  /* ---- follow-up: most overdue first, capped to a short list ---- */
-  const followUp = v.slice().sort((a,b)=>since(b)-since(a)).slice(0,4);
-
-  /* ---- your satsangs: only for a role tied to a named conductor ---- */
-  let satsangStrip = '';
-  if(isConductor){
-    const mine = CAL.filter(c=>c.kind==='Satsang' && c.conductor===R().conductorName);
-    const groups = {};
-    mine.forEach(c=>{ (groups[c.title]=groups[c.title]||[]).push(c); });
-    const rows = Object.entries(groups).map(([title,sessions])=>{
-      sessions.sort((a,b)=>a.at-b.at);
-      const next = sessions.find(c=>c.at>=TODAY);
-      const past = sessions.filter(c=>c.at<TODAY).sort((a,b)=>b.at-a.at);
-      const lastReported = past.map(c=>SUBMITTED_REPORTS.find(r=>r.calId===c.id)).find(Boolean);
-      const owed = past.some(c=>!SUBMITTED_REPORTS.some(r=>r.calId===c.id));
-      const present = lastReported ? lastReported.entries.filter(e=>e.attended).length : null;
-      const total = lastReported ? lastReported.entries.length : null;
-      return {title, region:sessions[0].region, next, owed, present, total};
-    });
-    if(rows.length){
-      satsangStrip = `
-    <p class="sub" style="margin:0 0 8px;font-weight:600;color:var(--ink-2)">Your satsangs</p>
-    <div class="grid2" style="margin-bottom:16px">
-      ${rows.map(r=>`<div class="card pad">
-        <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px">
-          <span class="nm serif" style="font-size:16.5px">${esc(r.title)}</span>
-          ${r.owed?'<span class="tag t-warn">Report owed</span>':''}
-        </div>
-        <div class="sub2" style="margin-top:2px">${esc(r.region)}${r.next?` · next ${fmt(r.next.at)}, ${esc(r.next.time)}`:' · no session scheduled'}</div>
-        ${r.total!==null?`<div style="margin-top:8px" class="bar" style="grid-template-columns:1fr 40px">
-          <span class="track"><span class="fill" style="width:${Math.round(r.present/Math.max(1,r.total)*100)}%"></span></span>
-          <span class="num">${r.present}/${r.total}</span></div><div class="sub2">Attended last session held</div>`
-          :'<div class="sub2" style="margin-top:8px">No session reported yet.</div>'}
-      </div>`).join('')}
-    </div>`;
-    }
-  }
-
-  const sevColor = {hi:'var(--rose)', mid:'var(--amber)', lo:'var(--deep)'};
-  const sevLabel = {hi:'High', mid:'Medium', lo:'Low'};
 
   el.innerHTML = `
-    <div class="grid4" style="grid-template-columns:repeat(${Math.min(Math.max(tiles.length,1),6)},1fr);margin-bottom:18px">
-      ${tiles.map(t=>`<div class="kpi" ${t.go?`style="cursor:pointer" onclick="tab('${t.go}')"`:''}>
-        <div class="n" style="color:var(${t.c})">${t.n}</div>
-        <div class="l">${esc(t.l)}</div><div class="d">${esc(t.d)}</div></div>`).join('')}
+    <div class="grid4" style="grid-template-columns:repeat(${Math.max(notifyCards.length,1)},1fr);margin-bottom:16px">
+      ${notifyCards.map(c=>`<div class="kpi" style="cursor:pointer" onclick="tab('${c.go}')">
+        <div class="n" style="color:${c.n?'var(--amber)':'var(--sage)'}">${c.n}</div>
+        <div class="l">${esc(c.l)}</div><div class="d">Tap to open</div></div>`).join('')}
     </div>
 
-    <div class="grid2" style="margin-bottom:18px">
+    <div class="${isAdmin?'grid2':''}">
       <div class="card pad">
-        <h2 class="sec">Seeker journey</h2>
-        <p class="sub">Seeker_Category read as a funnel — Curious, then Well-wisher, then Partner. Each bar is sized against Curious, the entry stage.</p>
-        ${(()=>{
-          const stages = ["Curious","Well-wisher","Partner"].filter(k=>byCat[k]!==undefined);
-          const base = byCat[stages[0]] || 1;
-          return stages.map((k,i)=>{
-            const n = byCat[k]||0;
-            const prev = i>0 ? (byCat[stages[i-1]]||0) : null;
-            const conv = prev ? Math.round(n/Math.max(1,prev)*100) : null;
-            return `<div class="bar">
-              <span style="color:var(--ink-2)">${esc(k)}</span>
-              <span class="track"><span class="fill" style="width:${Math.max(6,Math.round(n/base*100))}%;opacity:${1-i*.18}"></span></span>
-              <span class="num">${n}${conv!==null?` <span style="color:var(--ink-3);font-weight:400;font-size:13px">(${conv}%)</span>`:''}</span></div>`;
-          }).join('');
-        })() || '<p class="sub" style="margin:0">Nothing in view yet.</p>'}
-        ${catOrder.filter(k=>!["Curious","Well-wisher","Partner"].includes(k)).map(k=>`<div class="bar">
-          <span style="color:var(--ink-2)">${esc(k)}</span>
-          <span class="track"><span class="fill" style="width:${Math.round(byCat[k]/catMax*100)}%"></span></span>
-          <span class="num">${byCat[k]}</span></div>`).join('')}
-      </div>
-      <div class="card pad">
-        <h2 class="sec">Needs your attention</h2>
-        <p class="sub">Computed from data already on record — nothing typed in separately.</p>
-        ${flagItems.length ? flagItems.map(f=>`<div style="padding:9px 0;border-bottom:1px solid #EEF4F9;display:flex;gap:10px;align-items:flex-start;${f.go?'cursor:pointer':''}" ${f.go?`onclick="tab('${f.go}')"`:''}>
-          <span class="tag" style="background:${sevColor[f.sev]};color:#fff;flex:0 0 auto">${sevLabel[f.sev]}</span>
+        <h2 class="sec">Latest updates</h2>
+        <p class="sub">Every interaction, milestone, category move and filed report — across everyone you can see, most recent first.</p>
+        ${feed.length ? feed.map(f=>`<div style="padding:9px 0;border-bottom:1px solid #EEF4F9;display:flex;gap:10px;align-items:flex-start">
+          <span class="tag ${ACT_TAG[f.kind]||'t-semi'}" style="flex:0 0 auto;margin-top:1px">${esc(f.kind)}</span>
           <div style="flex:1">
-            <div style="font-size:15px;font-weight:500">${esc(f.txt)}</div>
-            ${f.sub?`<div class="sub2" style="margin-top:1px">${f.sub}</div>`:''}
+            <div style="font-size:15px">${f.pname?`<b>${esc(f.pname)}</b> — `:''}${esc(f.text)}</div>
+            <div class="sub2" style="margin-top:1px">${esc(f.who)} · ${fmt(f.at)}</div>
           </div>
-        </div>`).join('') : '<p class="sub" style="margin:0">Nothing needs attention right now.</p>'}
+        </div>`).join('') : '<p class="sub" style="margin:0">Nothing recorded yet in your scope.</p>'}
       </div>
-    </div>
 
-    ${satsangStrip}
-
-    <div class="card pad" style="margin-bottom:18px">
-      <h2 class="sec">Seekers to follow up</h2>
-      <p class="sub">Longest since last contact, first.</p>
-      <table style="margin-top:8px"><thead><tr><th>Seeker</th><th>Category</th><th>Last contact</th><th>Most recent note</th></tr></thead>
-        <tbody>${followUp.length ? followUp.map(p=>{
-          const lastI = p.inter.length ? p.inter.slice().sort((a,b)=>b.dt-a.dt)[0] : null;
-          return `<tr onclick="open_(${p.id})">
-            <td><span class="nm serif" style="font-size:15.5px">${esc(p.name)}</span></td>
-            <td>${categoryTag(p.category)}</td>
-            <td>${since(p)} days${overdue(p)?' <span class="tag t-warn" style="font-size:12px">overdue</span>':''}</td>
-            <td class="sub2" style="max-width:340px">${lastI?esc(lastI.txt):'No interaction logged yet.'}</td>
-          </tr>`;
-        }).join('') : '<tr><td colspan="4" style="color:var(--ink-3)">Nothing in view yet.</td></tr>'}</tbody>
-      </table>
-    </div>
-
-    <div class="card pad">
-      <h2 class="sec">Latest updates</h2>
-      <p class="sub">Every interaction, milestone, category move and filed report — across everyone you can see, most recent first.</p>
-      ${feed.length ? feed.map(f=>`<div style="padding:9px 0;border-bottom:1px solid #EEF4F9;display:flex;gap:10px;align-items:flex-start">
-        <span class="tag ${ACT_TAG[f.kind]||'t-semi'}" style="flex:0 0 auto;margin-top:1px">${esc(f.kind)}</span>
-        <div style="flex:1">
-          <div style="font-size:15px">${f.pname?`<b>${esc(f.pname)}</b> — `:''}${esc(f.text)}</div>
-          <div class="sub2" style="margin-top:1px">${esc(f.who)} · ${fmt(f.at)}</div>
+      ${isAdmin?`<div>
+        <div class="card pad" style="margin-bottom:12px">
+          <h2 class="sec">System health</h2>
+          <p class="sub">Full detail on the Operations tab.</p>
+          ${SERVICES.map(s=>`<div style="display:flex;gap:9px;align-items:center;padding:5px 0">
+            <span style="width:8px;height:8px;border-radius:50%;background:${s.s==='ok'?'var(--sage)':'var(--amber)'};flex:0 0 auto"></span>
+            <span style="font-size:14.5px;flex:1">${esc(s.n)}</span>
+            <span class="tag ${s.s==='ok'?'t-active':'t-warn'}" style="font-size:12.5px">${s.s==='ok'?'Healthy':'Recovered'}</span>
+          </div>`).join('')}
+          ${healthBad?`<div class="warn" style="margin-bottom:0">${healthBad} item(s) need a look.
+            <span class="lnk-btn" onclick="tab('ops')" style="cursor:pointer;color:var(--deep);font-weight:600"> Open Operations →</span></div>`
+            :`<div class="ok" style="margin-bottom:0">Everything healthy.</div>`}
         </div>
-      </div>`).join('') : '<p class="sub" style="margin:0">Nothing recorded yet in your scope.</p>'}
+        <div class="card pad">
+          <h2 class="sec">Needs an administrator</h2>
+          ${SECURITY.filter(s=>s.s!=='ok').map(s=>`<div class="warn" style="margin:0 0 8px">
+            <b>${esc(s.n)}</b> — ${esc(s.v)}<br><span style="font-size:13.5px">${esc(s.d)}</span></div>`).join('')
+            || '<p class="sub" style="margin:0">Nothing outstanding.</p>'}
+          <div class="btnrow" style="margin-top:8px"><button class="btn sm ghost" onclick="tab('ops')">Full Operations view</button></div>
+        </div>
+      </div>`:''}
     </div>
-
-    ${isAdmin?`<div class="grid2" style="margin-top:18px">
-      <div class="card pad">
-        <h2 class="sec">System health</h2>
-        <p class="sub">Full detail on the Operations tab.</p>
-        ${SERVICES.map(s=>`<div style="display:flex;gap:9px;align-items:center;padding:5px 0">
-          <span style="width:8px;height:8px;border-radius:50%;background:${s.s==='ok'?'var(--sage)':'var(--amber)'};flex:0 0 auto"></span>
-          <span style="font-size:14.5px;flex:1">${esc(s.n)}</span>
-          <span class="tag ${s.s==='ok'?'t-active':'t-warn'}" style="font-size:12.5px">${s.s==='ok'?'Healthy':'Recovered'}</span>
-        </div>`).join('')}
-        ${healthBad?`<div class="warn" style="margin-bottom:0">${healthBad} item(s) need a look.
-          <span class="lnk-btn" onclick="tab('ops')" style="cursor:pointer;color:var(--deep);font-weight:600"> Open Operations →</span></div>`
-          :`<div class="ok" style="margin-bottom:0">Everything healthy.</div>`}
-      </div>
-      <div class="card pad">
-        <h2 class="sec">Needs an administrator</h2>
-        ${SECURITY.filter(s=>s.s!=='ok').map(s=>`<div class="warn" style="margin:0 0 8px">
-          <b>${esc(s.n)}</b> — ${esc(s.v)}<br><span style="font-size:13.5px">${esc(s.d)}</span></div>`).join('')
-          || '<p class="sub" style="margin:0">Nothing outstanding.</p>'}
-        <div class="btnrow" style="margin-top:8px"><button class="btn sm ghost" onclick="tab('ops')">Full Operations view</button></div>
-      </div>
-    </div>`:''}
-
-    <div class="hidden-note" style="margin-top:18px"><b>This is a view, not a new store.</b> Every number above is read from data that
+    <div class="hidden-note"><b>This is a view, not a new store.</b> Every number above is read from data that
       already exists elsewhere in the system — nothing is duplicated to build this screen, so it cannot drift
       out of step with the tabs it summarises.</div>`;
 }
