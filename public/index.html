@@ -465,7 +465,7 @@ nav .pip.r{background:var(--sage-wash);color:var(--sage)}
 .igrp-section-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:9px}
 .igrp-section-title{color:var(--ink-2);font-weight:700;font-size:13.5px}
 .igrp-link-btn{border:0;background:transparent;color:var(--deep);font-size:13px;cursor:pointer;padding:4px 0}
-.igrp-link-btn:before{content:"\uFF0B";font-weight:700;margin-right:3px}
+.igrp-link-btn:before{content:"+";font-weight:700;margin-right:3px}
 .igrp-field-list{border:1px solid var(--line);border-radius:10px;background:var(--card);overflow:hidden}
 .igrp-field-row{display:flex;align-items:center;gap:14px;min-height:48px;padding:9px 12px;border-bottom:1px solid var(--line)}
 .igrp-field-row:last-child{border-bottom:0}
@@ -3915,24 +3915,53 @@ function renderSatsangEvents(force){
   const el = document.getElementById('satsangEvents');
   if(!el) return;
   if(LIVE_SATSANG_DEFS === null){ el.innerHTML = genericSkeleton(4); loadSatsangDefs(); return; }
-  if(!SATSANG_EVENTS_DEF_ID && LIVE_SATSANG_DEFS.length) SATSANG_EVENTS_DEF_ID = LIVE_SATSANG_DEFS[0].Satsang_ID;
-
   if(!LIVE_SATSANG_DEFS.length){ el.innerHTML = '<p class="sub2">No satsang definitions yet \u2014 create one under Satsang Definitions first.</p>'; return; }
 
-  el.innerHTML = `
-    <div style="display:flex;gap:8px;align-items:center;margin-bottom:14px;flex-wrap:wrap">
-      <label class="sub2">Satsang:</label>
-      <select id="seDefPicker" style="border-radius:999px;padding:6px 14px;font-size:15px;border:1px solid var(--line-2)" onchange="SATSANG_EVENTS_DEF_ID=Number(this.value); loadSatsangEvents(true)">
-        ${LIVE_SATSANG_DEFS.map(d=>`<option value="${d.Satsang_ID}" ${d.Satsang_ID==SATSANG_EVENTS_DEF_ID?'selected':''}>${esc(d.Satsang_Name)}</option>`).join('')}
-      </select>
-    </div>
-    <div id="satsangEventsBody"><p class="sub2">Loading\u2026</p></div>
-    <div style="margin-top:26px">
-      <h3 class="sec" style="font-size:17px;margin-bottom:4px">Attendee and satsang notes</h3>
-      <p class="sub2" style="margin-bottom:10px" id="satsangNotesHint">Click "Notes" on an event above to open it here \u2014 no need to leave this tab.</p>
+  el.innerHTML = LIVE_SATSANG_DEFS.map(d=>{
+    const isOpen = d.Satsang_ID === SATSANG_EVENTS_DEF_ID;
+    return `<section class="igrp${isOpen?' open':''}" id="sevgrp_${d.Satsang_ID}">
+      <button class="igrp-head" onclick="toggleSatsangEventGroup(${d.Satsang_ID})">
+        <span class="igrp-chevron">\u203A</span>
+        <span class="igrp-title">
+          <div class="igrp-name">${esc(d.Satsang_Name)} <span class="sub2" style="font-weight:400">(${esc(d.Satsang_Short_Name)})</span></div>
+          <div class="igrp-summary">${esc(d.ST_Name||'')} \u00b7 ${esc(d.Satsang_Frequency||'One-off')}</div>
+        </span>
+        <span class="igrp-actions" onclick="event.stopPropagation()">${statusBadge(d.Satsang_Status)}</span>
+      </button>
+      <div class="igrp-details"><div class="igrp-details-inner" id="sevgrpBody_${d.Satsang_ID}">
+        ${isOpen ? satsangEventGroupInnerHTML() : ''}
+      </div></div>
+    </section>`;
+  }).join('');
+  if(SATSANG_EVENTS_DEF_ID) loadSatsangEvents(force);
+}
+// The inner markup (event list + notes panel) is shared by whichever
+// satsang card is currently open \u2014 only one at a time, same as before,
+// just reached by clicking a card instead of a dropdown.
+function satsangEventGroupInnerHTML(){
+  return `<div id="satsangEventsBody">${genericSkeleton(3)}</div>
+    <div style="margin-top:22px">
+      <h3 class="sec" style="font-size:16px;margin-bottom:4px">Attendee and satsang notes</h3>
+      <p class="sub2" style="margin-bottom:10px" id="satsangNotesHint">Click "Notes" on an event above to open it here \u2014 no need to leave this card.</p>
       <div id="satsangCommentsBody"></div>
     </div>`;
-  loadSatsangEvents(force);
+}
+async function toggleSatsangEventGroup(defId){
+  const wasOpen = SATSANG_EVENTS_DEF_ID === defId;
+  // Single-open accordion, same as the old dropdown's "one satsang at a
+  // time" behaviour \u2014 collapse whichever card was open first.
+  if(SATSANG_EVENTS_DEF_ID){
+    const prev = document.getElementById('sevgrp_'+SATSANG_EVENTS_DEF_ID);
+    if(prev) prev.classList.remove('open');
+  }
+  SATSANG_EVENTS_DEF_ID = wasOpen ? null : defId;
+  const el = document.getElementById('sevgrp_'+defId);
+  if(el) el.classList.toggle('open', !wasOpen);
+  const body = document.getElementById('sevgrpBody_'+defId);
+  if(!wasOpen && body){
+    body.innerHTML = satsangEventGroupInnerHTML();
+    loadSatsangEvents(true);
+  }
 }
 
 async function loadSatsangEvents(force){
