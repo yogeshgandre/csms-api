@@ -155,6 +155,11 @@ router.post('/:id/resume', requireAuth, async (req, res) => {
 router.post('/:id/archive', requireAuth, async (req, res) => {
   await setFormStatus(req, res, ['Published', 'Paused', 'Draft'], 'Archived');
 });
+// Terminal — only reachable from Published, and one-way (matches the
+// requirement: this status only exists after Published, no un-expiring).
+router.post('/:id/expire', requireAuth, async (req, res) => {
+  await setFormStatus(req, res, ['Published'], 'Expired');
+});
 
 /* ============ Form_Additional_Fields (dynamic questions per form) ============
    No PK or versioning was given in the schema — same situation

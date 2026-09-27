@@ -223,6 +223,57 @@ router.post('/defs/:id/reject', requireAuth, async (req, res) => {
   await setDefStatus(req, res, 'Rejected', (name) => `"${name}" was rejected.${remarks ? ' ' + remarks : ''}`);
 });
 
+// Terminal — an Approved satsang can be Stopped, but a Stopped satsang
+// cannot be un-stopped from here (matches the requirement: this status
+// only exists after Approved, and is one-way).
+router.post('/defs/:id/stop', requireAuth, async (req, res) => {
+  try {
+    const cur = await pool.query(
+      `SELECT ${qi('Satsang_Status')} FROM ${qi('SCS')}.${qi('M_Satsang')} WHERE ${qi('Satsang_ID')} = $1`,
+      [req.params.id]
+    );
+    if (cur.rowCount === 0) return res.status(404).json({ error: 'NOT_FOUND' });
+    if (cur.rows[0].Satsang_Status !== 'Approved') {
+      return res.status(409).json({ error: 'BAD_STATE', message: 'Only an Approved satsang can be Stopped.' });
+    }
+    await pool.query(`UPDATE ${qi('SCS')}.${qi('M_Satsang')} SET ${qi('Satsang_Status')} = 'Stopped' WHERE ${qi('Satsang_ID')} = $1`, [req.params.id]);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('[POST /satsangs/defs/:id/stop] error', err);
+    res.status(500).json({ error: 'INTERNAL', message: err.message });
+  }
+});
+
+// Duplicates the base definition (type, start date, frequency) into a new
+// Draft under a new name — custom fields, conductors and attendees are
+// NOT copied, since those are set up fresh via the usual accordion.
+router.post('/defs/:id/copy', requireAuth, async (req, res) => {
+  const { shortName, name } = req.body || {};
+  if (!shortName || !name) return res.status(400).json({ error: 'shortName and name are required' });
+  try {
+    const src = await pool.query(
+      `SELECT ${qi('Satsang_Type_ID')}, ${qi('Satsang_Start_Date')}, ${qi('Satsang_Frequency')}
+       FROM ${qi('SCS')}.${qi('M_Satsang')} WHERE ${qi('Satsang_ID')} = $1`,
+      [req.params.id]
+    );
+    if (src.rowCount === 0) return res.status(404).json({ error: 'NOT_FOUND' });
+    const maxQ = await pool.query(`SELECT COALESCE(MAX(${qi('Satsang_ID')}), 0) + 1 AS next_id FROM ${qi('SCS')}.${qi('M_Satsang')}`);
+    const id = maxQ.rows[0].next_id;
+    await pool.query(
+      `INSERT INTO ${qi('SCS')}.${qi('M_Satsang')}
+        (${qi('Satsang_ID')}, ${qi('Satsang_Type_ID')}, ${qi('Satsang_Short_Name')}, ${qi('Satsang_Name')},
+         ${qi('Created_ID')}, ${qi('Satsang_Start_Date')}, ${qi('Satsang_Frequency')},
+         ${qi('Satsang_Status')}, ${qi('Ver_From_DT')}, ${qi('Ver_To_DT')})
+       VALUES ($1,$2,$3,$4,$5,$6,$7,'Draft',CURRENT_DATE,$8)`,
+      [id, src.rows[0].Satsang_Type_ID, shortName, name, req.user.csmsId, src.rows[0].Satsang_Start_Date, src.rows[0].Satsang_Frequency, FAR_FUTURE]
+    );
+    res.status(201).json({ ok: true, satsangId: id });
+  } catch (err) {
+    console.error('[POST /satsangs/defs/:id/copy] error', err);
+    res.status(500).json({ error: 'INTERNAL', message: err.message });
+  }
+});
+
 async function setDefStatus(req, res, newStatus, messageFor) {
   let client;
   try {

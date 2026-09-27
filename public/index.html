@@ -3576,7 +3576,9 @@ const SATSANG_STATUS_COLORS = {
   'Accepted': {bg:'#E7F3EC', fg:'var(--sage)'},
   'Published': {bg:'#E7F3EC', fg:'var(--sage)'},
   'Paused': {bg:'#FDF0DC', fg:'#9A6A0E'},
-  'Archived': {bg:'#EEF1F4', fg:'var(--ink-3)'}
+  'Archived': {bg:'#EEF1F4', fg:'var(--ink-3)'},
+  'Stopped': {bg:'#FBE7E7', fg:'var(--rose)'},
+  'Expired': {bg:'#FBE7E7', fg:'var(--rose)'}
 };
 function statusBadge(s){
   const c = SATSANG_STATUS_COLORS[s] || {bg:'#EEF1F4', fg:'var(--ink-2)'};
@@ -3857,15 +3859,45 @@ async function removeSatsangAttendee(defId, seekerId, btn){
 }
 
 function satsangDefActionsHTML(d){
+  const copyBtn = `<button class="mini" onclick="copySatsangDef(${d.Satsang_ID}, this)" title="Copy to a new draft" style="width:auto;padding:0 10px;height:24px;font-size:13.5px">Copy</button>`;
   if(d.Satsang_Status==='Draft' || d.Satsang_Status==='Rejected'){
     return `<button class="btn sm" onclick="submitSatsangDef(${d.Satsang_ID}, this)"><span class="spin"></span><span class="lbl">Submit for review</span></button>
+      ${copyBtn}
       <button class="mini" onclick="deleteSatsangDef(${d.Satsang_ID}, this)" title="Delete" style="width:24px;height:24px;color:var(--rose)">&times;</button>`;
   }
   if(d.Satsang_Status==='In Review'){
     return `<button class="btn sm" onclick="approveSatsangDef(${d.Satsang_ID}, this)"><span class="spin"></span><span class="lbl">Approve</span></button>
-      <button class="btn ghost sm" style="color:var(--rose);border-color:var(--rose)" onclick="rejectSatsangDef(${d.Satsang_ID}, this)"><span class="spin"></span><span class="lbl">Reject</span></button>`;
+      <button class="btn ghost sm" style="color:var(--rose);border-color:var(--rose)" onclick="rejectSatsangDef(${d.Satsang_ID}, this)"><span class="spin"></span><span class="lbl">Reject</span></button>
+      ${copyBtn}`;
   }
-  return '';
+  if(d.Satsang_Status==='Approved'){
+    return `<button class="btn ghost sm" style="color:var(--rose);border-color:var(--rose)" onclick="stopSatsangDef(${d.Satsang_ID}, this)"><span class="spin"></span><span class="lbl">Stop</span></button>
+      ${copyBtn}`;
+  }
+  return copyBtn;
+}
+async function stopSatsangDef(id, btn){
+  if(!confirm('Stop this satsang? This cannot be undone.')) return;
+  await withLoading(btn, async ()=>{
+    try{
+      await apiFetch('/api/satsangs/defs/'+id+'/stop', {method:'POST'});
+      toast('Satsang stopped.');
+      LIVE_SATSANG_DEFS = null; await loadSatsangDefs();
+    }catch(err){ toast('Could not stop: '+(err.message||'')); }
+  });
+}
+async function copySatsangDef(id, btn){
+  const name = prompt('Name for the new draft:');
+  if(!name || !name.trim()) return;
+  const shortName = prompt('Short name for the new draft:', name.trim().slice(0,20));
+  if(!shortName || !shortName.trim()) return;
+  await withLoading(btn, async ()=>{
+    try{
+      await apiFetch('/api/satsangs/defs/'+id+'/copy', {method:'POST', body: JSON.stringify({name: name.trim(), shortName: shortName.trim()})});
+      toast('Copied to a new draft.');
+      LIVE_SATSANG_DEFS = null; await loadSatsangDefs();
+    }catch(err){ toast('Could not copy: '+(err.message||'')); }
+  });
 }
 
 async function createSatsangDef(btn){
@@ -4711,6 +4743,7 @@ function formActionsHTML(f){
   if(s==='In Review') return previewBtn + `<button class="btn sm" onclick="publishForm(${f.Form_ID}, this)"><span class="spin"></span><span class="lbl">Publish</span></button>
     <button class="btn ghost sm" style="color:var(--rose);border-color:var(--rose)" onclick="rejectForm(${f.Form_ID}, this)"><span class="spin"></span><span class="lbl">Reject</span></button>`;
   if(s==='Published') return previewBtn + `<button class="mini" onclick="pauseForm(${f.Form_ID}, this)" style="width:auto;padding:0 10px;height:26px;font-size:13.5px">Pause</button>
+    <button class="btn ghost sm" style="color:var(--rose);border-color:var(--rose)" onclick="expireForm(${f.Form_ID}, this)"><span class="spin"></span><span class="lbl">Expire</span></button>
     <button class="mini" onclick="archiveForm(${f.Form_ID}, this)" title="Archive" style="width:24px;height:24px;color:var(--rose)">&times;</button>`;
   if(s==='Paused') return previewBtn + `<button class="mini" onclick="resumeForm(${f.Form_ID}, this)" style="width:auto;padding:0 10px;height:26px;font-size:13.5px">Resume</button>
     <button class="mini" onclick="archiveForm(${f.Form_ID}, this)" title="Archive" style="width:24px;height:24px;color:var(--rose)">&times;</button>`;
@@ -4809,6 +4842,13 @@ async function archiveForm(id, btn){
   await withLoading(btn, async ()=>{
     try{ await apiFetch('/api/forms/'+id+'/archive', {method:'POST'}); toast('Archived.'); LIVE_FORMS=null; loadForms(); }
     catch(err){ toast('Could not archive: '+(err.message||'')); }
+  });
+}
+async function expireForm(id, btn){
+  if(!confirm('Expire this form? It cannot be un-expired from here.')) return;
+  await withLoading(btn, async ()=>{
+    try{ await apiFetch('/api/forms/'+id+'/expire', {method:'POST'}); toast('Expired.'); LIVE_FORMS=null; loadForms(); }
+    catch(err){ toast('Could not expire: '+(err.message||'')); }
   });
 }
 
