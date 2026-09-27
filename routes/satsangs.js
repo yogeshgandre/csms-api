@@ -549,8 +549,17 @@ router.post('/defs/:id/events', requireAuth, async (req, res) => {
       [seId]
     );
 
-    for (const cId of [sc1Id, sc2Id].filter(Boolean)) {
-      await notify(client, cId, `A new "${defQ.rows[0].Satsang_Name}" event needs your approval.`, 'satsang_event', seId);
+    // Conductors are managed separately via /defs/:id/conductors
+    // (SCS.Satsang_Conductor) — no longer set per event. Notify every
+    // conductor already assigned to this satsang that a new event needs
+    // approval.
+    const condQ = await client.query(
+      `SELECT ${qi('SC_CSMS_ID')} FROM ${qi('SCS')}.${qi('Satsang_Conductor')}
+       WHERE ${qi('Satsang_ID')} = $1 AND ${qi('Ver_To_DT')} >= CURRENT_DATE`,
+      [req.params.id]
+    );
+    for (const row of condQ.rows) {
+      await notify(client, row.SC_CSMS_ID, `A new "${defQ.rows[0].Satsang_Name}" event needs your approval.`, 'satsang_event', seId);
     }
 
     await client.query('COMMIT');

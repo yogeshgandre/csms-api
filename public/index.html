@@ -3788,6 +3788,7 @@ async function addSatsangConductor(defId, btn){
       await apiFetch('/api/satsangs/defs/'+defId+'/conductors', {method:'POST', body: JSON.stringify({email, name: document.getElementById('condName_'+defId).value.trim()})});
       toast('Conductor added.');
       SATSANG_DETAIL_DATA[defId].conductors = await apiFetch('/api/satsangs/defs/'+defId+'/conductors');
+      delete SATSANG_EVENT_CONDUCTORS[defId]; // Event Management shows the same roster \u2014 refresh it too
       renderSatsangGroupBody(defId);
     }catch(err){ toast('Could not add: '+(err.message||'')); }
   });
@@ -3799,6 +3800,7 @@ async function removeSatsangConductor(defId, csmsId, btn){
       await apiFetch('/api/satsangs/defs/'+defId+'/conductors/'+csmsId, {method:'DELETE'});
       toast('Removed.');
       SATSANG_DETAIL_DATA[defId].conductors = await apiFetch('/api/satsangs/defs/'+defId+'/conductors');
+      delete SATSANG_EVENT_CONDUCTORS[defId];
       renderSatsangGroupBody(defId);
     }catch(err){ toast('Could not remove: '+(err.message||'')); }
   });
@@ -3982,7 +3984,7 @@ function eventRowHTML(e){
     <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
       <div>
         <div style="font-weight:600">${esc(when)} \u00b7 ${esc(e.Event_Time_City)}</div>
-        <div class="sub2">${esc(e.Event_Duration||'')}${e.sc1_name?(' \u00b7 '+esc(e.sc1_name)):''}${e.sc2_name?(', '+esc(e.sc2_name)):''}</div>
+        <div class="sub2">${esc(e.Event_Duration||'')}${(e.conductors||[]).length?(' \u00b7 '+e.conductors.map(c=>esc(c.Seeker_Name||c.Seeker_Email)).join(', ')):''}</div>
       </div>
       <div style="display:flex;align-items:center;gap:8px">
         ${statusBadge(e.Current_Status)}
@@ -4029,14 +4031,12 @@ function eventAttendeesPanelHTML(seId){
   const comments = EVENT_COMMENTS_CACHE[seId] || [];
   const events = LIVE_SATSANG_EVENTS[SATSANG_EVENTS_DEF_ID] || [];
   const ev = events.find(x=>x.SE_ID==seId);
-  const conductorOptions = ev
-    ? [ev.SC1_CSMS_ID ? `<option value="${ev.SC1_CSMS_ID}">${esc(ev.sc1_name||'Conductor 1')}</option>` : '',
-       ev.SC2_CSMS_ID ? `<option value="${ev.SC2_CSMS_ID}">${esc(ev.sc2_name||'Conductor 2')}</option>` : ''].join('')
-    : '';
+  const conductorOptions = (ev && ev.conductors ? ev.conductors : [])
+    .map(c=>`<option value="${c.SC_CSMS_ID}">${esc(c.Seeker_Name||c.Seeker_Email||'Conductor')}</option>`).join('');
   return `<div class="card pad" style="background:var(--paper)">
     <p class="sub2" style="font-weight:600;margin-bottom:6px">Satsang roster \u2014 shared across every event of this satsang</p>
     <select id="evAttCond_${seId}" style="border-radius:999px;padding:6px 14px;font-size:14.5px;border:1px solid var(--line-2);margin-bottom:10px;width:100%;max-width:280px;box-sizing:border-box">
-      <option value="">${conductorOptions?'Noting as\u2026':'No conductor set on this event'}</option>
+      <option value="">${conductorOptions?'Noting as\u2026':'No conductor assigned to this satsang yet \u2014 add one in Satsang Definitions'}</option>
       ${conductorOptions}
     </select>
     ${list.length ? list.map(a=>{
@@ -4196,38 +4196,40 @@ async function toggleFormLinks(seId, btn){
   });
 }
 
-function renderSatsangEventsBody(){
+async function renderSatsangEventsBody(){
   const body = document.getElementById('satsangEventsBody');
   if(!body) return;
   const def = LIVE_SATSANG_DEFS.find(d=>d.Satsang_ID==SATSANG_EVENTS_DEF_ID);
   const events = LIVE_SATSANG_EVENTS[SATSANG_EVENTS_DEF_ID] || [];
   const isApproved = def && def.Satsang_Status==='Approved';
+  // Conductors live at the satsang level (Satsang_Conductor, managed in
+  // Satsang Definitions) \u2014 shown here read-only rather than re-entered,
+  // and read from an event row if we already have one so as not to
+  // re-fetch on every render.
+  const conductors = events[0] ? (events[0].conductors||[]) : (SATSANG_EVENT_CONDUCTORS[SATSANG_EVENTS_DEF_ID] || null);
+  if(conductors === null){
+    try{ SATSANG_EVENT_CONDUCTORS[SATSANG_EVENTS_DEF_ID] = await apiFetch('/api/satsangs/defs/'+SATSANG_EVENTS_DEF_ID+'/conductors'); }
+    catch(err){ SATSANG_EVENT_CONDUCTORS[SATSANG_EVENTS_DEF_ID] = []; }
+    return renderSatsangEventsBody();
+  }
 
   body.innerHTML = `
     ${!isApproved ? `<div class="hidden-note" style="margin-bottom:12px">This satsang definition is <b>${esc(def?def.Satsang_Status:'')}</b> \u2014 it must be Approved before events can be created.</div>` : ''}
+    <p class="sub2" style="margin-bottom:10px"><b>Conductor${conductors.length===1?'':'s'}:</b> ${conductors.length ? conductors.map(c=>esc(c.Seeker_Name||c.Seeker_Email)).join(', ') : 'None assigned yet \u2014 add one under Satsang Definitions.'}</p>
     ${isApproved ? `<details style="margin-bottom:14px">
       <summary style="cursor:pointer;font-size:14px;color:var(--deep)">+ New event</summary>
       <div class="card pad" style="margin-top:8px;display:flex;flex-direction:column;gap:8px;max-width:420px">
         <input id="evStart" type="datetime-local" style="border-radius:999px;padding:7px 14px;font-size:15px;border:1px solid var(--line-2)">
         <input id="evCity" placeholder="City" style="border-radius:999px;padding:7px 14px;font-size:15px;border:1px solid var(--line-2)">
         <input id="evDuration" placeholder="Duration (e.g. 1.5 hours)" style="border-radius:999px;padding:7px 14px;font-size:15px;border:1px solid var(--line-2)">
-        <div style="position:relative">
-          <input id="evSc1Name" placeholder="Conductor 1 name (optional)" autocomplete="off" oninput="peopleAutocomplete(this,'evSc1')" style="width:100%;border-radius:999px;padding:7px 14px;font-size:15px;border:1px solid var(--line-2);box-sizing:border-box">
-          <div id="evSc1_ac" class="ac-dropdown" style="display:none"></div>
-        </div>
-        <input id="evSc1Email" type="email" placeholder="Conductor 1 email" style="border-radius:999px;padding:7px 14px;font-size:15px;border:1px solid var(--line-2)">
-        <div style="position:relative">
-          <input id="evSc2Name" placeholder="Conductor 2 name (optional)" autocomplete="off" oninput="peopleAutocomplete(this,'evSc2')" style="width:100%;border-radius:999px;padding:7px 14px;font-size:15px;border:1px solid var(--line-2);box-sizing:border-box">
-          <div id="evSc2_ac" class="ac-dropdown" style="display:none"></div>
-        </div>
-        <input id="evSc2Email" type="email" placeholder="Conductor 2 email (optional)" style="border-radius:999px;padding:7px 14px;font-size:15px;border:1px solid var(--line-2)">
         <button class="btn sm" onclick="createSatsangEvent(this)"><span class="spin"></span><span class="lbl">Create event</span></button>
         <div class="err" id="evErr"></div>
-        <p class="sub2">Start typing a conductor's name to pick an existing CSMS person, or just type a new name and email \u2014 they don't need to have signed in yet. Conductor 1 approves the event before it's Scheduled.</p>
+        <p class="sub2">The satsang's assigned conductor(s) will be notified to approve this event before it's Scheduled.</p>
       </div>
     </details>` : ''}
     ${events.length ? events.map(eventRowHTML).join('') : '<p class="sub2">No events yet.</p>'}`;
 }
+let SATSANG_EVENT_CONDUCTORS = {};
 
 // Debounced CSMS-people autocomplete, reused for any "pick a person" field.
 // prefix is the id stem: fills <prefix>Name / <prefix>Email on selection.
@@ -4269,11 +4271,7 @@ async function createSatsangEvent(btn){
       const city = document.getElementById('evCity').value.trim();
       const duration = document.getElementById('evDuration').value.trim();
       if(!eventStart || !city || !duration){ errEl.textContent='Date/time, city and duration are required.'; errEl.classList.add('on'); return; }
-      await apiFetch('/api/satsangs/defs/'+SATSANG_EVENTS_DEF_ID+'/events', {method:'POST', body: JSON.stringify({
-        eventStart, city, duration,
-        sc1Name: document.getElementById('evSc1Name').value.trim(), sc1Email: document.getElementById('evSc1Email').value.trim(),
-        sc2Name: document.getElementById('evSc2Name').value.trim(), sc2Email: document.getElementById('evSc2Email').value.trim()
-      })});
+      await apiFetch('/api/satsangs/defs/'+SATSANG_EVENTS_DEF_ID+'/events', {method:'POST', body: JSON.stringify({eventStart, city, duration})});
       toast('Event created \u2014 pending conductor approval.');
       LIVE_SATSANG_UPCOMING = null;
       loadSatsangEvents(true);
@@ -4318,16 +4316,14 @@ function renderSatsangCommentsBody(){
   const body = document.getElementById('satsangCommentsBody');
   if(!body) return;
   const ev = (LIVE_SATSANG_COMMENTS_EVENTS||[]).find(e=>e.SE_ID==SATSANG_COMMENTS_SE_ID);
-  const conductorOptions = ev
-    ? [ev.SC1_CSMS_ID ? `<option value="${ev.SC1_CSMS_ID}">${esc(ev.sc1_name||'Conductor 1')}</option>` : '',
-       ev.SC2_CSMS_ID ? `<option value="${ev.SC2_CSMS_ID}">${esc(ev.sc2_name||'Conductor 2')}</option>` : ''].join('')
-    : '';
+  const conductorOptions = (ev && ev.conductors ? ev.conductors : [])
+    .map(c=>`<option value="${c.SC_CSMS_ID}">${esc(c.Seeker_Name||c.Seeker_Email||'Conductor')}</option>`).join('');
 
   body.innerHTML = `
     <div class="card pad">
       <p class="sub2" style="font-weight:600;margin-bottom:8px">Conductor's overall satsang report</p>
       <select id="scConductor" onchange="renderConductorReportBox()" style="border-radius:999px;padding:7px 14px;font-size:15px;border:1px solid var(--line-2);margin-bottom:10px;width:100%;max-width:320px;box-sizing:border-box">
-        <option value="">${conductorOptions?'Choose conductor\u2026':'No conductor set on this event'}</option>
+        <option value="">${conductorOptions?'Choose conductor\u2026':'No conductor assigned to this satsang yet'}</option>
         ${conductorOptions}
       </select>
       <div id="conductorReportBox"></div>
