@@ -779,7 +779,7 @@ nav .pip.r{background:var(--sage-wash);color:var(--sage)}
 
   <section class="pane" id="p-sevahub">
     <h2 class="sec">Seva Management</h2>
-    <p class="sub">Matching seekers to service, by skill and by capacity — not just a list of who volunteered once.</p>
+    <p class="sub">Matching seekers to service, by skill and by capacity — not just a list of who volunteered once. <span style="color:var(--amber);font-weight:600">Sample data, pre-production.</span></p>
     <div id="sevahub"></div>
   </section>
 
@@ -6121,7 +6121,12 @@ function addOpp(){
 
 function renderSevahub(){
   const el = document.getElementById('sevahub'); if(!el) return;
-  const v = visible();
+  // Sample data, pre-production: whatever real role/identity ends up mapped
+  // to ROLE, this tab should still show something to work with rather than
+  // silently going blank when the mock roster's names/regions don't happen
+  // to match. Falls back to the full mock roster if the normal role-scoped
+  // view() comes back empty.
+  const v = visible().length ? visible() : SEEKERS.slice();
   const serving = v.filter(p=>p.sevaHrs>0);
   const totalHrs = v.reduce((a,p)=>a+p.sevaHrs,0);
   const hrsThisWk = v.reduce((a,p)=>a+p.inter.filter(i=>i.type==='Seva'&&days(i.dt)<=7)
