@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>CSMS – Dashboard samples</title>
+<style>
+:root{
+  box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+  --bg:#F4F6FA;--card:#FFFFFF;--ink:#1B2437;--ink-2:#5B6780;--ink-3:#8B96AB;--line:#E6EAF1;--brand:#2F5BD3;--brand-soft:#EAF0FE;
+  --c-blue:#2F5BD3;--c-teal:#0F766E;--c-amber:#B45309;--c-red:#B42323;--c-green:#15803D;--c-violet:#6D3FC9;
+  --font-head:"Plus Jakarta Sans","Public Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --font-body:"Public Sans","Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0C1322;--card:#141D30;--ink:#E6ECF8;--ink-2:#A6B3CB;--ink-3:#7886A3;--line:#243150;--brand:#7C9CFF;--brand-soft:#1C2B52;--c-blue:#7C9CFF;--c-teal:#4FD1C0;--c-amber:#F0A94E;--c-red:#F27C7C;--c-green:#5CCB7E;--c-violet:#B394F5}}
+:root[data-theme="dark"]{--bg:#0C1322;--card:#141D30;--ink:#E6ECF8;--ink-2:#A6B3CB;--ink-3:#7886A3;--line:#243150;--brand:#7C9CFF;--brand-soft:#1C2B52;--c-blue:#7C9CFF;--c-teal:#4FD1C0;--c-amber:#F0A94E;--c-red:#F27C7C;--c-green:#5CCB7E;--c-violet:#B394F5}
+*{box-sizing:border-box}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:13px;font-weight:400;line-height:1.4;font-variant-numeric:tabular-nums}
+button{font:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.shell{height:100%;display:flex}
+.rail{display:none;width:54px;flex:none;background:#14224A;flex-direction:column;align-items:center;gap:10px;padding:14px 0}
+.rail span{width:32px;height:32px;border-radius:9px;display:grid;place-items:center;color:#9FB0DA;font-size:12px;font-weight:500}
+.rail span.on{background:#2F5BD3;color:#fff}
+[data-v="b"] .rail{display:flex}
+.app{flex:1;min-width:0;height:100%;display:grid;grid-template-rows:auto auto minmax(0,1fr);gap:12px;padding:12px 16px}
+
+header{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.brand{font-family:var(--font-head);font-weight:600;font-size:15px}
+.brand small{display:block;font-weight:400;font-size:11px;color:var(--ink-3)}
+.seg{display:flex;background:var(--card);border:1px solid var(--line);border-radius:9px;padding:2px;gap:2px}
+.seg button{border:0;background:transparent;color:var(--ink-2);padding:5px 11px;border-radius:7px;font-weight:400}
+.seg button[aria-pressed="true"]{background:var(--brand-soft);color:var(--brand);font-weight:500}
+.scope{margin-left:auto;display:flex;align-items:center;gap:10px;color:var(--ink-2)}
+.scope b{font-weight:500;color:var(--ink)}
+.chip{background:var(--brand-soft);color:var(--brand);padding:3px 9px;border-radius:7px;font-size:12px}
+.sample{color:var(--ink-3);font-size:11px}
+
+.tiles{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px}
+.tile{--c:var(--c-blue);position:relative;display:flex;flex-direction:column;gap:2px;min-height:112px;padding:14px 16px;background:color-mix(in srgb,var(--c) 11%,var(--card));border-radius:14px;overflow:hidden}
+.t-blue{--c:var(--c-blue)}.t-teal{--c:var(--c-teal)}.t-amber{--c:var(--c-amber)}.t-red{--c:var(--c-red)}.t-green{--c:var(--c-green)}.t-violet{--c:var(--c-violet)}
+.lab{display:flex;align-items:center;gap:7px;color:var(--ink-2);font-size:12.5px}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--c)}
+.val{font-family:var(--font-head);font-weight:500;font-size:30px;line-height:1.1;letter-spacing:-.5px;color:var(--ink)}
+.dlt{color:var(--c);font-size:12px;font-weight:500}
+.why{margin-top:auto;color:var(--ink-3);font-size:11.5px}
+.spark{display:none;position:absolute;right:12px;top:14px;width:64px;height:22px}
+.spark path{fill:none;stroke:var(--c);stroke-width:1.6;vector-effect:non-scaling-stroke;stroke-linejoin:round}
+
+.panels{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));grid-template-rows:minmax(0,1fr);gap:12px;min-height:0}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;min-height:0;display:flex;flex-direction:column;overflow:hidden}
+.card h2{margin:0 0 8px;font-family:var(--font-head);font-size:13.5px;font-weight:500;display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.card h2 span{font-family:var(--font-body);font-weight:400;color:var(--ink-3);font-size:11.5px}
+.scroll{overflow:auto;min-height:0;flex:1}
+.p-funnel{grid-column:1/6;grid-row:1}.p-flags{grid-column:6/9;grid-row:1}.p-table{grid-column:9/13;grid-row:1}
+
+.fstage{display:grid;grid-template-columns:90px 1fr 40px;align-items:center;gap:8px;margin-bottom:7px}
+.fstage .n{color:var(--ink-2)}
+.bar{height:20px;border-radius:5px;background:var(--brand);display:flex;align-items:center;padding-left:8px;color:#fff;font-size:12px;font-weight:500;min-width:32px}
+.bar{color:#fff}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .bar{color:#0F1521}}
+:root[data-theme="dark"] .bar{color:#0F1521}
+.conv{color:var(--ink-3);font-size:11.5px;text-align:right}
+.fnote{margin-top:auto;color:var(--ink-2);font-size:12px;background:var(--brand-soft);border-radius:8px;padding:6px 10px}
+
+.chartwrap{flex:1;min-height:0;display:flex;flex-direction:column}
+svg.trend{flex:1;width:100%;min-height:0}
+.axis{display:flex;justify-content:space-between;color:var(--ink-3);font-size:11px;margin-top:4px}
+.legend{display:flex;gap:14px;color:var(--ink-2);font-size:12px;margin-bottom:4px}
+.legend i{display:inline-block;width:10px;height:2px;border-radius:2px;vertical-align:middle;margin-right:5px}
+
+.flag{display:grid;grid-template-columns:8px 1fr auto;gap:10px;padding:9px 0;border-bottom:1px solid var(--line);align-items:start}
+.flag:last-child{border-bottom:0}
+.sev{width:8px;height:8px;border-radius:50%;margin-top:5px}
+.flag b{display:block;font-weight:500;font-size:13px}
+.flag p{margin:2px 0 0;color:var(--ink-2);font-size:12px}
+.flag button{border:1px solid var(--line);background:transparent;color:var(--brand);border-radius:7px;padding:3px 9px;font-size:12px;white-space:nowrap}
+.flag button:hover{background:var(--brand-soft)}
+
+table{width:100%;border-collapse:collapse}
+th{text-align:left;color:var(--ink-3);font-weight:400;font-size:11.5px;padding:4px 8px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--card)}
+td{padding:7px 8px;border-bottom:1px solid var(--line)}
+td b{font-weight:500}
+tr:hover td{background:var(--brand-soft)}
+.tag{--c:var(--c-blue);padding:2px 8px;border-radius:999px;font-size:11.5px;font-weight:500;color:var(--c);background:color-mix(in srgb,var(--c) 13%,var(--card));white-space:nowrap}
+.g{--c:var(--c-green)}.a{--c:var(--c-amber)}.r{--c:var(--c-red)}.b{--c:var(--c-blue)}.v{--c:var(--c-violet)}.tl{--c:var(--c-teal)}
+.mini{display:flex;align-items:center;gap:8px}
+.mini .track{flex:1;height:5px;border-radius:3px;background:var(--line);overflow:hidden}
+.mini .track i{display:block;height:100%}
+
+/* ---- B: rail + hero tile ---- */
+[data-v="b"] .tile{background:var(--card);border:1px solid var(--line);border-radius:12px}
+[data-v="b"] .spark{display:block}
+[data-v="b"] .card{border-radius:12px}
+[data-v="b"] .tile:first-child{background:#14224A;border-color:#14224A}
+[data-v="b"] .tile:first-child .lab,[data-v="b"] .tile:first-child .why{color:#A9B8E0}
+[data-v="b"] .tile:first-child .val{color:#fff}
+[data-v="b"] .tile:first-child .dlt{color:#9FE3B5}
+[data-v="b"] .tile:first-child .spark path{stroke:#9FB8FF}
+
+/* ---- C: ledger ---- */
+[data-v="c"] .tile{background:var(--card);border:1px solid var(--line);border-top:3px solid var(--c);border-radius:6px;padding:10px 12px;min-height:100px}
+[data-v="c"] .val{font-size:26px}
+[data-v="c"] .spark{display:block;top:12px}
+[data-v="c"] .card{border-radius:6px;padding:10px 12px}
+[data-v="c"] .app{gap:10px}
+[data-v="c"] .tiles,[data-v="c"] .panels{gap:10px}
+[data-v="c"] .tag{border-radius:4px;background:transparent;border:1px solid color-mix(in srgb,var(--c) 45%,var(--card))}
+[data-v="c"] td{padding:5px 8px}
+[data-v="c"] .bar{border-radius:2px;height:16px}
+[data-v="c"] .seg,[data-v="c"] .chip{border-radius:5px}
+
+
+/* ---- soften pass ---- */
+[data-v] .app{padding:24px 40px;gap:22px;max-width:1440px;margin:0 auto;width:100%}
+[data-v] .tiles,[data-v] .panels{gap:16px}
+[data-v] .tile{min-height:86px;padding:13px 15px;border-radius:12px;background:color-mix(in srgb,var(--c) 7%,var(--card));border:1px solid transparent;border-top-width:1px}
+[data-v="b"] .tile:not(:first-child),[data-v="c"] .tile{background:var(--card);border-color:var(--line)}
+[data-v="c"] .tile{border-top:2px solid var(--c);border-radius:6px}
+[data-v="b"] .tile:first-child{background:#14224A;border-color:#14224A}
+[data-v] .val{font-size:22px;font-weight:400;letter-spacing:-.2px}
+[data-v] .lab{font-size:12.5px}
+[data-v] .dlt{font-weight:400;font-size:12px}
+[data-v] .why{display:none}
+[data-v] .spark{width:48px;height:16px;top:15px}
+[data-v] .card{padding:22px 24px;border-radius:14px}
+[data-v="c"] .card{border-radius:6px}
+[data-v] .card h2{margin-bottom:14px;font-weight:500;font-size:14px}
+.p-funnel{grid-column:1/6;grid-row:1}.p-flags{grid-column:6/13;grid-row:1}.p-table{grid-column:1/13;grid-row:2}
+[data-v] .flag{padding:13px 0}
+[data-v] td{padding:12px 8px}
+[data-v] th{padding:4px 8px 8px}
+[data-v] .fstage{margin-bottom:12px}
+[data-v] .bar{height:18px;font-weight:400;font-size:12px}
+[data-v] .fnote{padding:8px 12px;font-weight:400}
+[data-v] .seg button[aria-pressed="true"]{font-weight:400}
+[data-v] .tag{font-weight:400}
+
+
+/* ---- professional pass ---- */
+[data-v] .spark{top:auto;bottom:14px;right:14px}
+[data-v] .fstage{grid-template-columns:110px 1fr 40px}
+[data-v="a"] .tile{border-color:var(--line)}
+:root{--bg:#F6F7F9;--line:#E8EBF0;--brand:#3B5BA5;--brand-soft:#EEF1F8;--ink:#1F2733;--ink-2:#5F6B7C;--ink-3:#8A94A3;
+ --c-blue:#3C5FA8;--c-teal:#2F7F79;--c-amber:#A86A1F;--c-red:#B0413E;--c-green:#3F7D58;--c-violet:#6B55A8}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0F1521;--card:#161E2D;--line:#252F44;--brand:#8FA8E8;--brand-soft:#1E2A45;--ink:#E7EBF3;--ink-2:#A9B3C4;--ink-3:#7C8799;--c-blue:#8FA8E8;--c-teal:#6CC3BB;--c-amber:#E0B071;--c-red:#E39A98;--c-green:#8CC5A2;--c-violet:#B7A6E6}}
+:root[data-theme="dark"]{--bg:#0F1521;--card:#161E2D;--line:#252F44;--brand:#8FA8E8;--brand-soft:#1E2A45;--ink:#E7EBF3;--ink-2:#A9B3C4;--ink-3:#7C8799;--c-blue:#8FA8E8;--c-teal:#6CC3BB;--c-amber:#E0B071;--c-red:#E39A98;--c-green:#8CC5A2;--c-violet:#B7A6E6}
+[data-v] header{padding-bottom:16px;border-bottom:1px solid var(--line)}
+[data-v] .seg{background:transparent;border-radius:8px}
+[data-v] .seg button[aria-pressed="true"]{background:var(--brand-soft);color:var(--brand)}
+[data-v] .tile{min-height:88px;background:color-mix(in srgb,var(--c) 5%,var(--card))}
+[data-v="b"] .tile:not(:first-child),[data-v="c"] .tile{background:var(--card)}
+[data-v] .card{box-shadow:0 1px 2px rgba(20,30,50,.04)}
+[data-v] .val{color:var(--ink)}
+[data-v] th{text-transform:uppercase;letter-spacing:.05em;font-size:10.5px;color:var(--ink-3)}
+[data-v] .bar{background:color-mix(in srgb,var(--brand) 88%,var(--card));border-radius:4px}
+[data-v] .flag{grid-template-columns:72px 1fr auto}
+[data-v] .sev{width:auto;height:auto;margin-top:2px;padding:2px 8px;border-radius:6px;text-align:center;align-self:start;font-size:11px;color:var(--c);background:color-mix(in srgb,var(--c) 12%,var(--card))}
+[data-v] .flag button{border:0;padding:0;background:transparent;color:var(--brand)}
+[data-v] .flag button:hover{background:transparent;text-decoration:underline}
+[data-v] .chip{background:transparent;border:1px solid var(--line);color:var(--ink-2)}
+
+
+
+/* ---- stakeholder legibility pass: larger type throughout ---- */
+body{font-size:15px}
+[data-v] .brand{font-size:17px}
+[data-v] .brand small{font-size:12px}
+[data-v] .seg button{font-size:14px;padding:7px 14px}
+[data-v] .scope{font-size:14px}
+[data-v] .chip,[data-v] .sample{font-size:13px}
+[data-v] .lab{font-size:13.5px}
+[data-v] .val{font-size:30px}
+[data-v] .dlt{font-size:13px}
+[data-v] .card h2{font-size:15.5px}
+[data-v] .card h2 span{font-size:12.5px}
+[data-v] .fstage .n,[data-v] .conv{font-size:13px}
+[data-v] .bar{font-size:13px}
+[data-v] .fnote{font-size:13.5px}
+[data-v] .flag b{font-size:14.5px}
+[data-v] .flag p{font-size:13px}
+[data-v] .flag button{font-size:13px}
+[data-v] th{font-size:12px}
+[data-v] td{font-size:14px}
+[data-v] .tag{font-size:12.5px}
+[data-v] .strip-h{font-size:13.5px}
+[data-v] .sc .nm{font-size:14.5px}
+[data-v] .sc .sub,[data-v] .sc .ft{font-size:12.5px}
+[data-v] .sc .v{font-size:23px}
+.sv-id h1{font-size:26px}
+.sv-meta{font-size:13.5px}
+.btn-line,.btn-solid{font-size:13.5px}
+.sv-card h2{font-size:15px}
+.sv-tl-date{font-size:12.5px}
+.sv-tl-text{font-size:14.5px}
+.sv-table th{font-size:12px}
+.sv-table td{font-size:14.5px}
+.sv-facts dt,.sv-facts dd{font-size:14px}
+.sv-notes{font-size:14.5px}
+.sv-back,.sv-crumbs{font-size:14px}
+
+/* ---- roles with a strip (conductors) ---- */
+[data-v] .app{display:flex;flex-direction:column}
+[data-v] .panels{flex:1;min-height:0}
+.strip[hidden]{display:none}
+.strip-h{font-size:12.5px;color:var(--ink-2);margin-bottom:8px}
+.strip-h span{color:var(--ink-3);margin-left:6px;font-size:11.5px}
+.strip-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}
+.sc{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 15px;display:flex;flex-direction:column;gap:7px;box-shadow:0 1px 2px rgba(20,30,50,.04)}
+.sc .top{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.sc .nm{font-weight:500;font-size:13px}
+.sc .sub{color:var(--ink-3);font-size:11.5px}
+.sc .v{font-family:var(--font-head);font-size:20px}
+.sc .track{height:4px;border-radius:2px;background:var(--line);overflow:hidden}
+.sc .track i{display:block;height:100%;border-radius:2px}
+.sc .ft{color:var(--ink-2);font-size:11.5px}
+.has-strip .panels{grid-template-rows:minmax(0,1fr)}
+.has-strip .p-funnel{grid-column:1/5;grid-row:1}
+.has-strip .p-flags{grid-column:5/9;grid-row:1}
+.has-strip .p-table{grid-column:9/13;grid-row:1}
+.has-strip th:nth-child(2),.has-strip td:nth-child(2),.has-strip th:nth-child(5),.has-strip td:nth-child(5){display:none}
+.has-strip .card{padding:18px 20px}
+.has-strip .flag{grid-template-columns:64px 1fr;row-gap:2px}
+.has-strip .flag button{grid-column:2;justify-self:start}
+
+
+/* ---- seeker full-screen profile ---- */
+.rowlink{cursor:pointer}
+.rowlink:focus-visible{outline:2px solid var(--brand);outline-offset:-2px}
+.seeker-view{position:fixed;inset:0;background:var(--bg);z-index:50;overflow:auto;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+.seeker-view[hidden]{display:none}
+.sv-top{position:sticky;top:0;z-index:2;background:var(--bg);border-bottom:1px solid var(--line);padding:14px 40px;display:flex;align-items:center;gap:14px}
+.sv-back{border:0;background:transparent;color:var(--brand);font-size:13px;padding:6px 4px;border-radius:6px}
+.sv-back:hover{text-decoration:underline}
+.sv-crumbs{color:var(--ink-3);font-size:12px}
+.sv-body{max-width:1180px;margin:0 auto;padding:28px 40px 60px}
+.sv-head{display:flex;align-items:center;gap:18px;margin-bottom:28px}
+.sv-avatar{width:56px;height:56px;border-radius:50%;background:var(--brand-soft);color:var(--brand);display:grid;place-items:center;font-family:var(--font-head);font-size:18px;font-weight:500;flex:none}
+.sv-id{flex:1;min-width:0}
+.sv-id h1{margin:0 0 4px;font-family:var(--font-head);font-size:22px;font-weight:500;color:var(--ink)}
+.sv-meta{color:var(--ink-2);font-size:12.5px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.sv-actions{display:flex;gap:10px;flex:none}
+.btn-line{border:1px solid var(--line);background:var(--card);color:var(--ink-2);border-radius:8px;padding:9px 14px;font-size:12.5px}
+.btn-solid{border:0;background:var(--brand);color:#fff;border-radius:8px;padding:9px 14px;font-size:12.5px}
+.btn-line:hover{background:var(--brand-soft);color:var(--brand)}
+.sv-grid{display:grid;grid-template-columns:1.7fr 1fr;gap:20px;align-items:start}
+.sv-card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px 22px;margin-bottom:20px;box-shadow:0 1px 2px rgba(20,30,50,.04)}
+.sv-card h2{margin:0 0 14px;font-family:var(--font-head);font-size:13.5px;font-weight:500;display:flex;align-items:center;gap:8px}
+.sv-priv{font-family:var(--font-body);font-weight:400;color:var(--ink-3);font-size:11px}
+.sv-timeline{position:relative;padding-left:18px}
+.sv-timeline::before{content:"";position:absolute;left:4px;top:4px;bottom:4px;width:1px;background:var(--line)}
+.sv-tl-item{position:relative;padding-bottom:18px}
+.sv-tl-item:last-child{padding-bottom:0}
+.sv-tl-item::before{content:"";position:absolute;left:-18px;top:4px;width:8px;height:8px;border-radius:50%;background:var(--brand)}
+.sv-tl-date{color:var(--ink-3);font-size:11.5px}
+.sv-tl-text{font-size:13px;color:var(--ink);margin-top:1px}
+.sv-twrap{overflow-x:auto}
+.sv-table{width:100%;min-width:420px;border-collapse:collapse}
+.sv-table th{text-align:left;color:var(--ink-3);font-weight:400;font-size:11px;text-transform:uppercase;letter-spacing:.04em;padding:0 8px 8px;border-bottom:1px solid var(--line)}
+.sv-table td{padding:10px 8px;border-bottom:1px solid var(--line);font-size:13px}
+.sv-table tr:last-child td{border-bottom:0}
+.sv-facts{margin:0;display:grid;grid-template-columns:auto 1fr;gap:9px 12px}
+.sv-facts dt{color:var(--ink-3);font-size:12px}
+.sv-facts dd{margin:0;color:var(--ink);font-size:13px;text-align:right}
+.sv-notes{color:var(--ink-2);font-size:13px;line-height:1.6}
+.sv-notes p{margin:0 0 10px}
+.sv-notes p:last-child{margin:0}
+@media (max-width:900px){
+  .sv-grid{grid-template-columns:1fr}
+  .sv-top,.sv-body{padding-left:18px;padding-right:18px}
+  .sv-head{flex-wrap:wrap}
+  .sv-id{flex:1 1 100%;order:2}
+  .sv-actions{order:3;flex:1 1 100%}
+  .sv-actions button{flex:1}
+  .sv-meta{white-space:normal}
+}
+
+@media (max-width:1100px){html,body{height:auto}.shell,.app{height:auto}.tiles{grid-template-columns:repeat(3,minmax(0,1fr))}.panels{display:flex;flex-direction:column}.card{min-height:260px}}
+@media (max-width:560px){.tiles{grid-template-columns:repeat(2,minmax(0,1fr))}.scope{margin-left:0}.rail{display:none!important}}
+</style></head>
+<body>
+<div style="position:sticky;top:0;z-index:60;background:#B45309;color:#fff;font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  font-size:13px;padding:8px 16px;display:flex;align-items:center;gap:10px">
+  <b>Sample data</b><span style="opacity:.85">— this view is not connected to the live database.</span>
+  <button onclick="parent.postMessage('closeSampleDash','*')" style="margin-left:auto;border:1px solid rgba(255,255,255,.5);background:transparent;
+    color:#fff;border-radius:6px;padding:4px 12px;font-size:12.5px;cursor:pointer">Back to live dashboard</button>
+</div>
+<div class="shell" id="shell" data-v="a">
+<div class="seeker-view" id="seekerView" hidden role="dialog" aria-modal="true" aria-labelledby="svName">
+ <div class="sv-top">
+   <button class="sv-back" id="svBack" aria-label="Back to dashboard">← Back to dashboard</button>
+   <div class="sv-crumbs" id="svCrumbs"></div>
+ </div>
+ <div class="sv-body">
+   <div class="sv-head">
+     <div class="sv-avatar" id="svAvatar"></div>
+     <div class="sv-id">
+       <h1 id="svName"></h1>
+       <div class="sv-meta" id="svMeta"></div>
+     </div>
+     <div class="sv-actions">
+       <button class="btn-line">Log a contact</button>
+       <button class="btn-solid">Assign owner</button>
+     </div>
+   </div>
+   <div class="sv-grid">
+     <div class="sv-col-main">
+       <section class="sv-card">
+         <h2>Journey timeline</h2>
+         <div class="sv-timeline" id="svTimeline"></div>
+       </section>
+       <section class="sv-card">
+         <h2>Satsang &amp; event attendance</h2>
+         <div class="sv-twrap"><table class="sv-table"><thead><tr><th>Date</th><th>Type</th><th>Status</th><th>Notes</th></tr></thead><tbody id="svAttendance"></tbody></table></div>
+       </section>
+       <section class="sv-card">
+         <h2>Forms submitted</h2>
+         <div class="sv-twrap"><table class="sv-table"><thead><tr><th>Form</th><th>Submitted</th><th>Status</th></tr></thead><tbody id="svForms"></tbody></table></div>
+       </section>
+     </div>
+     <div class="sv-col-side">
+       <section class="sv-card">
+         <h2>Contact</h2>
+         <dl class="sv-facts" id="svContact"></dl>
+       </section>
+       <section class="sv-card">
+         <h2>Seva</h2>
+         <dl class="sv-facts" id="svSeva"></dl>
+       </section>
+       <section class="sv-card">
+         <h2>Notes <span class="sv-priv">private to owner</span></h2>
+         <div class="sv-notes" id="svNotes"></div>
+       </section>
+     </div>
+   </div>
+ </div>
+</div>
+
+ <nav class="rail" aria-label="Sections"><span class="on" title="Overview">O</span><span title="Seekers">S</span><span title="Journey">J</span><span title="Reports">R</span><span title="Seva">V</span></nav>
+ <div class="app">
+  <header>
+    <div class="brand">CSMS<small>Curious Seeker Management System</small></div>
+    <div class="seg" role="group" aria-label="View as" id="rseg">
+      <button data-role="admin" aria-pressed="true">Global Admin</button>
+      <button data-role="rs" aria-pressed="false">Regional RS</button>
+      <button data-role="conductor" aria-pressed="false">Satsang Conductor</button>
+      <button data-role="event" aria-pressed="false">Event Conductor</button>
+    </div>
+    <div class="scope"><span id="scope"></span><span class="chip">Last 30 days</span><span class="sample">Sample data only</span></div>
+  </header>
+  <section class="tiles" id="tiles" aria-label="Key updates"></section>
+  <section class="strip" id="strip" hidden></section>
+  <section class="panels">
+    <div class="card p-funnel"><h2>Seeker journey <span id="fsub"></span></h2><div id="funnel" class="scroll" style="display:flex;flex-direction:column"></div></div>
+    <div class="card p-flags"><h2>Needs your attention <span>today</span></h2><div id="flags" class="scroll"></div></div>
+    <div class="card p-table"><h2>Seekers to follow up <span id="tsub"></span></h2><div class="scroll"><table><thead><tr><th>Seeker</th><th>Stage</th><th>Last spoken</th><th>Reason</th><th>Owner</th></tr></thead><tbody id="rows"></tbody></table></div></div>
+  </section>
+ </div>
+</div>
+
+<script>
+const D = {
+ admin:{scope:"All regions · 5 satsang groups",
+  tiles:[["blue","Active seekers","2,486","▲ 3.1%","Steady growth"],["teal","New this month","142","▲ 18","Mostly from livestream"],["amber","Not spoken to in 30 days","213","▲ 9 this week","Assign before it grows"],["red","Forms awaiting review","37","12 older than 3 days","Clear the oldest first"],["green","Satsang attendance","71%","▼ 4 pts","Below 4-week average"],["violet","Seva hours","1,904","▲ 6%","Ahead of last month"]],
+  funnel:[["Visitors",5200],["Followers",2140],["Talkers",860],["Satsang group",412]], fnote:"Follower → Talker is the weakest step (40%). Livestream leads convert best.", fsub:"all channels",
+  flags:[["hi","213 seekers not spoken to in 30 days","62 are in Germany. Assign to conductors.","Assign"],["hi","Attendance dropped 4 pts","Munich group is down most (−11 pts).","Open group"],["mid","37 forms waiting for review","12 are older than 3 days.","Review"]],
+  tsub:"top 4",
+  rows:[["A. Keller","Talker","41 days","Missed 3 satsangs","M. Roth"],["S. Dubois","Follower","36 days","New, no first call","L. Martin"],["R. Patil","Satsang group","33 days","Sadhana drop","V. Kulkarni"],["J. Weber","Talker","31 days","Form pending","M. Roth"]]},
+ rs:{scope:"Region: Germany · 2 satsang groups",
+  tiles:[["blue","Active seekers","412","▲ 2.4%","Steady growth"],["teal","New this month","23","▲ 4","Mostly from website"],["amber","Not spoken to in 30 days","62","▲ 5 this week","Highest in Munich"],["red","Forms awaiting review","9","3 older than 3 days","Clear the oldest first"],["green","Satsang attendance","63%","▼ 7 pts","Below target of 70%"],["violet","Seva hours","318","▲ 2%","Flat vs last month"]],
+  funnel:[["Visitors",980],["Followers",410],["Talkers",150],["Satsang group",58]], fnote:"Talker → Satsang group is 39%. Two conductors have no open slots.", fsub:"Germany",
+  flags:[["hi","Attendance fell 7 pts in 12 weeks","Munich is the main driver.","Open group"],["hi","62 seekers not spoken to in 30 days","41 have no owner.","Assign"],["mid","9 forms waiting for review","3 older than 3 days.","Review"]],
+  tsub:"Germany · top 4",
+  rows:[["A. Keller","Talker","41 days","Missed 3 satsangs","M. Roth"],["J. Weber","Talker","31 days","Form pending","M. Roth"],["T. Braun","Follower","28 days","No owner","—"],["K. Fischer","Visitor","27 days","Opened 6 emails","—"]]},
+ conductor:{scope:"Munich · 3 satsangs · 78 seekers",
+  tiles:[["blue","Seekers in your satsangs","78","▲ 3","Across 3 satsangs"],["teal","Attended last week","53","of 78","Across 3 satsangs"],["amber","Not spoken to in 30 days","11","▲ 2 this week","Call these first"],["red","Notes to write","4","From last week","Private to you"],["green","Average attendance","67%","▼ 5 pts","Tuesday is lowest"],["violet","Seva this month","46 h","▲ 8 h","9 seekers serving"]],
+  strip:{title:"Your satsangs",sub:"next session first",items:[["Tuesday satsang · Munich","Tue · 19:00 · in person","58%",58,"38 seekers · next Tue 22 Sep","var(--c-amber)"],["Thursday online satsang","Thu · 20:00 · online","72%",72,"26 seekers · next Thu 24 Sep"],["Sunday sadhana circle","Sun · 09:00 · in person","84%",84,"14 seekers · next Sun 27 Sep"]]},
+  funnel:[["In your satsangs",78],["Attended last week",53],["Regular (3 of 4)",41],["Serving in seva",9]], fnote:"6 Talkers are ready to be invited into your satsangs.", fsub:"your seekers",
+  flags:[["hi","11 seekers not spoken to in 30 days","4 missed the last 3 satsangs.","Call list"],["mid","Tuesday attendance down 11 pts","Mostly regulars from the last quarter.","See who"],["mid","4 satsang notes still to write","Due before the next session.","Write"]],
+  tsub:"top 4",
+  rows:[["A. Keller","Group","41 days","Missed 3 Tuesday satsangs","You"],["D. Neumann","Group","35 days","Missed 2 Thursday satsangs","You"],["F. Schulz","Group","33 days","Sadhana drop","You"],["H. Wolf","Group","30 days","No contact logged","You"]]},
+ event:{scope:"Munich region · 3 upcoming events",
+  tiles:[["blue","Upcoming events","3","Next: Sat 26 Sep","Introductory talk"],["teal","Registrations","64","▲ 12 this week","Across 3 events"],["green","Attended last event","41","79% of registered","52 registered"],["violet","First-time attendees","27","▲ 6 vs prior event","Curious seekers"],["amber","Follow-ups due","19","Within 7 days","First-timers"],["red","Feedback pending","8","Oldest 9 days","Forms not filled"]],
+  strip:{title:"Your events",sub:"registrations vs seats",items:[["Introductory talk · Munich","Sat 26 Sep · in person","32",64,"32 of 50 seats"],["Online introduction","Wed 30 Sep · online","21",42,"21 of 50 seats","var(--c-amber)"],["Meditation workshop","Sat 3 Oct · in person","11",28,"11 of 40 seats","var(--c-amber)"]]},
+  funnel:[["Registered",64],["Attended",41],["First-timers",27],["Followed up",8],["Joined a satsang",3]], fnote:"Only 8 of 27 first-timers have been followed up. Most drop-off is after the event.", fsub:"last 30 days",
+  flags:[["hi","19 first-time attendees not followed up","9 attended more than 7 days ago.","Assign"],["mid","Online introduction under half full","21 of 50 seats, 9 days to go.","Share invite"],["mid","8 feedback forms not filled","From the last event.","Send reminder"]],
+  tsub:"first-time attendees, top 4",
+  rows:[["R. Sharma","Visitor","Not yet","First event, 9 days ago","—"],["T. Meier","Visitor","Not yet","First event, 9 days ago","—"],["L. Costa","Follower","2 days","Asked about satsang","P. Rao"],["M. Iyer","Follower","Not yet","Attended twice","—"]]}
+};
+
+
+const $=id=>document.getElementById(id);
+const stageTag={Visitor:"b",Follower:"tl",Talker:"v","Satsang group":"g",Group:"g"};
+const sevL={hi:"High",mid:"Medium",lo:"Low"};
+function spark(seed,up){const n=12;let p=[];for(let i=0;i<n;i++){const t=i/(n-1);const v=.5+(up?.28:-.05)*(t-.5)*2+.16*Math.sin(i*1.7+seed*2.3);p.push((t*100).toFixed(1)+","+(24-Math.max(.05,Math.min(.95,v))*24).toFixed(1))}return `<svg class="spark" viewBox="0 0 100 24" preserveAspectRatio="none" aria-hidden="true"><path d="M${p.join(" L")}"/></svg>`}
+function render(role){
+  const d=D[role];
+  $("scope").innerHTML="<b>"+d.scope+"</b>";
+  $("tiles").innerHTML=d.tiles.map((t,i)=>`<div class="tile t-${t[0]}"><div class="lab"><i class="dot"></i>${t[1]}</div><div class="val">${t[2]}</div><div class="dlt">${t[3]}</div>${spark(i+role.length,!/▼/.test(t[3]))}<div class="why">${t[4]}</div></div>`).join("");
+  const max=Math.max(...d.funnel.map(f=>f[1]));
+  $("funnel").innerHTML=d.funnel.map((f,i)=>{const pct=i?Math.round(f[1]/d.funnel[i-1][1]*100):null;
+    return `<div class="fstage"><div class="n">${f[0]}</div><div><div class="bar" style="width:${Math.max(f[1]/max*100,9)}%;opacity:${1-i*.16}">${f[1].toLocaleString()}</div></div><div class="conv">${pct!==null?pct+"%":""}</div></div>`}).join("")+`<div class="fnote">${d.fnote}</div>`;
+  $("fsub").textContent=d.fsub;
+  const col={hi:"var(--c-red)",mid:"var(--c-amber)",lo:"var(--c-teal)"};
+  $("flags").innerHTML=d.flags.slice(0,3).map(f=>`<div class="flag"><div class="sev" style="--c:${col[f[0]]}">${sevL[f[0]]}</div><div><b>${f[1]}</b><p>${f[2]}</p></div><button>${f[3]} →</button></div>`).join("");
+  $("tsub").textContent=d.tsub;
+  const st=d.strip;$("strip").hidden=!st;document.querySelector(".app").classList.toggle("has-strip",!!st);
+  if(st)$("strip").innerHTML=`<div class="strip-h">${st.title} <span>${st.sub}</span></div><div class="strip-grid">`+st.items.map(i=>`<div class="sc"><div class="top"><div><div class="nm">${i[0]}</div><div class="sub">${i[1]}</div></div><div class="v">${i[2]}</div></div><div class="track"><i style="width:${i[3]}%;background:${i[5]||"var(--brand)"}"></i></div><div class="ft">${i[4]}</div></div>`).join("")+`</div>`;
+  $("rows").innerHTML=d.rows.slice(0,4).map(r=>`<tr class="rowlink" tabindex="0" role="button" aria-label="Open ${r[0]}'s profile" data-name="${r[0]}"><td><b>${r[0]}</b></td><td><span class="tag ${stageTag[r[1]]||"b"}">${r[1]}</span></td><td>${r[2]}</td><td>${r[3]}</td><td>${r[4]}</td></tr>`).join("");
+  document.querySelectorAll("#rows tr").forEach(tr=>{tr.onclick=()=>openSeeker(tr.dataset.name);tr.onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();openSeeker(tr.dataset.name)}}});
+}
+document.querySelectorAll("#rseg button").forEach(b=>b.onclick=()=>{document.querySelectorAll("#rseg button").forEach(x=>x.setAttribute("aria-pressed",x===b));render(b.dataset.role)});
+
+const SEEKERS = {
+ "A. Keller":{stage:"Talker",owner:"M. Roth",group:"Tuesday satsang · Munich",joined:"14 Feb 2026",phone:"+49 89 •• •• 41",email:"a.keller••@mail.de",
+  timeline:[["9 Sep","Missed Tuesday satsang, 3rd in a row"],["2 Sep","Missed Tuesday satsang"],["18 Aug","Called — said work has been demanding"],["3 Jun","Became a Talker after 4 calls"],["14 Feb","First visited as a website Follower"]],
+  attendance:[["9 Sep","Satsang","Missed","—"],["2 Sep","Satsang","Missed","—"],["26 Aug","Satsang","Attended","Left early"],["19 Aug","Satsang","Attended",""]],
+  forms:[["Talker intake form","3 Jun 2026","Complete"],["Newsletter signup","14 Feb 2026","Complete"]],
+  seva:[["Total hours","6 h"],["Last seva","12 Jul 2026"],["Usual role","Prasad seva"]],
+  notes:["Prefers a call over WhatsApp. Mentioned a new job around August — attendance dipped since.","Was regular from Feb to Jul; worth a personal check-in before writing off."]},
+ "S. Dubois":{stage:"Follower",owner:"L. Martin",group:"Not yet assigned",joined:"20 Aug 2026",phone:"+33 6 •• •• 12",email:"s.dubois••@mail.fr",
+  timeline:[["17 Aug","Requested a first call — not yet scheduled"],["20 Aug","Signed up via Instagram"]],
+  attendance:[],
+  forms:[["Newsletter signup","20 Aug 2026","Complete"]],
+  seva:[["Total hours","0 h"],["Last seva","—"],["Usual role","—"]],
+  notes:["New Follower, no first call logged yet. Came in through an Instagram link on a Satsang post."]},
+ "R. Patil":{stage:"Satsang group",owner:"V. Kulkarni",group:"Pune Sunday satsang",joined:"3 Nov 2025",phone:"+91 98••• ••033",email:"r.patil••@mail.in",
+  timeline:[["20 Aug","Sadhana log shows a drop over 3 weeks"],["1 Jun","Started daily sadhana log"],["3 Nov","Joined satsang group"]],
+  attendance:[["17 Aug","Satsang","Attended",""],["10 Aug","Satsang","Attended",""],["3 Aug","Satsang","Missed","—"]],
+  forms:[["Sadhana commitment form","1 Jun 2026","Complete"]],
+  seva:[["Total hours","28 h"],["Last seva","14 Aug 2026"],["Usual role","Kitchen seva"]],
+  notes:["Long-standing group member. Sadhana consistency has dropped — worth a personal check rather than a form."]},
+ "J. Weber":{stage:"Talker",owner:"M. Roth",group:"Tuesday satsang · Munich",joined:"9 Jan 2026",phone:"+49 30 •• •• 77",email:"j.weber••@mail.de",
+  timeline:[["21 Aug","Talker follow-up form still pending"],["9 Jan","Became a Talker"]],
+  attendance:[["9 Sep","Satsang","Attended",""],["2 Sep","Satsang","Attended",""]],
+  forms:[["Talker follow-up form","—","Pending"]],
+  seva:[["Total hours","3 h"],["Last seva","2 Sep 2026"],["Usual role","Printing seva"]],
+  notes:["Regular attendee. Just needs the pending form nudged."]},
+ "T. Braun":{stage:"Follower",owner:"Unassigned",group:"Not yet assigned",joined:"25 Aug 2026",phone:"+49 30 •• •• 05",email:"t.braun••@mail.de",
+  timeline:[["25 Aug","Signed up, no owner assigned"]],attendance:[],forms:[],
+  seva:[["Total hours","0 h"],["Last seva","—"],["Usual role","—"]],
+  notes:["No owner yet — flagged in Regional RS view."]},
+ "K. Fischer":{stage:"Visitor",owner:"Unassigned",group:"Not yet assigned",joined:"26 Aug 2026",phone:"—",email:"k.fischer••@mail.de",
+  timeline:[["19–26 Aug","Opened 6 newsletter emails"],["26 Aug","First website visit"]],attendance:[],forms:[],
+  seva:[["Total hours","0 h"],["Last seva","—"],["Usual role","—"]],
+  notes:["High email engagement, no contact yet. Good candidate for outreach."]},
+ "D. Neumann":{stage:"Satsang group",owner:"You",group:"Thursday online satsang",joined:"11 Mar 2026",phone:"+49 89 •• •• 63",email:"d.neumann••@mail.de",
+  timeline:[["9 Sep","Missed 2nd Thursday satsang in a row"],["11 Mar","Joined group"]],
+  attendance:[["9 Sep","Satsang","Missed","—"],["2 Sep","Satsang","Missed","—"],["26 Aug","Satsang","Attended",""]],
+  forms:[["Satsang group intake","11 Mar 2026","Complete"]],
+  seva:[["Total hours","11 h"],["Last seva","20 Jul 2026"],["Usual role","Setup seva"]],
+  notes:["Two misses in a row after near-perfect attendance since March."]},
+ "F. Schulz":{stage:"Satsang group",owner:"You",group:"Sunday sadhana circle",joined:"2 Feb 2026",phone:"+49 89 •• •• 19",email:"f.schulz••@mail.de",
+  timeline:[["18 Aug","Sadhana log gap of 9 days"],["2 Feb","Joined sadhana circle"]],
+  attendance:[["7 Sep","Satsang","Attended",""],["31 Aug","Satsang","Attended",""]],
+  forms:[["Sadhana commitment form","2 Feb 2026","Complete"]],
+  seva:[["Total hours","19 h"],["Last seva","24 Aug 2026"],["Usual role","Flowers seva"]],
+  notes:["Attendance is fine; sadhana log has gone quiet — a check-in call is enough."]},
+ "H. Wolf":{stage:"Satsang group",owner:"You",group:"Tuesday satsang · Munich",joined:"30 Apr 2026",phone:"+49 89 •• •• 82",email:"h.wolf••@mail.de",
+  timeline:[["24 Aug","30 days since any logged contact"],["30 Apr","Joined group"]],attendance:[["31 Aug","Satsang","Attended",""]],
+  forms:[["Satsang group intake","30 Apr 2026","Complete"]],
+  seva:[["Total hours","4 h"],["Last seva","10 Jun 2026"],["Usual role","—"]],
+  notes:["Attending fine, just nothing logged in the system for a month."]},
+ "R. Sharma":{stage:"Visitor",owner:"Unassigned",group:"Not yet assigned",joined:"13 Sep 2026",phone:"—",email:"—",
+  timeline:[["13 Sep","Attended Introductory talk — first event, no prior record"]],attendance:[["13 Sep","Introductory talk","Attended","First-time"]],forms:[],
+  seva:[["Total hours","0 h"],["Last seva","—"],["Usual role","—"]],
+  notes:["First-time attendee, 9 days with no follow-up yet."]},
+ "T. Meier":{stage:"Visitor",owner:"Unassigned",group:"Not yet assigned",joined:"13 Sep 2026",phone:"—",email:"—",
+  timeline:[["13 Sep","Attended Introductory talk — first event, no prior record"]],attendance:[["13 Sep","Introductory talk","Attended","First-time"]],forms:[],
+  seva:[["Total hours","0 h"],["Last seva","—"],["Usual role","—"]],
+  notes:["First-time attendee, 9 days with no follow-up yet."]},
+ "L. Costa":{stage:"Follower",owner:"P. Rao",group:"Not yet assigned",joined:"6 Sep 2026",phone:"+351 9• ••• ••4",email:"l.costa••@mail.pt",
+  timeline:[["20 Sep","Asked about joining a satsang"],["8 Sep","First call logged"],["6 Sep","Attended Introductory talk"]],
+  attendance:[["6 Sep","Introductory talk","Attended","First-time"]],forms:[["Event feedback form","7 Sep 2026","Complete"]],
+  seva:[["Total hours","0 h"],["Last seva","—"],["Usual role","—"]],
+  notes:["Warm lead — asked directly about a satsang. Good candidate for a group invite."]},
+ "M. Iyer":{stage:"Follower",owner:"Unassigned",group:"Not yet assigned",joined:"14 Aug 2026",phone:"+91 98••• ••512",email:"m.iyer••@mail.in",
+  timeline:[["13 Sep","Attended 2nd event, no follow-up logged"],["14 Aug","First attended an event"]],
+  attendance:[["13 Sep","Introductory talk","Attended",""],["14 Aug","Online introduction","Attended","First-time"]],forms:[],
+  seva:[["Total hours","0 h"],["Last seva","—"],["Usual role","—"]],
+  notes:["Attended twice already without an owner — good candidate for direct outreach."]}
+};
+function initials(n){return n.split(" ").filter(w=>/[A-Za-z]/.test(w[0])).map(w=>w[0]).join("").slice(0,2).toUpperCase()}
+function openSeeker(name){
+  const sk=SEEKERS[name]; if(!sk) return;
+  $("svAvatar").textContent=initials(name);
+  $("svName").textContent=name;
+  $("svCrumbs").textContent=(document.querySelector('#rseg button[aria-pressed="true"]')?.textContent||"Dashboard")+" / "+name;
+  $("svMeta").innerHTML=`<span class="tag ${stageTag[sk.stage]||"b"}">${sk.stage}</span><span>${sk.group}</span><span>Owner: ${sk.owner}</span><span>Joined ${sk.joined}</span>`;
+  $("svTimeline").innerHTML=sk.timeline.map(t=>`<div class="sv-tl-item"><div class="sv-tl-date">${t[0]}</div><div class="sv-tl-text">${t[1]}</div></div>`).join("")||`<p style="color:var(--ink-3);font-size:13px">No activity logged yet.</p>`;
+  $("svAttendance").innerHTML=sk.attendance.length?sk.attendance.map(a=>`<tr><td>${a[0]}</td><td>${a[1]}</td><td>${a[2]}</td><td>${a[3]}</td></tr>`).join(""):`<tr><td colspan="4" style="color:var(--ink-3)">No sessions recorded yet.</td></tr>`;
+  $("svForms").innerHTML=sk.forms.length?sk.forms.map(f=>`<tr><td>${f[0]}</td><td>${f[1]}</td><td>${f[2]}</td></tr>`).join(""):`<tr><td colspan="3" style="color:var(--ink-3)">No forms submitted yet.</td></tr>`;
+  $("svContact").innerHTML=`<dt>Phone</dt><dd>${sk.phone}</dd><dt>Email</dt><dd>${sk.email}</dd>`;
+  $("svSeva").innerHTML=sk.seva.map(x=>`<dt>${x[0]}</dt><dd>${x[1]}</dd>`).join("");
+  $("svNotes").innerHTML=sk.notes.map(n=>`<p>${n}</p>`).join("");
+  $("seekerView").hidden=false;
+  document.body.style.overflow="hidden";
+  $("svBack").focus();
+}
+function closeSeeker(){$("seekerView").hidden=true;document.body.style.overflow="";}
+$("svBack").onclick=closeSeeker;
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("seekerView").hidden)closeSeeker()});
+
+render("admin");
+</script>
+</body></html>

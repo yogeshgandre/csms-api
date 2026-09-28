@@ -785,8 +785,14 @@ nav .pip.r{background:var(--sage-wash);color:var(--sage)}
 
   <section class="pane" id="p-dash">
     <h2 class="sec">Dashboard</h2>
-    <p class="sub">Live counts from Postgres — nothing here is illustrative.</p>
+    <p class="sub" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <span>Live counts from Postgres — nothing here is illustrative.</span>
+      <button class="mini" onclick="toggleSampleDash()" style="width:auto;padding:0 12px;height:24px;font-size:13px;background:var(--paper);color:var(--ink-2)">Preview with sample data</button>
+    </p>
     <div id="dash"></div>
+    <div id="sampleDashWrap" style="display:none;position:fixed;inset:0;z-index:400;background:#fff">
+      <iframe id="sampleDashFrame" src="" style="width:100%;height:100%;border:0" title="Sample dashboard data"></iframe>
+    </div>
   </section>
 
   <section class="pane" id="p-ops">
@@ -2674,6 +2680,22 @@ function weeklyActivity(weeks=8){
 function seekerFirstSeen(p){ return p.inter.length ? new Date(Math.min(...p.inter.map(i=>+i.dt))) : null; }
 
 let LIVE_DASH = null;
+// Sample-data preview: a full standalone mockup (public/sample-dashboard.html,
+// its own HTML/CSS/JS, sample seekers) shown in an iframe on demand \u2014 never
+// auto-loaded, never mixed with the live dashboard's own data.
+function toggleSampleDash(){
+  const wrap = document.getElementById('sampleDashWrap');
+  const frame = document.getElementById('sampleDashFrame');
+  if(!wrap || !frame) return;
+  if(!frame.getAttribute('src')) frame.setAttribute('src', 'sample-dashboard.html');
+  wrap.style.display = 'block';
+}
+window.addEventListener('message', (e)=>{
+  if(e.data === 'closeSampleDash'){
+    const wrap = document.getElementById('sampleDashWrap');
+    if(wrap) wrap.style.display = 'none';
+  }
+});
 function dashViewParams(){
   if(ROLE==='satsang') return {view:'satsang'};
   if(ROLE==='event') return {view:'event'};
