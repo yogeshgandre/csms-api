@@ -1378,14 +1378,14 @@ const QUERY_EXAMPLES = [
   "curious in India","well-wisher with translation skills","overdue in Germany",
   "attended foundation satsang","good potential in France","partner seekers"
 ];
-function useExample(t){ document.getElementById('q').value=t; render(); }
+function useExample(t){ const qEl=document.getElementById('q'); if(qEl){ qEl.value=t; } render(); }
 function queryEnter(){
   const list = rows();
   if(list.length===1) open_(list[0].id);
 }
 
 function rows(){
-  const raw = document.getElementById('q').value||'';
+  const raw = (document.getElementById('q')||{}).value || '';
   const parsed = parseQuery(raw);
   return visible().filter(s=>{
     if(FILTER==='overdue'){ if(!overdue(s)) return false; }
@@ -1420,7 +1420,13 @@ function render(){
   renderOverview();
   renderQueryUI();
   const list=rows();
-  document.getElementById('cnt').textContent = `${list.length} of ${visible().length} shown`;
+  // The old "Search & Records" pane (#cnt / #tbl / #hidnote / #catchips) was
+  // removed from the nav, but render() still wrote into it \u2014 which threw and
+  // aborted render() before it ever reached renderAlerts()/renderSevahub()
+  // at the bottom. Each write is guarded so a missing pane can't take the
+  // whole render down.
+  const cntEl = document.getElementById('cnt');
+  if(cntEl) cntEl.textContent = `${list.length} of ${visible().length} shown`;
 
   const catchipsEl = document.getElementById('catchips');
   if(catchipsEl && !catchipsEl.dataset.built){
@@ -1429,7 +1435,8 @@ function render(){
     catchipsEl.dataset.built = "1";
   }
 
-  document.getElementById('tbl').innerHTML = `
+  const tblEl = document.getElementById('tbl');
+  if(tblEl) tblEl.innerHTML = `
     <thead><tr>
       <th>Seeker</th><th>Category</th>
       <th class="hide-sm">WhatsApp</th><th>Last contact</th><th class="hide-sm">Seva hrs</th>
@@ -1455,7 +1462,8 @@ function render(){
        <b>Open question — cross-border access.</b> This role reaches records in every region.
        If the person holding it sits outside the EU, that is a transfer of special-category data out of Europe,
        and hosting in Germany does not resolve it. Tracked as ADR-0011.</div>` : '';
-  document.getElementById('hidnote').innerHTML = xborder + (h
+  const hidnoteEl = document.getElementById('hidnote');
+  if(hidnoteEl) hidnoteEl.innerHTML = xborder + (h
     ? `<div class="hidden-note"><b>${h} seeker records are outside your region</b> and are not shown.
        They are not merely hidden on screen — the database refuses to return them for this role.</div>` : '');
 
@@ -1476,8 +1484,10 @@ let LIVE_SEEKER_DETAIL_ID = null;
 let LIVE_SEEKER_DETAIL = null;
 
 function seekersSubtab(s){
-  document.getElementById('seekersMock').style.display = s==='mock' ? '' : 'none';
-  document.getElementById('seekersLive').style.display = s==='live' ? '' : 'none';
+  const mockEl = document.getElementById('seekersMock');
+  const liveEl = document.getElementById('seekersLive');
+  if(mockEl) mockEl.style.display = s==='mock' ? '' : 'none';
+  if(liveEl) liveEl.style.display = s==='live' ? '' : 'none';
   document.querySelectorAll('#p-seekers .chip[data-sub]').forEach(c=>c.classList.toggle('on', c.dataset.sub===s));
   if(s==='live') renderLiveSeekers();
 }
@@ -5456,9 +5466,12 @@ function renderJourney(){
    per-type satsang link tables (Upay/Vyashti/Bhav). One seeker at a
    time, picked by search. */
 function journeySubtab(s){
-  document.getElementById('journey').style.display = s==='board' ? '' : 'none';
-  document.getElementById('journeyMasterlist').style.display = s==='masterlist' ? '' : 'none';
-  document.getElementById('journeySearch').style.display = s==='search' ? '' : 'none';
+  const jb = document.getElementById('journey');
+  const jm = document.getElementById('journeyMasterlist');
+  const js = document.getElementById('journeySearch');
+  if(jb) jb.style.display = s==='board' ? '' : 'none';
+  if(jm) jm.style.display = s==='masterlist' ? '' : 'none';
+  if(js) js.style.display = s==='search' ? '' : 'none';
   document.querySelectorAll('#p-journey .chip').forEach(c=>c.classList.toggle('on', c.dataset.jsub===s));
   if(s==='board') renderJourney();
   else if(s==='masterlist') renderMasterlistMgmt();
@@ -5720,7 +5733,9 @@ function renderAbout(){
     ["Operations tab","Overdue volunteer access review","Volunteer deprovisioning gap"],
     ["Operations tab","Upgrade queue routed by risk level","Maintenance model"]
   ];
-  document.getElementById('about').innerHTML=`
+  const aboutEl = document.getElementById('about');
+  if(!aboutEl) return;
+  aboutEl.innerHTML=`
     <thead><tr><th>Where to click</th><th>What it shows</th><th>Requirement</th></tr></thead>
     <tbody>${rowsA.map(r=>`<tr style="cursor:default">
       <td>${esc(r[0])}</td><td style="color:var(--ink-2)">${esc(r[1])}</td>
@@ -5785,7 +5800,9 @@ function mockDeptRegion(id){
 }
 function renderProfiles(){
   const serving = visible().filter(p=>p.sevaHrs>0).sort((a,b)=>b.sevaHrs-a.sevaHrs);
-  document.getElementById('profiles').innerHTML = `
+  const profilesEl = document.getElementById('profiles');
+  if(!profilesEl) return;
+  profilesEl.innerHTML = `
     <div class="grid2">
       ${serving.map(p=>{
         const dep = DEPT.find(d=>mockDeptRegion(d.id)===p.region && d.head===p.name) ||
