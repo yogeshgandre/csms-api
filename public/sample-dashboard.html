@@ -277,11 +277,16 @@ body{font-size:15px}
 @media (max-width:1100px){html,body{height:auto}.shell,.app{height:auto}.tiles{grid-template-columns:repeat(3,minmax(0,1fr))}.panels{display:flex;flex-direction:column}.card{min-height:260px}}
 @media (max-width:560px){.tiles{grid-template-columns:repeat(2,minmax(0,1fr))}.scope{margin-left:0}.rail{display:none!important}}
 
-/* Pyramid reference image: sits below the live panels at its natural height,
-   so the app scrolls instead of squashing it into the flex row. */
-[data-v] .app{overflow:auto}
-.pyramid-row{flex:none!important;grid-template-rows:auto!important;min-height:0}
-.pyramid-row .card{min-height:0;overflow:visible}
+/* Pyramid reference image. The dashboard shell is a fixed-height (100vh)
+   app screen, so the pyramid lives OUTSIDE it in normal document flow —
+   putting it inside .app made it fight the fixed height and overlap the
+   panels. html/body therefore grow past the viewport and the page scrolls. */
+html,body{height:auto;min-height:100%}
+.shell{height:100vh}
+.pyramid-block{max-width:1440px;margin:0 auto;padding:0 40px 40px;width:100%}
+.pyramid-block .card{display:block;min-height:0;overflow:visible;padding:22px 24px}
+.pyramid-block img{width:100%;height:auto;display:block;border-radius:10px}
+@media (max-width:560px){.pyramid-block{padding:0 16px 24px}}
 </style></head>
 <body>
 <div style="position:sticky;top:0;z-index:60;background:#B45309;color:#fff;font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
@@ -360,15 +365,15 @@ body{font-size:15px}
     <div class="card p-flags"><h2>Needs your attention <span>today</span></h2><div id="flags" class="scroll"></div></div>
     <div class="card p-table"><h2>Seekers to follow up <span id="tsub"></span></h2><div class="scroll"><table><thead><tr><th>Seeker</th><th>Stage</th><th>Last spoken</th><th>Reason</th><th>Owner</th></tr></thead><tbody id="rows"></tbody></table></div></div>
   </section>
-  <section class="panels pyramid-row">
-    <div class="card" style="grid-column:1/13">
-      <h2>Visitor to Satsang journey <span>reference pathway</span></h2>
-      <img src="assets/pyramid-funnel.png" alt="Visitor to Satsang Journey — a pathway from first contact through Visitors, Followers, Exploring Our Path, and Satsang Group to an ongoing spiritual journey"
-        style="width:100%;height:auto;display:block;border-radius:10px">
-    </div>
-  </section>
  </div>
 </div>
+
+<section class="pyramid-block">
+  <div class="card">
+    <h2>Visitor to Satsang journey <span>reference pathway</span></h2>
+    <img src="assets/pyramid-funnel.png" alt="Visitor to Satsang Journey — a pathway from first contact through Visitors, Followers, Exploring Our Path, and Satsang Group to an ongoing spiritual journey">
+  </div>
+</section>
 
 <script>
 const D = {
