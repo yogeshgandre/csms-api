@@ -317,6 +317,11 @@ h2.sec{letter-spacing:-.01em}
 .pip{box-shadow:0 1px 2px rgba(22,51,74,.15)}
 nav .pip{background:var(--sage-wash);color:var(--sage)}
 nav .pip.r{background:var(--sage-wash);color:var(--sage)}
+/* Notification bell count: the header bell sits outside <nav>, so the
+   nav .pip rules above never reached it and it rendered unstyled. Solid
+   red so an unread count is the first thing the eye lands on. */
+#notifBadge{background:var(--rose);color:#fff;font-weight:700;text-align:center;
+  border-radius:9px;box-shadow:0 1px 3px rgba(180,35,35,.4)}
 .t-warn,.t-old{background:var(--amber-wash);color:var(--amber);border-color:#F0DFAE}
 .t-bad,.t-chg,.t-a9{background:var(--rose-wash);color:var(--rose);border-color:#F3CFB6}
 .t-core,.t-sub{background:var(--deep-wash);color:var(--deep);border-color:#C6E0F0}
@@ -2441,9 +2446,11 @@ function renderAlerts(){
   const total = od.length+fl.length+openT.length+pendingIntakeCount+unreadMsgs+unreadNotifs;
   setPip('pip', total);
   const badge = document.getElementById('notifBadge');
-  if(badge){ badge.style.display = total ? '' : 'none'; badge.textContent = total; }
+  if(badge){ badge.style.display = total ? 'inline-block' : 'none'; badge.textContent = total; }
 
-  document.getElementById('alerts').innerHTML=`
+  const alertsEl = document.getElementById('alerts');
+  if(!alertsEl) return;
+  alertsEl.innerHTML=`
     ${notifs.length?`<h2 class="sec" style="margin-top:4px">Notifications (${unreadNotifs} unread)</h2>
       ${notifs.map(n=>`<div class="sub-card" onclick="markNotifRead(${n.Notification_ID})" style="cursor:pointer;padding:11px 16px;${n.Is_Read?'opacity:.55':'border-left:3px solid var(--deep)'}">
         <div style="font-size:15.5px">${esc(n.Message)}</div>
@@ -5278,6 +5285,9 @@ let LIVE_NOTIFS = null;
 async function loadNotifications(){
   try{ LIVE_NOTIFS = await apiFetch('/api/notifications'); }
   catch(err){ /* silent \u2014 badge just stays at zero */ }
+  // The bell badge and nav pip are both set inside renderAlerts(); without
+  // this, a fresh load showed no count until the user opened that tab.
+  try{ renderAlerts(); }catch(e){ /* pane may not exist for this role */ }
 }
 async function markNotifRead(id){
   try{
