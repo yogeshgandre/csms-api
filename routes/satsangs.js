@@ -186,12 +186,29 @@ router.post('/defs/:id/submit', requireAuth, async (req, res) => {
       [req.params.id]
     );
 
-    const reviewerRoleIdsQ = await client.query(
-      `SELECT DISTINCT unnest(string_to_array(${qi('Satsang_Review_Role_ID')}, ',')) AS role_id
-       FROM ${qi('SCS')}.${qi('Satsangs_Seva_Dept_Access')}
-       WHERE ${qi('Ver_To_DT')} >= CURRENT_DATE AND ${qi('Satsang_Review_Role_ID')} IS NOT NULL`
-    );
-    const roleIds = reviewerRoleIdsQ.rows.map(r => r.role_id.trim()).filter(Boolean);
+    // Satsangs_Seva_Dept_Access is a configuration table that may not exist
+    // yet in a given environment. Reviewer notification is a side-effect of
+    // submitting, not the point of it \u2014 so a missing table (42P01) must not
+    // block the status change. Notifications are simply skipped until it's
+    // created.
+    let roleIds = [];
+    try {
+      // SAVEPOINT so the failed lookup doesn't abort the outer transaction
+      // (Postgres marks the whole tx aborted otherwise, and the UPDATE above
+      // would be lost with a 25P02 on the next statement).
+      await client.query('SAVEPOINT reviewer_lookup');
+      const reviewerRoleIdsQ = await client.query(
+        `SELECT DISTINCT unnest(string_to_array(${qi('Satsang_Review_Role_ID')}, ',')) AS role_id
+         FROM ${qi('SCS')}.${qi('Satsangs_Seva_Dept_Access')}
+         WHERE ${qi('Ver_To_DT')} >= CURRENT_DATE AND ${qi('Satsang_Review_Role_ID')} IS NOT NULL`
+      );
+      roleIds = reviewerRoleIdsQ.rows.map(r => r.role_id.trim()).filter(Boolean);
+      await client.query('RELEASE SAVEPOINT reviewer_lookup');
+    } catch (accessErr) {
+      await client.query('ROLLBACK TO SAVEPOINT reviewer_lookup');
+      if (accessErr.code !== '42P01') throw accessErr;
+      console.warn('[POST /satsangs/defs/:id/submit] SCS.Satsangs_Seva_Dept_Access missing — submitted without notifying reviewers.');
+    }
     if (roleIds.length) {
       const reviewersQ = await client.query(
         `SELECT DISTINCT ${qi('CSMS_ID')} FROM ${qi('RMS')}.${qi('User_Seva_Dept_Role')}
@@ -949,6 +966,9 @@ router.get('/access-config', requireAuth, async (req, res) => {
     );
     res.json(r.rows);
   } catch (err) {
+    // Same configuration table as the submit route — if it hasn't been
+    // created yet, report "no config" rather than a 500.
+    if (err.code === '42P01') return res.json([]);
     console.error('[GET /satsangs/access-config] error', err);
     res.status(500).json({ error: 'INTERNAL' });
   }

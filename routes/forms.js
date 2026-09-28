@@ -276,6 +276,9 @@ router.get('/access-config', requireAuth, async (req, res) => {
     );
     res.json(r.rows);
   } catch (err) {
+    // Configuration table may not exist yet in a given environment —
+    // report "no config" rather than a 500, same as the satsang equivalent.
+    if (err.code === '42P01') return res.json([]);
     console.error('[GET /forms/access-config] error', err);
     res.status(500).json({ error: 'INTERNAL' });
   }

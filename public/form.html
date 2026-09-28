@@ -5,42 +5,73 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Satsang Form — CSMS</title>
 <style>
+  /* Soft-blue palette, shared with the seeker profile cards and the public
+     intake form so every seeker-facing surface reads as one system. */
   :root{
     --ink:#173A66; --paper:#F3F8FB; --card:#FFFFFF; --line:#E4EEF4; --line-2:#CFE0EA;
     --deep:#0B8FC4; --deep-2:#2FA9DA; --deep-wash:#E1F3FA;
+    --ink-soft:#4A6690; --muted:#7088A7;
     --sage:#4F8A66; --sage-wash:#E5F3EA; --rose:#B3571F; --rose-wash:#FCE5D5;
-    --r:14px; --sh:0 1px 2px rgba(22,51,74,.05), 0 6px 18px rgba(11,143,196,.09);
+    --r:20px; --sh:0 30px 60px -35px rgba(23,58,102,.25);
   }
   *{box-sizing:border-box}
-  body{margin:0;background:var(--paper);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-    min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:32px 16px}
-  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh);
-    max-width:480px;width:100%;padding:28px 26px}
-  h1{font-size:20px;margin:0 0 4px}
-  .sub{font-size:13.5px;color:var(--ink);opacity:.7;margin:0 0 20px}
-  .field{margin-bottom:16px}
-  .field label{display:block;font-size:13px;font-weight:600;margin-bottom:6px}
-  .field input, .field select{width:100%;padding:9px 12px;font-size:14px;border:1px solid var(--line-2);
-    border-radius:10px;background:#fff;color:var(--ink);font-family:inherit}
-  .field input:focus, .field select:focus{outline:2px solid var(--deep-2);outline-offset:1px}
-  .day-row{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
-  .day-col{display:flex;flex-direction:column;align-items:stretch;gap:4px}
-  .day-label{font-size:10.5px;color:var(--ink);opacity:.6;text-align:center}
-  .day-input{width:100%;padding:6px 4px;font-size:13px;border:1px solid var(--line-2);border-radius:7px;
-    background:#fff;color:var(--ink);font-family:inherit;text-align:center;box-sizing:border-box}
-  .day-done{padding:6px 4px;font-size:12px;border-radius:7px;background:var(--deep-wash,#eef);
-    color:var(--deep);text-align:center;box-sizing:border-box;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  button{width:100%;padding:11px;border:none;border-radius:999px;background:var(--deep);color:#fff;
-    font-size:14.5px;font-weight:600;cursor:pointer;font-family:inherit}
-  button:disabled{opacity:.6;cursor:default}
-  button:hover:not(:disabled){background:var(--deep-2)}
-  .msg{padding:14px 16px;border-radius:10px;font-size:13.5px;margin-bottom:16px}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:Arial, Helvetica, sans-serif;
+    background-image:radial-gradient(circle at 15% -5%, rgba(43,131,198,.10), transparent 40%),
+                     radial-gradient(circle at 100% 15%, rgba(43,131,198,.08), transparent 45%);
+    min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:56px 20px}
+  .card{background:var(--card);border:1px solid var(--line-2);border-radius:var(--r);box-shadow:var(--sh);
+    max-width:620px;width:100%;padding:36px}
+  h1{font-size:24px;font-weight:700;margin:0 0 10px;color:var(--ink);line-height:1.3}
+  .sub{font-size:14.5px;color:var(--muted);margin:0 0 30px;padding-bottom:26px;border-bottom:1px solid var(--line-2)}
+  .sub strong{color:var(--ink-soft);font-weight:600}
+
+  .field{margin-bottom:30px}
+  .field:last-of-type{margin-bottom:0}
+  .field label{display:block;font-size:14.5px;font-weight:700;color:var(--ink);margin:0 0 12px}
+  .field input, .field select, .field textarea{width:100%;padding:12px 14px;font-size:15px;
+    border:1.5px solid var(--line-2);border-radius:10px;background:#fff;color:var(--ink);
+    font-family:inherit;outline:none;transition:border-color .15s ease, box-shadow .15s ease}
+  .field textarea{resize:vertical;min-height:110px}
+  .field input::placeholder, .field textarea::placeholder{color:#a9b6c8}
+  .field input:focus, .field select:focus, .field textarea:focus{
+    border-color:var(--deep-2);box-shadow:0 0 0 4px rgba(43,131,198,.15)}
+
+  /* Daily fields: one column per day, Sun through Sat. */
+  .day-row{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}
+  .day-col{display:flex;flex-direction:column;align-items:center;gap:6px}
+  .day-label{font-size:12px;font-weight:600;color:var(--muted)}
+  .day-input{width:100%;text-align:center;padding:10px 4px;font-family:inherit;font-size:14px;
+    border:1.5px solid var(--line-2);border-radius:8px;background:#fff;color:var(--ink);outline:none;
+    transition:border-color .15s ease, box-shadow .15s ease}
+  .day-input:focus{border-color:var(--deep-2);box-shadow:0 0 0 4px rgba(43,131,198,.15)}
+  .day-done{width:100%;padding:10px 4px;font-size:13px;font-weight:600;border-radius:8px;
+    background:var(--deep-wash);color:var(--deep);text-align:center;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+  button{width:100%;margin-top:34px;padding:15px;border:none;border-radius:999px;
+    background:linear-gradient(135deg, var(--deep-2) 0%, var(--deep) 100%);color:#fff;
+    font-size:16px;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:.01em;
+    box-shadow:0 14px 28px -12px rgba(11,143,196,.5);
+    transition:transform .12s ease, box-shadow .15s ease}
+  button:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 18px 34px -12px rgba(11,143,196,.55)}
+  button:active:not(:disabled){transform:translateY(0)}
+  button:disabled{opacity:.6;cursor:default;box-shadow:none}
+
+  .msg{padding:14px 16px;border-radius:10px;font-size:14px;margin-bottom:16px}
   .msg.err{background:var(--rose-wash);color:var(--rose)}
   .msg.ok{background:var(--sage-wash);color:var(--sage)}
   .center{text-align:center;padding:24px 0}
   .spin{display:inline-block;width:22px;height:22px;border:3px solid var(--line-2);border-top-color:var(--deep);
     border-radius:50%;animation:sp .8s linear infinite}
   @keyframes sp{to{transform:rotate(360deg)}}
+
+  @media (max-width:480px){
+    body{padding:28px 14px}
+    .card{padding:26px 18px}
+    .day-row{gap:5px}
+    .day-input{padding:8px 2px;font-size:12.5px}
+    .day-label{font-size:10.5px}
+  }
 </style>
 </head>
 <body>
@@ -95,8 +126,8 @@ function renderForm(data){
   CURRENT_FIELDS = data.fields || [];
   const when = data.eventTime ? new Date(data.eventTime).toLocaleString(undefined, {dateStyle:'medium', timeStyle:'short'}) : '';
   app.innerHTML = `
-    <h1>${esc(data.satsangName)}</h1>
-    <p class="sub">${data.seekerName ? 'Hi '+esc(data.seekerName)+' \u2014 ' : ''}${when ? esc(when) : ''}${data.eventCity ? (when?' \u00b7 ':'')+esc(data.eventCity) : ''}</p>
+    <h1>${esc(data.satsangName)}${when ? ' \u2014 '+esc(when) : ''}${data.eventCity ? ' \u00b7 '+esc(data.eventCity) : ''}</h1>
+    <p class="sub">${data.seekerName ? '<strong>'+esc(data.seekerName)+'</strong>' : ''}</p>
     <div id="formErr"></div>
     <form id="satsangForm"></form>
     <button type="button" id="submitBtn" onclick="submitForm()">Submit</button>
@@ -129,10 +160,12 @@ function renderForm(data){
         <div class="msg ok" style="margin-bottom:0">${esc(periodNote)}${f.lastValue?(' Last answer: '+esc(f.lastValue)):''}</div></div>`;
     }
     let input;
-    if(f.Field_Data_Type === 'number') input = `<input id="${id}" type="number" step="any">`;
+    if(f.Field_Data_Type === 'number') input = `<input id="${id}" type="number" step="any" placeholder="Enter a number">`;
     else if(f.Field_Data_Type === 'date') input = `<input id="${id}" type="date">`;
     else if(f.Field_Data_Type === 'boolean') input = `<select id="${id}"><option value="">Choose\u2026</option><option value="Yes">Yes</option><option value="No">No</option></select>`;
-    else input = `<input id="${id}" type="text">`;
+    // Free-text answers get a textarea \u2014 these are reflective questions
+    // (bhav efforts, learnings), not one-word values.
+    else input = `<textarea id="${id}" rows="3" placeholder="Share your ${esc(f.Field_Name.toLowerCase())}\u2026"></textarea>`;
     return `<div class="field"><label for="${id}">${esc(f.Field_Name)}${cadenceNote}</label>${input}</div>`;
   }).join('');
   if(!openFields.length){

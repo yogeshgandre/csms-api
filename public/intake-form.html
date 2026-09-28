@@ -5,38 +5,62 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Curious Intake — CSMS</title>
 <style>
+  /* Soft-blue palette, shared with the seeker profile cards and the satsang
+     self-service form so every seeker-facing surface reads as one system. */
   :root{
     --ink:#173A66; --paper:#F3F8FB; --card:#FFFFFF; --line:#E4EEF4; --line-2:#CFE0EA;
     --deep:#0B8FC4; --deep-2:#2FA9DA; --deep-wash:#E1F3FA;
-    --sage:#4F8A66; --sage-wash:#E5F3EA; --amber:#96690F; --amber-wash:#FDF2D0; --rose:#B3571F; --rose-wash:#FCE5D5;
-    --r:14px; --sh:0 1px 2px rgba(22,51,74,.05), 0 6px 18px rgba(11,143,196,.09);
+    --ink-soft:#4A6690; --muted:#7088A7;
+    --sage:#4F8A66; --sage-wash:#E5F3EA; --amber:#96690F; --amber-wash:#FDF2D0;
+    --rose:#B3571F; --rose-wash:#FCE5D5;
+    --r:20px; --sh:0 30px 60px -35px rgba(23,58,102,.25);
   }
   *{box-sizing:border-box}
-  body{margin:0;background:var(--paper);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-    min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:32px 16px}
-  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh);
-    max-width:660px;width:100%;padding:28px 26px}
-  h1{font-size:20px;margin:0 0 4px}
-  .sub{font-size:13.5px;color:var(--ink);opacity:.7;margin:0 0 20px}
-  .section-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--deep);margin:20px 0 10px}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:Arial, Helvetica, sans-serif;
+    background-image:radial-gradient(circle at 15% -5%, rgba(43,131,198,.10), transparent 40%),
+                     radial-gradient(circle at 100% 15%, rgba(43,131,198,.08), transparent 45%);
+    min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:56px 20px}
+  .card{background:var(--card);border:1px solid var(--line-2);border-radius:var(--r);box-shadow:var(--sh);
+    max-width:640px;width:100%;padding:36px}
+  h1{font-size:clamp(22px,5vw,30px);font-weight:700;line-height:1.25;margin:0 0 16px;color:var(--ink);text-align:center}
+  .sub{font-size:16px;line-height:1.6;color:var(--ink-soft);margin:0 0 36px;text-align:left}
+  .section-label{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;
+    color:var(--deep);margin:30px 0 14px}
   .section-label:first-child{margin-top:0}
-  .field{margin-bottom:16px}
-  .field-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 16px}
-  .field label{display:block;font-size:13px;font-weight:700;margin-bottom:6px;color:var(--ink)}
-  .field label .req{color:var(--rose)}
-  .field input, .field select{width:100%;padding:11px 13px;font-size:14.5px;border:1px solid var(--line-2);
-    border-radius:11px;background:#fff;color:var(--ink);font-family:inherit;appearance:auto}
-  .field input::placeholder{color:#9CB1C4}
-  .field input:focus, .field select:focus{outline:2px solid var(--deep-2);outline-offset:1px}
-  .field input[readonly]{background:var(--paper);color:#9CB1C4}
-  .whatsapp-row{display:flex;gap:8px}
-  .whatsapp-row select{flex:0 0 92px}
-  .whatsapp-row input{flex:1;min-width:0}
-  button{width:100%;padding:11px;border:none;border-radius:999px;background:var(--deep);color:#fff;
-    font-size:14.5px;font-weight:600;cursor:pointer;font-family:inherit}
-  button:disabled{opacity:.6;cursor:default}
-  button:hover:not(:disabled){background:var(--deep-2)}
-  .msg{padding:14px 16px;border-radius:10px;font-size:13.5px;margin-bottom:16px}
+
+  .field{display:flex;flex-direction:column;gap:8px;margin-bottom:22px}
+  .field-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 22px}
+  .field label{font-size:13.5px;font-weight:600;color:var(--ink)}
+  .field label .req{color:var(--deep);margin-left:2px}
+  .field input, .field select, .field textarea{width:100%;padding:12px 14px;font-size:15px;
+    border:1.5px solid var(--line-2);border-radius:10px;background:#fff;color:var(--ink);
+    font-family:inherit;outline:none;transition:border-color .15s ease, box-shadow .15s ease}
+  .field textarea{resize:vertical;min-height:70px}
+  .field input::placeholder, .field textarea::placeholder{color:#a6adb9}
+  .field input:focus, .field select:focus, .field textarea:focus{
+    border-color:var(--deep-2);box-shadow:0 0 0 4px rgba(43,131,198,.15)}
+  /* Dialing code mirrors the chosen country and is not typed into. */
+  .field input[readonly], .field input:disabled{background:#f4f6f8;color:#a6adb9;cursor:not-allowed}
+
+  .whatsapp-row{display:grid;grid-template-columns:108px 1fr;gap:10px}
+  .whatsapp-row select, .whatsapp-row input{min-width:0}
+
+  .checkbox-group{display:flex;flex-direction:column;gap:9px}
+  .checkbox-group label{display:flex;align-items:flex-start;gap:9px;font-weight:400;font-size:14.5px;
+    color:var(--ink-soft);cursor:pointer}
+  .checkbox-group input[type="checkbox"]{flex:none;width:18px;height:18px;margin:1px 0 0;
+    accent-color:var(--deep);cursor:pointer}
+
+  button{width:100%;margin-top:26px;padding:15px;border:none;border-radius:999px;
+    background:linear-gradient(135deg, var(--deep-2) 0%, var(--deep) 100%);color:#fff;
+    font-size:16px;font-weight:600;cursor:pointer;font-family:inherit;letter-spacing:.01em;
+    box-shadow:0 14px 28px -12px rgba(11,143,196,.55);
+    transition:transform .12s ease, box-shadow .15s ease}
+  button:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 18px 34px -12px rgba(11,143,196,.6)}
+  button:active:not(:disabled){transform:translateY(0)}
+  button:disabled{opacity:.6;cursor:default;box-shadow:none}
+
+  .msg{padding:14px 16px;border-radius:10px;font-size:14px;margin-bottom:16px}
   .msg.err{background:var(--rose-wash);color:var(--rose)}
   .msg.ok{background:var(--sage-wash);color:var(--sage)}
   .msg.warn{background:var(--amber-wash);color:var(--amber)}
@@ -45,7 +69,13 @@
   .spin{display:inline-block;width:22px;height:22px;border:3px solid var(--line-2);border-top-color:var(--deep);
     border-radius:50%;animation:sp .8s linear infinite}
   @keyframes sp{to{transform:rotate(360deg)}}
-  @media(max-width:520px){ .field-grid{grid-template-columns:1fr} }
+
+  @media(max-width:560px){
+    body{padding:28px 14px}
+    .card{padding:26px 20px}
+    .field-grid{grid-template-columns:1fr;gap:0}
+    .whatsapp-row{grid-template-columns:92px 1fr}
+  }
 </style>
 </head>
 <body>
@@ -127,7 +157,7 @@ function mandatoryFieldHTML(f, countries){
   }
   let extra = '';
   if(f.type === 'country'){
-    extra = `<div class="field"><label>Country dialing code</label><input id="m_Country_ISD_display" type="text" readonly placeholder="Auto-fills once you pick a country"></div>`;
+    extra = `<div class="field"><label>Country dialing code</label><input id="m_Country_ISD_display" type="text" disabled placeholder="Auto-fills once you pick a country"></div>`;
   }
   if(f.type === 'email') fullWidth = true;
   const span = fullWidth ? ' style="grid-column:1/-1"' : '';
