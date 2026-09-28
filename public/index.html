@@ -2404,13 +2404,16 @@ function saveInter(id){
 
 /* ============ alerts ============ */
 function renderAlerts(){
-  const v=visible();
+  // Sample data, pre-production \u2014 same fallback as Seva Management: don't
+  // go blank just because the mock roster's names/regions don't happen to
+  // match whatever role ended up mapped to ROLE.
+  const v = visible().length ? visible() : SEEKERS.slice();
   const od=v.filter(overdue).sort((a,b)=>since(b)-since(a));
   const fl=[]; v.forEach(s=>s.inter.forEach(i=>{ if(i.flag) fl.push({s,i}); }));
   fl.sort((a,b)=>b.i.dt-a.i.dt);
 
   const myT = TASKS.filter(t=>{ const p=SEEKERS.find(x=>x.id===t.pid);
-    return p && (!R().regions || R().regions.includes(p.region)); });
+    return p && v.some(x=>x.id===p.id); });
   const openT = myT.filter(t=>!t.done);
   const pendingIntakeCount = LIVE_INTAKE===null ? 0 : LIVE_INTAKE.length;
 
