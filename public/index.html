@@ -421,6 +421,40 @@ nav .pip.r{background:var(--sage-wash);color:var(--sage)}
 .sp-card .icobadge{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .sp-card .icobadge svg{width:18px;height:18px}
 .sp-count-badge{background:var(--paper);color:var(--ink-2);font-size:13px;font-weight:700;padding:2px 9px;border-radius:999px;flex-shrink:0}
+
+/* Seeker profile: Arial + soft-blue card pattern (matches the approved
+   reference mockup) \u2014 scoped to #seekerPage so the rest of the app keeps
+   its own type/color system. */
+#seekerPage{font-family:Arial, Helvetica, sans-serif}
+#seekerPage .sp-card{border-radius:16px;overflow:hidden;padding:0}
+#seekerPage .sp-card:hover{background:var(--card);box-shadow:0 20px 50px -25px rgba(11,90,143,.35)}
+#seekerPage .sp-card h3{margin:0;padding:20px 22px;background:var(--deep-wash);border-bottom:1px solid var(--line-2);font-family:Arial, Helvetica, sans-serif;font-weight:700}
+#seekerPage .sp-card .icobadge{background:#dcedfb !important;color:#1c5f8a !important}
+#seekerPage .sp-card > *:not(h3){padding-left:22px;padding-right:22px}
+#seekerPage .sp-card > *:last-child{padding-bottom:20px}
+#seekerPage .sp-card h3 + *{padding-top:16px}
+#seekerPage .kv2{display:grid;grid-template-columns:1fr 1fr;gap:0 24px;font-size:15px;margin-top:0}
+#seekerPage .kv{display:grid;grid-template-columns:1fr;gap:0;font-size:15px;margin-top:0}
+#seekerPage .sp-field{padding:14px 0;border-bottom:1px solid var(--line-2)}
+#seekerPage .sp-field-wide{grid-column:1 / -1;border-top:1px solid var(--line-2);margin-top:-1px}
+#seekerPage .sp-field-label{font-size:14px;color:var(--ink-3)}
+#seekerPage .sp-field-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:4px}
+#seekerPage .sp-field-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+#seekerPage .sp-field-value{font-size:15px;font-weight:600;color:var(--ink)}
+#seekerPage .sp-field-value.is-empty{color:var(--ink-3);font-weight:400}
+#seekerPage .edit-btn{flex:none;border:1px solid var(--line-2);background:#fff;color:#2b4f79;font-family:inherit;
+  font-size:12.5px;font-weight:600;padding:4px 13px;border-radius:999px;cursor:pointer;transition:background .15s,border-color .15s}
+#seekerPage .edit-btn:hover{background:var(--deep-wash);border-color:var(--deep-2)}
+#seekerPage .sp-badge{display:inline-flex;align-items:center;gap:6px;padding:3px 11px;border-radius:999px;font-size:13px;font-weight:600}
+#seekerPage .sp-badge-yes{background:#dcedfb;color:#1c5f8a}
+#seekerPage .sp-badge-yes::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+#seekerPage .sp-badge-no{background:var(--paper);color:var(--ink-3)}
+#seekerPage .sp-badge-high{background:#fbeee0;color:#925a1f}
+#seekerPage .sp-badge-medium{background:#fdf0dc;color:#9a6a0e}
+#seekerPage .sp-badge-low{background:var(--paper);color:var(--ink-2)}
+#seekerPage .sp-badge-flexible{background:#eef2fb;color:#3d5285}
+#seekerPage .oteamrow{border-radius:10px}
+#seekerPage .oteamrow:hover{background:var(--deep-wash)}
 .kv2{display:grid;grid-template-columns:1fr 1fr;gap:8px 24px;font-size:15.5px;margin-top:4px}
 .kv2>div:nth-child(odd){color:var(--ink-3);font-size:14.5px}
 .sp-timeline{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
@@ -1706,22 +1740,41 @@ async function saveSpCategory(btn){
 // One field's display <-> edit-input toggle, as exactly two grid cells
 // (label + value) so it stays aligned inside .kv's fixed 2-column grid.
 // `kind` is 'text'|'number'|'date'.
+// Recognized short values render as a soft-blue badge instead of plain
+// text, matching the reference card pattern's badge treatment for
+// yes/no and level-style answers.
+function spBadgeClass(v){
+  const s = String(v||'').trim().toLowerCase();
+  if(s==='yes') return 'sp-badge sp-badge-yes';
+  if(s==='no') return 'sp-badge sp-badge-no';
+  if(s==='high') return 'sp-badge sp-badge-high';
+  if(s==='medium') return 'sp-badge sp-badge-medium';
+  if(s==='low') return 'sp-badge sp-badge-low';
+  if(s==='flexible'||s==='full time'||s==='part time') return 'sp-badge sp-badge-flexible';
+  return null;
+}
 function spField(key, label, value, kind){
   kind = kind || 'text';
   const displayVal = value==null || value==='' ? '\u2014' : (kind==='date' ? new Date(value).toLocaleDateString() : esc(String(value)));
   if(SP_EDIT_FIELD === key){
     const raw = value==null ? '' : (kind==='date' ? String(value).slice(0,10) : value);
-    return `<div>${esc(label)}</div><div>
-        <input id="spInput_${key}" type="${kind==='number'?'number':kind==='date'?'date':'text'}" value="${esc(String(raw))}" style="width:100%;border-radius:999px;padding:5px 10px;font-size:14.5px;border:1px solid var(--line-2);box-sizing:border-box">
+    return `<div class="sp-field">
+        <div class="sp-field-label">${esc(label)}</div>
+        <input id="spInput_${key}" type="${kind==='number'?'number':kind==='date'?'date':'text'}" value="${esc(String(raw))}" style="width:100%;border-radius:8px;padding:6px 10px;font-size:14.5px;border:1px solid var(--deep-2);box-sizing:border-box;margin-top:4px">
         <div style="display:flex;gap:6px;margin-top:5px">
           <button class="mini" onclick="saveSpMasterlistField('${key}', this)" style="width:auto;padding:0 10px;height:24px;font-size:13px">Save</button>
           <button class="mini" onclick="spCancelEdit()" style="width:auto;padding:0 10px;height:24px;font-size:13px;background:var(--paper);color:var(--ink-2)">Cancel</button>
         </div>
       </div>`;
   }
-  return `<div>${esc(label)}</div><div style="display:flex;align-items:center;gap:8px">
-      <span>${displayVal}</span>
-      <button class="mini" onclick="spStartEdit('${key}')" style="width:auto;padding:0 8px;height:20px;font-size:12px;background:var(--paper);color:var(--ink-2)">Edit</button>
+  const badgeClass = displayVal!=='\u2014' ? spBadgeClass(value) : null;
+  const valueHTML = badgeClass ? `<span class="${badgeClass}">${displayVal}</span>` : `<span class="sp-field-value${displayVal==='\u2014'?' is-empty':''}">${displayVal}</span>`;
+  return `<div class="sp-field">
+      <div class="sp-field-label">${esc(label)}</div>
+      <div class="sp-field-row">
+        ${valueHTML}
+        <button class="edit-btn" onclick="spStartEdit('${key}')">Edit</button>
+      </div>
     </div>`;
 }
 
@@ -1729,20 +1782,22 @@ function spField(key, label, value, kind){
 // rendered as its own block below the .kv grid, not inside it.
 function spFieldBlock(key, label, value){
   if(SP_EDIT_FIELD === key){
-    return `<div style="margin-top:10px">
-        <p class="sub2" style="font-weight:600;margin-bottom:4px">${esc(label)}</p>
-        <textarea id="spInput_${key}" rows="2" style="width:100%;border-radius:10px;padding:6px 10px;font-size:14.5px;border:1px solid var(--line-2);box-sizing:border-box;font-family:inherit;resize:vertical">${esc(value||'')}</textarea>
+    return `<div class="sp-field sp-field-wide">
+        <div class="sp-field-label" style="font-weight:700">${esc(label)}</div>
+        <textarea id="spInput_${key}" rows="2" style="width:100%;border-radius:8px;padding:6px 10px;font-size:14.5px;border:1px solid var(--deep-2);box-sizing:border-box;font-family:inherit;resize:vertical;margin-top:4px">${esc(value||'')}</textarea>
         <div style="display:flex;gap:6px;margin-top:5px">
           <button class="mini" onclick="saveSpMasterlistField('${key}', this)" style="width:auto;padding:0 10px;height:24px;font-size:13px">Save</button>
           <button class="mini" onclick="spCancelEdit()" style="width:auto;padding:0 10px;height:24px;font-size:13px;background:var(--paper);color:var(--ink-2)">Cancel</button>
         </div>
       </div>`;
   }
-  return `<div style="margin-top:10px;display:flex;align-items:baseline;gap:8px">
-      <p class="sub2" style="font-weight:600;margin:0">${esc(label)}</p>
-      <button class="mini" onclick="spStartEdit('${key}')" style="width:auto;padding:0 8px;height:20px;font-size:12px;background:var(--paper);color:var(--ink-2)">Edit</button>
-    </div>
-    <p class="sub2">${esc(value||'\u2014')}</p>`;
+  return `<div class="sp-field sp-field-wide">
+      <div class="sp-field-top">
+        <div class="sp-field-label" style="font-weight:700">${esc(label)}</div>
+        <button class="edit-btn" onclick="spStartEdit('${key}')">Edit</button>
+      </div>
+      <span class="sp-field-value${value?'':' is-empty'}" style="margin-top:6px;display:block">${esc(value||'\u2014')}</span>
+    </div>`;
 }
 
 async function loadSatsangDefsForSp(){
@@ -1854,8 +1909,9 @@ function spCard(colorToken, icon, title, innerHtml, extraClass, countBadge){
 }
 function spDetailField(key, label, value){
   if(SP_EDIT_FIELD === key){
-    return `<div>${esc(label)}</div><div>
-        <input id="spInput_${key}" type="text" value="${esc(value==null?'':String(value))}" style="width:100%;border-radius:999px;padding:5px 10px;font-size:14.5px;border:1px solid var(--line-2);box-sizing:border-box">
+    return `<div class="sp-field">
+        <div class="sp-field-label">${esc(label)}</div>
+        <input id="spInput_${key}" type="text" value="${esc(value==null?'':String(value))}" style="width:100%;border-radius:8px;padding:6px 10px;font-size:14.5px;border:1px solid var(--deep-2);box-sizing:border-box;margin-top:4px">
         <div style="display:flex;gap:6px;margin-top:5px">
           <button class="mini" onclick="saveSpDetailField('${key}', this)" style="width:auto;padding:0 10px;height:24px;font-size:13px">Save</button>
           <button class="mini" onclick="spCancelEdit()" style="width:auto;padding:0 10px;height:24px;font-size:13px;background:var(--paper);color:var(--ink-2)">Cancel</button>
@@ -1863,9 +1919,12 @@ function spDetailField(key, label, value){
       </div>`;
   }
   const isEmpty = value==null || value==='';
-  return `<div>${esc(label)}</div><div style="display:flex;align-items:center;gap:8px">
-      <span>${isEmpty?'Not provided':esc(String(value))}</span>
-      <button class="mini" onclick="spStartEdit('${key}')" style="width:auto;padding:0 8px;height:20px;font-size:12px;background:var(--paper);color:var(--ink-2)">${isEmpty?'+ Add':'Edit'}</button>
+  return `<div class="sp-field">
+      <div class="sp-field-label">${esc(label)}</div>
+      <div class="sp-field-row">
+        <span class="sp-field-value${isEmpty?' is-empty':''}">${isEmpty?'Not provided':esc(String(value))}</span>
+        <button class="edit-btn" onclick="spStartEdit('${key}')">${isEmpty?'+ Add':'Edit'}</button>
+      </div>
     </div>`;
 }
 async function saveSpDetailField(key, btn){
@@ -1993,13 +2052,23 @@ function spBuildHeader(s){
       </div>
     </div>`;
 }
+// Read-only variant \u2014 same visual row as spField, no Edit button, for
+// values that are set elsewhere (Email/WhatsApp/City/Country).
+function spFieldReadonly(label, value){
+  return `<div class="sp-field">
+      <div class="sp-field-label">${esc(label)}</div>
+      <div class="sp-field-row">
+        <span class="sp-field-value${value?'':' is-empty'}">${esc(value||'\u2014')}</span>
+      </div>
+    </div>`;
+}
 function spBuildContact(s){
   const ml = s.masterlist || {};
   return spCard('deep', 'mail', 'Contact', `<div class="kv2">
-      <div>Email</div><div>${esc(s.Email||'\u2014')}</div>
-      <div>WhatsApp</div><div>${esc((s.Country_ISD?('+'+s.Country_ISD+' '):'')+(s.WhatsApp_Number||'')||'\u2014')}</div>
-      <div>City</div><div>${esc(s.City||'\u2014')}</div>
-      <div>Country</div><div>${esc(s.Country_Name||s.Country_ID||'\u2014')}</div>
+      ${spFieldReadonly('Email', s.Email)}
+      ${spFieldReadonly('WhatsApp', (s.Country_ISD?('+'+s.Country_ISD+' '):'')+(s.WhatsApp_Number||''))}
+      ${spFieldReadonly('City', s.City)}
+      ${spFieldReadonly('Country', s.Country_Name||s.Country_ID)}
       ${spField('subRegion','Sub-region', ml.Sub_Region)}
       ${spDetailField('Birth_Year','Birth year', s.Birth_Year)}
     </div>
@@ -2063,16 +2132,14 @@ function spBuildBackground(s){
   const ml = s.masterlist || {};
   return spCard('sage', 'heart', 'Personal and Vyashti Background', `<div class="kv2">
       ${spField('sadhanaStartDt','When did sadhana started ?', ml.Sadhana_ST_DT, 'date')}
+      ${spField('perInfo','Any other details ?', ml.Per_Info)}
       ${spField('visitedAshram','Visited the ashram ?', ml.Visited_Ashram)}
-      ${spField('pranshakti','Performing Pranshakti Spiritual Healing ?', ml.Pranshakti)}
-      ${spField('attendedMavWorkshop','Attended MAV Workshop ?', ml.Attended_MAV_Workshop)}
       ${spField('weeklySevaHrs','Weekly seva hours', ml.Weekly_Seva_Hrs, 'number')}
+      ${spField('pranshakti','Performing Pranshakti Spiritual Healing ?', ml.Pranshakti)}
       ${spField('availability','Available for seva', ml.Availability)}
+      ${spField('attendedMavWorkshop','Attended MAV Workshop ?', ml.Attended_MAV_Workshop)}
       ${spField('sensitiveList','Sensitivity Flag', ml.Sensitive_List)}
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 24px;margin-top:6px">
-      <div>${spFieldBlock('oppHome','Any opposition faced at home for doing sadhana ?', ml.Opp_Home)}</div>
-      <div>${spFieldBlock('perInfo','Any other details ?', ml.Per_Info)}</div>
+      ${spFieldBlock('oppHome','Any opposition faced at home for doing sadhana ?', ml.Opp_Home)}
     </div>`, 'full sp-c-background');
 }
 function spBuildPlatform(s){
