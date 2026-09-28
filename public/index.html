@@ -671,9 +671,8 @@ nav .pip.r{background:var(--sage-wash);color:var(--sage)}
 <nav>
   <div class="nav-logo"><img src="assets/csms-logo-sidebar.png" alt="CSMS — Connect · Serve · Grow" width="150" height="75"></div>
   <button class="on" data-p="overview" data-icon="home" data-color="sage" onclick="tab('overview')"><span class="nb-label">Overview</span><span class="pip r" id="pip6">0</span></button>
-  <button data-p="search" data-icon="idcard" data-color="deep" onclick="tab('search'); renderLiveSeekers()"><span class="nb-label">Search Seekers</span></button>
   <button data-p="alerts" data-icon="heart" data-color="rose" onclick="tab('alerts'); renderAlerts()"><span class="nb-label">My Seva Activities</span><span class="pip" id="pip">0</span></button>
-  <button data-p="journey" data-icon="sprout" data-color="sage" onclick="tab('journey'); renderLiveSeekers('journeySearch', false); renderJourney()"><span class="nb-label">Spiritual Journey</span></button>
+  <button data-p="journey" data-icon="sprout" data-color="sage" onclick="tab('journey'); renderLiveSeekers('journeySearch', false); renderJourney()"><span class="nb-label">Seeker Care</span></button>
   <button data-p="calendar" data-icon="calendar" data-color="deep" onclick="tab('calendar'); renderCalendar()"><span class="nb-label">Calendar</span></button>
   <button data-p="reports" data-icon="chart" data-color="violet" onclick="tab('reports'); renderReports()"><span class="nb-label">Reports</span><span class="pip r" id="pip5">0</span></button>
   <button data-p="sevahub" data-icon="gear" data-color="amber" onclick="tab('sevahub'); renderSevahub()"><span class="nb-label">Seva Management</span></button>
@@ -691,12 +690,6 @@ nav .pip.r{background:var(--sage-wash);color:var(--sage)}
     <h2 class="sec">Overview</h2>
     <p class="sub">The pulse of what you're responsible for — one screen instead of six tabs. Scoped to your access, same as everywhere else.</p>
     <div id="overview"></div>
-  </section>
-
-  <section class="pane" id="p-search">
-    <h2 class="sec">Search Seekers</h2>
-    <p class="sub">Find any seeker on record and open their full profile.</p>
-    <div id="seekerSearch"></div>
   </section>
 
   <section class="pane" id="p-org">
@@ -759,7 +752,7 @@ nav .pip.r{background:var(--sage-wash);color:var(--sage)}
   </section>
 
   <section class="pane" id="p-journey">
-    <h2 class="sec">Spiritual Journey</h2>
+    <h2 class="sec">Seeker Care</h2>
     <p class="sub">Where every seeker sits, and what brought them in. Not a sales pipeline — there is no close, and moving backwards is ordinary.</p>
     <div id="journeySearch" style="margin-bottom:16px"></div>
     <div id="journey"></div>
@@ -906,7 +899,7 @@ const CONTACT_SLA_DAYS = 60; /* flat window — there is no longer a per-stage S
 const ROLES = {
   abroad:{name:"Abroad RS — global admin", regions:null, mask:[],
     can:"Full access to all regions and all fields.",
-    tabs:["overview","search","alerts","journey","calendar","reports","sevahub","dash","org","satsangmgmt","eventmgmt","formmgmt","tickermgmt"],
+    tabs:["overview","alerts","journey","calendar","reports","sevahub","dash","org","satsangmgmt","eventmgmt","formmgmt","tickermgmt"],
     landing:"overview"},
   tech:{name:"Technical Admin", regions:null, mask:[],
     can:"System health and infrastructure. Not scoped to any region.",
@@ -914,24 +907,24 @@ const ROLES = {
     landing:"ops"},
   rs_de:{name:"Regional RS — Germany", regions:["Germany"], mask:[],
     can:"Germany only. All fields within that region.",
-    tabs:["overview","search","alerts","journey","calendar","reports","sevahub","dash","org","satsangmgmt","eventmgmt","formmgmt","tickermgmt"],
+    tabs:["overview","alerts","journey","calendar","reports","sevahub","dash","org","satsangmgmt","eventmgmt","formmgmt","tickermgmt"],
     landing:"dash"},
   rs_fr:{name:"Regional RS — France", regions:["France"], mask:[],
     can:"France only. All fields within that region.",
-    tabs:["overview","search","alerts","journey","calendar","reports","sevahub","dash","org","satsangmgmt","eventmgmt","formmgmt","tickermgmt"],
+    tabs:["overview","alerts","journey","calendar","reports","sevahub","dash","org","satsangmgmt","eventmgmt","formmgmt","tickermgmt"],
     landing:"dash"},
   seva:{name:"Seva RS — service allocation", regions:null, mask:["whatsapp","email","dob"],
     can:"All regions, but personal contact details and date of birth are hidden.",
-    tabs:["sevahub","search"],
+    tabs:["sevahub","journey"],
     landing:"sevahub"},
   satsang:{name:"Satsang conductor — Germany", regions:["Germany"], mask:["dob","remedy"],
     can:"Germany only. Attendance and notes; no remedy or date of birth.",
-    tabs:["dash","calendar","reports","search","satsangmgmt"],
+    tabs:["dash","calendar","reports","journey","satsangmgmt"],
     landing:"dash",
     conductorName:"Satsang conductor"},
   event:{name:"Event conductor — Germany", regions:["Germany"], mask:["dob","remedy"],
     can:"Germany only. Event registrations and attendance.",
-    tabs:["dash","calendar","reports","search","eventmgmt"],
+    tabs:["dash","calendar","reports","journey","eventmgmt"],
     landing:"dash",
     conductorName:"Event conductor"}
 };
@@ -1500,7 +1493,7 @@ function seekersSubtab(s){
 }
 
 async function loadLiveSeekers(containerId){
-  containerId = containerId || 'seekerSearch';
+  containerId = containerId || 'journeySearch';
   const q = (document.getElementById(containerId+'_q')||{}).value || '';
   try{
     const params = new URLSearchParams();
@@ -1518,7 +1511,7 @@ async function loadLiveSeekers(containerId){
 // Seekers tab, and the copy embedded in the Journey tab) without their
 // input/result element ids colliding in the DOM.
 function renderLiveSeekers(containerId, autoLoad){
-  containerId = containerId || 'seekerSearch';
+  containerId = containerId || 'journeySearch';
   if(autoLoad === undefined) autoLoad = true;
   const el = document.getElementById(containerId);
   if(!el) return;
@@ -1533,7 +1526,7 @@ function renderLiveSeekers(containerId, autoLoad){
 }
 
 function renderLiveSeekersBody(containerId){
-  containerId = containerId || 'seekerSearch';
+  containerId = containerId || 'journeySearch';
   const body = document.getElementById(containerId+'_body');
   if(!body) return;
   const list = LIVE_SEEKERS || [];
