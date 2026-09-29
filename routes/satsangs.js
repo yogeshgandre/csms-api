@@ -735,6 +735,80 @@ router.get('/events/:seId/form-links', requireAuth, async (req, res) => {
   }
 });
 
+/* Attendee form responses for ONE event, read-only. Answers live in the
+   per-satsang table SCS.Satsang_ID_<N>_Answers (created lazily on the
+   first submission), which until now was written by the public form
+   endpoint and never read back anywhere. Scoped by SE_ID so each event
+   shows only its own week's submissions. */
+router.get('/events/:seId/answers', requireAuth, async (req, res) => {
+  try {
+    const evQ = await pool.query(
+      `SELECT ${qi('Satsang_ID')} FROM ${qi('SCS')}.${qi('Satsang_Event_Defn')} WHERE ${qi('SE_ID')} = $1`,
+      [req.params.seId]
+    );
+    if (evQ.rowCount === 0) return res.status(404).json({ error: 'NOT_FOUND' });
+    const satsangId = evQ.rows[0].Satsang_ID;
+
+    // Field definitions give the column order and which fields are Daily.
+    const fieldsQ = await pool.query(
+      `SELECT ${qi('Field_Name')}, ${qi('Review_Frequency')}
+       FROM ${qi('SCS')}.${qi('M_Satsang_Defn')}
+       WHERE ${qi('Satsang_ID')} = $1 AND ${qi('Ver_To_DT')} >= CURRENT_DATE
+       ORDER BY ${qi('Display_Order')} NULLS LAST, ${qi('Field_Name')}`,
+      [satsangId]
+    );
+
+    const tbl = `${qi('SCS')}.${qi('Satsang_ID_' + Number(satsangId) + '_Answers')}`;
+    let rows = [];
+    try {
+      const r = await pool.query(
+        `SELECT a.${qi('Seeker_ID')}, a.${qi('Field_Name')}, a.${qi('Field_Value')},
+                a.${qi('Review_Date')}, a.${qi('Submitted_DT')},
+                sk.${qi('First_Name')}, sk.${qi('Last_Name')}
+         FROM ${tbl} a
+         LEFT JOIN ${qi('MSR')}.${qi('Seeker')} sk ON sk.${qi('Seeker_ID')} = a.${qi('Seeker_ID')}
+         WHERE a.${qi('SE_ID')} = $1
+         ORDER BY sk.${qi('First_Name')}, sk.${qi('Last_Name')}, a.${qi('Review_Date')}`,
+        [req.params.seId]
+      );
+      rows = r.rows;
+    } catch (tblErr) {
+      // Table only exists once someone has submitted — no submissions yet
+      // is an empty result, not an error.
+      if (tblErr.code !== '42P01') throw tblErr;
+    }
+
+    // Pivot to one entry per seeker. Daily fields keep their per-date
+    // values so the UI can show the Sun-Sat breakdown; others are a
+    // single value.
+    const bySeeker = new Map();
+    for (const row of rows) {
+      if (!bySeeker.has(row.Seeker_ID)) {
+        bySeeker.set(row.Seeker_ID, {
+          Seeker_ID: row.Seeker_ID,
+          First_Name: row.First_Name,
+          Last_Name: row.Last_Name,
+          Submitted_DT: row.Submitted_DT,
+          values: {},
+        });
+      }
+      const entry = bySeeker.get(row.Seeker_ID);
+      if (row.Submitted_DT > entry.Submitted_DT) entry.Submitted_DT = row.Submitted_DT;
+      const dateKey = row.Review_Date ? new Date(row.Review_Date).toISOString().slice(0, 10) : null;
+      if (!entry.values[row.Field_Name]) entry.values[row.Field_Name] = [];
+      entry.values[row.Field_Name].push({ date: dateKey, value: row.Field_Value });
+    }
+
+    res.json({
+      fields: fieldsQ.rows,
+      seekers: Array.from(bySeeker.values()),
+    });
+  } catch (err) {
+    console.error('[GET /satsangs/events/:seId/answers] error', err);
+    res.status(500).json({ error: 'INTERNAL', message: err.message });
+  }
+});
+
 /* ============ existing attendee/transfer read endpoints (unchanged) ============ */
 
 router.get('/:satsangId/attendees', requireAuth, async (req, res) => {

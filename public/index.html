@@ -487,6 +487,17 @@ nav .pip.r{background:var(--sage-wash);color:var(--sage)}
 .tr-input{flex:0 1 170px}
 .tr-select:focus,.tr-input:focus{border-color:var(--deep-2);box-shadow:0 0 0 3px rgba(43,131,198,.15)}
 @media(max-width:620px){ .tr-select,.tr-input{flex:1 1 100%} }
+
+/* Attendee responses table (read-only) inside an expanded satsang event. */
+.ans-table{width:100%;border-collapse:collapse;font-size:14px}
+.ans-table th{text-align:left;font-size:12.5px;font-weight:600;color:var(--ink-3);
+  padding:0 10px 6px 0;border-bottom:1px solid var(--line-2);white-space:nowrap}
+.ans-table td{padding:9px 10px 9px 0;border-bottom:1px solid var(--line-2);vertical-align:top}
+.ans-table tr:last-child td{border-bottom:none}
+.ans-days{display:flex;gap:5px;flex-wrap:wrap}
+.ans-day{display:inline-flex;flex-direction:column;align-items:center;gap:1px;min-width:30px;
+  background:var(--deep-wash);color:var(--deep);border-radius:6px;padding:3px 5px;font-size:12.5px}
+.ans-day b{font-size:10.5px;font-weight:700;opacity:.75}
 .kv2{display:grid;grid-template-columns:1fr 1fr;gap:8px 24px;font-size:15.5px;margin-top:4px}
 .kv2>div:nth-child(odd){color:var(--ink-3);font-size:14.5px}
 .sp-timeline{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
@@ -4174,6 +4185,7 @@ function eventRowHTML(e){
    the Attendee Addition tab, just reachable without switching tabs. ---- */
 let EVENT_ATTENDEES_CACHE = {};
 let EVENT_COMMENTS_CACHE = {}; // per-event comments, keyed by SE_ID, filtered per seeker for the inline note + history
+let EVENT_ANSWERS_CACHE = {}; // per-event attendee form responses (read-only), keyed by SE_ID
 async function toggleEventAttendees(seId, btn){
   const box = document.getElementById('evAttendees_'+seId);
   if(!box) return;
@@ -4182,12 +4194,16 @@ async function toggleEventAttendees(seId, btn){
   box.innerHTML = genericSkeleton(3);
   await withLoading(btn, async ()=>{
     try{
-      const [attendees, comments] = await Promise.all([
+      const [attendees, comments, answers] = await Promise.all([
         apiFetch('/api/satsangs/defs/'+SATSANG_EVENTS_DEF_ID+'/attendees'),
         apiFetch('/api/satsangs/events/'+seId+'/comments'),
+        // Read-only: what attendees themselves submitted through the
+        // self-service form for THIS event.
+        apiFetch('/api/satsangs/events/'+seId+'/answers').catch(()=>({fields:[],seekers:[]})),
       ]);
       EVENT_ATTENDEES_CACHE[seId] = attendees;
       EVENT_COMMENTS_CACHE[seId] = comments;
+      EVENT_ANSWERS_CACHE[seId] = answers;
       box.innerHTML = eventAttendeesPanelHTML(seId);
     }catch(err){ box.innerHTML = `<p class="sub2">Could not load: ${esc(err.message||'')}</p>`; }
   });
@@ -4233,6 +4249,50 @@ function eventAttendeesPanelHTML(seId){
       <button class="mini" onclick="addEventRosterAttendee(${seId}, this)" style="width:auto;padding:0 12px;height:28px">Add to roster</button>
     </div>
     <div class="err" id="evAttErr_${seId}"></div>
+  </div>
+  ${eventAnswersPanelHTML(seId)}`;
+}
+
+/* Read-only view of what attendees submitted through the self-service form
+   for THIS event. Daily fields expand to their Sun\u2192Sat values; everything
+   else shows a single value. Nothing here is editable \u2014 these are the
+   seeker's own answers. */
+function eventAnswersPanelHTML(seId){
+  const data = EVENT_ANSWERS_CACHE[seId] || {fields:[], seekers:[]};
+  const fields = data.fields || [];
+  const seekers = data.seekers || [];
+  if(!fields.length) return '';
+  if(!seekers.length){
+    return `<div class="card pad" style="background:var(--paper);margin-top:10px">
+      <p class="sub2" style="font-weight:600;margin-bottom:4px">Attendee responses</p>
+      <p class="sub2">No one has submitted the form for this event yet.</p>
+    </div>`;
+  }
+  const dayLabel = d => {
+    const dt = new Date(d+'T00:00:00');
+    return ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][dt.getDay()];
+  };
+  const cell = (f, entry) => {
+    const vals = (entry.values||{})[f.Field_Name] || [];
+    if(!vals.length) return '<span class="sub2">\u2014</span>';
+    if(f.Review_Frequency === 'Daily'){
+      const sorted = vals.slice().sort((a,b)=>String(a.date).localeCompare(String(b.date)));
+      return `<div class="ans-days">${sorted.map(v=>
+        `<span class="ans-day"><b>${v.date?esc(dayLabel(v.date)):''}</b>${esc(v.value==null?'\u2014':v.value)}</span>`).join('')}</div>`;
+    }
+    return esc(vals.map(v=>v.value).filter(v=>v!=null && v!=='').join(', ') || '\u2014');
+  };
+  return `<div class="card pad" style="background:var(--paper);margin-top:10px;overflow-x:auto">
+    <p class="sub2" style="font-weight:600;margin-bottom:8px">Attendee responses \u2014 submitted for this event</p>
+    <table class="ans-table">
+      <thead><tr><th>Seeker</th>${fields.map(f=>
+        `<th>${esc(f.Field_Name)}${f.Review_Frequency==='Daily'?' <span style="font-weight:400">(daily)</span>':''}</th>`).join('')}<th>Submitted</th></tr></thead>
+      <tbody>${seekers.map(s=>{
+        const name = esc([s.First_Name,s.Last_Name].filter(Boolean).join(' ')||('Seeker #'+s.Seeker_ID));
+        return `<tr><td style="font-weight:500">${name}</td>${fields.map(f=>`<td>${cell(f,s)}</td>`).join('')}
+          <td class="sub2">${s.Submitted_DT?esc(new Date(s.Submitted_DT).toLocaleDateString()):''}</td></tr>`;
+      }).join('')}</tbody>
+    </table>
   </div>`;
 }
 async function saveEventAttendeeNote(seId, seekerId, btn){
