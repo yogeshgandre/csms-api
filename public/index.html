@@ -721,6 +721,7 @@ nav .pip.r{background:var(--sage-wash);color:var(--sage)}
   <button data-p="sevahub" data-icon="gear" data-color="amber" onclick="tab('sevahub'); renderSevahub()"><span class="nb-label">Seva Management</span></button>
   <button data-p="dash" data-icon="grid" data-color="sage" onclick="tab('dash'); renderDash()"><span class="nb-label">Dashboard</span></button>
   <button data-p="org" data-icon="users" data-color="deep" onclick="tab('org')"><span class="nb-label">Organisation and Team Management</span></button>
+  <button data-p="security" data-icon="shield" data-color="rose" onclick="tab('security'); renderSecurity()"><span class="nb-label">Security and Access</span></button>
   <button data-p="satsangmgmt" data-icon="lotus" data-color="amber" onclick="tab('satsangmgmt'); satsangSubtab('defs')"><span class="nb-label">Satsang Management</span></button>
   <button data-p="eventmgmt" data-icon="ticket" data-color="violet" onclick="tab('eventmgmt'); renderEventMgmt()"><span class="nb-label">Event Management</span></button>
   <button data-p="formmgmt" data-icon="file" data-color="violet" onclick="tab('formmgmt'); formSubtab('defs')"><span class="nb-label">Form Management System</span></button>
@@ -817,6 +818,12 @@ nav .pip.r{background:var(--sage-wash);color:var(--sage)}
     <h2 class="sec">Seva Management</h2>
     <p class="sub">Matching seekers to service, by skill and by capacity — not just a list of who volunteered once. <span style="color:var(--amber);font-weight:600">Sample data, pre-production.</span></p>
     <div id="sevahub"></div>
+  </section>
+
+  <section class="pane" id="p-security">
+    <h2 class="sec">Security and Access</h2>
+    <p class="sub">Who can sign in, what they can reach, and where sensitive records sit. Read-only — access is granted and revoked in Organisation and Team Management.</p>
+    <div id="security"></div>
   </section>
 
   <section class="pane" id="p-dash">
@@ -942,11 +949,11 @@ const CONTACT_SLA_DAYS = 60; /* flat window — there is no longer a per-stage S
 const ROLES = {
   abroad:{name:"Abroad RS — global admin", regions:null, mask:[],
     can:"Full access to all regions and all fields.",
-    tabs:["overview","alerts","journey","calendar","reports","sevahub","dash","org","satsangmgmt","eventmgmt","formmgmt","tickermgmt"],
+    tabs:["overview","alerts","journey","calendar","reports","sevahub","dash","org","security","satsangmgmt","eventmgmt","formmgmt","tickermgmt"],
     landing:"overview"},
   tech:{name:"Technical Admin", regions:null, mask:[],
     can:"System health and infrastructure. Not scoped to any region.",
-    tabs:["overview","org","satsangmgmt","formmgmt","tickermgmt","ops"],
+    tabs:["overview","org","security","satsangmgmt","formmgmt","tickermgmt","ops"],
     landing:"ops"},
   rs_de:{name:"Regional RS — Germany", regions:["Germany"], mask:[],
     can:"Germany only. All fields within that region.",
@@ -1277,7 +1284,8 @@ function setRole(r){
   // button's own onclick, which is where most tabs trigger their render —
   // so re-fire it here for whichever tab this role opens on.
   const landingRender = {dash:renderDash, calendar:renderCalendar, journey:renderJourney,
-    alerts:renderAlerts, sevahub:renderSevahub, reports:renderReports, ops:renderOps};
+    alerts:renderAlerts, sevahub:renderSevahub, reports:renderReports, ops:renderOps,
+    security:renderSecurity};
   if(landingRender[R().landing]) landingRender[R().landing]();
 }
 function applyRoleNav(){
@@ -1902,6 +1910,7 @@ const SP_ICONS = {
   filetext: '<path d="M14 3v5a1 1 0 0 0 1 1h5"/><path d="M6 3h8l5 5v12a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M9 13h6M9 17h6"/>',
   chart: '<path d="M4 20V10M10 20V4M16 20v-7M22 20v-4"/><path d="M2 20h20"/>',
   users: '<circle cx="9" cy="8" r="3"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><circle cx="17" cy="9" r="2.5"/><path d="M15.5 14c2.7.2 4.5 2.4 4.5 6"/>',
+  shield: '<path d="M12 3l7 3v5.5c0 4.3-2.9 8.2-7 9.5-4.1-1.3-7-5.2-7-9.5V6l7-3z"/><path d="M9.5 12l1.8 1.8 3.4-3.6"/>',
   heart: '<path d="M12 20s-7-4.3-9.5-8.5C.7 8.2 2.3 5 5.5 5c1.9 0 3.3 1 4.5 2.5C11.2 6 12.6 5 14.5 5 17.7 5 19.3 8.2 21.5 11.5 19 15.7 12 20 12 20z"/>',
   plug: '<path d="M9 3v4M15 3v4"/><path d="M6 7h12l-1 5a5 5 0 0 1-10 0z"/><path d="M12 17v4"/>',
   flag: '<path d="M5 3v18"/><path d="M5 4h11l-2 4 2 4H5"/>',
@@ -2736,6 +2745,70 @@ function weeklyActivity(weeks=8){
   return buckets;
 }
 function seekerFirstSeen(p){ return p.inter.length ? new Date(Math.min(...p.inter.map(i=>+i.dt))) : null; }
+
+/* ============ Security and Access (read-only) ============ */
+let LIVE_SECURITY = null;
+async function renderSecurity(){
+  const el = document.getElementById('security');
+  if(!el) return;
+  el.innerHTML = '<p class="sub2">Loading\u2026</p>';
+  try{
+    LIVE_SECURITY = await apiFetch('/api/admin/security-overview');
+  }catch(err){
+    el.innerHTML = `<p class="sub2" style="color:var(--rose)">Could not load security overview. ${esc(err.message||'')}</p>`;
+    return;
+  }
+  const d = LIVE_SECURITY;
+  const access = d.access || [];
+  const orphans = d.orphans || [];
+
+  // Group current access by department so it reads as "who can reach what".
+  const byDept = {};
+  access.forEach(a=>{ (byDept[a.Seva_Dept_Name] = byDept[a.Seva_Dept_Name] || []).push(a); });
+
+  el.innerHTML = `
+    <div class="kpis" style="margin-bottom:18px">
+      <div class="kpi"><div class="n">${access.length}</div><div class="l">Active access grants</div><div class="d">Person + department + role</div></div>
+      <div class="kpi"><div class="n">${Object.keys(byDept).length}</div><div class="l">Departments with access</div><div class="d">Scope boundaries in force</div></div>
+      <div class="kpi"><div class="n" style="color:${orphans.length?'var(--amber)':'var(--sage)'}">${orphans.length}</div><div class="l">Accounts with no role</div><div class="d">Can sign in, cannot reach data</div></div>
+      <div class="kpi"><div class="n">${d.sensitiveCount}</div><div class="l">Sensitivity-flagged records</div><div class="d">Of ${d.seekerCount} seekers</div></div>
+    </div>
+
+    <div class="card pad" style="margin-bottom:14px">
+      <h3 class="sec" style="font-size:16px;margin:0 0 4px">How access is enforced</h3>
+      <p class="sub2" style="margin:0 0 10px">Not a display filter \u2014 the API refuses out-of-scope records outright.</p>
+      <ul class="sub2" style="margin:0;padding-left:18px;line-height:1.7">
+        <li>Every request must carry a signed-in identity; requests without one are rejected before any query runs.</li>
+        <li>An identity with no active department/role assignment is refused entirely, even if the account exists.</li>
+        <li>A role's department determines which seekers it can read; the scope is applied in SQL, not in the browser.</li>
+        <li>Assignments are time-bounded \u2014 an expired assignment stops granting access on its end date.</li>
+      </ul>
+    </div>
+
+    <h3 class="sec" style="font-size:16px;margin:18px 0 8px">Who currently has access</h3>
+    ${Object.keys(byDept).length ? Object.keys(byDept).sort().map(dept=>`
+      <div class="card pad" style="margin-bottom:10px">
+        <p class="sub2" style="font-weight:700;margin:0 0 8px">${esc(dept)} <span style="font-weight:400;color:var(--ink-3)">\u00b7 ${byDept[dept].length} ${byDept[dept].length===1?'person':'people'}</span></p>
+        <table class="ans-table">
+          <thead><tr><th>Person</th><th>Role</th><th>From</th><th>Until</th></tr></thead>
+          <tbody>${byDept[dept].map(a=>`<tr>
+            <td style="font-weight:500">${esc(a.person_name||('CSMS #'+a.CSMS_ID))}${a.person_email?`<br><span class="sub2">${esc(a.person_email)}</span>`:''}</td>
+            <td>${esc(a.Role_Name||'')}</td>
+            <td class="sub2">${a.Ver_From_DT?esc(new Date(a.Ver_From_DT).toLocaleDateString()):'\u2014'}</td>
+            <td class="sub2">${a.Ver_To_DT?esc(new Date(a.Ver_To_DT).toLocaleDateString()):'No end date'}</td>
+          </tr>`).join('')}</tbody>
+        </table>
+      </div>`).join('')
+      : '<p class="sub2">No active access grants.</p>'}
+
+    <h3 class="sec" style="font-size:16px;margin:18px 0 8px">Accounts with no active role</h3>
+    <div class="card pad">
+      ${orphans.length ? `<p class="sub2" style="margin:0 0 8px">These can authenticate but are refused at the API until a role is assigned. Worth reviewing \u2014 a dormant account is still an account.</p>
+        <table class="ans-table"><thead><tr><th>Person</th><th>Email</th></tr></thead>
+        <tbody>${orphans.map(o=>`<tr><td style="font-weight:500">${esc(o.person_name||('CSMS #'+o.CSMS_ID))}</td><td class="sub2">${esc(o.person_email||'\u2014')}</td></tr>`).join('')}</tbody></table>`
+      : '<p class="sub2">Every account has an active role assignment.</p>'}
+    </div>`;
+}
 
 let LIVE_DASH = null;
 // Sample-data preview: a full standalone mockup (public/sample-dashboard.html,

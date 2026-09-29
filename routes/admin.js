@@ -377,4 +377,61 @@ router.get('/people/search', requireAuth, async (req, res) => {
   }
 });
 
+/* GET /api/admin/security-overview — read-only posture view for the
+   Security tab. Everything here is derived from live tables (who actually
+   holds access right now, which records carry a sensitivity flag), not
+   from a hand-maintained list that would drift out of date. */
+router.get('/security-overview', requireAuth, async (req, res) => {
+  try {
+    // Who holds access right now, and under which department + role.
+    const accessQ = await pool.query(
+      `SELECT usdr.${qi('CSMS_ID')}, up.${qi('Seeker_Name')} AS person_name, up.${qi('Email')} AS person_email,
+              sd.${qi('Seva_Dept_Name')}, sdr.${qi('Role_Name')},
+              usdr.${qi('Ver_From_DT')}, usdr.${qi('Ver_To_DT')}
+       FROM ${qi('RMS')}.${qi('User_Seva_Dept_Role')} usdr
+       JOIN ${qi('RMS')}.${qi('Seva_Dept')} sd ON sd.${qi('Seva_Dept_ID')} = usdr.${qi('Seva_Dept_ID')}
+       JOIN ${qi('RMS')}.${qi('Seva_Dept_Role')} sdr ON sdr.${qi('Seva_Dept_Role_ID')} = usdr.${qi('Seva_Dept_Role_ID')}
+       LEFT JOIN ${qi('RMS')}.${qi('User_Profile')} up ON up.${qi('CSMS_ID')} = usdr.${qi('CSMS_ID')}
+       WHERE (usdr.${qi('Ver_To_DT')} IS NULL OR usdr.${qi('Ver_To_DT')} >= CURRENT_DATE)
+       ORDER BY sd.${qi('Seva_Dept_Name')}, sdr.${qi('Role_Name')}, up.${qi('Seeker_Name')}`
+    );
+
+    // People who can sign in but hold no active assignment — requireAuth
+    // rejects them with NO_ROLE_ASSIGNED, so these are dormant accounts
+    // worth reviewing rather than silent access.
+    const orphanQ = await pool.query(
+      `SELECT up.${qi('CSMS_ID')}, up.${qi('Seeker_Name')} AS person_name, up.${qi('Email')} AS person_email
+       FROM ${qi('RMS')}.${qi('User_Profile')} up
+       WHERE NOT EXISTS (
+         SELECT 1 FROM ${qi('RMS')}.${qi('User_Seva_Dept_Role')} usdr
+         WHERE usdr.${qi('CSMS_ID')} = up.${qi('CSMS_ID')}
+           AND (usdr.${qi('Ver_To_DT')} IS NULL OR usdr.${qi('Ver_To_DT')} >= CURRENT_DATE))
+       ORDER BY up.${qi('Seeker_Name')}`
+    );
+
+    // Records carrying a sensitivity flag — a count only. The Security tab
+    // must never become a back door that lists sensitive seekers by name.
+    let sensitiveCount = 0;
+    try {
+      const sQ = await pool.query(
+        `SELECT COUNT(*)::int AS n FROM ${qi('MSR')}.${qi('Seeker_Other_MasterList_Info')}
+         WHERE ${qi('Sensitive_List')} IS NOT NULL AND ${qi('Sensitive_List')} <> ''`
+      );
+      sensitiveCount = sQ.rows[0].n;
+    } catch (e) { if (e.code !== '42P01') throw e; }
+
+    const seekerQ = await pool.query(`SELECT COUNT(*)::int AS n FROM ${qi('MSR')}.${qi('Seeker')}`);
+
+    res.json({
+      access: accessQ.rows,
+      orphans: orphanQ.rows,
+      sensitiveCount,
+      seekerCount: seekerQ.rows[0].n,
+    });
+  } catch (err) {
+    console.error('[GET /admin/security-overview] error', err);
+    res.status(500).json({ error: 'INTERNAL', message: err.message });
+  }
+});
+
 module.exports = router;
