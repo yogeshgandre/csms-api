@@ -715,7 +715,7 @@ nav .pip.r{background:var(--sage-wash);color:var(--sage)}
   <div class="nav-logo"><img src="assets/csms-logo-sidebar.png" alt="CSMS — Connect · Serve · Grow" width="150" height="75"></div>
   <button class="on" data-p="overview" data-icon="home" data-color="sage" onclick="tab('overview')"><span class="nb-label">Overview</span><span class="pip r" id="pip6">0</span></button>
   <button data-p="alerts" data-icon="heart" data-color="rose" onclick="tab('alerts'); renderAlerts()"><span class="nb-label">My Seva Activities</span><span class="pip" id="pip">0</span></button>
-  <button data-p="journey" data-icon="sprout" data-color="sage" onclick="tab('journey'); renderLiveSeekers('journeySearch', false); renderJourney()"><span class="nb-label">Seeker Care</span></button>
+  <button data-p="journey" data-icon="sprout" data-color="sage" onclick="tab('journey'); renderJourney()"><span class="nb-label">Seeker Care</span></button>
   <button data-p="calendar" data-icon="calendar" data-color="deep" onclick="tab('calendar'); renderCalendar()"><span class="nb-label">Calendar</span></button>
   <button data-p="reports" data-icon="chart" data-color="violet" onclick="tab('reports'); renderReports()"><span class="nb-label">Reports</span><span class="pip r" id="pip5">0</span></button>
   <button data-p="sevahub" data-icon="gear" data-color="amber" onclick="tab('sevahub'); renderSevahub()"><span class="nb-label">Seva Management</span></button>
@@ -5615,61 +5615,127 @@ function renderJourney(){
   }
   if(LIVE_SEEKER_CATEGORIES === null){ el.innerHTML = genericSkeleton(5); loadSeekerCategories(); return; }
   const v = LIVE_JOURNEY_SEEKERS;
-
-  const lanes = LANES.map(L=>{
-    const ppl = v.filter(p=>p.Category_Name===L);
-    return {L, ppl};
-  });
-  // Safety net: anyone whose category doesn't match a known lane (no
-  // category set yet, or a category outside the live list) lands in a
-  // visible, read-only catch-all lane instead of silently vanishing.
-  const unmatched = v.filter(p=>laneIdx(p.Category_Name)<0);
-  if(unmatched.length) lanes.push({L:'Other / uncategorised', ppl: unmatched, readonly:true});
-
-  const board = `<div class="kboard">
-    ${lanes.map(({L,ppl,readonly})=>`
-      <div class="klane" ${readonly?'':`ondragover="dragOverLane(event)" ondragleave="dragLeaveLane(event)" ondrop="dropOnLane(event,'${L}')"`}>
-        <div class="klane-head">
-          <div class="klane-title">${esc(L)}</div>
-          <div class="klane-sub">${ppl.length} seeker${ppl.length===1?'':'s'}</div>
-        </div>
-        <div class="klane-body">
-        ${ppl.length ? ppl.map(p=>{
-          const i = laneIdx(p.Category_Name);
-          const name = [p.Sal,p.First_Name,p.Last_Name].filter(Boolean).join(' ') || ('Seeker #'+p.Seeker_ID);
-          const skills = p.skill_names || [];
-          return `<div class="kcard" onclick="openSeekerPage(${p.Seeker_ID})" ${readonly?'':`draggable="true" ondragstart="dragCard(event,${p.Seeker_ID})" ondragend="dragEndCard(event)"`}>
-            <div class="kcard-top">
-              <div class="kcard-avatar">${esc(seekerInitials(p))}</div>
-              <div style="min-width:0;flex:1">
-                <div class="nm serif" style="font-size:16px">${esc(name)}</div>
-                <div class="sub2">${esc([p.City,p.Country_Name].filter(Boolean).join(', ')||'\u2014')}</div>
-              </div>
-              ${p.Sensitive_List ? '<span class="kcard-badge">Sensitive</span>' : ''}
-            </div>
-            <div class="kcard-stats">
-              <div class="kcard-stat"><div class="n">${p.Weekly_Seva_Hrs!=null?esc(p.Weekly_Seva_Hrs):'\u2014'}</div><div class="l">Seva hrs</div></div>
-              <div class="kcard-stat"><div class="n">${skills.length}</div><div class="l">Skills</div></div>
-              <div class="kcard-stat"><div class="n">${p.milestone_count||0}</div><div class="l">Milestones</div></div>
-            </div>
-            ${skills.length ? `<div class="kcard-chips">${skills.map(sk=>`<span class="kcard-chip">${esc(sk)}</span>`).join('')}</div>` : ''}
-            ${p.Availability ? `<div class="kcard-avail">Availability: ${esc(p.Availability)}</div>` : ''}
-            ${readonly ? '' : `<div class="kcard-actions">
-              <button class="mini" onclick="event.stopPropagation();moveCategory(${p.Seeker_ID},-1)" ${i<=0?'disabled':''} title="Move back">‹</button>
-              <span class="kcard-drag" title="Drag to another category" onclick="event.stopPropagation()">⠿ drag</span>
-              <button class="mini" onclick="event.stopPropagation();moveCategory(${p.Seeker_ID},1)" ${i<0||i===LANES.length-1?'disabled':''} title="Move forward">›</button>
-            </div>`}
-          </div>`;
-        }).join('') : '<div class="klane-empty">Nobody here.</div>'}
-        </div>
-      </div>`).join('')}
-  </div>`;
-
-  el.innerHTML = board + `
-    <div id="journeySeekerDetailRoot"></div>
+  const qv = JV.q.replace(/"/g,'&quot;');
+  el.innerHTML = `
+    <div class="card pad" style="margin-bottom:12px;display:flex;gap:9px;align-items:center;flex-wrap:wrap">
+      <input type="search" id="journeyQ" value="${qv}" style="flex:1;min-width:220px;font-size:16px;padding:10px 13px"
+        placeholder="Search name, email, WhatsApp, city, country or skill" oninput="journeySetQuery(this.value)">
+      <label class="sub2" style="display:flex;align-items:center;gap:6px">Rows
+        <select onchange="journeySetPageSize(this.value)" style="border-radius:999px;padding:6px 10px;font-size:14px">
+          ${[25,50,100].map(n=>`<option value="${n}" ${JV.size===n?'selected':''}>${n}</option>`).join('')}
+        </select>
+      </label>
+    </div>
+    <div id="journeyChips" style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:12px"></div>
+    <div id="journeyTable"></div>
     <div class="hidden-note"><b>Why this is not called a pipeline.</b> There is no close and no win.
-      Moving a card backwards is ordinary — a seeker who goes quiet has not been lost, and the day the
+      Moving a seeker back to an earlier category is ordinary — a seeker who goes quiet has not been lost, and the day the
       screen implies otherwise is the day someone stops contacting them.</div>`;
+  journeyDraw();
+}
+
+/* ---- Seeker Care table view: filter / sort / paginate (client-side over /api/seekers) ---- */
+const JV = {q:'', cat:'__all__', sort:'name', dir:1, page:1, size:25};
+function journeyName(p){ return [p.Sal,p.First_Name,p.Last_Name].filter(Boolean).join(' ') || ('Seeker #'+p.Seeker_ID); }
+function journeySetQuery(q){ JV.q=q; JV.page=1; journeyDraw(); }
+function journeySetCat(c){ JV.cat=c; JV.page=1; journeyDraw(); }
+function journeySetPageSize(n){ JV.size=Number(n)||25; JV.page=1; journeyDraw(); }
+function journeyGoto(n){ JV.page=n; journeyDraw(); }
+function journeySortBy(k){
+  if(JV.sort===k) JV.dir=-JV.dir; else { JV.sort=k; JV.dir=1; }
+  JV.page=1; journeyDraw();
+}
+function journeySortVal(p,k){
+  switch(k){
+    case 'name': return journeyName(p).toLowerCase();
+    case 'cat': { const i=laneIdx(p.Category_Name); return i<0 ? 999 : i; }
+    case 'loc': return [p.Country_Name,p.City].filter(Boolean).join(' ').toLowerCase();
+    case 'hrs': return p.Weekly_Seva_Hrs==null ? -1 : Number(p.Weekly_Seva_Hrs);
+    case 'skills': return (p.skill_names||[]).length;
+    case 'ms': return p.milestone_count||0;
+  }
+  return '';
+}
+function journeyFiltered(){
+  const q = JV.q.trim().toLowerCase();
+  let list = (LIVE_JOURNEY_SEEKERS||[]).filter(p=>{
+    if(JV.cat==='__none__'){ if(laneIdx(p.Category_Name)>=0) return false; }
+    else if(JV.cat!=='__all__' && p.Category_Name!==JV.cat) return false;
+    if(!q) return true;
+    const hay = [journeyName(p),p.Email,p.WhatsApp_Number,p.City,p.Country_Name,...(p.skill_names||[])].filter(Boolean).join(' ').toLowerCase();
+    return hay.includes(q);
+  });
+  list = list.map((p,i)=>[p,i]).sort((a,b)=>{
+    const x=journeySortVal(a[0],JV.sort), y=journeySortVal(b[0],JV.sort);
+    const c = (typeof x==='number' && typeof y==='number') ? x-y : String(x).localeCompare(String(y));
+    return c ? c*JV.dir : a[1]-b[1];
+  }).map(t=>t[0]);
+  return list;
+}
+function journeyDraw(){
+  const tEl = document.getElementById('journeyTable'), cEl = document.getElementById('journeyChips');
+  if(!tEl || !cEl) return;
+  const all = LIVE_JOURNEY_SEEKERS||[];
+  const none = all.filter(p=>laneIdx(p.Category_Name)<0).length;
+
+  // category filter chips with live counts
+  const chip = (key,label,n)=>`<button class="chip ${JV.cat===key?'on':''}" onclick="journeySetCat(${JSON.stringify(key).replace(/"/g,'&quot;')})">${esc(label)} <span style="opacity:.7">${n}</span></button>`;
+  cEl.innerHTML = chip('__all__','All',all.length)
+    + LANES.map(L=>chip(L,L,all.filter(p=>p.Category_Name===L).length)).join('')
+    + (none ? chip('__none__','Uncategorised',none) : '');
+
+  const list = journeyFiltered();
+  const pages = Math.max(1, Math.ceil(list.length/JV.size));
+  if(JV.page>pages) JV.page=pages;
+  const from = (JV.page-1)*JV.size;
+  const rows = list.slice(from, from+JV.size);
+
+  const th = (k,label,cls)=>{
+    const on = JV.sort===k;
+    return `<th class="${cls||''}" onclick="journeySortBy('${k}')" style="cursor:pointer;white-space:nowrap;user-select:none">${label}${on?(JV.dir>0?' ▲':' ▼'):''}</th>`;
+  };
+  const catSelect = p=>{
+    const known = laneIdx(p.Category_Name)>=0;
+    return `<select onclick="event.stopPropagation()" onchange="commitJourneyCategoryChange(${p.Seeker_ID}, this.value, 'changed')"
+      title="Change category" style="border-radius:999px;padding:4px 10px;font-size:14px;border:1px solid var(--line-2);max-width:190px">
+      ${known ? '' : `<option value="" selected disabled>${p.Category_Name?esc(p.Category_Name):'Uncategorised'}</option>`}
+      ${LANES.map(L=>`<option value="${esc(L)}" ${L===p.Category_Name?'selected':''}>${esc(L)}</option>`).join('')}
+    </select>`;
+  };
+  const skillsCell = p=>{
+    const sk = p.skill_names||[];
+    if(!sk.length) return '<span class="sub2">\u2014</span>';
+    return `<div class="kcard-chips" style="margin:0">${sk.slice(0,2).map(x=>`<span class="kcard-chip">${esc(x)}</span>`).join('')}${sk.length>2?`<span class="kcard-chip" title="${esc(sk.slice(2).join(', '))}">+${sk.length-2}</span>`:''}</div>`;
+  };
+
+  tEl.innerHTML = `<div class="card" style="overflow-x:auto"><table>
+    <thead><tr>
+      ${th('name','Seeker')}${th('cat','Category')}${th('loc','Location','hide-sm')}
+      <th class="hide-sm">WhatsApp</th>${th('hrs','Seva hrs')}${th('skills','Skills','hide-sm')}${th('ms','Milestones','hide-sm')}
+      <th class="hide-sm">Availability</th>
+    </tr></thead>
+    <tbody>${rows.length ? rows.map(p=>`<tr onclick="openSeekerPage(${p.Seeker_ID})" style="cursor:pointer">
+      <td><div style="display:flex;align-items:center;gap:10px">
+        <div class="kcard-avatar">${esc(seekerInitials(p))}</div>
+        <div style="min-width:0"><div class="nm serif">${esc(journeyName(p))}${p.Sensitive_List?' <span class="kcard-badge" style="margin-left:6px">Sensitive</span>':''}</div>
+        <div class="sub2">${esc(p.Email||'')}</div></div></div></td>
+      <td>${catSelect(p)}</td>
+      <td class="hide-sm">${esc([p.City,p.Country_Name].filter(Boolean).join(', ')||'\u2014')}</td>
+      <td class="hide-sm">${esc(p.WhatsApp_Number||'\u2014')}</td>
+      <td>${p.Weekly_Seva_Hrs!=null?esc(p.Weekly_Seva_Hrs):'\u2014'}</td>
+      <td class="hide-sm">${skillsCell(p)}</td>
+      <td class="hide-sm">${p.milestone_count||0}</td>
+      <td class="hide-sm">${esc(p.Availability||'\u2014')}</td>
+    </tr>`).join('') : `<tr><td colspan="8" style="padding:34px;text-align:center;color:var(--ink-3)">No seekers match.</td></tr>`}</tbody>
+  </table></div>
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin:12px 0">
+    <span class="sub2">${list.length ? `Showing ${from+1}\u2013${Math.min(from+JV.size,list.length)} of ${list.length}` : '0 seekers'}</span>
+    <span style="display:flex;align-items:center;gap:8px">
+      <button class="btn ghost sm" onclick="journeyGoto(${JV.page-1})" ${JV.page<=1?'disabled':''}>\u2039 Prev</button>
+      <span class="sub2">Page ${JV.page} of ${pages}</span>
+      <button class="btn ghost sm" onclick="journeyGoto(${JV.page+1})" ${JV.page>=pages?'disabled':''}>Next \u203a</button>
+    </span>
+  </div>`;
 }
 
 /* ============ MasterList Management (Journey sub-tab) ============
