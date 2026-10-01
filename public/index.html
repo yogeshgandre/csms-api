@@ -342,6 +342,19 @@ nav .pip.r{background:var(--sage-wash);color:var(--sage)}
   width:24px;height:24px;line-height:1;font-size:16px;color:var(--ink-2);cursor:pointer}
 .mini:hover{border-color:#8397A6;color:var(--ink);background:var(--paper)}
 .mini:disabled{opacity:.35;cursor:not-allowed}
+.eng-cell{display:inline-flex;align-items:center;gap:8px;cursor:help;padding:3px 6px;margin:-3px -6px;border-radius:8px;outline:none}
+.eng-cell:hover,.eng-cell:focus{background:var(--deep-wash)}
+.eng-bar{width:64px;height:6px;border-radius:99px;background:var(--line);overflow:hidden;display:inline-block}
+.eng-bar i{display:block;height:100%;background:var(--violet,#7A4FB5);border-radius:99px}
+.eng-tip{position:fixed;z-index:500;display:none;width:260px;padding:12px 14px;background:var(--card);border:1px solid var(--line-2);
+  border-radius:12px;box-shadow:0 10px 30px rgba(20,40,60,.18);pointer-events:none;font-size:13.5px}
+.eng-tip-h{font-family:var(--font-head);font-weight:600;font-size:15px;margin-bottom:8px;display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+.eng-tip-h span{font-family:inherit;font-weight:500;font-size:12.5px;color:var(--ink-3)}
+.eng-row{display:grid;grid-template-columns:92px 1fr 28px;gap:8px;align-items:center;margin:5px 0}
+.eng-l{color:var(--ink-2)}
+.eng-t{height:7px;border-radius:99px;background:var(--line);overflow:hidden}
+.eng-t i{display:block;height:100%;border-radius:99px}
+.eng-row b{text-align:right;font-variant-numeric:tabular-nums}
 .kboard{display:grid;grid-template-columns:repeat(5,minmax(200px,1fr));gap:12px;overflow-x:auto;padding-bottom:6px}
 .klane{background:transparent}
 .klane-head{padding:11px 13px;margin-bottom:9px;background:var(--deep-wash);border:1px solid #C6E0F0;border-radius:var(--r-sm)}
@@ -716,6 +729,7 @@ nav .pip.r{background:var(--sage-wash);color:var(--sage)}
   <button class="on" data-p="overview" data-icon="home" data-color="sage" onclick="tab('overview')"><span class="nb-label">Overview</span><span class="pip r" id="pip6">0</span></button>
   <button data-p="alerts" data-icon="heart" data-color="rose" onclick="tab('alerts'); renderAlerts()"><span class="nb-label">My Seva Activities</span><span class="pip" id="pip">0</span></button>
   <button data-p="journey" data-icon="sprout" data-color="sage" onclick="tab('journey'); renderJourney()"><span class="nb-label">Seeker Care</span></button>
+  <button data-p="curious" data-icon="eye" data-color="violet" onclick="tab('curious'); renderCurious()"><span class="nb-label">Curious Care</span></button>
   <button data-p="calendar" data-icon="calendar" data-color="deep" onclick="tab('calendar'); renderCalendar()"><span class="nb-label">Calendar</span></button>
   <button data-p="reports" data-icon="chart" data-color="violet" onclick="tab('reports'); renderReports()"><span class="nb-label">Reports</span><span class="pip r" id="pip5">0</span></button>
   <button data-p="sevahub" data-icon="gear" data-color="amber" onclick="tab('sevahub'); renderSevahub()"><span class="nb-label">Seva Management</span></button>
@@ -800,6 +814,13 @@ nav .pip.r{background:var(--sage-wash);color:var(--sage)}
     <p class="sub">Where every seeker sits, and what brought them in. Not a sales pipeline — there is no close, and moving backwards is ordinary.</p>
     <div id="journeySearch" style="margin-bottom:16px"></div>
     <div id="journey"></div>
+  </section>
+
+  <section class="pane" id="p-curious">
+    <h2 class="sec">Curious Care</h2>
+    <p class="sub">People who have shown interest but are not yet seekers — how they engage across channels, who is nurturing them, and where they are on the path.
+      <span style="color:var(--amber);font-weight:600">Sample data, pre-production.</span></p>
+    <div id="curious"></div>
   </section>
 
   <section class="pane" id="p-calendar">
@@ -949,7 +970,7 @@ const CONTACT_SLA_DAYS = 60; /* flat window — there is no longer a per-stage S
 const ROLES = {
   abroad:{name:"Abroad RS — global admin", regions:null, mask:[],
     can:"Full access to all regions and all fields.",
-    tabs:["overview","alerts","journey","calendar","reports","sevahub","dash","org","security","satsangmgmt","eventmgmt","formmgmt","tickermgmt"],
+    tabs:["overview","alerts","journey","curious","calendar","reports","sevahub","dash","org","security","satsangmgmt","eventmgmt","formmgmt","tickermgmt"],
     landing:"overview"},
   tech:{name:"Technical Admin", regions:null, mask:[],
     can:"System health and infrastructure. Not scoped to any region.",
@@ -957,11 +978,11 @@ const ROLES = {
     landing:"ops"},
   rs_de:{name:"Regional RS — Germany", regions:["Germany"], mask:[],
     can:"Germany only. All fields within that region.",
-    tabs:["overview","alerts","journey","calendar","reports","sevahub","dash","org","satsangmgmt","eventmgmt","formmgmt","tickermgmt"],
+    tabs:["overview","alerts","journey","curious","calendar","reports","sevahub","dash","org","satsangmgmt","eventmgmt","formmgmt","tickermgmt"],
     landing:"dash"},
   rs_fr:{name:"Regional RS — France", regions:["France"], mask:[],
     can:"France only. All fields within that region.",
-    tabs:["overview","alerts","journey","calendar","reports","sevahub","dash","org","satsangmgmt","eventmgmt","formmgmt","tickermgmt"],
+    tabs:["overview","alerts","journey","curious","calendar","reports","sevahub","dash","org","satsangmgmt","eventmgmt","formmgmt","tickermgmt"],
     landing:"dash"},
   seva:{name:"Seva RS — service allocation", regions:null, mask:["whatsapp","email","dob"],
     can:"All regions, but personal contact details and date of birth are hidden.",
@@ -1283,7 +1304,7 @@ function setRole(r){
   // Landing on a tab programmatically (role switch) bypasses that nav
   // button's own onclick, which is where most tabs trigger their render —
   // so re-fire it here for whichever tab this role opens on.
-  const landingRender = {dash:renderDash, calendar:renderCalendar, journey:renderJourney,
+  const landingRender = {dash:renderDash, calendar:renderCalendar, journey:renderJourney, curious:renderCurious,
     alerts:renderAlerts, sevahub:renderSevahub, reports:renderReports, ops:renderOps,
     security:renderSecurity};
   if(landingRender[R().landing]) landingRender[R().landing]();
@@ -1919,6 +1940,7 @@ const SP_ICONS = {
   message: '<path d="M4 5h16a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H9l-5 4V6a1 1 0 0 1 1-1z"/>',
   help: '<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.8.4-1 .8-1 1.7"/><path d="M12 17h.01"/>',
   home: '<path d="M4 11l8-7 8 7"/><path d="M6 10v9a1 1 0 0 0 1 1h4v-6h2v6h4a1 1 0 0 0 1-1v-9"/>',
+  eye: '<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
   sprout: '<path d="M7 20h10"/><path d="M12 20v-8"/><path d="M12 12C7 12 5 8 5 5c4 0 7 2 7 7z"/><path d="M12 9c1-3 4-4 7-4-1 3-3 5-7 5z"/>',
   calendar: '<rect x="4" y="5" width="16" height="16" rx="2"/><path d="M4 10h16M8 3v4M16 3v4"/><path d="M8 14h.01M12 14h.01M16 14h.01"/>',
   gear: '<circle cx="12" cy="12" r="3"/><path d="M19.4 13a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6V19a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.6-1H4a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3H10a1.7 1.7 0 0 0 1-1.6V4a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V10a1.7 1.7 0 0 0 1.6 1H20a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.6 1z"/>',
@@ -5737,6 +5759,149 @@ function journeyDraw(){
     </span>
   </div>`;
 }
+
+
+/* ============ Curious Care (sample data, pre-production) ============
+   Dummy people only — no API yet. When the real source exists, replace
+   CURIOUS_DATA with a fetch; the table, filters and hover breakdown
+   below read only these fields. Engagement is per channel; the total
+   is derived, never stored. */
+const CURIOUS_DATA = [{"id":1,"name":"Nora Iyer","country":"United Kingdom","city":"Bristol","cat":"Satsang Group","eng":{"social":6,"livestream":6,"chat":19,"website":44,"email":28,"whatsapp":39},"last":"2026-06-09","level":"Bhav satsang","nurturer":"Imran Sheikh","role":"Event hospitality"},{"id":2,"name":"Anja Rossi","country":"Germany","city":"Berlin","cat":"Visitor","eng":{"social":1,"livestream":2,"chat":0,"website":8,"email":6,"whatsapp":4},"last":"2026-08-18","level":"Not started","nurturer":"Étienne Laurent","role":"None yet"},{"id":3,"name":"Nora Deshpande","country":"United Kingdom","city":"Bristol","cat":"Visitor","eng":{"social":5,"livestream":0,"chat":4,"website":9,"email":3,"whatsapp":0},"last":"2026-08-05","level":"Not started","nurturer":"Rachel Ng","role":"None yet"},{"id":4,"name":"Omar Dubois","country":"United Kingdom","city":"Bristol","cat":"Satsang Group","eng":{"social":26,"livestream":17,"chat":8,"website":30,"email":33,"whatsapp":35},"last":"2026-06-23","level":"Advanced bhav","nurturer":"Marcus Weber","role":"Livestream moderator"},{"id":5,"name":"Greta Dubois","country":"India","city":"Pune","cat":"Follower","eng":{"social":6,"livestream":0,"chat":9,"website":20,"email":12,"whatsapp":13},"last":"2026-06-09","level":"Initial bhav","nurturer":"Rachel Ng","role":"None yet"},{"id":6,"name":"Oliver Dubois","country":"France","city":"Marseille","cat":"Exploring Our Path","eng":{"social":0,"livestream":0,"chat":3,"website":31,"email":21,"whatsapp":24},"last":"2026-07-05","level":"Initial bhav","nurturer":"Marcus Weber","role":"Translation"},{"id":7,"name":"Samir Weber","country":"United Kingdom","city":"Manchester","cat":"Follower","eng":{"social":26,"livestream":0,"chat":3,"website":9,"email":12,"whatsapp":2},"last":"2026-07-16","level":"Not started","nurturer":"Divya Nair","role":"None yet"},{"id":8,"name":"Anton Deshpande","country":"Switzerland","city":"Geneva","cat":"Satsang Group","eng":{"social":24,"livestream":2,"chat":6,"website":52,"email":28,"whatsapp":8},"last":"2026-07-16","level":"Advanced bhav","nurturer":"Sunita Rao","role":"Event hospitality"},{"id":9,"name":"Greta Costa","country":"France","city":"Lyon","cat":"Visitor","eng":{"social":0,"livestream":2,"chat":3,"website":3,"email":4,"whatsapp":1},"last":"2026-08-25","level":"Not started","nurturer":"Imran Sheikh","role":"None yet"},{"id":10,"name":"Dev Lindqvist","country":"United States","city":"New York","cat":"Follower","eng":{"social":1,"livestream":5,"chat":9,"website":5,"email":3,"whatsapp":16},"last":"2026-08-11","level":"Not started","nurturer":"Rachel Ng","role":"Social media sharing"},{"id":11,"name":"Julia Brenner","country":"Germany","city":"Cologne","cat":"Satsang Group","eng":{"social":2,"livestream":11,"chat":22,"website":26,"email":0,"whatsapp":0},"last":"2026-06-23","level":"Bhav satsang","nurturer":"Divya Nair","role":"Translation"},{"id":12,"name":"Freya Tanaka","country":"United States","city":"New York","cat":"Exploring Our Path","eng":{"social":6,"livestream":13,"chat":12,"website":10,"email":19,"whatsapp":15},"last":"2026-07-16","level":"Advanced bhav","nurturer":"Sunita Rao","role":"Translation"},{"id":13,"name":"Isabel Patel","country":"Germany","city":"Berlin","cat":"Exploring Our Path","eng":{"social":43,"livestream":0,"chat":10,"website":37,"email":9,"whatsapp":22},"last":"2026-08-25","level":"Advanced bhav","nurturer":"Marcus Weber","role":"Livestream moderator"},{"id":14,"name":"Chloé Keller","country":"France","city":"Toulouse","cat":"Follower","eng":{"social":24,"livestream":0,"chat":5,"website":9,"email":4,"whatsapp":9},"last":"2026-08-20","level":"Not started","nurturer":"Imran Sheikh","role":"None yet"},{"id":15,"name":"Felix Bernard","country":"United Kingdom","city":"Manchester","cat":"Follower","eng":{"social":14,"livestream":10,"chat":7,"website":8,"email":2,"whatsapp":5},"last":"2026-08-16","level":"Not started","nurturer":"","role":"None yet"},{"id":16,"name":"Hugo Martin","country":"Switzerland","city":"Zurich","cat":"Satsang Group","eng":{"social":24,"livestream":4,"chat":11,"website":39,"email":13,"whatsapp":6},"last":"2026-08-14","level":"Bhav satsang","nurturer":"Marcus Weber","role":"Translation"},{"id":17,"name":"Noah Lindqvist","country":"Germany","city":"Hamburg","cat":"Visitor","eng":{"social":5,"livestream":0,"chat":0,"website":8,"email":0,"whatsapp":4},"last":"2026-08-20","level":"Not started","nurturer":"Sunita Rao","role":"None yet"},{"id":18,"name":"Elena Kapoor","country":"France","city":"Lyon","cat":"Visitor","eng":{"social":0,"livestream":0,"chat":2,"website":10,"email":3,"whatsapp":5},"last":"2026-08-25","level":"Not started","nurturer":"","role":"None yet"},{"id":19,"name":"Omar Haddad","country":"Switzerland","city":"Geneva","cat":"Follower","eng":{"social":12,"livestream":8,"chat":9,"website":18,"email":0,"whatsapp":10},"last":"2026-08-08","level":"Not started","nurturer":"Imran Sheikh","role":"Social media sharing"},{"id":20,"name":"Kavya Becker","country":"United Kingdom","city":"Bristol","cat":"Satsang Group","eng":{"social":17,"livestream":13,"chat":8,"website":26,"email":2,"whatsapp":28},"last":"2026-08-25","level":"Bhav satsang","nurturer":"Étienne Laurent","role":"Newsletter"},{"id":21,"name":"Elena Weber","country":"India","city":"Bengaluru","cat":"Follower","eng":{"social":0,"livestream":7,"chat":4,"website":6,"email":0,"whatsapp":2},"last":"2026-08-20","level":"Not started","nurturer":"Sunita Rao","role":"None yet"},{"id":22,"name":"Leon Patel","country":"Switzerland","city":"Geneva","cat":"Visitor","eng":{"social":7,"livestream":0,"chat":2,"website":5,"email":4,"whatsapp":4},"last":"2026-08-16","level":"Not started","nurturer":"Marcus Weber","role":"None yet"},{"id":23,"name":"Lucia Schmidt","country":"United Kingdom","city":"Manchester","cat":"Satsang Group","eng":{"social":55,"livestream":4,"chat":6,"website":2,"email":0,"whatsapp":17},"last":"2026-06-09","level":"Bhav satsang","nurturer":"Divya Nair","role":"Content writing"},{"id":24,"name":"Chloé Martin","country":"Germany","city":"Frankfurt","cat":"Exploring Our Path","eng":{"social":15,"livestream":15,"chat":12,"website":37,"email":15,"whatsapp":1},"last":"2026-08-25","level":"Initial bhav","nurturer":"Marcus Weber","role":"None yet"},{"id":25,"name":"Tara Becker","country":"Germany","city":"Cologne","cat":"Exploring Our Path","eng":{"social":16,"livestream":18,"chat":4,"website":27,"email":12,"whatsapp":15},"last":"2026-08-18","level":"Advanced bhav","nurturer":"Imran Sheikh","role":"Translation"},{"id":26,"name":"Dev Fischer","country":"France","city":"Lyon","cat":"Exploring Our Path","eng":{"social":6,"livestream":10,"chat":0,"website":18,"email":19,"whatsapp":1},"last":"2026-08-20","level":"Initial bhav","nurturer":"","role":"Event hospitality"},{"id":27,"name":"Tomas Laurent","country":"Australia","city":"Sydney","cat":"Satsang Group","eng":{"social":0,"livestream":17,"chat":6,"website":50,"email":19,"whatsapp":39},"last":"2026-08-24","level":"Bhav satsang","nurturer":"Rachel Ng","role":"Satsang set-up"},{"id":28,"name":"Tara Haddad","country":"Germany","city":"Munich","cat":"Exploring Our Path","eng":{"social":15,"livestream":12,"chat":6,"website":15,"email":1,"whatsapp":27},"last":"2026-08-18","level":"Initial bhav","nurturer":"Divya Nair","role":"Event hospitality"},{"id":29,"name":"Kabir Lindqvist","country":"India","city":"Pune","cat":"Satsang Group","eng":{"social":44,"livestream":0,"chat":19,"website":46,"email":33,"whatsapp":28},"last":"2026-08-05","level":"Bhav satsang","nurturer":"Claire Dubois","role":"Satsang set-up"},{"id":30,"name":"Chloé Bernard","country":"United Kingdom","city":"London","cat":"Visitor","eng":{"social":11,"livestream":0,"chat":3,"website":8,"email":0,"whatsapp":4},"last":"2026-08-23","level":"Not started","nurturer":"Marcus Weber","role":"None yet"},{"id":31,"name":"Leila Bernard","country":"United Kingdom","city":"London","cat":"Satsang Group","eng":{"social":50,"livestream":2,"chat":13,"website":19,"email":19,"whatsapp":6},"last":"2026-08-05","level":"Advanced bhav","nurturer":"Imran Sheikh","role":"Satsang set-up"},{"id":32,"name":"Kavya Schmidt","country":"India","city":"Goa","cat":"Follower","eng":{"social":1,"livestream":10,"chat":0,"website":14,"email":8,"whatsapp":7},"last":"2026-08-16","level":"Initial bhav","nurturer":"Rachel Ng","role":"Social media sharing"},{"id":33,"name":"Mateo Kapoor","country":"Netherlands","city":"Utrecht","cat":"Follower","eng":{"social":4,"livestream":2,"chat":6,"website":7,"email":9,"whatsapp":9},"last":"2026-07-24","level":"Not started","nurturer":"Rachel Ng","role":"None yet"},{"id":34,"name":"Dev Schmidt","country":"Australia","city":"Sydney","cat":"Follower","eng":{"social":9,"livestream":0,"chat":4,"website":8,"email":12,"whatsapp":7},"last":"2026-08-21","level":"Not started","nurturer":"Divya Nair","role":"None yet"},{"id":35,"name":"Lucia Weber","country":"Germany","city":"Hamburg","cat":"Visitor","eng":{"social":5,"livestream":2,"chat":2,"website":5,"email":0,"whatsapp":6},"last":"2026-08-08","level":"Not started","nurturer":"Étienne Laurent","role":"None yet"},{"id":36,"name":"Camille Nair","country":"Switzerland","city":"Geneva","cat":"Visitor","eng":{"social":4,"livestream":2,"chat":0,"website":0,"email":3,"whatsapp":6},"last":"2026-08-14","level":"Not started","nurturer":"Rachel Ng","role":"None yet"},{"id":37,"name":"Lukas Rousseau","country":"Australia","city":"Sydney","cat":"Exploring Our Path","eng":{"social":31,"livestream":6,"chat":7,"website":1,"email":9,"whatsapp":21},"last":"2026-06-23","level":"Initial bhav","nurturer":"Étienne Laurent","role":"Event hospitality"},{"id":38,"name":"Leila Lindqvist","country":"India","city":"Pune","cat":"Satsang Group","eng":{"social":13,"livestream":19,"chat":22,"website":13,"email":19,"whatsapp":4},"last":"2026-05-23","level":"Advanced bhav","nurturer":"Claire Dubois","role":"Livestream moderator"},{"id":39,"name":"Hugo Rousseau","country":"Germany","city":"Frankfurt","cat":"Exploring Our Path","eng":{"social":10,"livestream":10,"chat":15,"website":33,"email":15,"whatsapp":15},"last":"2026-08-05","level":"Initial bhav","nurturer":"Imran Sheikh","role":"Translation"},{"id":40,"name":"Jonas Rousseau","country":"Switzerland","city":"Geneva","cat":"Visitor","eng":{"social":6,"livestream":2,"chat":2,"website":3,"email":5,"whatsapp":2},"last":"2026-08-05","level":"Not started","nurturer":"Rachel Ng","role":"None yet"},{"id":41,"name":"Camille Becker","country":"Germany","city":"Frankfurt","cat":"Exploring Our Path","eng":{"social":36,"livestream":6,"chat":10,"website":30,"email":3,"whatsapp":24},"last":"2026-06-23","level":"Initial bhav","nurturer":"Imran Sheikh","role":"Social media sharing"},{"id":42,"name":"Felix Deshpande","country":"United Kingdom","city":"London","cat":"Exploring Our Path","eng":{"social":45,"livestream":12,"chat":12,"website":19,"email":4,"whatsapp":9},"last":"2026-08-25","level":"Initial bhav","nurturer":"Marcus Weber","role":"Event hospitality"},{"id":43,"name":"Tara Okafor","country":"France","city":"Toulouse","cat":"Visitor","eng":{"social":8,"livestream":2,"chat":2,"website":8,"email":4,"whatsapp":6},"last":"2026-06-09","level":"Not started","nurturer":"Claire Dubois","role":"None yet"},{"id":44,"name":"Sofia Sharma","country":"France","city":"Lyon","cat":"Visitor","eng":{"social":12,"livestream":2,"chat":2,"website":2,"email":5,"whatsapp":2},"last":"2026-08-20","level":"Not started","nurturer":"Claire Dubois","role":"None yet"},{"id":45,"name":"Noah Brenner","country":"France","city":"Lyon","cat":"Follower","eng":{"social":25,"livestream":7,"chat":0,"website":13,"email":11,"whatsapp":3},"last":"2026-08-08","level":"Not started","nurturer":"Hannah Vogel","role":"None yet"},{"id":46,"name":"Leila Nair","country":"United States","city":"New York","cat":"Exploring Our Path","eng":{"social":39,"livestream":6,"chat":7,"website":37,"email":0,"whatsapp":7},"last":"2026-06-23","level":"Initial bhav","nurturer":"Sunita Rao","role":"Translation"},{"id":47,"name":"Chloé Vogel","country":"France","city":"Toulouse","cat":"Visitor","eng":{"social":2,"livestream":2,"chat":2,"website":9,"email":5,"whatsapp":5},"last":"2026-08-05","level":"Not started","nurturer":"Divya Nair","role":"None yet"},{"id":48,"name":"Isabel Menon","country":"France","city":"Paris","cat":"Exploring Our Path","eng":{"social":16,"livestream":16,"chat":15,"website":30,"email":7,"whatsapp":4},"last":"2026-08-20","level":"Initial bhav","nurturer":"Rachel Ng","role":"Translation"},{"id":49,"name":"Lucia Lindqvist","country":"Switzerland","city":"Geneva","cat":"Visitor","eng":{"social":4,"livestream":2,"chat":0,"website":6,"email":5,"whatsapp":3},"last":"2026-08-05","level":"Not started","nurturer":"Claire Dubois","role":"None yet"},{"id":50,"name":"Kavya Tanaka","country":"India","city":"Goa","cat":"Exploring Our Path","eng":{"social":1,"livestream":16,"chat":15,"website":27,"email":15,"whatsapp":12},"last":"2026-08-23","level":"Advanced bhav","nurturer":"Étienne Laurent","role":"Event hospitality"}];
+const CURIOUS_CHANNELS = [
+  {k:'social',    label:'Social media',  color:'#7A4FB5'},
+  {k:'livestream',label:'Livestream',    color:'#0B8FC4'},
+  {k:'chat',      label:'Live chat',     color:'#2F8F6B'},
+  {k:'website',   label:'Website visits',color:'#C98A1B'},
+  {k:'email',     label:'Email opens',   color:'#B5475A'},
+  {k:'whatsapp',  label:'WhatsApp',      color:'#4A6572'}
+];
+const CURIOUS_CATS = ['Visitor','Follower','Exploring Our Path','Satsang Group'];
+const CURIOUS_LEVELS = ['Not started','Initial bhav','Advanced bhav','Bhav satsang'];
+const CV = {q:'', cat:'__all__', sort:'last', dir:-1, page:1, size:25};
+
+function curiousTotal(p){ return CURIOUS_CHANNELS.reduce((n,c)=>n+(p.eng[c.k]||0),0); }
+function curiousDaysAgo(p){ const [y,m,d]=p.last.split('-').map(Number); return Math.round((TODAY - new Date(y,m-1,d))/86400000); }
+function curiousCatTag(c){ return `<span class="tag ${['t-new','t-active','t-core','t-warn'][Math.max(0,CURIOUS_CATS.indexOf(c))]}">${esc(c)}</span>`; }
+function curiousLevelTag(l){ return `<span class="tag ${l==='Not started'?'t-new':'t-active'}">${esc(l)}</span>`; }
+function curiousScope(){
+  const r = R().regions;
+  return CURIOUS_DATA.filter(p=>!r || r.includes(p.country));
+}
+function renderCurious(){
+  const el = document.getElementById('curious'); if(!el) return;
+  el.innerHTML = `
+    <div class="card pad" style="margin-bottom:12px;display:flex;gap:9px;align-items:center;flex-wrap:wrap">
+      <input type="search" id="curiousQ" value="${esc(CV.q)}" style="flex:1;min-width:220px;font-size:16px;padding:10px 13px"
+        placeholder="Search name, city, country, nurturer or seva role" oninput="curiousSet('q',this.value)">
+      <label class="sub2" style="display:flex;align-items:center;gap:6px">Rows
+        <select onchange="curiousSet('size',Number(this.value))" style="border-radius:999px;padding:6px 10px;font-size:14px">
+          ${[25,50].map(n=>`<option value="${n}" ${CV.size===n?'selected':''}>${n}</option>`).join('')}
+        </select>
+      </label>
+    </div>
+    <div id="curiousChips" style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:12px"></div>
+    <div id="curiousTable"></div>`;
+  curiousDraw();
+}
+function curiousSet(k,v){ CV[k]=v; CV.page=1; curiousDraw(); }
+function curiousSortBy(k){ if(CV.sort===k) CV.dir=-CV.dir; else {CV.sort=k; CV.dir=1;} CV.page=1; curiousDraw(); }
+function curiousSortVal(p,k){
+  switch(k){
+    case 'name': return p.name.toLowerCase();
+    case 'country': return p.country.toLowerCase();
+    case 'city': return p.city.toLowerCase();
+    case 'cat': return CURIOUS_CATS.indexOf(p.cat);
+    case 'eng': return curiousTotal(p);
+    case 'last': return -curiousDaysAgo(p);   // most recent = largest
+    case 'level': return CURIOUS_LEVELS.indexOf(p.level);
+    case 'nurturer': return (p.nurturer||'\uffff').toLowerCase();
+    case 'role': return p.role.toLowerCase();
+  }
+  return '';
+}
+function curiousFiltered(){
+  const q = CV.q.trim().toLowerCase();
+  return curiousScope().filter(p=>{
+    if(CV.cat!=='__all__' && p.cat!==CV.cat) return false;
+    if(!q) return true;
+    return [p.name,p.city,p.country,p.nurturer,p.role].join(' ').toLowerCase().includes(q);
+  }).map((p,i)=>[p,i]).sort((a,b)=>{
+    const x=curiousSortVal(a[0],CV.sort), y=curiousSortVal(b[0],CV.sort);
+    const c=(typeof x==='number'&&typeof y==='number')?x-y:String(x).localeCompare(String(y));
+    return c?c*CV.dir:a[1]-b[1];
+  }).map(t=>t[0]);
+}
+function curiousDraw(){
+  const tEl=document.getElementById('curiousTable'), cEl=document.getElementById('curiousChips');
+  if(!tEl||!cEl) return;
+  const scope=curiousScope();
+  const chip=(k,l,n)=>`<button class="chip ${CV.cat===k?'on':''}" onclick="curiousSet('cat','${k}')">${esc(l)} <span style="opacity:.7">${n}</span></button>`;
+  cEl.innerHTML = chip('__all__','All',scope.length)+CURIOUS_CATS.map(c=>chip(c,c,scope.filter(p=>p.cat===c).length)).join('');
+
+  const list=curiousFiltered();
+  const pages=Math.max(1,Math.ceil(list.length/CV.size));
+  if(CV.page>pages) CV.page=pages;
+  const from=(CV.page-1)*CV.size, rows=list.slice(from,from+CV.size);
+  const maxEng=Math.max(1,...scope.map(curiousTotal));
+
+  const th=(k,l,cls)=>`<th class="${cls||''}" onclick="curiousSortBy('${k}')" style="cursor:pointer;white-space:nowrap;user-select:none">${l}${CV.sort===k?(CV.dir>0?' ▲':' ▼'):''}</th>`;
+  tEl.innerHTML = `<div class="card" style="overflow-x:auto"><table>
+    <thead><tr>
+      ${th('name','Curious name')}${th('country','Country','hide-sm')}${th('city','City','hide-sm')}${th('cat','Curious category')}
+      ${th('eng','Total engagement')}${th('last','Last contact')}${th('level','Seeker satsang level','hide-sm')}
+      ${th('nurturer','Nurturer','hide-sm')}${th('role','Seva role','hide-sm')}
+    </tr></thead>
+    <tbody>${rows.length?rows.map(p=>{
+      const tot=curiousTotal(p), d=curiousDaysAgo(p), overdue=d>CONTACT_SLA_DAYS;
+      return `<tr>
+        <td><div class="nm serif">${esc(p.name)}</div></td>
+        <td class="hide-sm">${esc(p.country)}</td>
+        <td class="hide-sm">${esc(p.city)}</td>
+        <td>${curiousCatTag(p.cat)}</td>
+        <td><span class="eng-cell" tabindex="0" onmouseenter="curiousTip(event,${p.id})" onmousemove="curiousTipMove(event)" onmouseleave="curiousTipHide()" onfocus="curiousTip(event,${p.id})" onblur="curiousTipHide()">
+          <b style="min-width:28px;display:inline-block">${tot}</b>
+          <span class="eng-bar"><i style="width:${Math.round(tot/maxEng*100)}%"></i></span></span></td>
+        <td style="white-space:nowrap">${fmt(new Date(...p.last.split('-').map((n,i)=>i===1?n-1:+n)))}
+          <div class="sub2" ${overdue?'style="color:var(--amber);font-weight:600"':''}>${d===0?'today':d+' day'+(d===1?'':'s')+' ago'}${overdue?' · overdue':''}</div></td>
+        <td class="hide-sm">${curiousLevelTag(p.level)}</td>
+        <td class="hide-sm">${p.nurturer?esc(p.nurturer):'<span class="tag t-bad">Unassigned</span>'}</td>
+        <td class="hide-sm">${p.role==='None yet'?'<span class="sub2">None yet</span>':esc(p.role)}</td>
+      </tr>`;}).join(''):`<tr><td colspan="9" style="padding:34px;text-align:center;color:var(--ink-3)">No curious people match.</td></tr>`}</tbody>
+  </table></div>
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin:12px 0">
+    <span class="sub2">${list.length?`Showing ${from+1}\u2013${Math.min(from+CV.size,list.length)} of ${list.length}`:'0 people'}</span>
+    <span style="display:flex;align-items:center;gap:8px">
+      <button class="btn ghost sm" onclick="CV.page--;curiousDraw()" ${CV.page<=1?'disabled':''}>\u2039 Prev</button>
+      <span class="sub2">Page ${CV.page} of ${pages}</span>
+      <button class="btn ghost sm" onclick="CV.page++;curiousDraw()" ${CV.page>=pages?'disabled':''}>Next \u203a</button>
+    </span>
+  </div>`;
+}
+
+/* hover bubble — one floating element, positioned in the viewport so the
+   table's horizontal scroll container can never clip it */
+function curiousTip(ev,id){
+  const p=CURIOUS_DATA.find(x=>x.id===id); if(!p) return;
+  let t=document.getElementById('curiousTip');
+  if(!t){ t=document.createElement('div'); t.id='curiousTip'; t.className='eng-tip'; document.body.appendChild(t); }
+  const tot=curiousTotal(p), max=Math.max(1,...CURIOUS_CHANNELS.map(c=>p.eng[c.k]||0));
+  t.innerHTML=`<div class="eng-tip-h">${esc(p.name)} <span>${tot} touchpoints</span></div>`+
+    CURIOUS_CHANNELS.map(c=>{const n=p.eng[c.k]||0;
+      return `<div class="eng-row"><span class="eng-l">${c.label}</span>
+        <span class="eng-t"><i style="width:${Math.round(n/max*100)}%;background:${c.color}"></i></span><b>${n}</b></div>`;}).join('');
+  t.style.display='block';
+  const r=ev.currentTarget.getBoundingClientRect();
+  curiousTipPlace(ev.type==='focus'?r.left+20:ev.clientX, ev.type==='focus'?r.bottom:ev.clientY);
+}
+function curiousTipPlace(x,y){
+  const t=document.getElementById('curiousTip'); if(!t) return;
+  const w=t.offsetWidth, h=t.offsetHeight;
+  let left=Math.min(x+16, window.innerWidth-w-10), top=y+16;
+  if(top+h>window.innerHeight-10) top=y-h-12;
+  t.style.left=Math.max(8,left)+'px'; t.style.top=Math.max(8,top)+'px';
+}
+function curiousTipMove(ev){ curiousTipPlace(ev.clientX,ev.clientY); }
+function curiousTipHide(){ const t=document.getElementById('curiousTip'); if(t) t.style.display='none'; }
 
 /* ============ MasterList Management (Journey sub-tab) ============
    Edits Seeker_Category (same write Journey's own drag-drop uses),
