@@ -395,6 +395,13 @@ nav .pip.r{background:var(--sage-wash);color:var(--sage)}
 .deptcard .dc-tag{display:block;text-align:center;margin:6px auto 0;font-size:12.5px;font-weight:700;letter-spacing:.06em;
   padding:2px 10px;border-radius:999px;width:fit-content}
 .deptcard .dc-count{text-align:center;font-size:14px;color:var(--ink-3);margin:8px 0 12px}
+/* Responsible Seeker: deliberately a different typeface from the
+   department name (italic serif vs the sans heading face) so a person
+   never reads as a department at a glance. */
+.dc-resp{font-family:Georgia,"Times New Roman",serif;font-style:italic;font-size:14px;
+  color:var(--deep);text-align:center;margin:2px 0 0}
+.dc-resp-inline{font-family:Georgia,"Times New Roman",serif;font-style:italic;font-size:13px;
+  color:var(--deep);font-weight:400;display:block;margin-top:1px}
 .dc-row{background:var(--card);border-radius:11px;padding:9px 12px;display:flex;align-items:center;gap:9px;
   cursor:pointer;margin-bottom:7px;transition:transform .1s var(--ease)}
 .dc-row:hover{transform:translateX(2px)}
@@ -508,6 +515,17 @@ nav .pip.r{background:var(--sage-wash);color:var(--sage)}
 .tr-input{flex:0 1 170px}
 .tr-select:focus,.tr-input:focus{border-color:var(--deep-2);box-shadow:0 0 0 3px rgba(43,131,198,.15)}
 @media(max-width:620px){ .tr-select,.tr-input{flex:1 1 100%} }
+
+/* Full-page satsang event detail. */
+.ev-row:hover{border-color:var(--deep-2);box-shadow:0 6px 18px -10px rgba(11,90,143,.35)}
+.ev-open{color:var(--ink-3);font-size:17px;line-height:1}
+.ev-row:hover .ev-open{color:var(--deep)}
+.ev-page-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;
+  padding-bottom:14px;margin-bottom:16px;border-bottom:1px solid var(--line-2)}
+.ev-page-title{font-size:19px;font-weight:700;color:var(--ink);margin:0}
+.ev-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start}
+.ev-col{min-width:0}
+@media(max-width:1000px){ .ev-grid{grid-template-columns:1fr} }
 
 /* Attendee responses table (read-only) inside an expanded satsang event. */
 .ans-table{width:100%;border-collapse:collapse;font-size:14px}
@@ -784,6 +802,7 @@ nav .pip.r{background:var(--sage-wash);color:var(--sage)}
     <div id="satsangEvents" style="display:none"></div>
     <div id="satsangTransfers" style="display:none"></div>
     <div id="satsangAccess" style="display:none"></div>
+    <div id="satsangEventPage" style="display:none"></div>
   </section>
 
   <section class="pane" id="p-eventmgmt">
@@ -3516,13 +3535,14 @@ function renderSevaDepartments(){
     return `<div class="deptcard" style="background:${bg}">
       <div class="dc-icon" onclick="openDeptModal(${d.Seva_Dept_ID})" style="cursor:pointer">${deptIconSVG(parsed.name, wash, 24)}</div>
       <div class="dc-name" style="cursor:pointer" onclick="openDeptModal(${d.Seva_Dept_ID})">${esc(parsed.name)}</div>
+      ${d.responsible_seeker_name ? `<div class="dc-resp">${esc(d.responsible_seeker_name)}</div>` : ''}
       ${parsed.tag ? `<span class="dc-tag" style="background:${tagColor(parsed.tag)}22;color:${tagColor(parsed.tag)}">${esc(parsed.tag)}</span>` : ''}
       <div class="dc-count">${kids.length} sub-department${kids.length===1?'':'s'}</div>
       ${kids.length ? visible.map(k=>{
           const kp = parseDeptName(k.Seva_Dept_Name);
           return `<div class="dc-row" onclick="openDeptModal(${k.Seva_Dept_ID})">
             <span class="dc-row-icon">${deptIconSVG(kp.name, wash, 13)}</span>
-            <span class="dc-row-name">${esc(kp.name)}</span>
+            <span class="dc-row-name">${esc(kp.name)}${k.responsible_seeker_name ? `<span class="dc-resp-inline">${esc(k.responsible_seeker_name)}</span>` : ''}</span>
             ${kp.tag ? `<span class="dc-tag" style="background:${tagColor(kp.tag)}22;color:${tagColor(kp.tag)};margin:0">${esc(kp.tag)}</span>` : ''}
           </div>`;
         }).join('') + (overflow>0 ? `<div class="dc-row" style="justify-content:center;font-weight:600" onclick="openDeptModal(${d.Seva_Dept_ID})">+ ${overflow} more</div>` : '')
@@ -3565,6 +3585,7 @@ function renderModalContent(){
       ${MODAL_STACK.length>1 ? `<button class="mini" onclick="backToParent()" title="Back" style="width:26px;height:26px;margin-right:10px">&lsaquo;</button>` : ''}
       <span class="igrp-title">
         <div class="igrp-name">${esc(parsed.name)}${parsed.tag ? ` <span class="dc-tag" style="background:${tagColor(parsed.tag)}22;color:${tagColor(parsed.tag)};margin:0 0 0 4px">${esc(parsed.tag)}</span>` : ''}</div>
+        ${dept.responsible_seeker_name ? `<div class="dc-resp" style="margin:2px 0 0">${esc(dept.responsible_seeker_name)}</div>` : ''}
         <div class="igrp-summary">${kids.length} sub-department${kids.length===1?'':'s'} \u00b7 ${roles.length} role${roles.length===1?'':'s'}</div>
       </span>
       <button class="mini" onclick="closeDeptModal()" style="width:26px;height:26px">&times;</button>
@@ -3575,7 +3596,7 @@ function renderModalContent(){
         <div class="igrp-section-head"><div class="igrp-section-title">Sub-departments <span style="font-weight:400;color:var(--ink-3)">(${kids.length})</span></div>
           <button class="igrp-link-btn" onclick="showIgrpForm('deptAdd_${dept.Seva_Dept_ID}')">Add sub-department</button></div>
         ${kids.length ? `<div class="igrp-field-list">${kids.map(k=>{ const kp = parseDeptName(k.Seva_Dept_Name); return `<div class="igrp-field-row" style="cursor:pointer" onclick="drillInto(${k.Seva_Dept_ID})">
-              <div style="flex:1"><span class="igrp-field-name">${esc(kp.name)}</span>${kp.tag?` <span class="dc-tag" style="background:${tagColor(kp.tag)}22;color:${tagColor(kp.tag)};margin:0 0 0 4px">${esc(kp.tag)}</span>`:''}</div>
+              <div style="flex:1"><span class="igrp-field-name">${esc(kp.name)}</span>${kp.tag?` <span class="dc-tag" style="background:${tagColor(kp.tag)}22;color:${tagColor(kp.tag)};margin:0 0 0 4px">${esc(kp.tag)}</span>`:''}${k.responsible_seeker_name?`<div class="dc-resp" style="margin:2px 0 0">${esc(k.responsible_seeker_name)}</div>`:''}</div>
               <span style="color:var(--ink-3)">&rsaquo;</span>
             </div>`; }).join('')}</div>` : '<div class="igrp-empty">No sub-departments yet.</div>'}
         <div class="igrp-inline-form" id="deptAdd_${dept.Seva_Dept_ID}">
@@ -4216,12 +4237,9 @@ function renderSatsangEvents(force){
 // satsang card is currently open \u2014 only one at a time, same as before,
 // just reached by clicking a card instead of a dropdown.
 function satsangEventGroupInnerHTML(){
-  return `<div id="satsangEventsBody">${genericSkeleton(3)}</div>
-    <div style="margin-top:22px">
-      <h3 class="sec" style="font-size:16px;margin-bottom:4px">Attendee and satsang notes</h3>
-      <p class="sub2" style="margin-bottom:10px" id="satsangNotesHint">Click "Notes" on an event above to open it here \u2014 no need to leave this card.</p>
-      <div id="satsangCommentsBody"></div>
-    </div>`;
+  // Notes and attendees are no longer a panel under the list \u2014 clicking an
+  // event card opens the full-page view that holds both.
+  return `<div id="satsangEventsBody">${genericSkeleton(3)}</div>`;
 }
 async function toggleSatsangEventGroup(defId){
   const wasOpen = SATSANG_EVENTS_DEF_ID === defId;
@@ -4253,25 +4271,26 @@ async function loadSatsangEvents(force){
   }
 }
 
+/* The whole card opens the event's full-page detail (roster, notes and
+   attendee responses together). Action buttons stop propagation so they
+   don't also navigate. */
 function eventRowHTML(e){
   const when = e.Event_ST_DT_TIME ? new Date(e.Event_ST_DT_TIME).toLocaleString() : '\u2014';
-  return `<div class="card pad" style="margin-bottom:8px">
+  return `<div class="card pad ev-row" style="margin-bottom:8px;cursor:pointer" onclick="openEventPage(${e.SE_ID})">
     <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
       <div>
         <div style="font-weight:600">${esc(when)} \u00b7 ${esc(e.Event_Time_City)}</div>
         <div class="sub2">${esc(e.Event_Duration||'')}${(e.conductors||[]).length?(' \u00b7 '+e.conductors.map(c=>esc(c.Seeker_Name||c.Seeker_Email)).join(', ')):''}</div>
       </div>
-      <div style="display:flex;align-items:center;gap:8px">
+      <div style="display:flex;align-items:center;gap:8px" onclick="event.stopPropagation()">
         ${statusBadge(e.Current_Status)}
         ${e.Current_Status==='Pending Conductor Approval' ? `<button class="btn sm" onclick="approveSatsangEvent(${e.SE_ID}, this)"><span class="spin"></span><span class="lbl">Approve</span></button>` : ''}
-        <button class="mini" onclick="toggleEventAttendees(${e.SE_ID}, this)" title="Add attendees to this satsang" style="width:auto;padding:0 10px;height:24px;font-size:13.5px">Attendees</button>
-        <button class="mini" onclick="openEventNotes(${e.SE_ID}, this)" title="Conductor's overall satsang report" style="width:auto;padding:0 10px;height:24px;font-size:13.5px">Notes</button>
         ${e.Current_Status==='Scheduled' ? `<button class="mini" onclick="toggleFormLinks(${e.SE_ID}, this)" title="Self-service form links" style="width:auto;padding:0 10px;height:24px;font-size:13.5px">Links</button>` : ''}
         ${e.Current_Status!=='Cancelled' ? `<button class="mini" onclick="cancelSatsangEvent(${e.SE_ID}, this)" title="Cancel" style="width:24px;height:24px;color:var(--rose)">&times;</button>` : ''}
+        <span class="ev-open">\u203A</span>
       </div>
     </div>
-    <div id="formLinks_${e.SE_ID}" style="display:none;margin-top:10px"></div>
-    <div id="evAttendees_${e.SE_ID}" style="display:none;margin-top:10px"></div>
+    <div id="formLinks_${e.SE_ID}" style="display:none;margin-top:10px" onclick="event.stopPropagation()"></div>
   </div>`;
 }
 
@@ -4282,43 +4301,72 @@ function eventRowHTML(e){
 let EVENT_ATTENDEES_CACHE = {};
 let EVENT_COMMENTS_CACHE = {}; // per-event comments, keyed by SE_ID, filtered per seeker for the inline note + history
 let EVENT_ANSWERS_CACHE = {}; // per-event attendee form responses (read-only), keyed by SE_ID
-async function toggleEventAttendees(seId, btn){
-  const box = document.getElementById('evAttendees_'+seId);
-  if(!box) return;
-  if(box.style.display !== 'none' && box.innerHTML){ box.style.display = 'none'; return; }
-  box.style.display = '';
-  box.innerHTML = genericSkeleton(3);
-  await withLoading(btn, async ()=>{
-    try{
-      const [attendees, comments, answers] = await Promise.all([
-        apiFetch('/api/satsangs/defs/'+SATSANG_EVENTS_DEF_ID+'/attendees'),
-        apiFetch('/api/satsangs/events/'+seId+'/comments'),
-        // Read-only: what attendees themselves submitted through the
-        // self-service form for THIS event.
-        apiFetch('/api/satsangs/events/'+seId+'/answers').catch(()=>({fields:[],seekers:[]})),
-      ]);
-      EVENT_ATTENDEES_CACHE[seId] = attendees;
-      EVENT_COMMENTS_CACHE[seId] = comments;
-      EVENT_ANSWERS_CACHE[seId] = answers;
-      box.innerHTML = eventAttendeesPanelHTML(seId);
-    }catch(err){ box.innerHTML = `<p class="sub2">Could not load: ${esc(err.message||'')}</p>`; }
-  });
+/* Full-page event detail: roster + per-attendee notes + the attendee's own
+   submitted responses, side by side, using the whole pane instead of a
+   cramped inline strip. */
+let EVENT_PAGE_SE_ID = null;
+async function openEventPage(seId){
+  EVENT_PAGE_SE_ID = seId;
+  const page = document.getElementById('satsangEventPage');
+  const list = document.getElementById('satsangEvents');
+  if(!page || !list) return;
+  list.style.display = 'none';
+  page.style.display = '';
+  page.innerHTML = genericSkeleton(4);
+  try{
+    const [attendees, comments, answers, reports] = await Promise.all([
+      apiFetch('/api/satsangs/defs/'+SATSANG_EVENTS_DEF_ID+'/attendees'),
+      apiFetch('/api/satsangs/events/'+seId+'/comments'),
+      apiFetch('/api/satsangs/events/'+seId+'/answers').catch(()=>({fields:[],seekers:[]})),
+      apiFetch('/api/satsangs/events/'+seId+'/conductor-report').catch(()=>[]),
+    ]);
+    EVENT_ATTENDEES_CACHE[seId] = attendees;
+    EVENT_COMMENTS_CACHE[seId] = comments;
+    EVENT_ANSWERS_CACHE[seId] = answers;
+    LIVE_CONDUCTOR_REPORTS = reports;
+    SATSANG_COMMENTS_SE_ID = seId;
+    renderEventPage(seId);
+  }catch(err){
+    page.innerHTML = `<p class="sub2" style="color:var(--rose)">Could not load this event. ${esc(err.message||'')}</p>
+      <button class="btn ghost sm" onclick="closeEventPage()">Back to events</button>`;
+  }
+}
+function closeEventPage(){
+  EVENT_PAGE_SE_ID = null;
+  const page = document.getElementById('satsangEventPage');
+  const list = document.getElementById('satsangEvents');
+  if(page) page.style.display = 'none';
+  if(list) list.style.display = '';
+}
+function renderEventPage(seId){
+  const page = document.getElementById('satsangEventPage');
+  if(!page) return;
+  const events = LIVE_SATSANG_EVENTS[SATSANG_EVENTS_DEF_ID] || [];
+  const ev = events.find(x=>x.SE_ID==seId) || {};
+  const when = ev.Event_ST_DT_TIME ? new Date(ev.Event_ST_DT_TIME).toLocaleString() : '';
+  const def = (LIVE_SATSANG_DEFS||[]).find(d=>d.Satsang_ID==SATSANG_EVENTS_DEF_ID);
+  page.innerHTML = `
+    <button class="btn ghost sm" onclick="closeEventPage()" style="margin-bottom:14px">\u2039 Back to events</button>
+    <div class="ev-page-head">
+      <div>
+        <h3 class="ev-page-title">${esc(def?def.Satsang_Name:'Satsang')}</h3>
+        <p class="sub2" style="margin:2px 0 0">${esc(when)}${ev.Event_Time_City?(' \u00b7 '+esc(ev.Event_Time_City)):''}${ev.Event_Duration?(' \u00b7 '+esc(ev.Event_Duration)):''}</p>
+      </div>
+      ${statusBadge(ev.Current_Status)}
+    </div>
+    <div class="ev-grid">
+      <div class="ev-col">${eventRosterPanelHTML(seId)}</div>
+      <div class="ev-col">${eventAnswersPanelHTML(seId)}${eventReportPanelHTML(seId)}</div>
+    </div>`;
 }
 // Roster + inline note + collapsed history, all in one row per attendee \u2014
 // replaces the old separate "grid of inputs" + "History" list further down.
-function eventAttendeesPanelHTML(seId){
+function eventRosterPanelHTML(seId){
   const list = EVENT_ATTENDEES_CACHE[seId] || [];
   const comments = EVENT_COMMENTS_CACHE[seId] || [];
-  const events = LIVE_SATSANG_EVENTS[SATSANG_EVENTS_DEF_ID] || [];
-  const ev = events.find(x=>x.SE_ID==seId);
-  const conductorOptions = (ev && ev.conductors ? ev.conductors : [])
-    .map(c=>`<option value="${c.SC_CSMS_ID}">${esc(c.Seeker_Name||c.Seeker_Email||'Conductor')}</option>`).join('');
   return `<div class="card pad" style="background:var(--paper)">
-    <p class="sub2" style="font-weight:600;margin-bottom:6px">Satsang roster \u2014 shared across every event of this satsang</p>
-    <select id="evAttCond_${seId}" style="border-radius:999px;padding:6px 14px;font-size:14.5px;border:1px solid var(--line-2);margin-bottom:10px;width:100%;max-width:280px;box-sizing:border-box">
-      <option value="">${conductorOptions?'Noting as\u2026':'No conductor assigned to this satsang yet \u2014 add one in Satsang Definitions'}</option>
-      ${conductorOptions}
-    </select>
+    <p class="sub2" style="font-weight:600;margin-bottom:2px">Attendees and notes</p>
+    <p class="sub2" style="margin-bottom:10px;font-size:13px">Roster is shared across every event of this satsang. Notes are recorded against you as the signed-in conductor.</p>
     ${list.length ? list.map(a=>{
         const own = comments.filter(c=>String(c.Seeker_ID)===String(a.Seeker_ID));
         const latest = own[0]; // API already orders newest-first
@@ -4345,8 +4393,49 @@ function eventAttendeesPanelHTML(seId){
       <button class="mini" onclick="addEventRosterAttendee(${seId}, this)" style="width:auto;padding:0 12px;height:28px">Add to roster</button>
     </div>
     <div class="err" id="evAttErr_${seId}"></div>
-  </div>
-  ${eventAnswersPanelHTML(seId)}`;
+  </div>`;
+}
+
+/* Conductor's overall report for the event \u2014 was a separate "Notes"
+   button/modal, now a panel on the event page. Scoped to the signed-in
+   user rather than asking who is writing. */
+function eventReportPanelHTML(seId){
+  const reports = LIVE_CONDUCTOR_REPORTS || [];
+  const mine = reports.find(r=>String(r.CS_CSMS_ID)===String(SESSION&&SESSION.csmsId));
+  const others = reports.filter(r=>String(r.CS_CSMS_ID)!==String(SESSION&&SESSION.csmsId));
+  return `<div class="card pad" style="background:var(--paper);margin-top:10px">
+    <p class="sub2" style="font-weight:600;margin-bottom:8px">Your satsang report</p>
+    <textarea id="evReport_${seId}" rows="4" placeholder="How did the satsang go overall?"
+      style="width:100%;border-radius:10px;padding:9px 12px;font-size:14.5px;border:1px solid var(--line-2);box-sizing:border-box;font-family:inherit;resize:vertical">${esc(mine?mine.Satsang_Report:'')}</textarea>
+    <button class="mini" onclick="saveEventReport(${seId}, this)" style="width:auto;padding:0 12px;height:28px;margin-top:8px">Save report</button>
+    <div class="err" id="evReportErr_${seId}"></div>
+    ${others.length ? `<div style="margin-top:12px;border-top:1px solid var(--line-2);padding-top:10px">
+      <p class="sub2" style="font-weight:600;margin-bottom:6px">Other conductors</p>
+      ${others.map(r=>`<div class="sub2" style="padding:5px 0">${esc(r.Satsang_Report||'\u2014')}
+        <span style="font-size:12.5px;color:var(--ink-3)">\u2014 ${esc(r.conductor_name||'Conductor')}</span></div>`).join('')}
+    </div>` : ''}
+  </div>`;
+}
+async function saveEventReport(seId, btn){
+  const ta = document.getElementById('evReport_'+seId);
+  const errEl = document.getElementById('evReportErr_'+seId);
+  if(errEl) errEl.classList.remove('on');
+  const report = ta ? ta.value.trim() : '';
+  if(!SESSION || !SESSION.csmsId){
+    if(errEl){ errEl.textContent='No signed-in identity.'; errEl.classList.add('on'); }
+    return;
+  }
+  await withLoading(btn, async ()=>{
+    try{
+      await apiFetch('/api/satsangs/events/'+seId+'/conductor-report', {method:'PUT',
+        body: JSON.stringify({csCsmsId:Number(SESSION.csmsId), report})});
+      toast('Report saved.');
+      LIVE_CONDUCTOR_REPORTS = await apiFetch('/api/satsangs/events/'+seId+'/conductor-report');
+      renderEventPage(seId);
+    }catch(err){
+      if(errEl){ errEl.textContent = err.message||'Could not save.'; errEl.classList.add('on'); }
+    }
+  });
 }
 
 /* Read-only view of what attendees submitted through the self-service form
@@ -4357,9 +4446,14 @@ function eventAnswersPanelHTML(seId){
   const data = EVENT_ANSWERS_CACHE[seId] || {fields:[], seekers:[]};
   const fields = data.fields || [];
   const seekers = data.seekers || [];
-  if(!fields.length) return '';
+  if(!fields.length){
+    return `<div class="card pad" style="background:var(--paper)">
+      <p class="sub2" style="font-weight:600;margin-bottom:4px">Attendee responses</p>
+      <p class="sub2">This satsang has no self-service form fields defined \u2014 add them in Satsang Definitions.</p>
+    </div>`;
+  }
   if(!seekers.length){
-    return `<div class="card pad" style="background:var(--paper);margin-top:10px">
+    return `<div class="card pad" style="background:var(--paper)">
       <p class="sub2" style="font-weight:600;margin-bottom:4px">Attendee responses</p>
       <p class="sub2">No one has submitted the form for this event yet.</p>
     </div>`;
@@ -4378,7 +4472,7 @@ function eventAnswersPanelHTML(seId){
     }
     return esc(vals.map(v=>v.value).filter(v=>v!=null && v!=='').join(', ') || '\u2014');
   };
-  return `<div class="card pad" style="background:var(--paper);margin-top:10px;overflow-x:auto">
+  return `<div class="card pad" style="background:var(--paper);overflow-x:auto">
     <p class="sub2" style="font-weight:600;margin-bottom:8px">Attendee responses \u2014 submitted for this event</p>
     <table class="ans-table">
       <thead><tr><th>Seeker</th>${fields.map(f=>
@@ -4395,15 +4489,15 @@ async function saveEventAttendeeNote(seId, seekerId, btn){
   const input = document.getElementById('evNote_'+seId+'_'+seekerId);
   const text = input ? input.value.trim() : '';
   if(!text) return;
-  const condSel = document.getElementById('evAttCond_'+seId);
-  const scCsmsId = condSel ? condSel.value : '';
-  if(!scCsmsId){ toast('Pick a conductor above first.'); return; }
+  // Notes are attributed to the signed-in user \u2014 no "Noting as" picker.
+  const scCsmsId = SESSION && SESSION.csmsId;
+  if(!scCsmsId){ toast('No signed-in identity.'); return; }
   await withLoading(btn, async ()=>{
     try{
       await apiFetch('/api/satsangs/events/'+seId+'/comments', {method:'POST', body: JSON.stringify({seekerId, scCsmsId:Number(scCsmsId), comments:text})});
       toast('Note saved.');
       EVENT_COMMENTS_CACHE[seId] = await apiFetch('/api/satsangs/events/'+seId+'/comments');
-      document.getElementById('evAttendees_'+seId).innerHTML = eventAttendeesPanelHTML(seId);
+      renderEventPage(seId);
     }catch(err){ toast('Could not save: '+(err.message||'')); }
   });
 }
@@ -4425,7 +4519,7 @@ async function deleteEventAttendeeComment(seId, seekerId, commentId, btn){
       await apiFetch('/api/satsangs/comments/'+commentId, {method:'DELETE'});
       toast('Deleted.');
       EVENT_COMMENTS_CACHE[seId] = await apiFetch('/api/satsangs/events/'+seId+'/comments');
-      document.getElementById('evAttendees_'+seId).innerHTML = eventAttendeesPanelHTML(seId);
+      renderEventPage(seId);
     }catch(err){ toast('Could not delete: '+(err.message||'')); }
   });
 }
@@ -4464,7 +4558,7 @@ async function addEventRosterAttendee(seId, btn){
       await apiFetch('/api/satsangs/defs/'+SATSANG_EVENTS_DEF_ID+'/attendees', {method:'POST', body: JSON.stringify({seekerId:Number(seekerId)})});
       toast('Added.');
       EVENT_ATTENDEES_CACHE[seId] = await apiFetch('/api/satsangs/defs/'+SATSANG_EVENTS_DEF_ID+'/attendees');
-      document.getElementById('evAttendees_'+seId).innerHTML = eventAttendeesPanelHTML(seId);
+      renderEventPage(seId);
     }catch(err){ if(errEl){ errEl.textContent = err.message||'Could not add.'; errEl.classList.add('on'); } }
   });
 }
@@ -4475,26 +4569,8 @@ async function removeEventRosterAttendee(seId, seekerId, btn){
       await apiFetch('/api/satsangs/defs/'+SATSANG_EVENTS_DEF_ID+'/attendees/'+seekerId, {method:'DELETE'});
       toast('Removed.');
       EVENT_ATTENDEES_CACHE[seId] = await apiFetch('/api/satsangs/defs/'+SATSANG_EVENTS_DEF_ID+'/attendees');
-      document.getElementById('evAttendees_'+seId).innerHTML = eventAttendeesPanelHTML(seId);
+      renderEventPage(seId);
     }catch(err){ toast('Could not remove: '+(err.message||'')); }
-  });
-}
-
-/* ---- Notes, inline per event row \u2014 opens the conductor's overall
-   satsang report below the event list. Per-attendee notes now live on
-   each row under "Attendees" above, not here. ---- */
-async function openEventNotes(seId, btn){
-  SATSANG_COMMENTS_SE_ID = seId;
-  LIVE_SATSANG_COMMENTS_EVENTS = LIVE_SATSANG_EVENTS[SATSANG_EVENTS_DEF_ID] || [];
-  const hint = document.getElementById('satsangNotesHint');
-  const ev = LIVE_SATSANG_COMMENTS_EVENTS.find(x=>x.SE_ID==seId);
-  if(hint) hint.textContent = ev ? ('Showing the report for '+(ev.Event_ST_DT_TIME?new Date(ev.Event_ST_DT_TIME).toLocaleString():'this event')) : '';
-  await withLoading(btn, async ()=>{
-    try{
-      await loadSatsangComments();
-      const body = document.getElementById('satsangCommentsBody');
-      if(body) body.scrollIntoView({behavior:'smooth', block:'start'});
-    }catch(err){ toast('Could not load: '+(err.message||'')); }
   });
 }
 
@@ -4617,77 +4693,16 @@ async function cancelSatsangEvent(seId, btn){
 }
 
 /* ---- Comments (Satsang_Comments, per attending seeker per event) ----
-   Entry point is openEventNotes() from an event row's "Notes" button. This
-   panel is now just the conductor's own overall report \u2014 per-attendee
-   notes and their history live inline on the Attendees roster instead. */
+   Both the conductor's overall report and the per-attendee notes now live
+   on the full-page event view (openEventPage), reached by clicking an
+   event card. The old "Attendees"/"Notes" buttons are gone. */
 let SATSANG_COMMENTS_SE_ID = null;
-let LIVE_SATSANG_COMMENTS_EVENTS = null; // events of the currently-open satsang, for conductorOptions lookup
 let LIVE_CONDUCTOR_REPORTS = null; // Conductor_Satsang_Comments rows for the currently-picked event
 
-async function loadSatsangComments(){
-  if(!SATSANG_COMMENTS_SE_ID) return;
-  const body = document.getElementById('satsangCommentsBody');
-  if(body) body.innerHTML = genericSkeleton(3);
-  try{
-    LIVE_CONDUCTOR_REPORTS = await apiFetch('/api/satsangs/events/'+SATSANG_COMMENTS_SE_ID+'/conductor-report').catch(()=>[]);
-    renderSatsangCommentsBody();
-  }catch(err){
-    if(body) body.innerHTML = `<p class="sub2">Could not load: ${esc(err.message||'')}</p>`;
-  }
-}
-
-function renderSatsangCommentsBody(){
-  const body = document.getElementById('satsangCommentsBody');
-  if(!body) return;
-  const ev = (LIVE_SATSANG_COMMENTS_EVENTS||[]).find(e=>e.SE_ID==SATSANG_COMMENTS_SE_ID);
-  const conductorOptions = (ev && ev.conductors ? ev.conductors : [])
-    .map(c=>`<option value="${c.SC_CSMS_ID}">${esc(c.Seeker_Name||c.Seeker_Email||'Conductor')}</option>`).join('');
-
-  body.innerHTML = `
-    <div class="card pad">
-      <p class="sub2" style="font-weight:600;margin-bottom:8px">Conductor's overall satsang report</p>
-      <select id="scConductor" onchange="renderConductorReportBox()" style="border-radius:999px;padding:7px 14px;font-size:15px;border:1px solid var(--line-2);margin-bottom:10px;width:100%;max-width:320px;box-sizing:border-box">
-        <option value="">${conductorOptions?'Choose conductor\u2026':'No conductor assigned to this satsang yet'}</option>
-        ${conductorOptions}
-      </select>
-      <div id="conductorReportBox"></div>
-    </div>
-    <p class="sub2" style="margin-top:8px">Looking for per-attendee notes? They're on each row under this event's <b>Attendees</b> button.</p>`;
-  renderConductorReportBox();
-}
 
 // One card: the selected conductor's overall report on this satsang event
 // (Conductor_Satsang_Comments) \u2014 one text field, overwritten on save, not
 // a running log like the per-attendee notes above.
-function renderConductorReportBox(){
-  const box = document.getElementById('conductorReportBox');
-  if(!box) return;
-  const sel = document.getElementById('scConductor');
-  const csCsmsId = sel ? sel.value : '';
-  if(!csCsmsId){ box.innerHTML = '<p class="sub2">Choose a conductor above to see or file their satsang report.</p>'; return; }
-  const existing = (LIVE_CONDUCTOR_REPORTS||[]).find(r=>String(r.CS_CSMS_ID)===String(csCsmsId));
-  box.innerHTML = `
-    <p class="sub2" style="font-weight:600;margin-top:10px">Satsang report \u2014 this conductor's overall account of the event</p>
-    <textarea id="scReportText" rows="3" placeholder="How did the satsang go overall\u2026" style="width:100%;border-radius:12px;padding:8px 14px;font-size:15px;border:1px solid var(--line-2);box-sizing:border-box;font-family:inherit;resize:vertical">${esc((existing && existing.Satsang_Report) || '')}</textarea>
-    <button class="btn sm" onclick="saveConductorReport(this)" style="margin-top:8px"><span class="spin"></span><span class="lbl">Save report</span></button>
-    <div class="err" id="scReportErr"></div>`;
-}
-
-async function saveConductorReport(btn){
-  const errEl = document.getElementById('scReportErr'); if(errEl) errEl.classList.remove('on');
-  const sel = document.getElementById('scConductor');
-  const csCsmsId = sel ? sel.value : '';
-  if(!csCsmsId){ return; }
-  await withLoading(btn, async ()=>{
-    try{
-      const report = document.getElementById('scReportText').value.trim();
-      await apiFetch('/api/satsangs/events/'+SATSANG_COMMENTS_SE_ID+'/conductor-report', {method:'PUT', body: JSON.stringify({csCsmsId:Number(csCsmsId), report})});
-      toast('Report saved.');
-      LIVE_CONDUCTOR_REPORTS = await apiFetch('/api/satsangs/events/'+SATSANG_COMMENTS_SE_ID+'/conductor-report');
-      renderConductorReportBox();
-    }catch(err){ if(errEl){ errEl.textContent = err.message||'Could not save.'; errEl.classList.add('on'); } }
-  });
-}
 
 
 

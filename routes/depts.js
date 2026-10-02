@@ -7,11 +7,25 @@ const router = express.Router();
 
 router.get('/', requireAuth, async (req, res) => {
   try {
+    // Each department may define a "Responsible Seeker" role; the active
+    // holder of that role is surfaced on the org chart alongside the
+    // department name. LEFT JOINs throughout so a department with no such
+    // role (or an unfilled one) still returns normally.
     const depts = await pool.query(
-      `SELECT ${qi('Seva_Dept_ID')}, ${qi('Seva_Dept_Name')}, ${qi('Parent_Seva_Dept_ID')}
-       FROM ${qi('RMS')}.${qi('Seva_Dept')}
-       WHERE ${qi('Ver_To_DT')} >= CURRENT_DATE
-       ORDER BY ${qi('Seva_Dept_Name')}`
+      `SELECT d.${qi('Seva_Dept_ID')}, d.${qi('Seva_Dept_Name')}, d.${qi('Parent_Seva_Dept_ID')},
+              up.${qi('Seeker_Name')} AS responsible_seeker_name
+       FROM ${qi('RMS')}.${qi('Seva_Dept')} d
+       LEFT JOIN ${qi('RMS')}.${qi('Seva_Dept_Role')} r
+         ON r.${qi('Seva_Dept_ID')} = d.${qi('Seva_Dept_ID')}
+         AND r.${qi('Ver_To_DT')} >= CURRENT_DATE
+         AND lower(trim(r.${qi('Role_Name')})) = 'responsible seeker'
+       LEFT JOIN ${qi('RMS')}.${qi('User_Seva_Dept_Role')} usdr
+         ON usdr.${qi('Seva_Dept_Role_ID')} = r.${qi('Seva_Dept_Role_ID')}
+         AND usdr.${qi('Seva_Dept_ID')} = d.${qi('Seva_Dept_ID')}
+         AND (usdr.${qi('Ver_To_DT')} IS NULL OR usdr.${qi('Ver_To_DT')} >= CURRENT_DATE)
+       LEFT JOIN ${qi('RMS')}.${qi('User_Profile')} up ON up.${qi('CSMS_ID')} = usdr.${qi('CSMS_ID')}
+       WHERE d.${qi('Ver_To_DT')} >= CURRENT_DATE
+       ORDER BY d.${qi('Seva_Dept_Name')}`
     );
     res.json(depts.rows);
   } catch (err) {
