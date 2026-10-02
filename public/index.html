@@ -5644,7 +5644,7 @@ function renderJourney(){
   el.innerHTML = `
     <div class="card pad" style="margin-bottom:12px;display:flex;gap:9px;align-items:center;flex-wrap:wrap">
       <input type="search" id="journeyQ" value="${qv}" style="flex:1;min-width:220px;font-size:16px;padding:10px 13px"
-        placeholder="Search name, email, WhatsApp, city, country or skill" oninput="journeySetQuery(this.value)">
+        placeholder="Search name, email, WhatsApp or country" oninput="journeySetQuery(this.value)">
       <label class="sub2" style="display:flex;align-items:center;gap:6px">Rows
         <select onchange="journeySetPageSize(this.value)" style="border-radius:999px;padding:6px 10px;font-size:14px">
           ${[25,50,100].map(n=>`<option value="${n}" ${JV.size===n?'selected':''}>${n}</option>`).join('')}
@@ -5674,9 +5674,8 @@ function journeySortVal(p,k){
   switch(k){
     case 'name': return journeyName(p).toLowerCase();
     case 'cat': { const i=laneIdx(p.Category_Name); return i<0 ? 999 : i; }
-    case 'loc': return [p.Country_Name,p.City].filter(Boolean).join(' ').toLowerCase();
+    case 'loc': return (p.Country_Name||'').toLowerCase();
     case 'hrs': return p.Weekly_Seva_Hrs==null ? -1 : Number(p.Weekly_Seva_Hrs);
-    case 'skills': return (p.skill_names||[]).length;
     case 'ms': return p.milestone_count||0;
   }
   return '';
@@ -5687,7 +5686,7 @@ function journeyFiltered(){
     if(JV.cat==='__none__'){ if(laneIdx(p.Category_Name)>=0) return false; }
     else if(JV.cat!=='__all__' && p.Category_Name!==JV.cat) return false;
     if(!q) return true;
-    const hay = [journeyName(p),p.Email,p.WhatsApp_Number,p.City,p.Country_Name,...(p.skill_names||[])].filter(Boolean).join(' ').toLowerCase();
+    const hay = [journeyName(p),p.Email,p.WhatsApp_Number,p.Country_Name].filter(Boolean).join(' ').toLowerCase();
     return hay.includes(q);
   });
   list = list.map((p,i)=>[p,i]).sort((a,b)=>{
@@ -5727,16 +5726,11 @@ function journeyDraw(){
       ${LANES.map(L=>`<option value="${esc(L)}" ${L===p.Category_Name?'selected':''}>${esc(L)}</option>`).join('')}
     </select>`;
   };
-  const skillsCell = p=>{
-    const sk = p.skill_names||[];
-    if(!sk.length) return '<span class="sub2">\u2014</span>';
-    return `<div class="kcard-chips" style="margin:0">${sk.slice(0,2).map(x=>`<span class="kcard-chip">${esc(x)}</span>`).join('')}${sk.length>2?`<span class="kcard-chip" title="${esc(sk.slice(2).join(', '))}">+${sk.length-2}</span>`:''}</div>`;
-  };
 
   tEl.innerHTML = `<div class="card" style="overflow-x:auto"><table>
     <thead><tr>
-      ${th('name','Seeker')}${th('cat','Category')}${th('loc','Location','hide-sm')}
-      <th class="hide-sm">WhatsApp</th>${th('hrs','Seva hrs')}${th('skills','Skills','hide-sm')}${th('ms','Milestones','hide-sm')}
+      ${th('name','Seeker')}${th('cat','Category')}${th('loc','Country','hide-sm')}
+      <th class="hide-sm">WhatsApp</th>${th('hrs','Seva hrs')}${th('ms','Milestones','hide-sm')}
       <th class="hide-sm">Availability</th>
     </tr></thead>
     <tbody>${rows.length ? rows.map(p=>`<tr onclick="openSeekerPage(${p.Seeker_ID})" style="cursor:pointer">
@@ -5745,13 +5739,12 @@ function journeyDraw(){
         <div style="min-width:0"><div class="nm serif">${esc(journeyName(p))}${p.Sensitive_List?' <span class="kcard-badge" style="margin-left:6px">Sensitive</span>':''}</div>
         <div class="sub2">${esc(p.Email||'')}</div></div></div></td>
       <td>${catSelect(p)}</td>
-      <td class="hide-sm">${esc([p.City,p.Country_Name].filter(Boolean).join(', ')||'\u2014')}</td>
+      <td class="hide-sm">${esc(p.Country_Name||'\u2014')}</td>
       <td class="hide-sm">${esc(p.WhatsApp_Number||'\u2014')}</td>
       <td>${p.Weekly_Seva_Hrs!=null?esc(p.Weekly_Seva_Hrs):'\u2014'}</td>
-      <td class="hide-sm">${skillsCell(p)}</td>
       <td class="hide-sm">${p.milestone_count||0}</td>
       <td class="hide-sm">${esc(p.Availability||'\u2014')}</td>
-    </tr>`).join('') : `<tr><td colspan="8" style="padding:34px;text-align:center;color:var(--ink-3)">No seekers match.</td></tr>`}</tbody>
+    </tr>`).join('') : `<tr><td colspan="7" style="padding:34px;text-align:center;color:var(--ink-3)">No seekers match.</td></tr>`}</tbody>
   </table></div>
   <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin:12px 0">
     <span class="sub2">${list.length ? `Showing ${from+1}\u2013${Math.min(from+JV.size,list.length)} of ${list.length}` : '0 seekers'}</span>
