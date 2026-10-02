@@ -426,7 +426,12 @@ nav .pip.r{background:var(--sage-wash);color:var(--sage)}
 .sp-stat .lbl2{font-size:14px;color:var(--ink-3);margin-bottom:3px}
 .sp-stat .val{font-size:22px;font-weight:600}
 .sp-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-.sp-card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px}
+.sp-card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;min-width:0;max-width:100%;overflow-x:auto}
+.sp-grid>*{min-width:0}
+.sp-scroll{overflow-x:auto;padding-bottom:6px}
+.sp-sat-grid{display:grid;grid-template-columns:repeat(3,minmax(230px,1fr));gap:16px}
+.sp-sat-grid>div{min-width:0}
+#seekerPage{max-width:100%;overflow-x:auto}
 .sp-card:hover{border-color:var(--deep-2);background:var(--deep-wash);box-shadow:0 4px 16px rgba(11,143,196,.14)}
 .sp-card.full{grid-column:1 / -1}
 .sp-card.amber-accent{border-left:3px solid var(--amber)}
@@ -860,7 +865,7 @@ nav .pip.r{background:var(--sage-wash);color:var(--sage)}
     <div class="card pad" style="margin-top:16px">
       <h2 class="sec">Visitor to Satsang journey</h2>
       <p class="sub">Reference pathway — the stages a seeker moves through, from first contact to an ongoing spiritual journey.</p>
-      <img src="assets/pyramid-funnel.png" alt="Visitor to Satsang Journey — a pathway from first contact through Visitors, Followers, Exploring Our Path, and Satsang Group to an ongoing spiritual journey"
+      <img src="assets/pyramid-funnel.png" alt="Visitor to Satsang Journey — a pathway from first contact through Visitors, Followers, Communicators and Attendees to an ongoing spiritual journey"
         style="width:100%;height:auto;display:block;border-radius:10px">
     </div>
     <div id="sampleDashWrap" style="display:none;position:fixed;inset:0;z-index:400;background:#fff">
@@ -1640,13 +1645,12 @@ async function openSeekerPage(id){
     <div class="sp-grid" style="margin-top:20px">
       ${spSkeletonCard('sp-c-contact')}
       ${spSkeletonCard('sp-c-more')}
-      ${spSkeletonCard('sp-c-skills')}
-      ${spSkeletonCard('sp-c-satsangs')}
+      ${spSkeletonCard('sp-c-skills','full')}
+      ${spSkeletonCard('sp-c-satsangs','full')}
       ${spSkeletonCard('sp-c-background','full')}
       ${spSkeletonCard('sp-c-platform','full')}
       ${spSkeletonCard('sp-c-milestones')}
       ${spSkeletonCard('sp-c-notes','amber-accent')}
-      ${spSkeletonCard('sp-c-cathist','full')}
       ${spSkeletonCard('sp-c-conductor','full')}
     </div>`;
 
@@ -1663,7 +1667,6 @@ async function openSeekerPage(id){
     spRevealCard('sp-c-contact', spBuildContact(LIVE_SEEKER_DETAIL));
     spRevealCard('sp-c-more', spBuildMoreContact(LIVE_SEEKER_DETAIL));
     spRevealCard('sp-c-platform', spBuildPlatform(LIVE_SEEKER_DETAIL));
-    spRevealCard('sp-c-cathist', spBuildCatHistory(LIVE_SEEKER_DETAIL));
   }).catch(err=>{
     el.innerHTML = `<button class="btn ghost sm" onclick="closeSeekerPage()">\u2190 Back</button>
       <p class="sub2" style="margin-top:10px">Could not load: ${esc(err.message||'')}</p>`;
@@ -2197,14 +2200,14 @@ function spBuildSkills(s){
         <option value="High">High</option><option value="Medium">Medium</option><option value="Low">Low</option>
       </select>
       <button class="mini" onclick="addSeekerSkill(this)" style="width:auto;padding:0 12px;height:28px">Add</button>
-    </div>`, 'sp-c-skills', skills.length);
+    </div>`, 'sp-c-skills full', skills.length);
 }
 function spBuildSatsangs(s){
   if(LIVE_SATSANG_DEFS===null) loadSatsangDefsForSp();
   const satsangLinks = s.satsangLinks || {upay:[],vyashti:[],bhav:[]};
   const linkedTotal = ['bhav','upay','vyashti'].reduce((n,k)=>n+((satsangLinks[k])||[]).length, 0);
   const satsangGroups = [['bhav','Bhav satsang'],['upay','Upay satsang'],['vyashti','Vyashti satsang']];
-  return spCard('pink', 'users', 'Satsangs', `<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">${satsangGroups.map(([type,label])=>{
+  return spCard('pink', 'users', 'Satsangs', `<div class="sp-scroll"><div class="sp-sat-grid">${satsangGroups.map(([type,label])=>{
     const rows = satsangLinks[type] || [];
     const linkedIds = new Set(rows.map(r=>String(r.Satsang_ID)));
     const pickable = (LIVE_SATSANG_DEFS||[]).filter(d=>(d.ST_Name||'').toLowerCase()===type && !linkedIds.has(String(d.Satsang_ID)));
@@ -2213,13 +2216,13 @@ function spBuildSatsangs(s){
           <button class="mini" onclick="removeSpSatsangLink('${type}', ${r.Satsang_ID}, this)" style="width:22px;height:22px;color:var(--rose)">&times;</button>
         </div>`).join('') : '<p class="sub2">Not linked yet.</p>'}
       <div style="display:flex;gap:6px;margin-top:4px">
-        <select id="spSatsangAdd_${type}" style="flex:1;border-radius:999px;padding:5px 8px;font-size:13.5px;border:1px solid var(--line-2)">
+        <select id="spSatsangAdd_${type}" style="flex:1;min-width:0;max-width:100%;border-radius:999px;padding:5px 8px;font-size:13.5px;border:1px solid var(--line-2)">
           <option value="">${LIVE_SATSANG_DEFS===null?'Loading\u2026':(pickable.length?'Add\u2026':'None left')}</option>
           ${pickable.map(d=>`<option value="${d.Satsang_ID}">${esc(d.Satsang_Name)}</option>`).join('')}
         </select>
         <button class="mini" onclick="addSpSatsangLink('${type}', this)" style="width:auto;padding:0 8px;height:26px;font-size:13px">Add</button>
       </div></div>`;
-  }).join('')}</div>`, 'sp-c-satsangs', linkedTotal);
+  }).join('')}</div></div>`, 'sp-c-satsangs full', linkedTotal);
 }
 function spBuildBackground(s){
   const ml = s.masterlist || {};
@@ -2273,11 +2276,6 @@ function spBuildInternalNotes(s){
     <textarea id="internalNoteInput" rows="2" placeholder="Visible only to your team." style="width:100%;border-radius:10px;padding:6px 10px;font-size:14.5px;border:1px solid var(--line-2);box-sizing:border-box;font-family:inherit;resize:vertical;margin-top:8px"></textarea>
     <div class="btnrow" style="margin-top:8px"><button class="btn ghost" onclick="saveSeekerInternalNote(this)">Save note</button></div>`, 'amber-accent sp-c-notes');
 }
-function spBuildCatHistory(s){
-  return spCard('sage', 'history', 'Category history', (s.categories||[]).length
-    ? `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">${s.categories.map(c=>`<div class="sp-cathist-row"><span>${categoryTag(c.Category_Name)}</span><span class="sub2">${esc(c.Ver_From_DT||'')} \u2192 ${c.Ver_To_DT && new Date(c.Ver_To_DT) < new Date('9999-01-01') ? esc(c.Ver_To_DT) : 'present'}</span></div>`).join('')}</div>`
-    : '<p class="sub2">No category history recorded.</p>', 'full sp-c-cathist');
-}
 function spBuildConductorNotes(s){
   const notes = s.notes || [];
   return spCard('rose', 'message', 'Conductor notes on this seeker', notes.length
@@ -2298,7 +2296,7 @@ function renderSeekerPage(){
     <button class="btn ghost sm" onclick="closeSeekerPage()" style="margin-bottom:16px">\u2190 Back</button>
     ${spBuildHeader(s)}
     <div class="sp-grid" style="margin-top:20px">
-      ${spBuildContact(s)}${spBuildMoreContact(s)}${spBuildSkills(s)}${spBuildSatsangs(s)}${spBuildBackground(s)}${spBuildPlatform(s)}${spBuildMilestones(s)}${spBuildInternalNotes(s)}${spBuildCatHistory(s)}${spBuildConductorNotes(s)}
+      ${spBuildContact(s)}${spBuildMoreContact(s)}${spBuildSkills(s)}${spBuildSatsangs(s)}${spBuildBackground(s)}${spBuildPlatform(s)}${spBuildMilestones(s)}${spBuildInternalNotes(s)}${spBuildConductorNotes(s)}
     </div>`;
 }
 
