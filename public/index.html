@@ -516,16 +516,93 @@ nav .pip.r{background:var(--sage-wash);color:var(--sage)}
 .tr-select:focus,.tr-input:focus{border-color:var(--deep-2);box-shadow:0 0 0 3px rgba(43,131,198,.15)}
 @media(max-width:620px){ .tr-select,.tr-input{flex:1 1 100%} }
 
-/* Full-page satsang event detail. */
+/* Organisation and Team Management: Arial throughout, including the
+   heading face and the org-chart cards, overriding --font-head. The
+   Responsible Seeker name keeps its serif italic on purpose, so it is
+   re-asserted here and not flattened by the blanket rule. */
+#p-org, #p-org *{font-family:Arial, Helvetica, sans-serif}
+#p-org .dc-resp, #p-org .dc-resp-inline{font-family:Georgia,"Times New Roman",serif}
+
+/* Full-page satsang event detail — one continuous form (no nested cards),
+   matching the approved conductor-form design. Calibri + soft blue. */
 .ev-row:hover{border-color:var(--deep-2);box-shadow:0 6px 18px -10px rgba(11,90,143,.35)}
 .ev-open{color:var(--ink-3);font-size:17px;line-height:1}
 .ev-row:hover .ev-open{color:var(--deep)}
-.ev-page-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;
-  padding-bottom:14px;margin-bottom:16px;border-bottom:1px solid var(--line-2)}
-.ev-page-title{font-size:19px;font-weight:700;color:var(--ink);margin:0}
-.ev-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start}
-.ev-col{min-width:0}
-@media(max-width:1000px){ .ev-grid{grid-template-columns:1fr} }
+.sef{--sef-900:#214f78;--sef-800:#2d638f;--sef-line:#cfe2ef;--sef-text:#28445c;
+  font-family:Calibri,"Segoe UI",Arial,sans-serif;color:var(--sef-text);font-size:14px;
+  background:#fff;border:1px solid var(--sef-line);border-radius:14px;
+  box-shadow:0 5px 18px rgba(50,100,135,.07);overflow:hidden}
+.sef-head{padding:22px 26px 18px;border-bottom:1px solid var(--sef-line);
+  background:linear-gradient(180deg,#f9fcfe 0%,#f2f8fc 100%)}
+.sef-title-row{display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap}
+.sef-h1{margin:0;color:var(--sef-900);font-size:22px;font-weight:700;letter-spacing:.1px}
+.sef-meta{margin-top:6px;color:#7890a2;font-size:12px}
+.sef-intro{margin-top:14px;color:#7890a2;font-size:12px}
+.sef-content{padding:0 26px}
+.sef-sub{color:var(--sef-800);font-weight:700;font-size:13px;margin:20px 0 10px}
+.sef-empty{color:#8aa0af;font-size:12px;padding:10px 0 4px}
+
+.sef-row{padding:16px 0 18px;border-bottom:1px solid var(--sef-line)}
+.sef-row:last-child{border-bottom:0}
+.sef-row-head{display:flex;align-items:center;justify-content:space-between;gap:15px;margin-bottom:10px;flex-wrap:wrap}
+.sef-name{color:var(--sef-900);font-size:14px;font-weight:700}
+.sef-status{margin-top:2px;color:#8aa0af;font-size:10px}
+.sef-badge{background:#eaf5fb;color:#3c7599;border-radius:14px;padding:4px 9px;font-size:10px;white-space:nowrap}
+.sef-badge-none{background:#f3f5f7;color:#8aa0af}
+
+.sef-grid{display:grid;border-top:1px solid #d9e8f1;border-left:1px solid #d9e8f1;
+  border-radius:7px;overflow:hidden}
+.sef-grid > div{min-height:30px;display:flex;align-items:center;justify-content:center;
+  border-right:1px solid #d9e8f1;border-bottom:1px solid #d9e8f1}
+.sef-corner{background:#f5faff}
+.sef-day{background:#edf7fc;color:#5d8198;font-size:10px;font-weight:700}
+.sef-metric{justify-content:flex-start !important;padding-left:10px;background:#f8fbfd;
+  color:#547188;font-size:10px;font-weight:600;text-align:left}
+.sef-value{background:#fff;color:#2e6f98;font-size:12px;font-weight:600}
+
+.sef-lines{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:10px;
+  color:#506e82;font-size:11px;line-height:1.45}
+.sef-label{display:inline-block;color:#6b8799;font-weight:700;margin-right:5px}
+.sef-date{color:#93a5b1;font-size:9px;margin-left:4px}
+
+.sef-note-line{display:grid;grid-template-columns:100px 1fr auto auto;gap:9px;align-items:center;
+  margin-top:11px;padding-top:10px;border-top:1px dashed #d9e8f1}
+.sef-note-line label{color:var(--sef-800);font-size:11px;font-weight:700}
+.sef-note-line input{width:100%;height:32px;border:1px solid #bdd7e8;border-radius:17px;
+  padding:0 12px;outline:none;color:var(--sef-text);background:#fbfdff;font:inherit;font-size:11px}
+.sef-note-line input:focus,.sef-search:focus,.sef-report-text:focus{
+  border-color:#6ca4c7;box-shadow:0 0 0 3px rgba(108,164,199,.12)}
+.sef-note-meta{color:#93a5b1;font-size:10px;margin-top:4px;padding-left:109px}
+
+.sef-btn{border:1px solid #bcd7e8;background:#f7fbfe;color:var(--sef-800);border-radius:16px;
+  padding:6px 12px;cursor:pointer;font:inherit;font-size:11px}
+.sef-btn.primary{background:#dceef8;border-color:#b8d9ea;color:#245d87;font-weight:600}
+.sef-btn:hover{background:#e9f5fb}
+
+.sef-tools{display:flex;gap:10px;margin:13px 0 4px;align-items:center}
+.sef-search{width:100%;border:1px solid #bdd7e8;border-radius:18px;padding:9px 13px;
+  outline:none;font:inherit;font-size:12px;color:var(--sef-text);background:#fbfdff;box-sizing:border-box}
+
+.sef-report{padding:0 0 6px}
+.sef-report-label{display:block;color:var(--sef-800);font-size:13px;font-weight:700;margin-bottom:8px}
+.sef-report-text{display:block;width:100%;min-height:125px;resize:vertical;border:1px solid #bdd7e8;
+  border-radius:10px;padding:12px 14px;outline:none;color:var(--sef-text);background:#fbfdff;
+  font:inherit;font-size:12px;line-height:1.5;box-sizing:border-box}
+.sef-save-report{height:36px;padding:0 16px;margin-top:10px;float:right}
+.sef-others{clear:both;padding-top:14px;border-top:1px solid var(--sef-line);margin-top:14px}
+.sef-other-row{color:#506e82;font-size:11px;line-height:1.45;padding:4px 0}
+.sef-foot{clear:both;padding:14px 0 18px;color:#8aa0af;font-size:10px}
+
+@media(max-width:900px){ .sef-content{padding:0 16px} .sef-head{padding:18px} }
+@media(max-width:680px){
+  .sef-grid{grid-template-columns:95px repeat(7,1fr) !important}
+  .sef-grid > div{min-height:28px}
+  .sef-lines{grid-template-columns:1fr}
+  .sef-note-line{grid-template-columns:1fr auto auto}
+  .sef-note-line label{grid-column:1 / -1}
+  .sef-note-meta{padding-left:0}
+  .sef-save-report{width:100%;float:none}
+}
 
 /* Attendee responses table (read-only) inside an expanded satsang event. */
 .ans-table{width:100%;border-collapse:collapse;font-size:14px}
@@ -4345,74 +4422,127 @@ function renderEventPage(seId){
   const ev = events.find(x=>x.SE_ID==seId) || {};
   const when = ev.Event_ST_DT_TIME ? new Date(ev.Event_ST_DT_TIME).toLocaleString() : '';
   const def = (LIVE_SATSANG_DEFS||[]).find(d=>d.Satsang_ID==SATSANG_EVENTS_DEF_ID);
+  const metaBits = [when, ev.Event_Time_City, ev.Event_Duration].filter(Boolean).map(esc).join(' \u00b7 ');
   page.innerHTML = `
     <button class="btn ghost sm" onclick="closeEventPage()" style="margin-bottom:14px">\u2039 Back to events</button>
-    <div class="ev-page-head">
-      <div>
-        <h3 class="ev-page-title">${esc(def?def.Satsang_Name:'Satsang')}</h3>
-        <p class="sub2" style="margin:2px 0 0">${esc(when)}${ev.Event_Time_City?(' \u00b7 '+esc(ev.Event_Time_City)):''}${ev.Event_Duration?(' \u00b7 '+esc(ev.Event_Duration)):''}</p>
+    <div class="sef">
+      <header class="sef-head">
+        <div class="sef-title-row">
+          <div>
+            <h1 class="sef-h1">${esc(def?def.Satsang_Name:'Satsang')}</h1>
+            <div class="sef-meta">${metaBits}</div>
+          </div>
+          ${statusBadge(ev.Current_Status)}
+        </div>
+        <div class="sef-intro">Review each seeker's responses and record your conductor note alongside them. Add or update the roster from the same form.</div>
+      </header>
+      <div class="sef-content">
+        <div class="sef-sub">Attendee responses \u2014 submitted for this event</div>
+        ${eventSeekerRowsHTML(seId)}
+        ${eventRosterToolsHTML(seId)}
+        <div class="sef-sub">Your satsang report</div>
+        ${eventReportPanelHTML(seId)}
+        <div class="sef-foot">All attendee notes and the satsang report are saved against this event and remain available to the signed-in conductor.</div>
       </div>
-      ${statusBadge(ev.Current_Status)}
-    </div>
-    <div class="ev-grid">
-      <div class="ev-col">${eventRosterPanelHTML(seId)}</div>
-      <div class="ev-col">${eventAnswersPanelHTML(seId)}${eventReportPanelHTML(seId)}</div>
     </div>`;
 }
-// Roster + inline note + collapsed history, all in one row per attendee \u2014
-// replaces the old separate "grid of inputs" + "History" list further down.
-function eventRosterPanelHTML(seId){
-  const list = EVENT_ATTENDEES_CACHE[seId] || [];
+
+/* One row per attendee: their submitted responses (daily fields as a
+   Sun\u2192Sat grid, free-text fields as labelled lines) with the conductor's
+   note for that seeker directly beneath \u2014 responses and note read
+   together rather than in separate panels. */
+function eventSeekerRowsHTML(seId){
+  const roster = EVENT_ATTENDEES_CACHE[seId] || [];
   const comments = EVENT_COMMENTS_CACHE[seId] || [];
-  return `<div class="card pad" style="background:var(--paper)">
-    <p class="sub2" style="font-weight:600;margin-bottom:2px">Attendees and notes</p>
-    <p class="sub2" style="margin-bottom:10px;font-size:13px">Roster is shared across every event of this satsang. Notes are recorded against you as the signed-in conductor.</p>
-    ${list.length ? list.map(a=>{
-        const own = comments.filter(c=>String(c.Seeker_ID)===String(a.Seeker_ID));
-        const latest = own[0]; // API already orders newest-first
-        const rest = own.slice(1);
-        const name = esc([a.First_Name,a.Last_Name].filter(Boolean).join(' ')||('Seeker #'+a.Seeker_ID));
-        return `<div style="border-top:1px solid var(--line-2);padding:8px 0">
-          <div style="display:grid;grid-template-columns:150px 1fr auto auto;gap:8px;align-items:center">
-            <span style="font-weight:500;font-size:14.5px">${name}</span>
-            <input id="evNote_${seId}_${a.Seeker_ID}" placeholder="${latest?'Add another note\u2026':'Add a note\u2026'}" style="border-radius:999px;padding:5px 12px;font-size:14.5px;border:1px solid var(--line-2)">
-            <button class="mini" onclick="saveEventAttendeeNote(${seId}, ${a.Seeker_ID}, this)" style="width:auto;padding:0 10px;height:26px;font-size:13px">Save</button>
-            <button class="mini" onclick="removeEventRosterAttendee(${seId}, ${a.Seeker_ID}, this)" title="Remove from roster" style="width:22px;height:22px;color:var(--rose)">&times;</button>
-          </div>
-          ${latest ? `<div class="sub2" style="margin-top:5px;padding-left:2px">${esc(latest.Comments)} <span style="font-size:12.5px">\u2014 ${esc(latest.conductor_name||'')}${latest.Comments_Date?(', '+esc(new Date(latest.Comments_Date).toLocaleDateString())):''}</span></div>` : ''}
-          ${rest.length ? `<button class="mini" onclick="toggleAttendeeHistory(${seId}, ${a.Seeker_ID}, this)" style="width:auto;padding:0 8px;height:20px;font-size:12.5px;background:var(--paper);color:var(--ink-2);margin-top:4px">Show ${rest.length} more</button>
-            <div id="evHist_${seId}_${a.Seeker_ID}" style="display:none;margin-top:4px;padding-left:2px"></div>` : ''}
-        </div>`;
-      }).join('') : '<p class="sub2">None yet.</p>'}
-    <div style="display:flex;gap:6px;margin-top:10px;position:relative">
-      <div style="flex:1;position:relative">
-        <input id="evAtt_${seId}_search" placeholder="Search by name or email" autocomplete="off" oninput="eventAttendeeAutocomplete(this, ${seId})" style="width:100%;border-radius:999px;padding:6px 14px;font-size:14.5px;border:1px solid var(--line-2);box-sizing:border-box">
-        <div id="evAtt_${seId}_ac" class="ac-dropdown" style="display:none"></div>
+  const data = EVENT_ANSWERS_CACHE[seId] || {fields:[], seekers:[]};
+  const fields = data.fields || [];
+  const answered = data.seekers || [];
+  if(!roster.length) return '<div class="sef-empty">No one is on this satsang\u2019s roster yet. Add attendees below.</div>';
+
+  const dailyFields = fields.filter(f=>f.Review_Frequency==='Daily');
+  const otherFields = fields.filter(f=>f.Review_Frequency!=='Daily');
+  const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+  return `<div class="sef-seekers">${roster.map(a=>{
+    const ans = answered.find(s=>String(s.Seeker_ID)===String(a.Seeker_ID));
+    const name = esc([a.First_Name,a.Last_Name].filter(Boolean).join(' ')||('Seeker #'+a.Seeker_ID));
+    const own = comments.filter(c=>String(c.Seeker_ID)===String(a.Seeker_ID));
+    const latest = own[0]; // API orders newest-first
+    const rest = own.slice(1);
+    const submitted = ans && ans.Submitted_DT ? new Date(ans.Submitted_DT).toLocaleDateString() : null;
+
+    // Daily values keyed by weekday so each column lands under its own day.
+    const gridFor = f => {
+      const vals = (ans && ans.values ? ans.values[f.Field_Name] : null) || [];
+      const byDay = {};
+      vals.forEach(v=>{ if(v.date) byDay[new Date(v.date+'T00:00:00').getDay()] = v.value; });
+      return `<div class="sef-metric">${esc(f.Field_Name)}</div>` +
+        DAYS.map((_,i)=>`<div class="sef-value">${byDay[i]==null||byDay[i]===''?'\u2014':esc(byDay[i])}</div>`).join('');
+    };
+
+    return `<div class="sef-row">
+      <div class="sef-row-head">
+        <div>
+          <div class="sef-name">${name}</div>
+          <div class="sef-status">${submitted?('Response submitted \u00b7 '+esc(submitted)):'No response submitted yet'}</div>
+        </div>
+        <span class="sef-badge${ans?'':' sef-badge-none'}">${ans?'Submitted':'Awaiting'}</span>
       </div>
-      <input id="evAtt_${seId}_seekerId" type="hidden">
-      <button class="mini" onclick="addEventRosterAttendee(${seId}, this)" style="width:auto;padding:0 12px;height:28px">Add to roster</button>
-    </div>
-    <div class="err" id="evAttErr_${seId}"></div>
-  </div>`;
+
+      ${dailyFields.length ? `<div class="sef-grid" style="grid-template-columns:125px repeat(7,1fr)">
+        <div class="sef-corner"></div>
+        ${DAYS.map(d=>`<div class="sef-day">${d}</div>`).join('')}
+        ${dailyFields.map(gridFor).join('')}
+      </div>` : ''}
+
+      ${otherFields.length ? `<div class="sef-lines">${otherFields.map(f=>{
+        const vals = (ans && ans.values ? ans.values[f.Field_Name] : null) || [];
+        const text = vals.map(v=>v.value).filter(v=>v!=null && v!=='').join(', ');
+        return `<div><span class="sef-label">${esc(f.Field_Name)}</span>${text?esc(text):'<span style="color:var(--ink-3)">\u2014</span>'}</div>`;
+      }).join('')}</div>` : ''}
+
+      <div class="sef-note-line">
+        <label>Conductor note</label>
+        <input id="evNote_${seId}_${a.Seeker_ID}" value="${latest?esc(latest.Comments):''}" placeholder="Add a note for ${name}\u2026">
+        <button type="button" class="sef-btn primary" onclick="saveEventAttendeeNote(${seId}, ${a.Seeker_ID}, this)">Save note</button>
+        <button type="button" class="sef-btn" onclick="removeEventRosterAttendee(${seId}, ${a.Seeker_ID}, this)" title="Remove from roster">Remove</button>
+      </div>
+      ${latest ? `<div class="sef-note-meta">\u2014 ${esc(latest.conductor_name||'')}${latest.Comments_Date?(', '+esc(new Date(latest.Comments_Date).toLocaleDateString())):''}</div>` : ''}
+      ${rest.length ? `<button type="button" class="sef-btn" style="margin-top:6px" onclick="toggleAttendeeHistory(${seId}, ${a.Seeker_ID}, this)">Show ${rest.length} earlier note${rest.length===1?'':'s'}</button>
+        <div id="evHist_${seId}_${a.Seeker_ID}" style="display:none;margin-top:6px"></div>` : ''}
+    </div>`;
+  }).join('')}</div>`;
 }
 
-/* Conductor's overall report for the event \u2014 was a separate "Notes"
-   button/modal, now a panel on the event page. Scoped to the signed-in
-   user rather than asking who is writing. */
+function eventRosterToolsHTML(seId){
+  return `<div class="sef-tools">
+    <div style="flex:1;position:relative;min-width:0">
+      <input class="sef-search" id="evAtt_${seId}_search" placeholder="Search by name or email to add to the roster"
+        autocomplete="off" oninput="eventAttendeeAutocomplete(this, ${seId})">
+      <div id="evAtt_${seId}_ac" class="ac-dropdown" style="display:none"></div>
+    </div>
+    <input id="evAtt_${seId}_seekerId" type="hidden">
+    <button type="button" class="sef-btn primary" onclick="addEventRosterAttendee(${seId}, this)">Add to roster</button>
+  </div>
+  <div class="err" id="evAttErr_${seId}"></div>`;
+}
+
+/* Conductor's overall report for the event, attributed to the signed-in
+   user \u2014 no "who is writing this" picker. */
 function eventReportPanelHTML(seId){
   const reports = LIVE_CONDUCTOR_REPORTS || [];
   const mine = reports.find(r=>String(r.CS_CSMS_ID)===String(SESSION&&SESSION.csmsId));
   const others = reports.filter(r=>String(r.CS_CSMS_ID)!==String(SESSION&&SESSION.csmsId));
-  return `<div class="card pad" style="background:var(--paper);margin-top:10px">
-    <p class="sub2" style="font-weight:600;margin-bottom:8px">Your satsang report</p>
-    <textarea id="evReport_${seId}" rows="4" placeholder="How did the satsang go overall?"
-      style="width:100%;border-radius:10px;padding:9px 12px;font-size:14.5px;border:1px solid var(--line-2);box-sizing:border-box;font-family:inherit;resize:vertical">${esc(mine?mine.Satsang_Report:'')}</textarea>
-    <button class="mini" onclick="saveEventReport(${seId}, this)" style="width:auto;padding:0 12px;height:28px;margin-top:8px">Save report</button>
+  return `<div class="sef-report">
+    <label class="sef-report-label" for="evReport_${seId}">How did the satsang go overall?</label>
+    <textarea id="evReport_${seId}" class="sef-report-text"
+      placeholder="Write your observations, key discussion points, follow-ups or overall assessment\u2026">${esc(mine?mine.Satsang_Report:'')}</textarea>
+    <button type="button" class="sef-btn primary sef-save-report" onclick="saveEventReport(${seId}, this)">Save report</button>
     <div class="err" id="evReportErr_${seId}"></div>
-    ${others.length ? `<div style="margin-top:12px;border-top:1px solid var(--line-2);padding-top:10px">
-      <p class="sub2" style="font-weight:600;margin-bottom:6px">Other conductors</p>
-      ${others.map(r=>`<div class="sub2" style="padding:5px 0">${esc(r.Satsang_Report||'\u2014')}
-        <span style="font-size:12.5px;color:var(--ink-3)">\u2014 ${esc(r.conductor_name||'Conductor')}</span></div>`).join('')}
+    ${others.length ? `<div class="sef-others">
+      <span class="sef-label" style="display:block;margin-bottom:6px">Other conductors</span>
+      ${others.map(r=>`<div class="sef-other-row">${esc(r.Satsang_Report||'\u2014')}
+        <span class="sef-date">\u2014 ${esc(r.conductor_name||'Conductor')}</span></div>`).join('')}
     </div>` : ''}
   </div>`;
 }
@@ -4438,53 +4568,6 @@ async function saveEventReport(seId, btn){
   });
 }
 
-/* Read-only view of what attendees submitted through the self-service form
-   for THIS event. Daily fields expand to their Sun\u2192Sat values; everything
-   else shows a single value. Nothing here is editable \u2014 these are the
-   seeker's own answers. */
-function eventAnswersPanelHTML(seId){
-  const data = EVENT_ANSWERS_CACHE[seId] || {fields:[], seekers:[]};
-  const fields = data.fields || [];
-  const seekers = data.seekers || [];
-  if(!fields.length){
-    return `<div class="card pad" style="background:var(--paper)">
-      <p class="sub2" style="font-weight:600;margin-bottom:4px">Attendee responses</p>
-      <p class="sub2">This satsang has no self-service form fields defined \u2014 add them in Satsang Definitions.</p>
-    </div>`;
-  }
-  if(!seekers.length){
-    return `<div class="card pad" style="background:var(--paper)">
-      <p class="sub2" style="font-weight:600;margin-bottom:4px">Attendee responses</p>
-      <p class="sub2">No one has submitted the form for this event yet.</p>
-    </div>`;
-  }
-  const dayLabel = d => {
-    const dt = new Date(d+'T00:00:00');
-    return ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][dt.getDay()];
-  };
-  const cell = (f, entry) => {
-    const vals = (entry.values||{})[f.Field_Name] || [];
-    if(!vals.length) return '<span class="sub2">\u2014</span>';
-    if(f.Review_Frequency === 'Daily'){
-      const sorted = vals.slice().sort((a,b)=>String(a.date).localeCompare(String(b.date)));
-      return `<div class="ans-days">${sorted.map(v=>
-        `<span class="ans-day"><b>${v.date?esc(dayLabel(v.date)):''}</b>${esc(v.value==null?'\u2014':v.value)}</span>`).join('')}</div>`;
-    }
-    return esc(vals.map(v=>v.value).filter(v=>v!=null && v!=='').join(', ') || '\u2014');
-  };
-  return `<div class="card pad" style="background:var(--paper);overflow-x:auto">
-    <p class="sub2" style="font-weight:600;margin-bottom:8px">Attendee responses \u2014 submitted for this event</p>
-    <table class="ans-table">
-      <thead><tr><th>Seeker</th>${fields.map(f=>
-        `<th>${esc(f.Field_Name)}${f.Review_Frequency==='Daily'?' <span style="font-weight:400">(daily)</span>':''}</th>`).join('')}<th>Submitted</th></tr></thead>
-      <tbody>${seekers.map(s=>{
-        const name = esc([s.First_Name,s.Last_Name].filter(Boolean).join(' ')||('Seeker #'+s.Seeker_ID));
-        return `<tr><td style="font-weight:500">${name}</td>${fields.map(f=>`<td>${cell(f,s)}</td>`).join('')}
-          <td class="sub2">${s.Submitted_DT?esc(new Date(s.Submitted_DT).toLocaleDateString()):''}</td></tr>`;
-      }).join('')}</tbody>
-    </table>
-  </div>`;
-}
 async function saveEventAttendeeNote(seId, seekerId, btn){
   const input = document.getElementById('evNote_'+seId+'_'+seekerId);
   const text = input ? input.value.trim() : '';
