@@ -107,10 +107,13 @@ p.sub{margin:0 0 16px;color:var(--ink-3);font-size:14.5px;max-width:62ch}
   font:inherit;font-size:15px;padding:7px 11px;border:1px solid var(--line-2);
   border-radius:var(--r-sm);min-width:210px;background:var(--card);
 }
-.chip{background:var(--card);border:1px solid var(--line-2);border-radius:999px;
-  padding:6px 14px;font-size:14.5px;color:var(--ink-2);box-shadow:none}
-.chip:hover{border-color:var(--ink-3);color:var(--ink);background:var(--paper)}
-.chip.on{background:var(--deep);border-color:var(--deep);color:#fff;font-weight:600}
+/* Sub-tab pills \u2014 rounded, solid blue when active, matching the approved
+   Satsang Management design. Applies to every .filters chip row, so the
+   Satsang, Form and Organisation sub-tabs all read the same. */
+.chip{background:var(--card);border:1px solid #c8dfeb;border-radius:18px;
+  padding:7px 14px;font-size:15px;color:#46718e;box-shadow:none}
+.chip:hover:not(.on){background:#f3faff;border-color:#b8d8e8;color:#46718e}
+.chip.on{background:#1598CC;border-color:#1598CC;color:#fff;font-weight:600}
 .count{margin-left:auto;font-size:14.5px;color:var(--ink-3);font-variant-numeric:tabular-nums}
 
 /* ---------- table ---------- */
@@ -391,7 +394,16 @@ nav .pip.r{background:var(--sage-wash);color:var(--sage)}
 .deptcard{border-radius:16px;padding:20px 18px;display:flex;flex-direction:column;min-width:0}
 .deptcard .dc-icon{width:52px;height:52px;border-radius:50%;background:var(--card);display:flex;align-items:center;
   justify-content:center;margin:0 auto 12px;box-shadow:0 1px 2px rgba(22,51,74,.08)}
-.deptcard .dc-name{font-family:var(--font-head);font-size:20px;font-weight:600;text-align:center;letter-spacing:-.01em}
+.deptcard .dc-name{font-family:var(--font-head);font-size:20px;font-weight:600;text-align:center;letter-spacing:-.01em;
+  color:var(--org-blue)}
+/* Department names read blue, but each branch keeps its own pale wash \u2014
+   the wash is what tells you which branch a row belongs to, so it carries
+   grouping, not decoration. A darker blue than the app's mid-blue is used
+   so it still clears contrast on the palest of those washes. */
+#p-org{--org-blue:#1A5C8A}
+.dc-rootcard{background:linear-gradient(135deg,#2F8FC4 0%,#1A5C8A 100%);
+  margin:0 auto 20px;max-width:360px;transition:box-shadow .15s ease, transform .15s ease}
+.dc-rootcard:hover{box-shadow:0 10px 26px -12px rgba(26,92,138,.55);transform:translateY(-1px)}
 .deptcard .dc-tag{display:block;text-align:center;margin:6px auto 0;font-size:12.5px;font-weight:700;letter-spacing:.06em;
   padding:2px 10px;border-radius:999px;width:fit-content}
 .deptcard .dc-count{text-align:center;font-size:14px;color:var(--ink-3);margin:8px 0 12px}
@@ -407,7 +419,7 @@ nav .pip.r{background:var(--sage-wash);color:var(--sage)}
 .dc-row:hover{transform:translateX(2px)}
 .dc-row .dc-row-icon{width:24px;height:24px;border-radius:50%;background:var(--paper);flex-shrink:0;
   display:flex;align-items:center;justify-content:center}
-.dc-row .dc-row-name{font-size:15px;font-weight:500;color:var(--ink);flex-grow:1}
+.dc-row .dc-row-name{font-size:15px;font-weight:500;color:var(--org-blue,var(--ink));flex-grow:1}
 .dc-empty{text-align:center;padding:24px 0;color:var(--ink-3)}
 .dc-empty svg{opacity:.5;margin-bottom:8px}
 .dc-empty p{font-size:14.5px;margin:0}
@@ -523,6 +535,31 @@ nav .pip.r{background:var(--sage-wash);color:var(--sage)}
 #p-org, #p-org *{font-family:Arial, Helvetica, sans-serif}
 #p-org .dc-resp, #p-org .dc-resp-inline{font-family:Georgia,"Times New Roman",serif}
 
+/* Satsang Event Management landing — card list per the approved design. */
+.sem-toolbar{display:flex;justify-content:space-between;align-items:center;margin:4px 0 9px}
+.sem-section-title{color:#4d7896;font-size:15px;font-weight:700}
+.sem-count{color:#8aa6b6;font-size:13px}
+.sem-list{display:flex;flex-direction:column;gap:9px}
+.sem-item{border:1px solid #d7eaf3;border-radius:11px;background:#fff;transition:.15s ease}
+.sem-item:hover{border-color:#b8d8e8;box-shadow:0 3px 12px rgba(112,170,198,.09)}
+.sem-head{display:grid;grid-template-columns:40px 1fr auto;align-items:center;gap:0;
+  width:100%;padding:13px 14px;min-height:76px;background:transparent;border:0;cursor:pointer;text-align:left;
+  font-family:Calibri,"Segoe UI",Arial,sans-serif}
+.sem-arrow{width:22px;height:22px;border-radius:50%;background:#e7f5fb;color:#3d8db5;
+  display:flex;align-items:center;justify-content:center;font-size:15px;flex:none}
+.sem-main{min-width:0}
+.sem-name{color:#4d7896;font-size:15px;font-weight:700}
+.sem-name span{color:#7898ad;font-size:13px;font-weight:400;margin-left:4px}
+.sem-meta{color:#7899ad;font-size:13px;margin-top:5px}
+.sem-actions{display:flex;align-items:center;gap:10px}
+.sem-help{margin-top:18px;padding:11px 14px;background:#eef8fc;border:1px solid #d5eaf3;
+  border-radius:9px;color:#6d8799;font-size:13px}
+.sem-help strong{color:#6b9ab5}
+@media(max-width:700px){
+  .sem-head{grid-template-columns:32px 1fr;gap:4px}
+  .sem-actions{grid-column:2;justify-content:flex-start;margin-top:7px}
+}
+
 /* Full-page satsang event detail — one continuous form (no nested cards),
    matching the approved conductor-form design. Calibri + soft blue. */
 .ev-row:hover{border-color:var(--deep-2);box-shadow:0 6px 18px -10px rgba(11,90,143,.35)}
@@ -536,66 +573,72 @@ nav .pip.r{background:var(--sage-wash);color:var(--sage)}
   background:linear-gradient(180deg,#f9fcfe 0%,#f2f8fc 100%)}
 .sef-title-row{display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap}
 .sef-h1{margin:0;color:var(--sef-900);font-size:22px;font-weight:700;letter-spacing:.1px}
-.sef-meta{margin-top:6px;color:#7890a2;font-size:12px}
-.sef-intro{margin-top:14px;color:#7890a2;font-size:12px}
+.sef-meta{margin-top:6px;color:#7890a2;font-size:13px}
+.sef-intro{margin-top:14px;color:#7890a2;font-size:13px}
 .sef-content{padding:0 26px}
-.sef-sub{color:var(--sef-800);font-weight:700;font-size:13px;margin:20px 0 10px}
-.sef-empty{color:#8aa0af;font-size:12px;padding:10px 0 4px}
+.sef-sub{color:var(--sef-800);font-weight:700;font-size:15px;margin:20px 0 10px}
+.sef-empty{color:#8aa0af;font-size:13px;padding:10px 0 4px}
 
 .sef-row{padding:16px 0 18px;border-bottom:1px solid var(--sef-line)}
 .sef-row:last-child{border-bottom:0}
 .sef-row-head{display:flex;align-items:center;justify-content:space-between;gap:15px;margin-bottom:10px;flex-wrap:wrap}
-.sef-name{color:var(--sef-900);font-size:14px;font-weight:700}
-.sef-status{margin-top:2px;color:#8aa0af;font-size:10px}
-.sef-badge{background:#eaf5fb;color:#3c7599;border-radius:14px;padding:4px 9px;font-size:10px;white-space:nowrap}
+.sef-name{color:var(--sef-900);font-size:16px;font-weight:700}
+.sef-status{margin-top:3px;color:#8aa0af;font-size:12px}
+.sef-badge{background:#eaf5fb;color:#3c7599;border-radius:14px;padding:4px 10px;font-size:12px;white-space:nowrap}
 .sef-badge-none{background:#f3f5f7;color:#8aa0af}
 
-.sef-grid{display:grid;border-top:1px solid #d9e8f1;border-left:1px solid #d9e8f1;
-  border-radius:7px;overflow:hidden}
-.sef-grid > div{min-height:30px;display:flex;align-items:center;justify-content:center;
+.sef-grid{display:grid;grid-template-columns:150px repeat(7,70px);width:max-content;max-width:100%;
+  border-top:1px solid #d9e8f1;border-left:1px solid #d9e8f1;border-radius:7px;overflow:auto}
+.sef-grid > div{min-height:34px;display:flex;align-items:center;justify-content:center;
   border-right:1px solid #d9e8f1;border-bottom:1px solid #d9e8f1}
 .sef-corner{background:#f5faff}
-.sef-day{background:#edf7fc;color:#5d8198;font-size:10px;font-weight:700}
+.sef-day{background:#edf7fc;color:#5d8198;font-size:12px;font-weight:700}
 .sef-metric{justify-content:flex-start !important;padding-left:10px;background:#f8fbfd;
-  color:#547188;font-size:10px;font-weight:600;text-align:left}
-.sef-value{background:#fff;color:#2e6f98;font-size:12px;font-weight:600}
+  color:#547188;font-size:12px;font-weight:600;text-align:left}
+.sef-value{background:#fff;color:#2e6f98;font-size:14px;font-weight:600}
 
 .sef-lines{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:10px;
-  color:#506e82;font-size:11px;line-height:1.45}
-.sef-label{display:inline-block;color:#6b8799;font-weight:700;margin-right:5px}
+  color:#506e82;font-size:13px;line-height:1.5}
+.sef-label{display:inline-block;color:#6b8799;font-weight:700;margin-right:5px;font-size:13px}
 .sef-date{color:#93a5b1;font-size:9px;margin-left:4px}
 
 .sef-note-line{display:grid;grid-template-columns:100px 1fr auto auto;gap:9px;align-items:center;
   margin-top:11px;padding-top:10px;border-top:1px dashed #d9e8f1}
-.sef-note-line label{color:var(--sef-800);font-size:11px;font-weight:700}
+.sef-note-line label{color:var(--sef-800);font-size:13px;font-weight:700}
 .sef-note-line input{width:100%;height:32px;border:1px solid #bdd7e8;border-radius:17px;
-  padding:0 12px;outline:none;color:var(--sef-text);background:#fbfdff;font:inherit;font-size:11px}
+  padding:0 13px;outline:none;color:var(--sef-text);background:#fbfdff;font:inherit;font-size:13px}
 .sef-note-line input:focus,.sef-search:focus,.sef-report-text:focus{
   border-color:#6ca4c7;box-shadow:0 0 0 3px rgba(108,164,199,.12)}
-.sef-note-meta{color:#93a5b1;font-size:10px;margin-top:4px;padding-left:109px}
+.sef-note-meta{color:#93a5b1;font-size:12px;margin-top:4px;padding-left:114px}
 
 .sef-btn{border:1px solid #bcd7e8;background:#f7fbfe;color:var(--sef-800);border-radius:16px;
-  padding:6px 12px;cursor:pointer;font:inherit;font-size:11px}
+  padding:6px 13px;cursor:pointer;font:inherit;font-size:13px}
 .sef-btn.primary{background:#dceef8;border-color:#b8d9ea;color:#245d87;font-weight:600}
 .sef-btn:hover{background:#e9f5fb}
 
 .sef-tools{display:flex;gap:10px;margin:13px 0 4px;align-items:center}
 .sef-search{width:100%;border:1px solid #bdd7e8;border-radius:18px;padding:9px 13px;
-  outline:none;font:inherit;font-size:12px;color:var(--sef-text);background:#fbfdff;box-sizing:border-box}
+  outline:none;font:inherit;font-size:13px;color:var(--sef-text);background:#fbfdff;box-sizing:border-box}
+
+/* Attendees with no response yet: name + note only, no empty grid. */
+.sef-pending{border-top:1px solid var(--sef-line)}
+.sef-pending-row{padding:12px 0;border-bottom:1px solid #e8f1f7}
+.sef-pending-row:last-child{border-bottom:0}
+.sef-note-compact{margin-top:6px;padding-top:0;border-top:0}
 
 .sef-report{padding:0 0 6px}
 .sef-report-label{display:block;color:var(--sef-800);font-size:13px;font-weight:700;margin-bottom:8px}
 .sef-report-text{display:block;width:100%;min-height:125px;resize:vertical;border:1px solid #bdd7e8;
   border-radius:10px;padding:12px 14px;outline:none;color:var(--sef-text);background:#fbfdff;
-  font:inherit;font-size:12px;line-height:1.5;box-sizing:border-box}
+  font:inherit;font-size:14px;line-height:1.55;box-sizing:border-box}
 .sef-save-report{height:36px;padding:0 16px;margin-top:10px;float:right}
 .sef-others{clear:both;padding-top:14px;border-top:1px solid var(--sef-line);margin-top:14px}
-.sef-other-row{color:#506e82;font-size:11px;line-height:1.45;padding:4px 0}
-.sef-foot{clear:both;padding:14px 0 18px;color:#8aa0af;font-size:10px}
+.sef-other-row{color:#506e82;font-size:13px;line-height:1.5;padding:5px 0}
+.sef-foot{clear:both;padding:14px 0 18px;color:#8aa0af;font-size:12px}
 
 @media(max-width:900px){ .sef-content{padding:0 16px} .sef-head{padding:18px} }
 @media(max-width:680px){
-  .sef-grid{grid-template-columns:95px repeat(7,1fr) !important}
+  .sef-grid{grid-template-columns:110px repeat(7,minmax(44px,1fr));width:100%}
   .sef-grid > div{min-height:28px}
   .sef-lines{grid-template-columns:1fr}
   .sef-note-line{grid-template-columns:1fr auto auto}
@@ -3631,9 +3674,10 @@ function renderSevaDepartments(){
   }).join('');
 
   el.innerHTML = `
-    <div class="deptcard" style="background:var(--ink);margin-bottom:20px;max-width:360px;margin-left:auto;margin-right:auto">
-      <div class="dc-icon" style="background:rgba(255,255,255,.15)">${deptIconSVG(rootParsed.name, '#fff', 24)}</div>
+    <div class="deptcard dc-rootcard"${rootDept ? ` onclick="openDeptModal(${rootDept.Seva_Dept_ID})" style="cursor:pointer"` : ''}>
+      <div class="dc-icon" style="background:rgba(255,255,255,.18)">${deptIconSVG(rootParsed.name, '#fff', 24)}</div>
       <div class="dc-name" style="color:#fff">${esc(rootParsed.name)}</div>
+      ${rootDept && rootDept.responsible_seeker_name ? `<div class="dc-resp" style="color:#eaf5fb">${esc(rootDept.responsible_seeker_name)}</div>` : ''}
       ${rootParsed.tag ? `<span class="dc-tag" style="background:rgba(255,255,255,.18);color:#fff">${esc(rootParsed.tag)}</span>` : ''}
     </div>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px">
@@ -4292,22 +4336,29 @@ function renderSatsangEvents(force){
   if(LIVE_SATSANG_DEFS === null){ el.innerHTML = genericSkeleton(4); loadSatsangDefs(); return; }
   if(!LIVE_SATSANG_DEFS.length){ el.innerHTML = '<p class="sub2">No satsang definitions yet \u2014 create one under Satsang Definitions first.</p>'; return; }
 
-  el.innerHTML = LIVE_SATSANG_DEFS.map(d=>{
-    const isOpen = d.Satsang_ID === SATSANG_EVENTS_DEF_ID;
-    return `<section class="igrp${isOpen?' open':''}" id="sevgrp_${d.Satsang_ID}">
-      <button class="igrp-head" onclick="toggleSatsangEventGroup(${d.Satsang_ID})">
-        <span class="igrp-chevron">\u203A</span>
-        <span class="igrp-title">
-          <div class="igrp-name">${esc(d.Satsang_Name)} <span class="sub2" style="font-weight:400">(${esc(d.Satsang_Short_Name)})</span></div>
-          <div class="igrp-summary">${esc(d.ST_Name||'')} \u00b7 ${esc(d.Satsang_Frequency||'One-off')}</div>
-        </span>
-        <span class="igrp-actions" onclick="event.stopPropagation()">${statusBadge(d.Satsang_Status)}</span>
-      </button>
-      <div class="igrp-details"><div class="igrp-details-inner" id="sevgrpBody_${d.Satsang_ID}">
-        ${isOpen ? satsangEventGroupInnerHTML() : ''}
-      </div></div>
-    </section>`;
-  }).join('');
+  const n = LIVE_SATSANG_DEFS.length;
+  el.innerHTML = `
+    <div class="sem-toolbar">
+      <div class="sem-section-title">Satsang event definitions</div>
+      <div class="sem-count">${n} definition${n===1?'':'s'}</div>
+    </div>
+    <div class="sem-list">${LIVE_SATSANG_DEFS.map(d=>{
+      const isOpen = d.Satsang_ID === SATSANG_EVENTS_DEF_ID;
+      return `<section class="igrp sem-item${isOpen?' open':''}" id="sevgrp_${d.Satsang_ID}">
+        <button class="igrp-head sem-head" onclick="toggleSatsangEventGroup(${d.Satsang_ID})">
+          <span class="sem-arrow">${isOpen?'\u2304':'\u203A'}</span>
+          <span class="igrp-title sem-main">
+            <div class="sem-name">${esc(d.Satsang_Name)} <span>(${esc(d.Satsang_Short_Name)})</span></div>
+            <div class="sem-meta">${esc(d.ST_Name||'')} \u00b7 ${esc(d.Satsang_Frequency||'One-off')}</div>
+          </span>
+          <span class="igrp-actions sem-actions" onclick="event.stopPropagation()">${statusBadge(d.Satsang_Status)}</span>
+        </button>
+        <div class="igrp-details"><div class="igrp-details-inner" id="sevgrpBody_${d.Satsang_ID}">
+          ${isOpen ? satsangEventGroupInnerHTML() : ''}
+        </div></div>
+      </section>`;
+    }).join('')}</div>
+    <div class="sem-help"><strong>Tip:</strong> Select a satsang definition to view its schedule, conductors, seekers and upcoming events.</div>`;
   if(SATSANG_EVENTS_DEF_ID) loadSatsangEvents(force);
 }
 // The inner markup (event list + notes panel) is shared by whichever
@@ -4462,56 +4513,71 @@ function eventSeekerRowsHTML(seId){
   const dailyFields = fields.filter(f=>f.Review_Frequency==='Daily');
   const otherFields = fields.filter(f=>f.Review_Frequency!=='Daily');
   const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const nameOf = a => esc([a.First_Name,a.Last_Name].filter(Boolean).join(' ')||('Seeker #'+a.Seeker_ID));
+  const ansFor = a => answered.find(s=>String(s.Seeker_ID)===String(a.Seeker_ID));
 
-  return `<div class="sef-seekers">${roster.map(a=>{
-    const ans = answered.find(s=>String(s.Seeker_ID)===String(a.Seeker_ID));
-    const name = esc([a.First_Name,a.Last_Name].filter(Boolean).join(' ')||('Seeker #'+a.Seeker_ID));
+  // Only those who actually submitted get the full response block; the
+  // rest are listed compactly below so they can still be noted on or
+  // removed without a page of empty grids.
+  const submitters = roster.filter(a=>ansFor(a));
+  const pending = roster.filter(a=>!ansFor(a));
+
+  const noteLine = (a, compact) => {
     const own = comments.filter(c=>String(c.Seeker_ID)===String(a.Seeker_ID));
-    const latest = own[0]; // API orders newest-first
+    const latest = own[0];
     const rest = own.slice(1);
-    const submitted = ans && ans.Submitted_DT ? new Date(ans.Submitted_DT).toLocaleDateString() : null;
-
-    // Daily values keyed by weekday so each column lands under its own day.
-    const gridFor = f => {
-      const vals = (ans && ans.values ? ans.values[f.Field_Name] : null) || [];
-      const byDay = {};
-      vals.forEach(v=>{ if(v.date) byDay[new Date(v.date+'T00:00:00').getDay()] = v.value; });
-      return `<div class="sef-metric">${esc(f.Field_Name)}</div>` +
-        DAYS.map((_,i)=>`<div class="sef-value">${byDay[i]==null||byDay[i]===''?'\u2014':esc(byDay[i])}</div>`).join('');
-    };
-
-    return `<div class="sef-row">
-      <div class="sef-row-head">
-        <div>
-          <div class="sef-name">${name}</div>
-          <div class="sef-status">${submitted?('Response submitted \u00b7 '+esc(submitted)):'No response submitted yet'}</div>
-        </div>
-        <span class="sef-badge${ans?'':' sef-badge-none'}">${ans?'Submitted':'Awaiting'}</span>
-      </div>
-
-      ${dailyFields.length ? `<div class="sef-grid" style="grid-template-columns:125px repeat(7,1fr)">
-        <div class="sef-corner"></div>
-        ${DAYS.map(d=>`<div class="sef-day">${d}</div>`).join('')}
-        ${dailyFields.map(gridFor).join('')}
-      </div>` : ''}
-
-      ${otherFields.length ? `<div class="sef-lines">${otherFields.map(f=>{
-        const vals = (ans && ans.values ? ans.values[f.Field_Name] : null) || [];
-        const text = vals.map(v=>v.value).filter(v=>v!=null && v!=='').join(', ');
-        return `<div><span class="sef-label">${esc(f.Field_Name)}</span>${text?esc(text):'<span style="color:var(--ink-3)">\u2014</span>'}</div>`;
-      }).join('')}</div>` : ''}
-
-      <div class="sef-note-line">
+    return `<div class="sef-note-line${compact?' sef-note-compact':''}">
         <label>Conductor note</label>
-        <input id="evNote_${seId}_${a.Seeker_ID}" value="${latest?esc(latest.Comments):''}" placeholder="Add a note for ${name}\u2026">
+        <input id="evNote_${seId}_${a.Seeker_ID}" value="${latest?esc(latest.Comments):''}" placeholder="Add a note for ${nameOf(a)}\u2026">
         <button type="button" class="sef-btn primary" onclick="saveEventAttendeeNote(${seId}, ${a.Seeker_ID}, this)">Save note</button>
         <button type="button" class="sef-btn" onclick="removeEventRosterAttendee(${seId}, ${a.Seeker_ID}, this)" title="Remove from roster">Remove</button>
       </div>
       ${latest ? `<div class="sef-note-meta">\u2014 ${esc(latest.conductor_name||'')}${latest.Comments_Date?(', '+esc(new Date(latest.Comments_Date).toLocaleDateString())):''}</div>` : ''}
       ${rest.length ? `<button type="button" class="sef-btn" style="margin-top:6px" onclick="toggleAttendeeHistory(${seId}, ${a.Seeker_ID}, this)">Show ${rest.length} earlier note${rest.length===1?'':'s'}</button>
-        <div id="evHist_${seId}_${a.Seeker_ID}" style="display:none;margin-top:6px"></div>` : ''}
+        <div id="evHist_${seId}_${a.Seeker_ID}" style="display:none;margin-top:6px"></div>` : ''}`;
+  };
+
+  const submitterRows = submitters.map(a=>{
+    const ans = ansFor(a);
+    const submitted = ans.Submitted_DT ? new Date(ans.Submitted_DT).toLocaleDateString() : null;
+    const gridFor = f => {
+      const vals = (ans.values || {})[f.Field_Name] || [];
+      const byDay = {};
+      vals.forEach(v=>{ if(v.date) byDay[new Date(v.date+'T00:00:00').getDay()] = v.value; });
+      return `<div class="sef-metric">${esc(f.Field_Name)}</div>` +
+        DAYS.map((_,i)=>`<div class="sef-value">${byDay[i]==null||byDay[i]===''?'\u2014':esc(byDay[i])}</div>`).join('');
+    };
+    return `<div class="sef-row">
+      <div class="sef-row-head">
+        <div>
+          <div class="sef-name">${nameOf(a)}</div>
+          <div class="sef-status">${submitted?('Response submitted \u00b7 '+esc(submitted)):'Response submitted'}</div>
+        </div>
+        <span class="sef-badge">Submitted</span>
+      </div>
+      ${dailyFields.length ? `<div class="sef-grid">
+        <div class="sef-corner"></div>
+        ${DAYS.map(d=>`<div class="sef-day">${d}</div>`).join('')}
+        ${dailyFields.map(gridFor).join('')}
+      </div>` : ''}
+      ${otherFields.length ? `<div class="sef-lines">${otherFields.map(f=>{
+        const vals = (ans.values || {})[f.Field_Name] || [];
+        const text = vals.map(v=>v.value).filter(v=>v!=null && v!=='').join(', ');
+        return `<div><span class="sef-label">${esc(f.Field_Name)}</span>${text?esc(text):'<span style="color:#9fb3c2">\u2014</span>'}</div>`;
+      }).join('')}</div>` : ''}
+      ${noteLine(a, false)}
     </div>`;
-  }).join('')}</div>`;
+  }).join('');
+
+  return `<div class="sef-seekers">${
+      submitters.length ? submitterRows
+        : '<div class="sef-empty">No one has submitted the form for this event yet.</div>'
+    }</div>
+    ${pending.length ? `<div class="sef-sub" style="margin-top:22px">Awaiting a response \u2014 ${pending.length} ${pending.length===1?'attendee':'attendees'}</div>
+      <div class="sef-pending">${pending.map(a=>`<div class="sef-pending-row">
+        <div class="sef-name">${nameOf(a)}</div>
+        ${noteLine(a, true)}
+      </div>`).join('')}</div>` : ''}`;
 }
 
 function eventRosterToolsHTML(seId){
